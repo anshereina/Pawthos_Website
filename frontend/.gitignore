@@ -1,0 +1,30 @@
+# Node.js
+node_modules/
+build/
+.env.local       # <--- If you use local env files in React (less common for CRA)
+.env.development.local
+.env.test.local
+.env.production.local
+.env             # <--- If you created a .env directly in frontend (less common for CRA)
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Runtime files
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# IDEs and editors
+.vscode/        # Optional: if you want to share VS Code settings, remove this
+.idea/
+.DS_Store
+
+# Misc
+.cache/
+.eslintcache
+.prettierrc.js.cache

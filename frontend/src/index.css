@@ -1,0 +1,19 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure html, body, and the root element take full height/width */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevents unwanted scrollbars if content overflows slightly */
+  box-sizing: border-box; /* Add this line */
+
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
