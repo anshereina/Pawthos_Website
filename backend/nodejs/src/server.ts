@@ -2,7 +2,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Pool } from 'pg'; // Import the Pool class from 'pg'
+import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'; // Ensure jwt is imported
 
 dotenv.config(); // Load environment variables from .env
 
@@ -11,6 +13,12 @@ const PORT = process.env.PORT || 5001; // Backend runs on port 5001
 
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Enable JSON body parsing
+
+// General Request Logger Middleware
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  next();
+});
 
 // --- PostgreSQL Database Connection Setup ---
 const pool = new Pool({
@@ -29,24 +37,604 @@ pool.connect()
   })
   .catch(err => {
     console.error('Error connecting to PostgreSQL database:', err.message);
-    // You might want to exit the application or handle this more gracefully in production
+    // In a production environment, you might want to exit the process here
+    // process.exit(1);
   });
 
+// Secret for JWT (should be in an environment variable in production)
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey'; // Define JWT_SECRET
+
+// --- Middleware for Role-Based Authorization ---
+// This middleware now allows for multiple roles and checks for x-user-id if pet_owner
+const authorize = (roles: string[] = []) => {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const userRole = req.headers['x-user-role'] as string;
+    const userId = req.headers['x-user-id'] as string; // Get user ID from custom header
+
+    if (!userRole || !roles.includes(userRole)) {
+      console.log(`[AUTH] Access denied for role: ${userRole} on ${req.url}. Required roles: ${roles.join(', ')}`);
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+
+    // Special handling for pet_owner to ensure they only access their own data
+    if (userRole === 'pet_owner' && req.params.petId) {
+      // For pet-specific routes, ensure the pet belongs to the user
+      // This check needs to be done *after* fetching pet details, so it's a bit tricky here.
+      // For now, the backend routes themselves will handle pet ownership verification.
+      // This middleware just ensures the role is allowed.
+      // The actual pet ownership check will be in the route handler.
+      if (!userId) {
+        console.log(`[AUTH] Access denied: User ID missing for pet_owner on ${req.url}`);
+        return res.status(400).json({ message: 'Bad Request: User ID is required for pet owners.' });
+      }
+      // Attach userId to request for later use in route handlers
+      (req as any).userId = userId;
+    }
+    next();
+  };
+};
+
+
 // --- API Routes ---
+
+// Root route
 app.get('/', (req, res) => {
   res.send('Hello from Node.js/TypeScript Backend!');
 });
 
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
+// User Registration Route
+app.post('/api/register', async (req, res) => {
+  const { name, email, password, role, address, phone_number } = req.body;
+  const requestingUserRole = req.headers['x-user-role'] as string; // Role of the user making the request
 
-  // Basic validation (replace with actual authentication logic using the database)
-  if (username === "user" && password === "pass") {
-    return res.status(200).json({ message: "Login successful!", token: "fake-jwt-token" });
-  } else {
-    return res.status(401).json({ message: "Invalid credentials" });
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ message: 'Name, email, password, and role are required.' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format.' });
+  }
+
+  if (role === 'admin') {
+    if (requestingUserRole !== 'admin') {
+      console.log(`[AUTH] Access denied: Non-admin tried to register Admin role. Requesting role: ${requestingUserRole}`);
+      return res.status(403).json({ message: 'Access denied. Only Admin can create Admin accounts.' });
+    }
+  } else if (role !== 'pet_owner' && role !== 'veterinarian') { // Allow veterinarian registration
+    console.log(`[AUTH] Access denied: Attempted to register with unknown role: ${role}`);
+    return res.status(400).json({ message: 'Invalid role specified.' });
+  }
+
+  try {
+    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({ message: 'User with this email already exists.' });
+    }
+
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password_hash, role, address, phone_number) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, role, address, phone_number',
+      [name, email, passwordHash, role, address || null, phone_number || null]
+    );
+
+    res.status(201).json({
+      message: 'User registered successfully!',
+      user: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Error during user registration:', error.message);
+    res.status(500).json({ message: 'Internal server error during registration.' });
   }
 });
+
+
+// User Login Route
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({
+      message: 'Login successful!',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+    });
+
+  } catch (error: any) {
+    console.error('Error during login:', error.message);
+    res.status(500).json({ message: 'Internal server error during login.' });
+  }
+});
+
+// Endpoint to get all users (protected for admins)
+app.get('/api/users', authorize(['admin']), async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name, email, role, address, phone_number FROM users');
+    res.status(200).json({ users: result.rows });
+  } catch (error: any) {
+    console.error('Error fetching users:', error.message);
+    res.status(500).json({ message: 'Internal server error fetching users.' });
+  }
+});
+
+// Endpoint to update a user by ID (protected for admins)
+app.put('/api/users/:id', authorize(['admin']), async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const { name, email, role, address, phone_number } = req.body;
+
+  if (isNaN(userId)) {
+    return res.status(400).json({ message: 'Invalid user ID.' });
+  }
+  if (!name || !email || !role) {
+    return res.status(400).json({ message: 'Name, email, and role are required for update.' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format.' });
+  }
+
+  try {
+    const existingUserWithEmail = await pool.query(
+      'SELECT id FROM users WHERE email = $1 AND id != $2',
+      [email, userId]
+    );
+    if (existingUserWithEmail.rows.length > 0) {
+      return res.status(409).json({ message: 'User with this email already exists.' });
+    }
+
+    const result = await pool.query(
+      'UPDATE users SET name = $1, email = $2, role = $3, address = $4, phone_number = $5 WHERE id = $6 RETURNING id, name, email, role, address, phone_number',
+      [name, email, role, address || null, phone_number || null, userId]
+    );
+
+    res.status(200).json({
+      message: 'User updated successfully!',
+      user: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Error updating user:', error.message);
+    res.status(500).json({ message: 'Internal server error updating user.' });
+  }
+});
+
+// Endpoint to delete a user by ID (protected for admins)
+app.delete('/api/users/:id', authorize(['admin']), async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+
+  if (isNaN(userId)) {
+    return res.status(400).json({ message: 'Invalid user ID.' });
+  }
+
+  try {
+    const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({ message: 'User deleted successfully!', id: userId });
+  } catch (error: any) {
+    console.error('Error deleting user:', error.message);
+    res.status(500).json({ message: 'Internal server error deleting user.' });
+  }
+});
+
+// Get all pets (Admin, Veterinarian, Pet Owner)
+app.get('/api/pets', authorize(['admin', 'veterinarian', 'pet_owner']), async (req, res) => {
+  const userRole = req.headers['x-user-role'];
+  const userId = req.headers['x-user-id'];
+
+  let query = `
+    SELECT
+      p.id,
+      p.name,
+      u.name AS owner_name,
+      p.owner_id,
+      p.species,
+      p.date_of_birth,
+      p.age,
+      p.color,
+      p.breed,
+      p.gender,
+      p.contact_number,
+      p.address,
+      p.sterilized
+    FROM pets p
+    JOIN users u ON p.owner_id = u.id
+  `;
+  const queryParams: (string | number)[] = [];
+
+  if (userRole === 'pet_owner') {
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required for pet owners.' });
+    }
+    query += ' WHERE p.owner_id = $1';
+    queryParams.push(userId);
+  }
+
+  query += ' ORDER BY p.id ASC;';
+
+  try {
+    const result = await pool.query(query, queryParams);
+    res.status(200).json({ pets: result.rows });
+  } catch (error: any) {
+    console.error('Error fetching pets:', error.message);
+    res.status(500).json({ message: 'Internal server error fetching pet records.' });
+  }
+});
+
+// Get a single pet by ID (Admin, Veterinarian, Pet Owner)
+app.get('/api/pets/:id', authorize(['admin', 'veterinarian', 'pet_owner']), async (req, res) => {
+  const petId = parseInt(req.params.id, 10);
+  const userRole = req.headers['x-user-role'];
+  const userId = req.headers['x-user-id'];
+
+  if (isNaN(petId)) {
+    return res.status(400).json({ message: 'Invalid pet ID.' });
+  }
+
+  try {
+    let query = `
+      SELECT
+        p.id,
+        p.name,
+        u.name AS owner_name,
+        p.owner_id,
+        p.species,
+        p.date_of_birth,
+        p.age,
+        p.color,
+        p.breed,
+        p.gender,
+        p.contact_number,
+        p.address,
+        p.sterilized
+      FROM pets p
+      JOIN users u ON p.owner_id = u.id
+      WHERE p.id = $1
+    `;
+    const queryParams: (string | number)[] = [petId];
+
+    if (userRole === 'pet_owner') {
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required for pet owners.' });
+      }
+      query += ' AND p.owner_id = $2';
+      queryParams.push(userId);
+    }
+
+    const result = await pool.query(query, queryParams);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Pet not found or you do not have permission to view it.' });
+    }
+    res.status(200).json({ pet: result.rows[0] });
+  } catch (error: any) {
+    console.error(`Error fetching pet ${petId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error fetching pet.' });
+  }
+});
+
+// POST a new pet (Admin, Veterinarian)
+app.post('/api/pets', authorize(['admin', 'veterinarian']), async (req, res) => {
+  const { name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized } = req.body;
+
+  if (!name || !owner_id || !species || !date_of_birth || age === undefined || !color || !breed || !gender || contact_number === undefined || address === undefined || sterilized === undefined) {
+    return res.status(400).json({ message: 'All pet fields are required.' });
+  }
+
+  try {
+    const ownerCheck = await pool.query('SELECT id FROM users WHERE id = $1', [owner_id]);
+    if (ownerCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Owner not found.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO pets (name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id, name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized, created_at, updated_at;`,
+      [name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized]
+    );
+
+    res.status(201).json({
+      message: 'Pet record created successfully!',
+      pet: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Error creating pet record:', error.message);
+    res.status(500).json({ message: 'Internal server error creating pet record.' });
+  }
+});
+
+// PUT update a pet by ID (Admin, Veterinarian)
+app.put('/api/pets/:id', authorize(['admin', 'veterinarian']), async (req, res) => {
+  const petId = parseInt(req.params.id, 10);
+  const { name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized } = req.body;
+
+  if (isNaN(petId)) {
+    return res.status(400).json({ message: 'Invalid pet ID.' });
+  }
+  if (!name || !owner_id || !species || !date_of_birth || age === undefined || !color || !breed || !gender || contact_number === undefined || address === undefined || sterilized === undefined) {
+    return res.status(400).json({ message: 'All pet fields are required for update.' });
+  }
+
+  try {
+    const ownerCheck = await pool.query('SELECT id FROM users WHERE id = $1', [owner_id]);
+    if (ownerCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'New owner not found.' });
+    }
+
+    const result = await pool.query(
+      `UPDATE pets
+       SET name = $1, owner_id = $2, species = $3, date_of_birth = $4, age = $5, color = $6, breed = $7, gender = $8, contact_number = $9, address = $10, sterilized = $11, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $12
+       RETURNING id, name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized, created_at, updated_at;`,
+      [name, owner_id, species, date_of_birth, age, color, breed, gender, contact_number, address, sterilized, petId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Pet not found.' });
+    }
+
+    res.status(200).json({
+      message: 'Pet record updated successfully!',
+      pet: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Error updating pet record:', error.message);
+    res.status(500).json({ message: 'Internal server error updating pet record.' });
+  }
+});
+
+// DELETE a pet by ID (Admin only)
+app.delete('/api/pets/:id', authorize(['admin']), async (req, res) => {
+  const petId = parseInt(req.params.id, 10);
+
+  if (isNaN(petId)) {
+    return res.status(400).json({ message: 'Invalid pet ID.' });
+  }
+
+  try {
+    const result = await pool.query('DELETE FROM pets WHERE id = $1 RETURNING id', [petId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Pet not found.' });
+    }
+
+    res.status(200).json({ message: 'Pet record deleted successfully!', id: petId });
+  } catch (error: any) {
+    console.error('Error deleting pet record:', error.message);
+    res.status(500).json({ message: 'Internal server error deleting pet record.' });
+  }
+});
+
+// --- Vaccine Records Endpoints ---
+
+// GET all vaccine records for a specific pet (Admin, Veterinarian, Pet Owner)
+app.get('/api/pets/:petId/vaccine-records', authorize(['admin', 'veterinarian', 'pet_owner']), async (req, res) => {
+  const petId = parseInt(req.params.petId, 10);
+  const userRole = req.headers['x-user-role'];
+  const userId = req.headers['x-user-id']; // Assuming user ID is sent in headers
+
+  if (isNaN(petId)) {
+    return res.status(400).json({ message: 'Invalid pet ID.' });
+  }
+
+  try {
+    // Verify the pet exists and the user has permission to view it
+    const petCheck = await pool.query('SELECT owner_id FROM pets WHERE id = $1', [petId]);
+    const pet = petCheck.rows[0];
+
+    if (!pet) {
+      return res.status(404).json({ message: 'Pet not found.' });
+    }
+
+    if (userRole === 'pet_owner' && pet.owner_id.toString() !== userId) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to view this pet\'s vaccine records.' });
+    }
+
+    const result = await pool.query('SELECT id, pet_id, date_of_vaccination, vaccine_used, batch_lot_no, date_of_next_vaccination, veterinarian_lic_no_ptr FROM vaccine_records WHERE pet_id = $1 ORDER BY date_of_vaccination DESC', [petId]);
+    res.status(200).json({ vaccineRecords: result.rows });
+  } catch (error: any) {
+    console.error(`Error fetching vaccine records for pet ${petId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error fetching vaccine records.' });
+  }
+});
+
+// POST a new vaccine record for a pet (Admin, Veterinarian)
+app.post('/api/pets/:petId/vaccine-records', authorize(['admin', 'veterinarian']), async (req, res) => {
+  const petId = parseInt(req.params.petId, 10);
+  const { date_of_vaccination, vaccine_used, batch_lot_no, date_of_next_vaccination, veterinarian_lic_no_ptr } = req.body;
+
+  if (isNaN(petId) || !date_of_vaccination || !vaccine_used || !veterinarian_lic_no_ptr) {
+    return res.status(400).json({ message: 'Pet ID, date of vaccination, vaccine used, and veterinarian license/PTR are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO vaccine_records (pet_id, date_of_vaccination, vaccine_used, batch_lot_no, date_of_next_vaccination, veterinarian_lic_no_ptr) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [petId, date_of_vaccination, vaccine_used, batch_lot_no || null, date_of_next_vaccination || null, veterinarian_lic_no_ptr]
+    );
+    res.status(201).json({ message: 'Vaccine record added successfully!', vaccineRecord: result.rows[0] });
+  } catch (error: any) {
+    console.error(`Error adding vaccine record for pet ${petId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error adding vaccine record.' });
+  }
+});
+
+// PUT (Update) an existing vaccine record (Admin, Veterinarian)
+app.put('/api/vaccine-records/:recordId', authorize(['admin', 'veterinarian']), async (req, res) => {
+  const recordId = parseInt(req.params.recordId, 10);
+  const { date_of_vaccination, vaccine_used, batch_lot_no, date_of_next_vaccination, veterinarian_lic_no_ptr } = req.body;
+
+  if (isNaN(recordId) || !date_of_vaccination || !vaccine_used || !veterinarian_lic_no_ptr) {
+    return res.status(400).json({ message: 'Record ID, date of vaccination, vaccine used, and veterinarian license/PTR are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE vaccine_records SET date_of_vaccination = $1, vaccine_used = $2, batch_lot_no = $3, date_of_next_vaccination = $4, veterinarian_lic_no_ptr = $5 WHERE id = $6 RETURNING *',
+      [date_of_vaccination, vaccine_used, batch_lot_no || null, date_of_next_vaccination || null, veterinarian_lic_no_ptr, recordId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Vaccine record not found.' });
+    }
+    res.status(200).json({ message: 'Vaccine record updated successfully!', vaccineRecord: result.rows[0] });
+  } catch (error: any) {
+    console.error(`Error updating vaccine record ${recordId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error updating vaccine record.' });
+  }
+});
+
+// DELETE a vaccine record (Admin only)
+app.delete('/api/vaccine-records/:recordId', authorize(['admin']), async (req, res) => {
+  const recordId = parseInt(req.params.recordId, 10);
+
+  if (isNaN(recordId)) {
+    return res.status(400).json({ message: 'Invalid record ID.' });
+  }
+
+  try {
+    const result = await pool.query('DELETE FROM vaccine_records WHERE id = $1 RETURNING id', [recordId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Vaccine record not found.' });
+    }
+    res.status(200).json({ message: 'Vaccine record deleted successfully!', id: recordId });
+  } catch (error: any) {
+    console.error(`Error deleting vaccine record ${recordId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error deleting vaccine record.' });
+  }
+});
+
+// --- Medical Records Endpoints ---
+
+// GET all medical records for a specific pet (Admin, Veterinarian, Pet Owner)
+app.get('/api/pets/:petId/medical-records', authorize(['admin', 'veterinarian', 'pet_owner']), async (req, res) => {
+  const petId = parseInt(req.params.petId, 10);
+  const userRole = req.headers['x-user-role'];
+  const userId = req.headers['x-user-id']; // Assuming user ID is sent in headers
+
+  if (isNaN(petId)) {
+    return res.status(400).json({ message: 'Invalid pet ID.' });
+  }
+
+  try {
+    // Verify the pet exists and the user has permission to view it
+    const petCheck = await pool.query('SELECT owner_id FROM pets WHERE id = $1', [petId]);
+    const pet = petCheck.rows[0];
+
+    if (!pet) {
+      return res.status(404).json({ message: 'Pet not found.' });
+    }
+
+    if (userRole === 'pet_owner' && pet.owner_id.toString() !== userId) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to view this pet\'s medical records.' });
+    }
+
+    const result = await pool.query('SELECT id, pet_id, reason_for_visit, date_of_visit, next_visit, procedure_done, findings, recommendation, vaccine_used_medication FROM medical_records WHERE pet_id = $1 ORDER BY date_of_visit DESC', [petId]);
+    res.status(200).json({ medicalRecords: result.rows });
+  } catch (error: any) {
+    console.error(`Error fetching medical records for pet ${petId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error fetching medical records.' });
+  }
+});
+
+// POST a new medical record for a pet (Admin, Veterinarian)
+app.post('/api/pets/:petId/medical-records', authorize(['admin', 'veterinarian']), async (req, res) => {
+  const petId = parseInt(req.params.petId, 10);
+  const { reason_for_visit, date_of_visit, next_visit, procedure_done, findings, recommendation, vaccine_used_medication } = req.body;
+
+  if (isNaN(petId) || !reason_for_visit || !date_of_visit || !findings || !recommendation || !vaccine_used_medication) {
+    return res.status(400).json({ message: 'Pet ID, reason for visit, date of visit, findings, recommendation, and vaccine/medication are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO medical_records (pet_id, reason_for_visit, date_of_visit, next_visit, procedure_done, findings, recommendation, vaccine_used_medication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [petId, reason_for_visit, date_of_visit, next_visit || null, procedure_done || null, findings, recommendation, vaccine_used_medication]
+    );
+    res.status(201).json({ message: 'Medical record added successfully!', medicalRecord: result.rows[0] });
+  } catch (error: any) {
+    console.error(`Error adding medical record for pet ${petId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error adding medical record.' });
+  }
+});
+
+// PUT (Update) an existing medical record (Admin, Veterinarian)
+app.put('/api/medical-records/:recordId', authorize(['admin', 'veterinarian']), async (req, res) => {
+  const recordId = parseInt(req.params.recordId, 10);
+  const { reason_for_visit, date_of_visit, next_visit, procedure_done, findings, recommendation, vaccine_used_medication } = req.body;
+
+  if (isNaN(recordId) || !reason_for_visit || !date_of_visit || !findings || !recommendation || !vaccine_used_medication) {
+    return res.status(400).json({ message: 'Record ID, reason for visit, date of visit, findings, recommendation, and vaccine/medication are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE medical_records SET reason_for_visit = $1, date_of_visit = $2, next_visit = $3, procedure_done = $4, findings = $5, recommendation = $6, vaccine_used_medication = $7 WHERE id = $8 RETURNING *',
+      [reason_for_visit, date_of_visit, next_visit || null, procedure_done || null, findings, recommendation, vaccine_used_medication, recordId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Medical record not found.' });
+    }
+    res.status(200).json({ message: 'Medical record updated successfully!', medicalRecord: result.rows[0] });
+  } catch (error: any) {
+    console.error(`Error updating medical record ${recordId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error updating medical record.' });
+  }
+});
+
+// DELETE a medical record (Admin only)
+app.delete('/api/medical-records/:recordId', authorize(['admin']), async (req, res) => {
+  const recordId = parseInt(req.params.recordId, 10);
+
+  if (isNaN(recordId)) {
+    return res.status(400).json({ message: 'Invalid record ID.' });
+  }
+
+  try {
+    const result = await pool.query('DELETE FROM medical_records WHERE id = $1 RETURNING id', [recordId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Medical record not found.' });
+    }
+    res.status(200).json({ message: 'Medical record deleted successfully!', id: recordId });
+  } catch (error: any) {
+    console.error(`Error deleting medical record ${recordId}:`, error.message);
+    res.status(500).json({ message: 'Internal server error deleting medical record.' });
+  }
+});
+
 
 // --- Start the Server ---
 app.listen(PORT, () => {
