@@ -1,0 +1,81 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  address?: string;
+  phone_number?: string;
+  created_at?: string;
+  is_confirmed?: boolean;
+}
+
+interface AuthContextType {
+  user: UserData | null;
+  setUser: (user: UserData | null) => void;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch user data using the stored token
+        const response = await axios.get('http://localhost:8000/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setUser(response.data);
+      } catch (error: any) {
+        // If token is invalid, remove it
+        console.error('Failed to restore session:', error);
+        localStorage.removeItem('access_token');
+        setUser(null);
+        window.location.href = '/login';
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    restoreSession();
+  }, []);
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('access_token');
+  };
+
+  return (
+    <AuthContext.Provider value={{ 
+      user, 
+      setUser, 
+      isAuthenticated: !!user, 
+      isLoading,
+      logout 
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}; 
