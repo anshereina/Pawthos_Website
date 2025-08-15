@@ -79,8 +79,8 @@ def send_email_otp(to_email: str, otp_code: str):
         server.login(sender_email, password)
         server.sendmail(sender_email, to_email, msg.as_string())
 
-def authenticate_user(db: Session, email: str, password: str, user_type: str):
-    user = get_user_by_type(db, email, user_type)
+def authenticate_admin(db: Session, email: str, password: str):
+    user = get_admin(db, email)
     if not user:
         return False
     if not verify_password(password, user.password_hash):
@@ -89,8 +89,20 @@ def authenticate_user(db: Session, email: str, password: str, user_type: str):
         return False
     return user
 
-def authenticate_admin(db: Session, email: str, password: str):
-    user = get_admin(db, email)
+def authenticate_user(db: Session, email: str, password: str):
+    """Authenticate a regular user (not admin)"""
+    user = get_user(db, email)
+    if not user:
+        return False
+    if not verify_password(password, user.password_hash):
+        return False
+    if not user.is_confirmed:
+        return False
+    return user
+
+def authenticate_user_by_type(db: Session, email: str, password: str, user_type: str):
+    """Authenticate user by type (admin or user)"""
+    user = get_user_by_type(db, email, user_type)
     if not user:
         return False
     if not verify_password(password, user.password_hash):

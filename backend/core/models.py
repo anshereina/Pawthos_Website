@@ -29,6 +29,9 @@ class User(Base):
     is_confirmed = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
     otp_code = Column(String(10), nullable=True)
     otp_expires_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationship
+    pets = relationship("Pet", back_populates="user", cascade="all, delete-orphan")
 
 class Pet(Base):
     __tablename__ = "pets"
@@ -36,15 +39,20 @@ class Pet(Base):
     id = Column(Integer, primary_key=True, index=True)
     pet_id = Column(String(20), unique=True, index=True, nullable=False)  # PET-0001 format
     name = Column(String(255), nullable=False)
-    owner_name = Column(String(255), nullable=False)
+    owner_name = Column(String(255), nullable=False)  # Keep for backward compatibility
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)  # New foreign key
     species = Column(String(50), nullable=False)  # feline, canine, etc.
     date_of_birth = Column(Date, nullable=True)
     color = Column(String(100), nullable=True)
     breed = Column(String(100), nullable=True)
     gender = Column(String(20), nullable=True)  # male, female
     reproductive_status = Column(String(20), nullable=True)  # intact, castrated, spayed
+    photo_url = Column(String(500), nullable=True)  # URL to pet photo
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now()) 
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationship
+    user = relationship("User", back_populates="pets") 
 
 class Report(Base):
     __tablename__ = "reports"
@@ -130,15 +138,17 @@ class VaccinationRecord(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
-    date_of_vaccination = Column(Date, nullable=False)
-    vaccine_used = Column(String(255), nullable=False)
-    batch_no_lot_no = Column(String(100), nullable=False)
-    date_of_next_vaccination = Column(Date, nullable=True)
-    veterinarian_lic_no_ptr = Column(String(100), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    vaccine_name = Column(String(255), nullable=False)
+    vaccination_date = Column(String(255), nullable=False)  # Changed to String to match your DB
+    expiration_date = Column(String(255), nullable=True)    # Changed to String to match your DB
+    veterinarian = Column(String(255), nullable=False)
+    batch_lot_no = Column(String(255), nullable=False)      # Added to match your DB
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    pet = relationship("Pet") 
+    pet = relationship("Pet")
+    user = relationship("User") 
 
 class VaccinationEvent(Base):
     __tablename__ = "vaccination_events"
@@ -206,7 +216,7 @@ class Appointment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     pet_id = Column(Integer, ForeignKey("pets.id"), nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     type = Column(String(255), nullable=False)  # service type
     date = Column(Date, nullable=False)
     time = Column(Time, nullable=False)  # time without time zone
@@ -237,3 +247,23 @@ class ServiceRequest(Base):
     handled_by = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now()) 
+
+class PainAssessment(Base):
+    __tablename__ = "pain_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    pet_name = Column(String(255), nullable=False)
+    pet_type = Column(String(255), nullable=False)
+    pain_level = Column(String(255), nullable=False)
+    assessment_date = Column(String(255), nullable=False)
+    recommendations = Column(Text, nullable=True)
+    image_url = Column(String(255), nullable=True)
+    created_at = Column(DateTime, nullable=True)
+    basic_answers = Column(Text, nullable=True)
+    assessment_answers = Column(Text, nullable=True)
+    questions_completed = Column(Boolean, nullable=True)
+
+    pet = relationship("Pet")
+    user = relationship("User") 

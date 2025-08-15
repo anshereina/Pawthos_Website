@@ -47,6 +47,7 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user_type: str
 
 class TokenData(BaseModel):
     email: Optional[str] = None
@@ -116,6 +117,7 @@ class PetBase(BaseModel):
     breed: Optional[str] = None
     gender: Optional[str] = None
     reproductive_status: Optional[str] = None
+    photo_url: Optional[str] = None
 
 class PetCreate(PetBase):
     pass
@@ -129,6 +131,7 @@ class PetUpdate(BaseModel):
     breed: Optional[str] = None
     gender: Optional[str] = None
     reproductive_status: Optional[str] = None
+    photo_url: Optional[str] = None
 
 class Pet(BaseModel):
     id: int
@@ -141,6 +144,7 @@ class Pet(BaseModel):
     breed: Optional[str] = None
     gender: Optional[str] = None
     reproductive_status: Optional[str] = None
+    photo_url: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -262,21 +266,22 @@ class ShippingPermitRecord(ShippingPermitRecordBase):
 
 class VaccinationRecordBase(BaseModel):
     pet_id: int
-    date_of_vaccination: date
-    vaccine_used: str
-    batch_no_lot_no: str
-    date_of_next_vaccination: Optional[date] = None
-    veterinarian_lic_no_ptr: str
+    user_id: Optional[int] = None
+    vaccine_name: str
+    vaccination_date: str
+    expiration_date: Optional[str] = None
+    veterinarian: str
+    batch_lot_no: str
 
 class VaccinationRecordCreate(VaccinationRecordBase):
     pass
 
 class VaccinationRecordUpdate(BaseModel):
-    date_of_vaccination: Optional[date] = None
-    vaccine_used: Optional[str] = None
-    batch_no_lot_no: Optional[str] = None
-    date_of_next_vaccination: Optional[date] = None
-    veterinarian_lic_no_ptr: Optional[str] = None
+    vaccine_name: Optional[str] = None
+    vaccination_date: Optional[str] = None
+    expiration_date: Optional[str] = None
+    veterinarian: Optional[str] = None
+    batch_lot_no: Optional[str] = None
 
 class VaccinationRecord(VaccinationRecordBase):
     id: int
@@ -284,7 +289,7 @@ class VaccinationRecord(VaccinationRecordBase):
     updated_at: Optional[datetime]
 
     class Config:
-        orm_mode = True 
+        from_attributes = True 
 
 class VaccinationEventBase(BaseModel):
     event_date: date
@@ -456,6 +461,42 @@ class ServiceRequest(ServiceRequestBase):
     request_id: str
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True 
+
+class PainAssessmentBase(BaseModel):
+    pet_id: int
+    user_id: int
+    pet_name: str
+    pet_type: str
+    pain_level: str
+    assessment_date: str
+    recommendations: Optional[str] = None
+    image_url: Optional[str] = None
+    basic_answers: Optional[str] = None
+    assessment_answers: Optional[str] = None
+    questions_completed: Optional[bool] = None
+
+class PainAssessmentCreate(PainAssessmentBase):
+    pass
+
+class PainAssessmentUpdate(BaseModel):
+    pet_id: Optional[int] = None
+    user_id: Optional[int] = None
+    pet_name: Optional[str] = None
+    pet_type: Optional[str] = None
+    pain_level: Optional[str] = None
+    assessment_date: Optional[str] = None
+    recommendations: Optional[str] = None
+    image_url: Optional[str] = None
+    basic_answers: Optional[str] = None
+    assessment_answers: Optional[str] = None
+    questions_completed: Optional[bool] = None
+
+class PainAssessment(PainAssessmentBase):
+    id: int
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True 

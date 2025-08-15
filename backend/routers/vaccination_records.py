@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Dict
 from core.database import get_db
-from core.models import VaccinationRecord, Pet
+from core.models import VaccinationRecord, Pet, User
 from core.schemas import VaccinationRecord as VaccinationRecordSchema, VaccinationRecordCreate, VaccinationRecordUpdate
 
 router = APIRouter(prefix="/vaccination-records", tags=["vaccination-records"])
@@ -39,7 +39,7 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
         ).join(
             VaccinationRecord, Pet.id == VaccinationRecord.pet_id
         ).filter(
-            func.date(VaccinationRecord.date_of_vaccination) == target_date
+            func.date(VaccinationRecord.vaccination_date) == target_date
         ).group_by(
             Pet.species, Pet.gender
         ).all()
@@ -90,7 +90,23 @@ def get_vaccination_records_by_pet(pet_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=VaccinationRecordSchema, status_code=status.HTTP_201_CREATED)
 def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Depends(get_db)):
-    db_record = VaccinationRecord(**record.dict())
+    # Get the pet to find the owner name
+    pet = db.query(Pet).filter(Pet.id == record.pet_id).first()
+    if not pet:
+        raise HTTPException(status_code=404, detail="Pet not found")
+    
+    # Find the user by owner name
+    user = db.query(User).filter(User.name == pet.owner_name).first()
+    
+    # Create the vaccination record with user_id if found
+    record_data = record.dict()
+    if user:
+        record_data['user_id'] = user.id
+    else:
+        # If no user found, set user_id to None (should be nullable in DB)
+        record_data['user_id'] = None
+    
+    db_record = VaccinationRecord(**record_data)
     db.add(db_record)
     db.commit()
     db.refresh(db_record)
