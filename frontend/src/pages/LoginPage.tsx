@@ -80,6 +80,13 @@ const LoginPage: React.FC = () => {
               navigate({ to: '/dashboard' });
             }}
           />
+          
+          {/* Contact Admin Message */}
+          <div className="text-center mt-6">
+            <p className="text-white text-sm opacity-80">
+              Need access? Contact your administrator
+            </p>
+          </div>
         </div>
       </div>
     </div>

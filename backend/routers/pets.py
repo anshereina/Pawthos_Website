@@ -7,6 +7,7 @@ import re
 from core.database import get_db
 from core.models import Pet
 from core.schemas import PetCreate, PetUpdate, Pet as PetSchema
+from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
@@ -89,7 +90,7 @@ def get_pets(
     db: Session = Depends(get_db)
 ):
     """Get all pets with optional filtering"""
-    query = db.query(Pet)
+    query = db.query(Pet).options(joinedload(Pet.user))
     
     if species and species.lower() != 'all':
         query = query.filter(Pet.species.ilike(f"%{species}%"))
@@ -104,14 +105,23 @@ def get_pets(
         )
     
     pets = query.offset(skip).limit(limit).all()
+
+    # Prefer linked user.name over placeholder owner_name if available
+    for p in pets:
+        if getattr(p, 'user', None) and getattr(p.user, 'name', None):
+            p.owner_name = p.user.name
+
     return pets
 
 @router.get("/{pet_id}", response_model=PetSchema)
 def get_pet(pet_id: str, db: Session = Depends(get_db)):
     """Get a specific pet by pet_id"""
-    pet = db.query(Pet).filter(Pet.pet_id == pet_id).first()
+    pet = db.query(Pet).options(joinedload(Pet.user)).filter(Pet.pet_id == pet_id).first()
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
+    # Prefer linked user.name if present
+    if getattr(pet, 'user', None) and getattr(pet.user, 'name', None):
+        pet.owner_name = pet.user.name
     return pet
 
 @router.put("/{pet_id}", response_model=PetSchema)
@@ -177,13 +187,14 @@ def delete_pet(pet_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Pet not found")
     
     # Import related models
-    from core.models import VaccinationRecord, MedicalRecord, Appointment
+    from core.models import VaccinationRecord, MedicalRecord, Appointment, PainAssessment
     
     try:
         # Count related records for logging
         vaccination_count = db.query(VaccinationRecord).filter(VaccinationRecord.pet_id == db_pet.id).count()
         medical_count = db.query(MedicalRecord).filter(MedicalRecord.pet_id == db_pet.id).count()
         appointment_count = db.query(Appointment).filter(Appointment.pet_id == db_pet.id).count()
+        pain_assessment_count = db.query(PainAssessment).filter(PainAssessment.pet_id == db_pet.id).count()
         
         deleted_records = []
         
@@ -204,7 +215,12 @@ def delete_pet(pet_id: str, db: Session = Depends(get_db)):
             db.query(Appointment).filter(Appointment.pet_id == db_pet.id).delete()
             deleted_records.append(f"{appointment_count} appointment(s)")
         
-        # 4. Finally delete the pet
+        # 4. Delete pain assessments
+        if pain_assessment_count > 0:
+            db.query(PainAssessment).filter(PainAssessment.pet_id == db_pet.id).delete()
+            deleted_records.append(f"{pain_assessment_count} pain assessment(s)")
+        
+        # 5. Finally delete the pet
         db.delete(db_pet)
         db.commit()
         

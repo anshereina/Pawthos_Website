@@ -63,6 +63,7 @@ class ReportBase(BaseModel):
     status: Optional[str] = "New"
     submitted_by: str
     submitted_by_email: EmailStr
+    admin_id: Optional[int] = None
 
 class ReportCreate(ReportBase):
     pass
@@ -71,12 +72,14 @@ class ReportUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
+    admin_id: Optional[int] = None
 
 class Report(ReportBase):
     id: int
     report_id: str
     created_at: datetime
     updated_at: Optional[datetime] = None
+    admin: Optional[Admin] = None
 
     class Config:
         from_attributes = True
@@ -88,6 +91,7 @@ class AlertBase(BaseModel):
     submitted_by: str
     submitted_by_email: EmailStr
     recipients: Optional[str] = None  # JSON string of recipient emails
+    admin_id: Optional[int] = None
 
 class AlertCreate(AlertBase):
     recipients: Optional[str] = None  # JSON string of recipient emails
@@ -97,6 +101,7 @@ class AlertUpdate(BaseModel):
     message: Optional[str] = None
     priority: Optional[str] = None
     recipients: Optional[str] = None
+    admin_id: Optional[int] = None
 
 class Alert(AlertBase):
     id: int
@@ -104,6 +109,7 @@ class Alert(AlertBase):
     recipients: Optional[str] = None  # JSON string of recipient emails
     created_at: datetime
     updated_at: Optional[datetime] = None
+    admin: Optional[Admin] = None
 
     class Config:
         from_attributes = True
@@ -145,7 +151,7 @@ class Pet(BaseModel):
     gender: Optional[str] = None
     reproductive_status: Optional[str] = None
     photo_url: Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     class Config:
@@ -160,6 +166,7 @@ class AnimalControlRecordBase(BaseModel):
     species: Optional[str] = None  # feline, canine, etc.
     gender: Optional[str] = None  # male, female
     date: date
+    admin_id: Optional[int] = None
 
 class AnimalControlRecordCreate(AnimalControlRecordBase):
     pass
@@ -173,6 +180,7 @@ class AnimalControlRecordUpdate(BaseModel):
     species: Optional[str] = None
     gender: Optional[str] = None
     date: Optional[str] = None  # Changed from Optional[date] to Optional[str] to handle string dates
+    admin_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -183,6 +191,7 @@ class AnimalControlRecord(AnimalControlRecordBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    admin: Optional[Admin] = None
 
     class Config:
         from_attributes = True 
@@ -197,6 +206,7 @@ class MeatInspectionRecordBase(BaseModel):
     status: str = "Pending"  # Pending, Approved, Rejected
     remarks: Optional[str] = None
     inspector_name: Optional[str] = None
+    admin_id: Optional[int] = None
 
 class MeatInspectionRecordCreate(MeatInspectionRecordBase):
     pass
@@ -211,11 +221,13 @@ class MeatInspectionRecordUpdate(BaseModel):
     status: Optional[str] = None
     remarks: Optional[str] = None
     inspector_name: Optional[str] = None
+    admin_id: Optional[int] = None
 
 class MeatInspectionRecord(MeatInspectionRecordBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    admin: Optional[Admin] = None
 
     class Config:
         from_attributes = True 
@@ -236,6 +248,7 @@ class ShippingPermitRecordBase(BaseModel):
     expiry_date: date
     status: Optional[str] = "Active"
     remarks: Optional[str] = None
+    admin_id: Optional[int] = None
 
 class ShippingPermitRecordCreate(ShippingPermitRecordBase):
     pass
@@ -255,11 +268,13 @@ class ShippingPermitRecordUpdate(BaseModel):
     expiry_date: Optional[date] = None
     status: Optional[str] = None
     remarks: Optional[str] = None
+    admin_id: Optional[int] = None
 
 class ShippingPermitRecord(ShippingPermitRecordBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    admin: Optional[Admin] = None
 
     class Config:
         from_attributes = True 
@@ -360,30 +375,37 @@ class VaccinationDriveRecord(VaccinationDriveRecordBase):
 
 class MedicalRecordBase(BaseModel):
     reason_for_visit: str
-    date_of_visit: date
-    next_visit: Optional[date] = None
-    procedure_done: str
-    findings: str
-    recommendation: str
-    vaccine_used_medication: str
+    date_visited: date
+    date_of_next_visit: Optional[date] = None
+    procedures_done: Optional[str] = None
+    findings: Optional[str] = None
+    recommendations: Optional[str] = None
+    medications: Optional[str] = None
+    vaccine_used: Optional[str] = None
+    veterinarian: Optional[str] = None
 
 class MedicalRecordCreate(MedicalRecordBase):
     pass
 
 class MedicalRecordUpdate(BaseModel):
     reason_for_visit: Optional[str] = None
-    date_of_visit: Optional[date] = None
-    next_visit: Optional[date] = None
-    procedure_done: Optional[str] = None
+    date_visited: Optional[date] = None
+    date_of_next_visit: Optional[date] = None
+    procedures_done: Optional[str] = None
     findings: Optional[str] = None
-    recommendation: Optional[str] = None
-    vaccine_used_medication: Optional[str] = None
+    recommendations: Optional[str] = None
+    medications: Optional[str] = None
+    vaccine_used: Optional[str] = None
+    veterinarian: Optional[str] = None
 
 class MedicalRecord(MedicalRecordBase):
     id: int
     pet_id: int
+    user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    pet: Optional["Pet"] = None
+    user: Optional["User"] = None
 
     class Config:
         from_attributes = True
@@ -417,6 +439,8 @@ class Appointment(AppointmentBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     pet: Optional[Pet] = None
+    user: Optional[User] = None
+    client_name: Optional[str] = None
 
     class Config:
         from_attributes = True

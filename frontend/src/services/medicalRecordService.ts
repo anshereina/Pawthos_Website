@@ -1,37 +1,64 @@
 import { API_BASE_URL } from '../config';
 
-export interface MedicalRecord {
+export interface Pet {
   id: number;
-  pet_id: number;
-  reason_for_visit: string;
-  date_of_visit: string;
-  next_visit?: string;
-  procedure_done: string;
-  findings: string;
-  recommendation: string;
-  vaccine_used_medication: string;
+  pet_id: string;
+  name: string;
+  owner_name: string;
+  species: string;
+  date_of_birth?: string;
+  color?: string;
+  breed?: string;
+  gender?: string;
+  reproductive_status?: string;
+  photo_url?: string;
   created_at: string;
   updated_at?: string;
 }
 
+export interface MedicalRecord {
+  id: number;
+  pet_id: number;
+  user_id: number;
+  reason_for_visit: string;
+  date_visited: string;
+  date_of_next_visit?: string;
+  procedures_done?: string;
+  findings?: string;
+  recommendations?: string;
+  medications?: string;
+  vaccine_used?: string;
+  veterinarian?: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  pet?: Pet;
+}
+
 export interface CreateMedicalRecordData {
   reason_for_visit: string;
-  date_of_visit: string;
-  next_visit?: string;
-  procedure_done: string;
-  findings: string;
-  recommendation: string;
-  vaccine_used_medication: string;
+  date_visited: string;
+  date_of_next_visit?: string;
+  procedures_done?: string;
+  findings?: string;
+  recommendations?: string;
+  medications?: string;
+  vaccine_used?: string;
+  veterinarian?: string;
+  notes?: string;
 }
 
 export interface UpdateMedicalRecordData {
   reason_for_visit?: string;
-  date_of_visit?: string;
-  next_visit?: string;
-  procedure_done?: string;
+  date_visited?: string;
+  date_of_next_visit?: string;
+  procedures_done?: string;
   findings?: string;
-  recommendation?: string;
-  vaccine_used_medication?: string;
+  recommendations?: string;
+  medications?: string;
+  vaccine_used?: string;
+  veterinarian?: string;
+  notes?: string;
 }
 
 class MedicalRecordService {
@@ -52,6 +79,18 @@ class MedicalRecordService {
 
   async getMedicalRecordsByPet(petId: number): Promise<MedicalRecord[]> {
     const response = await fetch(`${this.baseUrl}/pet/${petId}`, {
+      headers: this.getHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch medical records');
+    }
+    
+    return response.json();
+  }
+
+  async getAllMedicalRecords(): Promise<MedicalRecord[]> {
+    const response = await fetch(`${this.baseUrl}/`, {
       headers: this.getHeaders(),
     });
     

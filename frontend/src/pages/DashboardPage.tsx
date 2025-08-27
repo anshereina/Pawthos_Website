@@ -6,14 +6,111 @@ import { useSidebar } from '../components/useSidebar';
 import { UserCircle, ChevronDown, User, Settings, LogOut, Cat, Dog, PieChart, LineChart, Bell, Calendar, AlertTriangle, FileText } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { useVaccinationStatistics } from '../hooks/useVaccinationStatistics';
+import { useVaccinationStatistics, useYearlyVaccinationStatistics } from '../hooks/useVaccinationStatistics';
 import { useAnimalControlStatistics } from '../hooks/useAnimalControlStatistics';
 import { useNotifications, Notification } from '../hooks/useNotifications';
 
 // --- Card Components ---
-const DonutChart = ({ maleColor, femaleColor }: { maleColor: string; femaleColor: string }) => (
-  <PieChart size={60} strokeWidth={1.5} className="text-green-700" />
-);
+interface DonutChartProps {
+  maleCount: number;
+  femaleCount: number;
+  total: number;
+  maleColor: string;
+  femaleColor: string;
+  size?: number;
+}
+
+const DonutChart: React.FC<DonutChartProps> = ({ 
+  maleCount, 
+  femaleCount, 
+  total, 
+  maleColor, 
+  femaleColor, 
+  size = 60 
+}) => {
+  if (total === 0) {
+    // Show empty donut chart when no data
+    return (
+      <svg width={size} height={size} viewBox="0 0 60 60">
+        <circle
+          cx="30"
+          cy="30"
+          r="25"
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth="8"
+        />
+        <text x="30" y="35" textAnchor="middle" fontSize="8" fill="#9ca3af">
+          No Data
+        </text>
+      </svg>
+    );
+  }
+
+  const radius = 25;
+  const strokeWidth = 8;
+  const circumference = 2 * Math.PI * radius;
+  
+  // Calculate percentages
+  const malePercentage = maleCount / total;
+  const femalePercentage = femaleCount / total;
+  
+  // Calculate stroke dasharray values
+  const maleDasharray = malePercentage * circumference;
+  const femaleDasharray = femalePercentage * circumference;
+  
+  // Calculate stroke dashoffset for positioning
+  const maleDashoffset = 0;
+  const femaleDashoffset = -maleDasharray;
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 60 60">
+      {/* Background circle */}
+      <circle
+        cx="30"
+        cy="30"
+        r={radius}
+        fill="none"
+        stroke="#e5e7eb"
+        strokeWidth={strokeWidth}
+      />
+      
+      {/* Male segment */}
+      {maleCount > 0 && (
+        <circle
+          cx="30"
+          cy="30"
+          r={radius}
+          fill="none"
+          stroke={maleColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${maleDasharray} ${circumference}`}
+          strokeDashoffset={maleDashoffset}
+          strokeLinecap="round"
+          transform="rotate(-90 30 30)"
+        />
+      )}
+      
+      {/* Female segment */}
+      {femaleCount > 0 && (
+        <circle
+          cx="30"
+          cy="30"
+          r={radius}
+          fill="none"
+          stroke={femaleColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${femaleDasharray} ${circumference}`}
+          strokeDashoffset={femaleDashoffset}
+          strokeLinecap="round"
+          transform="rotate(-90 30 30)"
+        />
+      )}
+      
+      {/* No center text - pure color donut chart */}
+    </svg>
+  );
+};
 
 interface FelineVaccinationCardProps {
   statistics: {
@@ -49,7 +146,7 @@ const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistic
           </div>
         </div>
         {/* Donut Chart */}
-        <DonutChart maleColor="#7ed957" femaleColor="#388e3c" />
+        <DonutChart maleCount={statistics.male} femaleCount={statistics.female} total={statistics.total} maleColor="#7ed957" femaleColor="#388e3c" />
         {/* KPI */}
         <div className="flex flex-col items-center ml-4">
           <span className="text-3xl font-bold">{statistics.total.toString().padStart(2, '0')}</span>
@@ -94,7 +191,7 @@ const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistic
           </div>
         </div>
         {/* Donut Chart */}
-        <DonutChart maleColor="#7ed957" femaleColor="#388e3c" />
+        <DonutChart maleCount={statistics.male} femaleCount={statistics.female} total={statistics.total} maleColor="#7ed957" femaleColor="#388e3c" />
         {/* KPI */}
         <div className="flex flex-col items-center ml-4">
           <span className="text-3xl font-bold">{statistics.total.toString().padStart(2, '0')}</span>
@@ -113,6 +210,8 @@ interface TotalCatchCardProps {
 }
 
 const TotalCatchCard: React.FC<TotalCatchCardProps> = ({ statistics, selectedDate }) => {
+  const malePercentage = statistics.canine.total > 0 ? Math.round((statistics.canine.male / statistics.canine.total) * 100) : 0;
+  const femalePercentage = statistics.canine.total > 0 ? Math.round((statistics.canine.female / statistics.canine.total) * 100) : 0;
   const displayDate = new Date(selectedDate).toLocaleDateString('en-US', { 
     month: '2-digit', 
     day: '2-digit', 
@@ -121,21 +220,31 @@ const TotalCatchCard: React.FC<TotalCatchCardProps> = ({ statistics, selectedDat
 
   return (
     <div className="border border-black rounded-lg p-4 flex flex-col w-full h-full" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold text-center mb-2">Total Catch on {displayDate}</div>
-      <div className="divide-y divide-black flex-1 flex items-center">
-        {/* Canine Section Only */}
-        <div className="flex items-center w-full">
-          <div className="flex-1 flex flex-col items-center">
-            <span className="text-2xl font-bold">{statistics.canine.total.toString().padStart(2, '0')}</span>
-            <span className="text-xs">Canine</span>
+      <div className="font-bold text-lg mb-2">Total Catch</div>
+      <div className="flex items-center flex-1">
+        {/* Legend */}
+        <div className="flex flex-col items-start mr-4">
+          <div className="flex items-center mb-1">
+            <span className="inline-block w-3 h-3 rounded-sm mr-2" style={{ background: '#7ed957' }}></span>
+            <span className="text-xs">{malePercentage}% Male</span>
           </div>
-          <div className="flex flex-col items-end mr-2">
-            <span className="text-xs">Male: {statistics.canine.male.toString().padStart(2, '0')}</span>
-            <span className="text-xs">Female: {statistics.canine.female.toString().padStart(2, '0')}</span>
+          <div className="flex items-center">
+            <span className="inline-block w-3 h-3 rounded-sm mr-2" style={{ background: '#388e3c' }}></span>
+            <span className="text-xs">{femalePercentage}% Female</span>
           </div>
-          <span className="ml-2">
-            <Dog size={28} className="text-black" />
-          </span>
+        </div>
+        {/* Donut Chart */}
+        <DonutChart 
+          maleCount={statistics.canine.male} 
+          femaleCount={statistics.canine.female} 
+          total={statistics.canine.total} 
+          maleColor="#7ed957" 
+          femaleColor="#388e3c" 
+        />
+        {/* KPI */}
+        <div className="flex flex-col items-center ml-4">
+          <span className="text-3xl font-bold">{statistics.canine.total.toString().padStart(2, '0')}</span>
+          <span className="text-xs text-gray-600">Total Catch on {displayDate}</span>
         </div>
       </div>
     </div>
@@ -143,21 +252,67 @@ const TotalCatchCard: React.FC<TotalCatchCardProps> = ({ statistics, selectedDat
 };
 
 const YearlyVaccinationReportCard = () => {
-  // Sample data based on the description
-  const monthlyData = [
-    { month: 'Jan', canineMale: 12, canineFemale: 10, felineMale: 8, felineFemale: 7 },
-    { month: 'Feb', canineMale: 15, canineFemale: 13, felineMale: 9, felineFemale: 8 },
-    { month: 'Mar', canineMale: 18, canineFemale: 16, felineMale: 11, felineFemale: 10 },
-    { month: 'Apr', canineMale: 22, canineFemale: 20, felineMale: 13, felineFemale: 12 },
-    { month: 'May', canineMale: 28, canineFemale: 26, felineMale: 16, felineFemale: 15 },
-    { month: 'Jun', canineMale: 35, canineFemale: 33, felineMale: 19, felineFemale: 18 },
-    { month: 'Jul', canineMale: 38, canineFemale: 36, felineMale: 22, felineFemale: 21 },
-    { month: 'Aug', canineMale: 42, canineFemale: 39, felineMale: 24, felineFemale: 22 },
-    { month: 'Sep', canineMale: 36, canineFemale: 34, felineMale: 20, felineFemale: 19 },
-    { month: 'Oct', canineMale: 30, canineFemale: 28, felineMale: 17, felineFemale: 16 },
-    { month: 'Nov', canineMale: 24, canineFemale: 22, felineMale: 14, felineFemale: 13 },
-    { month: 'Dec', canineMale: 18, canineFemale: 16, felineMale: 11, felineFemale: 10 }
-  ];
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = React.useState(currentYear);
+  const { statistics: yearlyStats, loading, error, refreshStatistics } = useYearlyVaccinationStatistics(selectedYear);
+
+  // Generate year options (current year and 4 years back)
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  if (loading) {
+    return (
+      <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
+        <div className="font-bold mb-2 flex items-center gap-2">
+          <LineChart size={20} /> 
+          Yearly Vaccination Report
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="ml-auto text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+          >
+            {yearOptions.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
+        <div className="font-bold mb-2 flex items-center gap-2">
+          <LineChart size={20} /> 
+          Yearly Vaccination Report
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="ml-auto text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+          >
+            {yearOptions.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1 flex items-center justify-center text-red-500 text-sm">
+          Error loading yearly statistics
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data if available, otherwise use empty data
+  const monthlyData = yearlyStats?.monthly_data || Array.from({ length: 12 }, (_, i) => ({
+    month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
+    canineMale: 0,
+    canineFemale: 0,
+    felineMale: 0,
+    felineFemale: 0
+  }));
 
   const maxValue = Math.max(...monthlyData.flatMap(d => [d.canineMale, d.canineFemale, d.felineMale, d.felineFemale]));
   const padding = 40;
@@ -165,6 +320,7 @@ const YearlyVaccinationReportCard = () => {
   const availableHeight = 100 - (padding * 2 / 100);
 
   const getY = (value: number) => {
+    if (maxValue === 0) return 80; // If no data, place at bottom
     const percentage = (value / maxValue) * 60; // Use 60% of available height
     return 20 + (60 - percentage); // Start at 20%, max at 80%
   };
@@ -183,9 +339,25 @@ const YearlyVaccinationReportCard = () => {
     return points.join(' ');
   };
 
+  const totalVaccinations = monthlyData.reduce((sum, data) => 
+    sum + data.canineMale + data.canineFemale + data.felineMale + data.felineFemale, 0
+  );
+
   return (
     <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold mb-2 flex items-center gap-2"><LineChart size={20} /> Yearly Vaccination Report</div>
+      <div className="font-bold mb-2 flex items-center gap-2">
+        <LineChart size={20} /> 
+        Yearly Vaccination Report
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="ml-auto text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+        >
+          {yearOptions.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
       
       {/* Legend */}
       <div className="grid grid-cols-2 gap-1 mb-3 text-xs">
@@ -211,11 +383,15 @@ const YearlyVaccinationReportCard = () => {
       <div className="flex-1 w-full h-full">
         <svg width="100%" height="100%" className="w-full h-full">
           {/* Y-axis labels */}
-          <text x="5%" y="20%" className="text-xs fill-gray-600">40</text>
-          <text x="5%" y="35%" className="text-xs fill-gray-600">30</text>
-          <text x="5%" y="50%" className="text-xs fill-gray-600">20</text>
-          <text x="5%" y="65%" className="text-xs fill-gray-600">10</text>
-          <text x="5%" y="80%" className="text-xs fill-gray-600">0</text>
+          {maxValue > 0 && (
+            <>
+              <text x="5%" y="20%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.8)}</text>
+              <text x="5%" y="35%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.6)}</text>
+              <text x="5%" y="50%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.4)}</text>
+              <text x="5%" y="65%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.2)}</text>
+              <text x="5%" y="80%" className="text-xs fill-gray-600">0</text>
+            </>
+          )}
 
           {/* Y-axis line */}
           <line x1="15%" y1="20%" x2="15%" y2="80%" stroke="#e5e7eb" strokeWidth="1" />
@@ -290,9 +466,15 @@ const YearlyVaccinationReportCard = () => {
       {/* Summary Stats */}
       <div className="mt-3 text-xs text-gray-600">
         <div className="flex justify-between">
-          <span>Peak Month: August</span>
-          <span>Total: {monthlyData.reduce((sum, data) => sum + data.canineMale + data.canineFemale + data.felineMale + data.felineFemale, 0)}</span>
+          <span>Peak Month: {yearlyStats?.summary?.peak_month || 'N/A'}</span>
+          <span>Total: {totalVaccinations}</span>
         </div>
+        {yearlyStats?.summary && (
+          <div className="flex justify-between mt-1">
+            <span>Canine: {yearlyStats.summary.total_canine}</span>
+            <span>Feline: {yearlyStats.summary.total_feline}</span>
+          </div>
+        )}
       </div>
     </div>
   );

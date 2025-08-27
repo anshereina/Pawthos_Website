@@ -4,19 +4,41 @@ import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
+import { usePainAssessments } from '../hooks/usePainAssessments';
+import LoadingSpinner from '../components/LoadingSpinner';
+import PainAssessmentDetailsModal from '../components/PainAssessmentDetailsModal';
+import DeletePainAssessmentModal from '../components/DeletePainAssessmentModal';
+import { PainAssessment } from '../services/painAssessmentService';
 
-const TABS = [
-  { label: 'All Assessments', value: 'all' },
-  { label: 'Pending Review', value: 'pending' },
-  { label: 'Completed', value: 'completed' },
-];
+// Function to format assessment date to show only date or shorter time
+const formatAssessmentDate = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // Return original if invalid date
+    
+    // Format as MM/DD/YYYY HH:MM (shorter time format)
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${month}/${day}/${year} ${hours}:${minutes}`;
+  } catch (error) {
+    return dateString; // Return original if parsing fails
+  }
+};
+
+
 
 const TABLE_COLUMNS = [
   'Assessment ID',
   'Pet Name',
-  'Owner Name',
-  'Submitted Date',
-  'Severity',
+  'Pet Type',
+  'Assessment Date',
+  'Pain Level',
   'Status',
   'Action',
 ];
@@ -25,9 +47,48 @@ const PainAssessmentPage: React.FC = () => {
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('all');
+
   const [search, setSearch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<PainAssessment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [assessmentToDelete, setAssessmentToDelete] = useState<PainAssessment | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { assessments, loading, error, deleteAssessment, getAssessment } = usePainAssessments();
+
+  // Add custom styles for table scrolling
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .table-scroll-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db #f3f4f6;
+      }
+      .table-scroll-container::-webkit-scrollbar {
+        height: 8px;
+      }
+      .table-scroll-container::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+      }
+      .table-scroll-container::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+      }
+      .table-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     if (user === null) {
@@ -62,18 +123,72 @@ const PainAssessmentPage: React.FC = () => {
     router.navigate({ to: path });
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-100 font-inter w-full">
+        <Sidebar
+          items={navigationItems}
+          activeItem={activeItem}
+          onItemClick={handleItemClick}
+          isExpanded={isExpanded}
+          onToggleExpand={toggleSidebar}
+        />
+        <div className={`flex-1 flex items-center justify-center transition-all duration-300 ease-in-out ${
+          isExpanded ? 'ml-64' : 'ml-16'
+        }`}>
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
   const toggleDropdown = () => {
     setIsDropdownOpen(prev => !prev);
   };
 
-  const handleViewAssessment = (assessmentId: number) => {
-    console.log('View assessment:', assessmentId);
-    // Add view functionality here
+  const handleViewAssessment = async (assessmentId: number) => {
+    try {
+      const assessment = await getAssessment(assessmentId);
+      setSelectedAssessment(assessment);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching assessment details:', error);
+    }
   };
 
-  const handleDeleteAssessment = (assessmentId: number) => {
-    console.log('Delete assessment:', assessmentId);
-    // Add delete functionality here
+  const handleRowClick = async (assessmentId: number) => {
+    await handleViewAssessment(assessmentId);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAssessment(null);
+  };
+
+  const handleDeleteAssessment = async (assessmentId: number) => {
+    const assessment = assessments.find(a => a.id === assessmentId);
+    if (assessment) {
+      setAssessmentToDelete(assessment);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const handleDeleteConfirm = async (assessmentId: number) => {
+    try {
+      await deleteAssessment(assessmentId);
+    } catch (error) {
+      console.error('Error deleting assessment:', error);
+      throw error; // Re-throw to let the modal handle the error
+    }
+  };
+
+  const handleDeleteSuccess = () => {
+    // Success is handled by the modal
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setAssessmentToDelete(null);
   };
 
   return (
@@ -121,26 +236,16 @@ const PainAssessmentPage: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+          
           {/* Top Control Panel */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div className="flex justify-between items-center">
-              {/* Assessment Type Tabs */}
-              <div className="flex space-x-2">
-                {TABS.map(tab => (
-                  <button
-                    key={tab.value}
-                    onClick={() => setActiveTab(tab.value)}
-                    className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                      activeTab === tab.value
-                        ? 'bg-green-800 text-white'
-                        : 'bg-white text-green-800 border border-green-800 hover:bg-green-50'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
+            <div className="flex justify-end items-center">
               {/* Search and Actions */}
               <div className="flex items-center space-x-4">
                 {/* Search Bar */}
@@ -169,66 +274,96 @@ const PainAssessmentPage: React.FC = () => {
           </div>
 
           {/* Pain Assessment Table */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="w-full">
-              {/* Table Header */}
-              <thead className="bg-green-800 text-white">
-                <tr>
-                  {TABLE_COLUMNS.map(col => (
-                    <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              
-              {/* Table Body */}
-              <tbody>
-                {[...Array(5)].map((_, i) => (
-                  <tr 
-                    key={i}
-                    className={`${
-                      i % 2 === 0 ? 'bg-green-50' : 'bg-white'
-                    } hover:bg-green-100 transition-colors duration-150`}
-                  >
-                    <td className="px-6 py-4 text-gray-900">-</td>
-                    <td className="px-6 py-4 text-gray-900">-</td>
-                    <td className="px-6 py-4 text-gray-900">-</td>
-                    <td className="px-6 py-4 text-gray-900">-</td>
-                    <td className="px-6 py-4 text-gray-900">-</td>
-                    <td className="px-6 py-4 text-gray-900">-</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => handleViewAssessment(i + 1)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150"
-                          title="View assessment"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAssessment(i + 1)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
-                          title="Delete assessment"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                
-                {/* Empty state */}
-                {false && (
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="table-scroll-container max-w-full">
+              <table className="w-full min-w-[1200px] table-fixed">
+                {/* Table Header */}
+                <thead className="bg-green-800 text-white">
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                      No assessments found matching your criteria.
-                    </td>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-32">Assessment ID</th>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-48">Pet Name</th>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-48">Pet Type</th>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-48">Assessment Date</th>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-48">Pain Level</th>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-48">Status</th>
+                    <th className="px-6 py-4 text-left font-medium whitespace-nowrap w-32">Action</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                
+                {/* Table Body */}
+                <tbody>
+                  {assessments.length > 0 ? (
+                    assessments.map((assessment, i) => (
+                                          <tr 
+                      key={assessment.id}
+                      className={`${
+                        i % 2 === 0 ? 'bg-green-50' : 'bg-white'
+                      } hover:bg-green-100 transition-colors duration-150 cursor-pointer`}
+                      onClick={() => handleRowClick(assessment.id)}
+                    >
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pet_type}</td>
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{formatAssessmentDate(assessment.assessment_date)}</td>
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            assessment.questions_completed 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {assessment.questions_completed ? 'Completed' : 'Pending Review'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap w-32">
+                          <div className="flex items-center space-x-3" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleViewAssessment(assessment.id)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150"
+                              title="View assessment"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAssessment(assessment.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
+                              title="Delete assessment"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                        No assessments found matching your criteria.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </main>
       </div>
+
+      {/* Pain Assessment Details Modal */}
+      <PainAssessmentDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        assessment={selectedAssessment}
+      />
+
+      {/* Delete Pain Assessment Modal */}
+      <DeletePainAssessmentModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onSuccess={handleDeleteSuccess}
+        assessment={assessmentToDelete}
+        onDelete={handleDeleteConfirm}
+      />
     </div>
   );
 };

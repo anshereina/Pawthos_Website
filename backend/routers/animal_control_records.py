@@ -77,20 +77,20 @@ def get_animal_control_statistics(date: str = None, db: Session = Depends(get_db
             # You can customize this logic based on your needs
             if species in ["feline", "cat", "kitten"]:
                 if gender in ["male", "m", "male"]:
-                    result["feline"]["male"] = count
+                    result["feline"]["male"] += count
                     print(f"Added {count} to feline male")
                 elif gender in ["female", "f", "female"]:
-                    result["feline"]["female"] = count
+                    result["feline"]["female"] += count
                     print(f"Added {count} to feline female")
                 else:
                     print(f"Unknown gender '{gender}' for feline")
             elif species in ["canine", "dog", "puppy"] or species not in ["feline", "cat", "kitten"]:
                 # Treat any other species as canine (including custom names like "Maku")
                 if gender in ["male", "m", "male"]:
-                    result["canine"]["male"] = count
+                    result["canine"]["male"] += count
                     print(f"Added {count} to canine male (species: {species})")
                 elif gender in ["female", "f", "female"]:
-                    result["canine"]["female"] = count
+                    result["canine"]["female"] += count
                     print(f"Added {count} to canine female (species: {species})")
                 else:
                     print(f"Unknown gender '{gender}' for canine")

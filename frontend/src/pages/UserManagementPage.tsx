@@ -31,7 +31,6 @@ const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const token = localStorage.getItem('access_token');
 
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -45,6 +44,13 @@ const UserManagementPage: React.FC = () => {
       router.navigate({ to: '/login' });
     }
   }, [user, router, isLoading]);
+
+  // Default to USER tab when not an admin
+  React.useEffect(() => {
+    if (user && user.role !== 'admin') {
+      setSelectedRole('user');
+    }
+  }, [user]);
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -67,6 +73,19 @@ const UserManagementPage: React.FC = () => {
     setLoadingUsers(true);
     setError(null);
     try {
+      if (!user) {
+        setLoadingUsers(false);
+        return;
+      }
+
+      // Block admin fetch for non-admins to avoid 401 spam
+      if (selectedRole === 'admin' && user.role !== 'admin') {
+        setUsers([]);
+        setError('Admin access required');
+        setLoadingUsers(false);
+        return;
+      }
+
       const params: any = {};
       if (searchTerm) params.search = searchTerm;
       
@@ -76,6 +95,14 @@ const UserManagementPage: React.FC = () => {
       } else {
         endpoint = `${API_BASE_URL}/users/`;
       }
+
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setError('Not authenticated');
+        setLoadingUsers(false);
+        router.navigate({ to: '/login' });
+        return;
+      }
       
       const response = await axios.get(endpoint, {
         params,
@@ -83,19 +110,28 @@ const UserManagementPage: React.FC = () => {
       });
       setUsers(response.data);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 
-                          (typeof err.response?.data === 'string' ? err.response.data : 'Failed to fetch users');
-      setError(errorMessage);
+      const status = err?.response?.status;
+      if (status === 401) {
+        setError('Session expired. Please log in again.');
+        logout();
+        router.navigate({ to: '/login' });
+      } else if (status === 403) {
+        setError('Admin access required');
+      } else {
+        const errorMessage = err.response?.data?.detail || 
+                            (typeof err.response?.data === 'string' ? err.response.data : 'Failed to fetch users');
+        setError(errorMessage);
+      }
     } finally {
       setLoadingUsers(false);
     }
-  }, [selectedRole, searchTerm, token]);
+  }, [selectedRole, searchTerm, router, logout, user]);
 
   React.useEffect(() => {
-    if (user && token) {
+    if (user) {
       fetchUsers();
     }
-  }, [fetchUsers, user, token]);
+  }, [fetchUsers, user]);
 
   const handleItemClick = (path: string) => {
     router.navigate({ to: path });
@@ -293,12 +329,13 @@ const UserManagementPage: React.FC = () => {
               {/* User Role Tabs */}
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setSelectedRole('admin')}
+                  onClick={() => user?.role === 'admin' && setSelectedRole('admin')}
+                  disabled={user?.role !== 'admin'}
                   className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
                     selectedRole === 'admin'
                       ? 'bg-green-800 text-white'
                       : 'bg-white text-green-800 border border-green-800 hover:bg-green-50'
-                  }`}
+                  } ${user?.role !== 'admin' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   ADMIN
                 </button>

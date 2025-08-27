@@ -14,6 +14,23 @@ export const useSidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const router = useRouter();
   
+  // Initialize from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sidebarExpanded');
+      if (saved !== null) {
+        setIsExpanded(saved === 'true');
+      }
+    } catch {}
+  }, []);
+
+  // Persist to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebarExpanded', String(isExpanded));
+    } catch {}
+  }, [isExpanded]);
+  
   // Get current location from router
   const currentLocation = router.state.location.pathname;
   
@@ -36,7 +53,7 @@ export const useSidebar = () => {
   const activeItem = getActiveItem(currentLocation);
 
   const toggleSidebar = () => {
-    setIsExpanded(!isExpanded);
+    setIsExpanded((prev) => !prev);
   };
 
   const navigationItems = [

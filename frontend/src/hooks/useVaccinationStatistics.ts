@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { vaccinationRecordService, VaccinationStatistics } from '../services/vaccinationRecordService';
+import { vaccinationRecordService, VaccinationStatistics, YearlyVaccinationStatistics } from '../services/vaccinationRecordService';
 
 export const useVaccinationStatistics = (date?: string) => {
   const [statistics, setStatistics] = useState<VaccinationStatistics | null>(null);
@@ -18,6 +18,40 @@ export const useVaccinationStatistics = (date?: string) => {
       setLoading(false);
     }
   }, [date]);
+
+  useEffect(() => {
+    fetchStatistics();
+  }, [fetchStatistics]);
+
+  const refreshStatistics = () => {
+    fetchStatistics();
+  };
+
+  return {
+    statistics,
+    loading,
+    error,
+    refreshStatistics,
+  };
+};
+
+export const useYearlyVaccinationStatistics = (year?: number) => {
+  const [statistics, setStatistics] = useState<YearlyVaccinationStatistics | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStatistics = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await vaccinationRecordService.getYearlyVaccinationStatistics(year);
+      setStatistics(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch yearly vaccination statistics');
+    } finally {
+      setLoading(false);
+    }
+  }, [year]);
 
   useEffect(() => {
     fetchStatistics();

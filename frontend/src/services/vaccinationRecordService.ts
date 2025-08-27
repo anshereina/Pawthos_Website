@@ -3,29 +3,36 @@ import { API_BASE_URL } from '../config';
 export interface VaccinationRecord {
   id: number;
   pet_id: number;
-  date_of_vaccination: string;
-  vaccine_used: string;
-  batch_no_lot_no: string;
-  date_of_next_vaccination?: string;
-  veterinarian_lic_no_ptr: string;
+  user_id: number;
+  vaccine_name: string;
+  vaccination_date: string;
+  expiration_date?: string;
+  veterinarian: string;
+  batch_lot_no: string;
   created_at: string;
   updated_at?: string;
 }
 
+// Enhanced interface for displaying pet information
+export interface VaccinationRecordWithPet extends VaccinationRecord {
+  pet_name?: string;
+  pet_species?: string;
+}
+
 export interface CreateVaccinationRecordData {
-  date_of_vaccination: string;
-  vaccine_used: string;
-  batch_no_lot_no: string;
-  date_of_next_vaccination?: string;
-  veterinarian_lic_no_ptr: string;
+  vaccine_name: string;
+  vaccination_date: string;
+  expiration_date?: string;
+  veterinarian: string;
+  batch_lot_no: string;
 }
 
 export interface UpdateVaccinationRecordData {
-  date_of_vaccination?: string;
-  vaccine_used?: string;
-  batch_no_lot_no?: string;
-  date_of_next_vaccination?: string;
-  veterinarian_lic_no_ptr?: string;
+  vaccine_name?: string;
+  vaccination_date?: string;
+  expiration_date?: string;
+  veterinarian?: string;
+  batch_lot_no?: string;
 }
 
 export interface VaccinationStatistics {
@@ -40,6 +47,22 @@ export interface VaccinationStatistics {
     total: number;
   };
   total_vaccinations: number;
+}
+
+export interface YearlyVaccinationStatistics {
+  year: number;
+  monthly_data: Array<{
+    month: string;
+    canineMale: number;
+    canineFemale: number;
+    felineMale: number;
+    felineFemale: number;
+  }>;
+  summary: {
+    total_canine: number;
+    total_feline: number;
+    peak_month: string;
+  };
 }
 
 class VaccinationRecordService {
@@ -70,6 +93,23 @@ class VaccinationRecordService {
     
     if (!response.ok) {
       throw new Error('Failed to fetch vaccination statistics');
+    }
+    
+    return response.json();
+  }
+
+  async getYearlyVaccinationStatistics(year?: number): Promise<YearlyVaccinationStatistics> {
+    const url = new URL(`${this.baseUrl}/statistics/yearly`);
+    if (year) {
+      url.searchParams.append('year', year.toString());
+    }
+    
+    const response = await fetch(url.toString(), {
+      headers: this.getHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch yearly vaccination statistics');
     }
     
     return response.json();
@@ -140,13 +180,22 @@ class VaccinationRecordService {
   }
 
   async getAllVaccinationRecords(): Promise<VaccinationRecord[]> {
-    const token = localStorage.getItem('access_token');
-    console.log('Fetching all vaccination records with token:', token, 'URL:', `${this.baseUrl}/`);
     const response = await fetch(`${this.baseUrl}/`, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {
       throw new Error('Failed to fetch all vaccination records');
+    }
+    return response.json();
+  }
+
+  // Enhanced method to get vaccination records with pet information
+  async getVaccinationRecordsWithPets(): Promise<VaccinationRecordWithPet[]> {
+    const response = await fetch(`${this.baseUrl}/`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch vaccination records');
     }
     return response.json();
   }

@@ -4,6 +4,7 @@ from typing import List, Optional
 from core import models, schemas, auth
 from core.database import get_db
 from datetime import date
+from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
@@ -47,7 +48,10 @@ def get_appointments(
     db: Session = Depends(get_db)
 ):
     """Get all appointments with optional filtering"""
-    query = db.query(models.Appointment)
+    query = db.query(models.Appointment).options(
+        joinedload(models.Appointment.pet).joinedload(models.Pet.user),
+        joinedload(models.Appointment.user)
+    )
     
     if search:
         search_filter = f"%{search}%"
@@ -68,7 +72,27 @@ def get_appointments(
     if date_to:
         query = query.filter(models.Appointment.date <= date_to)
     
-    return query.order_by(models.Appointment.date.desc()).all()
+    appointments = query.order_by(models.Appointment.date.desc()).all()
+
+    for apt in appointments:
+        # Ensure user relation is present when user_id exists
+        if getattr(apt, 'user', None) is None and getattr(apt, 'user_id', None):
+            user_obj = db.query(models.User).filter(models.User.id == apt.user_id).first()
+            if user_obj is not None:
+                apt.user = user_obj
+        # Attach client_name helper for response
+        name = None
+        if getattr(apt, 'user', None) is not None:
+            name = getattr(apt.user, 'name', None)
+        if not name and getattr(apt, 'pet', None) is not None:
+            pet_user = getattr(apt.pet, 'user', None)
+            if pet_user is not None:
+                name = getattr(pet_user, 'name', None)
+        if not name and getattr(apt, 'pet', None) is not None:
+            name = getattr(apt.pet, 'owner_name', None)
+        setattr(apt, 'client_name', name)
+
+    return appointments
 
 @router.get("/{appointment_id}", response_model=schemas.Appointment)
 def get_appointment(
@@ -77,23 +101,68 @@ def get_appointment(
     current_user: models.Admin = Depends(auth.get_current_active_user)
 ):
     """Get a specific appointment by ID"""
-    appointment = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
+    appointment = (
+        db.query(models.Appointment)
+        .options(
+            joinedload(models.Appointment.pet).joinedload(models.Pet.user),
+            joinedload(models.Appointment.user)
+        )
+        .filter(models.Appointment.id == appointment_id)
+        .first()
+    )
     if not appointment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Appointment not found"
         )
+
+    # Ensure user relation is present when user_id exists
+    if getattr(appointment, 'user', None) is None and getattr(appointment, 'user_id', None):
+        user_obj = db.query(models.User).filter(models.User.id == appointment.user_id).first()
+        if user_obj is not None:
+            appointment.user = user_obj
+
+    # Attach client_name helper for response
+    name = None
+    if getattr(appointment, 'user', None) is not None:
+        name = getattr(appointment.user, 'name', None)
+    if not name and getattr(appointment, 'pet', None) is not None:
+        pet_user = getattr(appointment.pet, 'user', None)
+        if pet_user is not None:
+            name = getattr(pet_user, 'name', None)
+    if not name and getattr(appointment, 'pet', None) is not None:
+        name = getattr(appointment.pet, 'owner_name', None)
+    setattr(appointment, 'client_name', name)
+
     return appointment
 
 @router.post("/", response_model=schemas.Appointment)
 def create_appointment(
     appointment: schemas.AppointmentCreate,
     db: Session = Depends(get_db),
-    current_user: models.Admin = Depends(auth.get_current_active_user)
+    current_user: models.Admin | models.User = Depends(auth.get_current_active_user)
 ):
     """Create a new appointment"""
-    db_appointment = models.Appointment(**appointment.dict())
-    
+    # Default/derive the user_id if not explicitly provided
+    payload = appointment.dict()
+
+    # If the creator is a regular user, use their id
+    if not payload.get('user_id') and isinstance(current_user, models.User):
+        payload['user_id'] = current_user.id
+
+    # If still missing, try to infer from pet (pet.user_id or by owner_name match)
+    if not payload.get('user_id') and payload.get('pet_id'):
+        pet = db.query(models.Pet).filter(models.Pet.id == payload['pet_id']).first()
+        if pet is not None:
+            if getattr(pet, 'user_id', None):
+                payload['user_id'] = pet.user_id
+            else:
+                # Try to match by owner_name to a User record
+                owner_user = db.query(models.User).filter(models.User.name == pet.owner_name).first()
+                if owner_user is not None:
+                    payload['user_id'] = owner_user.id
+
+    db_appointment = models.Appointment(**payload)
     db.add(db_appointment)
     db.commit()
     db.refresh(db_appointment)

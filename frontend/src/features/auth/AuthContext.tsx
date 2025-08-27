@@ -36,12 +36,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // Fetch user data using the stored token
-        const response = await axios.get('http://localhost:8000/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setUser(response.data);
+        // Decode JWT token to get user type
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          try {
+            // Use a more robust base64 decoding
+            const base64 = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(window.atob(base64));
+            const userType = payload.user_type || 'admin';
+            
+            // Fetch user data using the stored token
+            const response = await axios.get('http://localhost:8000/auth/me', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const userWithRole = {
+              ...response.data,
+              role: userType
+            };
+            
+            setUser(userWithRole);
+          } catch (decodeError) {
+            console.error('Token decode error:', decodeError);
+            // Fallback: try to determine user type from user data
+            const response = await axios.get('http://localhost:8000/auth/me', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            // Check if it's an admin by looking for admin-specific fields
+            const userData = response.data;
+            const isAdmin = userData && !userData.address && userData.is_confirmed !== undefined;
+            const userWithRole = {
+              ...userData,
+              role: isAdmin ? 'admin' : 'user'
+            };
+            
+            setUser(userWithRole);
+          }
+        } else {
+          throw new Error('Invalid token format');
+        }
       } catch (error: any) {
         // If token is invalid, remove it
         console.error('Failed to restore session:', error);

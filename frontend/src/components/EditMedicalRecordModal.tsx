@@ -26,13 +26,13 @@ const EditMedicalRecordModal: React.FC<EditMedicalRecordModalProps> = ({
   useEffect(() => {
     if (record) {
       setFormData({
-        reasonForVisit: record.reasonForVisit || '',
-        dateOfVisit: record.dateOfVisit || '',
-        nextVisit: record.nextVisit || '',
-        procedureDone: record.procedureDone || '',
+        reasonForVisit: record.reason_for_visit || '',
+        dateOfVisit: record.date_visited || '',
+        nextVisit: record.date_of_next_visit || '',
+        procedureDone: record.procedures_done || '',
         findings: record.findings || '',
-        recommendation: record.recommendation || '',
-        vaccineUsedMedication: record.vaccineUsedMedication || '',
+        recommendation: record.recommendations || '',
+        vaccineUsedMedication: record.medications || '',
       });
     }
   }, [record]);

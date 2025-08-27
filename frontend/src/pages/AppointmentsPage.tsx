@@ -12,7 +12,6 @@ import { Appointment, ServiceRequest } from '../services/appointmentService';
 
 const TABS = [
   { label: 'Appointments', value: 'appointments' },
-  { label: 'Request', value: 'request' },
   { label: 'History', value: 'history' },
 ];
 
@@ -228,7 +227,7 @@ const AppointmentsPage: React.FC = () => {
       >
         {/* Header */}
         <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Appointments & Request</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Appointment</h1>
           <div className="relative flex items-center space-x-4 user-info-area">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={toggleDropdown}>
               <UserCircle size={28} className="text-gray-600" />
@@ -346,7 +345,7 @@ const AppointmentsPage: React.FC = () => {
                         {activeTab === 'appointments' && (
                           <>
                             <td className="px-6 py-4">{item.id}</td>
-                            <td className="px-6 py-4">{item.pet?.owner_name || '-'}</td>
+                            <td className="px-6 py-4">{item.client_name || item.user?.name || item.pet?.owner_name || '-'}</td>
                             <td className="px-6 py-4">{item.pet?.name || '-'}</td>
                             <td className="px-6 py-4">{item.type}</td>
                             <td className="px-6 py-4">{item.date} {item.time}</td>

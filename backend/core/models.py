@@ -64,8 +64,12 @@ class Report(Base):
     status = Column(String(20), nullable=False, default="New")  # New, In Progress, Resolved
     submitted_by = Column(String(255), nullable=False)
     submitted_by_email = Column(String(255), nullable=False)
+    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the report
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationship
+    admin = relationship("Admin")
 
 class Alert(Base):
     __tablename__ = "alerts"
@@ -78,8 +82,12 @@ class Alert(Base):
     submitted_by = Column(String(255), nullable=False)
     submitted_by_email = Column(String(255), nullable=False)
     recipients = Column(Text, nullable=True)  # JSON string of recipient emails
+    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the alert
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now()) 
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationship
+    admin = relationship("Admin") 
 
 class AnimalControlRecord(Base):
     __tablename__ = "animal_control_records"
@@ -93,8 +101,12 @@ class AnimalControlRecord(Base):
     species = Column(String(50), nullable=True)  # feline, canine, etc.
     gender = Column(String(20), nullable=True)  # male, female
     date = Column(Date, nullable=False)
+    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the record
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now()) 
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationship
+    admin = relationship("Admin") 
 
 class MeatInspectionRecord(Base):
     __tablename__ = "meat_inspection_records"
@@ -109,8 +121,12 @@ class MeatInspectionRecord(Base):
     status = Column(String(20), nullable=False, default="Pending")  # Pending, Approved, Rejected
     remarks = Column(Text, nullable=True)
     inspector_name = Column(String(255), nullable=True)
+    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the record
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now()) 
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationship
+    admin = relationship("Admin") 
 
 class ShippingPermitRecord(Base):
     __tablename__ = "shipping_permit_records"
@@ -130,8 +146,12 @@ class ShippingPermitRecord(Base):
     expiry_date = Column(Date, nullable=False)
     status = Column(String(50), default="Active")  # Active, Expired, Cancelled
     remarks = Column(Text)
+    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the record
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow) 
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship
+    admin = relationship("Admin") 
 
 class VaccinationRecord(Base):
     __tablename__ = "vaccination_records"
@@ -201,15 +221,22 @@ class MedicalRecord(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     reason_for_visit = Column(String(255), nullable=False)
-    date_of_visit = Column(Date, nullable=False)
-    next_visit = Column(Date, nullable=True)
-    procedure_done = Column(Text, nullable=False)
-    findings = Column(Text, nullable=False)
-    recommendation = Column(Text, nullable=False)
-    vaccine_used_medication = Column(Text, nullable=False)
+    date_visited = Column(Date, nullable=False)
+    date_of_next_visit = Column(Date, nullable=True)
+    procedures_done = Column(Text, nullable=True)
+    findings = Column(Text, nullable=True)
+    recommendations = Column(Text, nullable=True)
+    medications = Column(Text, nullable=True)
+    vaccine_used = Column(String(255), nullable=True)
+    veterinarian = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    pet = relationship("Pet")
+    user = relationship("User")
 
 class Appointment(Base):
     __tablename__ = "appointments"

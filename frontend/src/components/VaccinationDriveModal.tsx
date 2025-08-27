@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText } from 'lucide-react';
+import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Search, ChevronDown } from 'lucide-react';
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
+import { petService, Pet } from '../services/petService';
+import { userService, User as UserType } from '../services/userService';
 
 interface VaccinationEvent {
   id: number;
@@ -45,6 +47,16 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const [petRecords, setPetRecords] = useState<PetVaccinationRecord[]>([]);
   const [editingRecord, setEditingRecord] = useState<PetVaccinationRecord | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  // Data for dropdowns
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [loadingPets, setLoadingPets] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  
+  // Dropdown visibility states - track which record is showing dropdown
+  const [activeOwnerDropdown, setActiveOwnerDropdown] = useState<number | null>(null);
+  const [activePetDropdown, setActivePetDropdown] = useState<number | null>(null);
 
   // Update form data when event changes
   useEffect(() => {
@@ -57,6 +69,78 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       });
     }
   }, [event]);
+
+  // Fetch pets and users data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchPets();
+      fetchUsers();
+    }
+  }, [isOpen]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setActiveOwnerDropdown(null);
+        setActivePetDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchPets = async () => {
+    setLoadingPets(true);
+    try {
+      const petsData = await petService.getPets();
+      setPets(petsData);
+    } catch (error) {
+      console.error('Error fetching pets:', error);
+    } finally {
+      setLoadingPets(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const usersData = await userService.getUsers();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Helper functions for dropdowns
+  const getFilteredOwners = (searchTerm: string) => {
+    return users.filter(user => 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const getFilteredPets = (searchTerm: string, ownerName?: string) => {
+    let filteredPets = pets;
+    
+    // If owner is selected, filter pets by that owner
+    if (ownerName) {
+      filteredPets = pets.filter(pet => pet.owner_name === ownerName);
+    }
+    
+    // Then filter by search term
+    return filteredPets.filter(pet => 
+      pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pet.species.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pet.breed?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
 
   const barangayOptions = [
     'Barangay San Antonio',
@@ -358,6 +442,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           </div>
         </div>
 
+
+
         {/* Individual Pet Vaccination Records Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b border-gray-200">
@@ -407,7 +493,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
               <p className="text-sm">Click "Add Single" or "Add Multiple" to start logging vaccinations</p>
             </div>
           ) : (
-            <div className="overflow-x-auto max-h-96">
+            <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead className="bg-green-800 text-white sticky top-0">
                   <tr>
@@ -430,26 +516,90 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                       <td className="px-3 py-2 text-center text-xs font-medium border border-gray-200 bg-gray-50">
                         {index + 1}
                       </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <input
-                          type="text"
-                          value={record.ownerName}
-                          onChange={(e) => updatePetRecord(record.id, 'ownerName', e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(e, record.id, 'ownerName')}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                          placeholder="Owner name"
-                          data-record-id={record.id}
-                          data-field="ownerName"
-                        />
+                      <td className="px-2 py-1 border border-gray-200 relative">
+                        <div className="dropdown-container">
+                          <input
+                            type="text"
+                            value={record.ownerName}
+                            onChange={(e) => updatePetRecord(record.id, 'ownerName', e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, record.id, 'ownerName')}
+                            onFocus={() => {
+                              setActiveOwnerDropdown(record.id);
+                            }}
+                            className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                            placeholder="Owner name"
+                            data-record-id={record.id}
+                            data-field="ownerName"
+                          />
+                                                    {activeOwnerDropdown === record.id && (
+                            <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                              <div className="p-2 text-xs bg-gray-100 border-b">DEBUG: Found {getFilteredOwners(record.ownerName).length} users</div>
+                              {getFilteredOwners(record.ownerName).length > 0 ? (
+                                getFilteredOwners(record.ownerName).map((user) => (
+                                  <div
+                                    key={user.id}
+                                    className="px-3 py-2 hover:bg-green-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
+                                    onClick={() => {
+                                      updatePetRecord(record.id, 'ownerName', user.name);
+                                      updatePetRecord(record.id, 'ownerContact', user.phone_number || '');
+                                      // Clear pet name when owner changes
+                                      updatePetRecord(record.id, 'petName', '');
+                                      updatePetRecord(record.id, 'species', '');
+                                      updatePetRecord(record.id, 'breed', '');
+                                      updatePetRecord(record.id, 'color', '');
+                                      updatePetRecord(record.id, 'sex', '');
+                                      setActiveOwnerDropdown(null);
+                                    }}
+                                  >
+                                    <div className="font-medium">{user.name}</div>
+                                    <div className="text-gray-500">{user.email}</div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="p-3 text-center text-gray-500">
+                                  No users found. Total users in database: {users.length}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <input
-                          type="text"
-                          value={record.petName}
-                          onChange={(e) => updatePetRecord(record.id, 'petName', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                          placeholder="Pet name"
-                        />
+                      <td className="px-2 py-1 border border-gray-200 relative">
+                        <div className="dropdown-container">
+                          <input
+                            type="text"
+                            value={record.petName}
+                            onChange={(e) => updatePetRecord(record.id, 'petName', e.target.value)}
+                            onFocus={() => {
+                              setActivePetDropdown(record.id);
+                            }}
+                            className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                            placeholder="Pet name"
+                          />
+                          {activePetDropdown === record.id && (
+                            <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                              {getFilteredPets(record.petName, record.ownerName).map((pet) => (
+                                <div
+                                  key={pet.id}
+                                  className="px-3 py-2 hover:bg-green-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
+                                  onClick={() => {
+                                    updatePetRecord(record.id, 'petName', pet.name);
+                                    updatePetRecord(record.id, 'species', pet.species);
+                                    updatePetRecord(record.id, 'breed', pet.breed || '');
+                                    updatePetRecord(record.id, 'color', pet.color || '');
+                                    updatePetRecord(record.id, 'sex', pet.gender || '');
+                                    setActivePetDropdown(null);
+                                  }}
+                                >
+                                  <div className="font-medium">{pet.name}</div>
+                                  <div className="text-gray-500">
+                                    {pet.species} • {pet.breed || 'Unknown breed'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-2 py-1 border border-gray-200">
                         <input

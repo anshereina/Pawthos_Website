@@ -18,6 +18,10 @@ const DeletePetModal: React.FC<DeletePetModalProps> = ({
   loading 
 }) => {
   const handleConfirm = async () => {
+    console.log('DeletePetModal - pet object:', pet);
+    console.log('DeletePetModal - pet.pet_id:', pet?.pet_id);
+    console.log('DeletePetModal - pet.name:', pet?.name);
+    
     try {
       await onConfirm();
       onClose();

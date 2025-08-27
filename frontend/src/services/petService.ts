@@ -11,6 +11,7 @@ export interface Pet {
   breed?: string;
   gender?: string;
   reproductive_status?: string;
+  photo_url?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -24,6 +25,7 @@ export interface CreatePetData {
   breed?: string;
   gender?: string;
   reproductive_status?: string;
+  photo_url?: string;
 }
 
 export interface UpdatePetData {
@@ -35,6 +37,7 @@ export interface UpdatePetData {
   breed?: string;
   gender?: string;
   reproductive_status?: string;
+  photo_url?: string;
 }
 
 class PetService {
@@ -138,12 +141,16 @@ class PetService {
   }
 
   async deletePet(petId: string): Promise<void> {
+    console.log('deletePet called with petId:', petId);
+    console.log('petId type:', typeof petId);
+    
     const token = localStorage.getItem('access_token');
     const headers: Record<string, string> = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     const deleteUrl = `${this.baseUrl}/${petId}`;
+    console.log('Delete URL:', deleteUrl);
     
     const response = await fetch(deleteUrl, {
       method: 'DELETE',

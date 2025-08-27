@@ -1,34 +1,35 @@
 import React, { useState, useEffect } from 'react';
+import { VaccinationRecordWithPet } from '../services/vaccinationRecordService';
 
 interface EditVaccinationRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => void;
-  record: any;
+  record: VaccinationRecordWithPet;
 }
 
 const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({ 
   isOpen, 
   onClose, 
   onSubmit, 
-  record 
+  record
 }) => {
   const [formData, setFormData] = useState({
-    dateOfVaccination: '',
-    vaccineUsed: '',
-    batchNumber: '',
-    dateOfNextVaccination: '',
-    veterinarianLicenseNumber: '',
+    vaccineName: '',
+    vaccinationDate: '',
+    expirationDate: '', // This will store the Next Vaccination Date
+    veterinarian: '',
+    batchLotNo: '',
   });
 
   useEffect(() => {
     if (record) {
       setFormData({
-        dateOfVaccination: record.dateOfVaccination || '',
-        vaccineUsed: record.vaccineUsed || '',
-        batchNumber: record.batchNumber || '',
-        dateOfNextVaccination: record.dateOfNextVaccination || '',
-        veterinarianLicenseNumber: record.veterinarianLicenseNumber || 'Dr. Ma. Fe V. Templado PRC # 4585',
+        vaccineName: record.vaccine_name || '',
+        vaccinationDate: record.vaccination_date || '',
+        expirationDate: record.expiration_date || '', // Map expiration_date to Next Vaccination Date
+        veterinarian: record.veterinarian || '',
+        batchLotNo: record.batch_lot_no || '',
       });
     }
   }, [record]);
@@ -46,30 +47,26 @@ const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({
         <h2 className="text-xl font-bold text-gray-900 mb-4">Edit Vaccination Record</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Vaccination *
+                Pet Name
               </label>
               <input
-                type="date"
-                value={formData.dateOfVaccination}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  dateOfVaccination: e.target.value 
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
+                type="text"
+                value={record.pet_name || 'Unknown'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                disabled
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Vaccine Used *
+                Vaccine Name *
               </label>
               <select
-                value={formData.vaccineUsed}
+                value={formData.vaccineName}
                 onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
-                  vaccineUsed: e.target.value 
+                  vaccineName: e.target.value 
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
@@ -84,49 +81,63 @@ const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Batch No. / Lot No. *
+                Vaccination Date *
               </label>
               <input
-                type="text"
-                value={formData.batchNumber}
+                type="date"
+                value={formData.vaccinationDate}
                 onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
-                  batchNumber: e.target.value 
+                  vaccinationDate: e.target.value 
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Enter batch or lot number"
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Next Vaccination
+                Next Vaccination Date
               </label>
               <input
                 type="date"
-                value={formData.dateOfNextVaccination}
+                value={formData.expirationDate}
                 onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
-                  dateOfNextVaccination: e.target.value 
+                  expirationDate: e.target.value 
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Veterinarian License No. PTR *
+                Veterinarian *
               </label>
               <input
                 type="text"
-                value={formData.veterinarianLicenseNumber}
+                value={formData.veterinarian}
                 onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
-                  veterinarianLicenseNumber: e.target.value 
+                  veterinarian: e.target.value 
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Enter veterinarian license number"
+                placeholder="Enter veterinarian name"
                 required
-                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Batch/Lot No. *
+              </label>
+              <input
+                type="text"
+                value={formData.batchLotNo}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  batchLotNo: e.target.value 
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Enter batch or lot number"
+                required
               />
             </div>
           </div>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 interface AddMedicalRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void> | void;
 }
 
 const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({ 
@@ -20,19 +20,29 @@ const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({
     recommendation: '',
     vaccineUsedMedication: '',
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData({
-      reasonForVisit: '',
-      dateOfVisit: '',
-      nextVisit: '',
-      procedureDone: '',
-      findings: '',
-      recommendation: '',
-      vaccineUsedMedication: '',
-    });
+    setError(null);
+    setSubmitting(true);
+    try {
+      await onSubmit(formData);
+      setFormData({
+        reasonForVisit: '',
+        dateOfVisit: '',
+        nextVisit: '',
+        procedureDone: '',
+        findings: '',
+        recommendation: '',
+        vaccineUsedMedication: '',
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Failed to add medical record');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -41,6 +51,9 @@ const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Medical Record</h2>
+        {error && (
+          <div className="mb-3 p-3 rounded bg-red-100 text-red-700 text-sm">{error}</div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -158,14 +171,16 @@ const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              disabled={submitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors"
+              className={`px-4 py-2 text-white rounded-lg transition-colors ${submitting ? 'bg-green-400' : 'bg-green-800 hover:bg-green-900'}`}
+              disabled={submitting}
             >
-              Add Record
+              {submitting ? 'Adding...' : 'Add Record'}
             </button>
           </div>
         </form>

@@ -49,6 +49,28 @@ class UserService {
       throw error;
     }
   }
+
+  async getUsers(search?: string): Promise<User[]> {
+    try {
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+
+      const response = await fetch(`${this.baseUrl}/?${params.toString()}`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  }
 }
 
 export const userService = new UserService(); 

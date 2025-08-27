@@ -182,13 +182,30 @@ const PetRecordsPage: React.FC = () => {
     setIsDeleteMedicalRecordModalOpen(true);
   };
 
-  const handleAddMedicalRecord = (recordData: any) => {
-    const newRecord = {
-      ...recordData,
-      id: Date.now().toString(),
-    };
-    setMedicalRecords(prev => [...prev, newRecord]);
-    setIsAddMedicalRecordModalOpen(false);
+  const handleAddMedicalRecord = async (recordData: any) => {
+    if (!selectedPet) return;
+    try {
+      setMedicalRecordsLoading(true);
+      // Map modal fields to backend API fields
+      const mappedData = {
+        reason_for_visit: recordData.reasonForVisit,
+        date_visited: recordData.dateOfVisit,
+        date_of_next_visit: recordData.nextVisit || undefined,
+        procedures_done: recordData.procedureDone,
+        findings: recordData.findings,
+        recommendations: recordData.recommendation,
+        medications: recordData.vaccineUsedMedication,
+      };
+      await medicalRecordService.createMedicalRecord(selectedPet.id, mappedData);
+      // Refetch medical records from backend
+      const records = await medicalRecordService.getMedicalRecordsByPet(selectedPet.id);
+      setMedicalRecords(records);
+      setIsAddMedicalRecordModalOpen(false);
+    } catch (error) {
+      console.error('Error adding medical record:', error);
+    } finally {
+      setMedicalRecordsLoading(false);
+    }
   };
 
   const handleUpdateMedicalRecord = async (id: number, recordData: any) => {
@@ -207,11 +224,19 @@ const PetRecordsPage: React.FC = () => {
     }
   };
 
-  const handleConfirmDeleteMedicalRecord = () => {
-    if (selectedMedicalRecord) {
-      setMedicalRecords(prev => prev.filter(record => record.id !== selectedMedicalRecord.id));
+  const handleConfirmDeleteMedicalRecord = async () => {
+    if (!selectedMedicalRecord || !selectedPet) return;
+    try {
+      setMedicalRecordsLoading(true);
+      await medicalRecordService.deleteMedicalRecord(selectedMedicalRecord.id);
+      const records = await medicalRecordService.getMedicalRecordsByPet(selectedPet.id);
+      setMedicalRecords(records);
       setIsDeleteMedicalRecordModalOpen(false);
       setSelectedMedicalRecord(null);
+    } catch (error) {
+      console.error('Error deleting medical record:', error);
+    } finally {
+      setMedicalRecordsLoading(false);
     }
   };
 
@@ -223,11 +248,11 @@ const PetRecordsPage: React.FC = () => {
       setVaccinationRecordsLoading(true);
       // Map modal fields to backend API fields
       const mappedData = {
-        date_of_vaccination: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined,
-        vaccine_used: recordData.vaccineUsed,
-        batch_no_lot_no: recordData.batchNumber,
-        date_of_next_vaccination: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined,
-        veterinarian_lic_no_ptr: recordData.veterinarianLicenseNumber,
+        vaccination_date: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined,
+        vaccine_name: recordData.vaccineUsed,
+        batch_lot_no: recordData.batchNumber,
+        expiration_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Map next vaccination date to expiration_date
+        veterinarian: recordData.veterinarianLicenseNumber,
       };
       console.log('Sending vaccination record data:', mappedData); // Debug log
       await vaccinationRecordService.createVaccinationRecord(selectedPet.id, mappedData); // Use numeric id
@@ -259,11 +284,11 @@ const PetRecordsPage: React.FC = () => {
       setVaccinationRecordsLoading(true);
       // Map modal fields to backend API fields
       const mappedData = {
-        date_of_vaccination: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined,
-        vaccine_used: recordData.vaccineUsed,
-        batch_no_lot_no: recordData.batchNumber,
-        date_of_next_vaccination: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined,
-        veterinarian_lic_no_ptr: recordData.veterinarianLicenseNumber,
+        vaccination_date: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined,
+        vaccine_name: recordData.vaccineUsed,
+        batch_lot_no: recordData.batchNumber,
+        expiration_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Map next vaccination date to expiration_date
+        veterinarian: recordData.veterinarianLicenseNumber,
       };
       await vaccinationRecordService.updateVaccinationRecord(id, mappedData);
       // Refetch records from backend
@@ -309,6 +334,11 @@ const PetRecordsPage: React.FC = () => {
 
   const handleDeletePet = async () => {
     if (selectedPet) {
+      console.log('selectedPet object:', selectedPet);
+      console.log('selectedPet.pet_id:', selectedPet.pet_id);
+      console.log('selectedPet.id:', selectedPet.id);
+      console.log('selectedPet.name:', selectedPet.name);
+      
       try {
         await deletePet(selectedPet.pet_id);
         setIsDeleteModalOpen(false);
@@ -327,6 +357,9 @@ const PetRecordsPage: React.FC = () => {
   };
 
   const openDeleteModal = (pet: Pet) => {
+    console.log('openDeleteModal called with pet:', pet);
+    console.log('pet.pet_id:', pet.pet_id);
+    console.log('pet.name:', pet.name);
     setSelectedPet(pet);
     setIsDeleteModalOpen(true);
   };
@@ -412,12 +445,12 @@ const PetRecordsPage: React.FC = () => {
         </header>
 
         {/* Main Profile Section */}
-        <section className="bg-gray-100 px-6 py-8 overflow-y-auto">
+        <section className="bg-gray-50 px-6 py-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 items-start">
             {/* Left: Photo and Basic Info */}
             <div className="flex flex-col items-center gap-6 min-w-[280px]">
               {/* Photo Holder */}
-              <div className="w-48 h-64 bg-white border-4 border-green-700 rounded-xl flex items-center justify-center text-gray-300 text-lg font-semibold shadow-lg">
+              <div className="w-48 h-64 bg-white border-2 border-green-600 rounded-xl flex items-center justify-center text-gray-300 text-lg font-semibold shadow-lg">
                 Photo
               </div>
               
@@ -431,13 +464,13 @@ const PetRecordsPage: React.FC = () => {
               <div className="flex flex-col gap-3 w-full">
                 <button 
                   onClick={handleVaccineCardClick}
-                  className="w-full px-4 py-2 rounded-lg border border-green-700 text-green-700 bg-white font-semibold hover:bg-green-50 transition-colors"
+                  className="w-full px-4 py-2 rounded-lg border border-green-600 text-green-700 bg-white font-semibold hover:bg-green-50 transition-colors"
                 >
-                  VacCard
+                  Vaccine Card
                 </button>
                 <button 
                   onClick={handleMedicalHistoryClick}
-                  className="w-full px-4 py-2 rounded-lg border border-green-700 text-green-700 bg-white font-semibold hover:bg-green-50 transition-colors"
+                  className="w-full px-4 py-2 rounded-lg border border-green-600 text-green-700 bg-white font-semibold hover:bg-green-50 transition-colors"
                 >
                   Medical History
                 </button>
@@ -448,8 +481,8 @@ const PetRecordsPage: React.FC = () => {
                 <h4 className="text-sm font-medium text-gray-700 mb-3 text-center">Reproductive Status</h4>
                 <div className="flex justify-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <span className={`inline-flex items-center justify-center w-4 h-4 border-2 border-green-700 rounded ${
-                      selectedPet.reproductive_status === 'intact' ? 'bg-green-700' : 'bg-white'
+                    <span className={`inline-flex items-center justify-center w-4 h-4 border-2 border-green-800 rounded ${
+                      selectedPet.reproductive_status === 'intact' ? 'bg-green-800' : 'bg-white'
                     }`}>
                       {selectedPet.reproductive_status === 'intact' && (
                         <CheckSquare size={14} className="text-white" />
@@ -458,8 +491,8 @@ const PetRecordsPage: React.FC = () => {
                     <span className="text-green-800 font-medium text-sm">Intact</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <span className={`inline-flex items-center justify-center w-4 h-4 border-2 border-green-700 rounded ${
-                      selectedPet.reproductive_status === 'castrated' || selectedPet.reproductive_status === 'spayed' ? 'bg-green-700' : 'bg-white'
+                    <span className={`inline-flex items-center justify-center w-4 h-4 border-2 border-green-800 rounded ${
+                      selectedPet.reproductive_status === 'castrated' || selectedPet.reproductive_status === 'spayed' ? 'bg-green-800' : 'bg-white'
                     }`}>
                       {(selectedPet.reproductive_status === 'castrated' || selectedPet.reproductive_status === 'spayed') && (
                         <CheckSquare size={14} className="text-white" />
@@ -475,11 +508,11 @@ const PetRecordsPage: React.FC = () => {
             </div>
 
             {/* Right: Detailed Information */}
-            <div className="flex-1">
+            <div className="flex-1 mt-8">
               <div className="bg-green-800 rounded-2xl px-8 py-8 shadow-lg">
                 <h3 className="text-center text-white text-xl font-semibold mb-8">{selectedPet.name}'s Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* First column */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left column */}
                   <div className="flex flex-col gap-5">
                     <div>
                       <label className="block text-white mb-1">Type of Species:</label>
@@ -491,22 +524,34 @@ const PetRecordsPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-white mb-1">Breed:</label>
+                      <label className="block text-white mb-1">Age:</label>
                       <input 
                         type="text" 
-                        value={selectedPet.breed || ''} 
+                        value={calculateAge(selectedPet.date_of_birth)} 
                         className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
                         disabled 
                       />
                     </div>
+                    <div>
+                      <label className="block text-white mb-1">Date of Birth:</label>
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          value={formatDateForProfile(selectedPet.date_of_birth)} 
+                          className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800 pr-10" 
+                          disabled 
+                        />
+                        <Calendar size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-700" />
+                      </div>
+                    </div>
                   </div>
-                  {/* Second column */}
+                  {/* Right column */}
                   <div className="flex flex-col gap-5">
                     <div>
-                      <label className="block text-white mb-1">Age:</label>
+                      <label className="block text-white mb-1">Breed:</label>
                       <input 
                         type="text" 
-                        value={calculateAgeForProfile(selectedPet.date_of_birth)} 
+                        value={selectedPet.breed || ''} 
                         className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
                         disabled 
                       />
@@ -519,21 +564,6 @@ const PetRecordsPage: React.FC = () => {
                         className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
                         disabled 
                       />
-                    </div>
-                  </div>
-                  {/* Third column */}
-                  <div className="flex flex-col gap-5">
-                    <div>
-                      <label className="block text-white mb-1">Date of Birth:</label>
-                      <div className="relative">
-                        <input 
-                          type="text" 
-                          value={formatDateForProfile(selectedPet.date_of_birth)} 
-                          className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800 pr-10" 
-                          disabled 
-                        />
-                        <Calendar size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-700" />
-                      </div>
                     </div>
                     <div>
                       <label className="block text-white mb-1">Sex:</label>
@@ -644,22 +674,22 @@ const PetRecordsPage: React.FC = () => {
                       ) : (
                         vaccinationRecords
                           .filter(record =>
-                            record.vaccine_used?.toLowerCase().includes(vaccinationSearch.toLowerCase()) ||
-                            record.batch_no_lot_no?.toLowerCase().includes(vaccinationSearch.toLowerCase()) ||
-                            record.veterinarian_lic_no_ptr?.toLowerCase().includes(vaccinationSearch.toLowerCase())
+                            record.vaccine_name?.toLowerCase().includes(vaccinationSearch.toLowerCase()) ||
+                            record.veterinarian?.toLowerCase().includes(vaccinationSearch.toLowerCase()) ||
+                            record.batch_lot_no?.toLowerCase().includes(vaccinationSearch.toLowerCase())
                           )
                           .map((record, index) => (
                             <tr
                               key={record.id}
                               className={index % 2 === 0 ? 'bg-green-50' : 'bg-white'}
                             >
-                              <td className="px-6 py-4">{new Date(record.date_of_vaccination).toLocaleDateString()}</td>
-                              <td className="px-6 py-4">{record.vaccine_used}</td>
-                              <td className="px-6 py-4">{record.batch_no_lot_no}</td>
+                              <td className="px-6 py-4">{new Date(record.vaccination_date).toLocaleDateString()}</td>
+                              <td className="px-6 py-4">{record.vaccine_name}</td>
+                              <td className="px-6 py-4">{record.batch_lot_no || '-'}</td>
                               <td className="px-6 py-4">
-                                {record.date_of_next_vaccination ? new Date(record.date_of_next_vaccination).toLocaleDateString() : '-'}
+                                {record.expiration_date ? new Date(record.expiration_date).toLocaleDateString() : '-'}
                               </td>
-                              <td className="px-6 py-4">{record.veterinarian_lic_no_ptr}</td>
+                              <td className="px-6 py-4">{record.veterinarian}</td>
                               <td className="px-6 py-4 flex items-center gap-2">
                                 <button 
                                   className="p-1 rounded hover:bg-green-200 transition-colors" 
@@ -780,31 +810,48 @@ const PetRecordsPage: React.FC = () => {
                         <th className="px-6 py-4 text-left font-medium">Findings</th>
                         <th className="px-6 py-4 text-left font-medium">Recommendation</th>
                         <th className="px-6 py-4 text-left font-medium">Vaccine Used/Medication</th>
+                        <th className="px-6 py-4 text-left font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {medicalRecordsLoading ? (
-                        <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500">Loading medical records...</td></tr>
+                        <tr><td colSpan={8} className="px-6 py-8 text-center text-gray-500">Loading medical records...</td></tr>
                       ) : medicalRecords.length === 0 ? (
-                        <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400 italic">No medical records found.</td></tr>
+                        <tr><td colSpan={8} className="px-6 py-8 text-center text-gray-400 italic">No medical records found.</td></tr>
                       ) : (
                         medicalRecords
                           .filter(record =>
                             record.reason_for_visit?.toLowerCase().includes(medicalHistorySearch.toLowerCase()) ||
-                            record.procedure_done?.toLowerCase().includes(medicalHistorySearch.toLowerCase()) ||
-                            record.vaccine_used_medication?.toLowerCase().includes(medicalHistorySearch.toLowerCase()) ||
+                            record.procedures_done?.toLowerCase().includes(medicalHistorySearch.toLowerCase()) ||
+                            record.medications?.toLowerCase().includes(medicalHistorySearch.toLowerCase()) ||
                             record.findings?.toLowerCase().includes(medicalHistorySearch.toLowerCase()) ||
-                            record.recommendation?.toLowerCase().includes(medicalHistorySearch.toLowerCase())
+                            record.recommendations?.toLowerCase().includes(medicalHistorySearch.toLowerCase())
                           )
                           .map((record, index) => (
                             <tr key={record.id} className={index % 2 === 0 ? 'bg-green-50' : 'bg-white'}>
                               <td className="px-6 py-4">{record.reason_for_visit}</td>
-                              <td className="px-6 py-4">{new Date(record.date_of_visit).toLocaleDateString()}</td>
-                              <td className="px-6 py-4">{record.next_visit ? new Date(record.next_visit).toLocaleDateString() : '-'}</td>
-                              <td className="px-6 py-4">{record.procedure_done}</td>
+                              <td className="px-6 py-4">{new Date(record.date_visited).toLocaleDateString()}</td>
+                              <td className="px-6 py-4">{record.date_of_next_visit ? new Date(record.date_of_next_visit).toLocaleDateString() : '-'}</td>
+                              <td className="px-6 py-4">{record.procedures_done}</td>
                               <td className="px-6 py-4">{record.findings}</td>
-                              <td className="px-6 py-4">{record.recommendation}</td>
-                              <td className="px-6 py-4">{record.vaccine_used_medication}</td>
+                              <td className="px-6 py-4">{record.recommendations}</td>
+                              <td className="px-6 py-4">{record.medications}</td>
+                              <td className="px-6 py-4 flex items-center gap-2">
+                                <button 
+                                  className="p-1 rounded hover:bg-green-200 transition-colors" 
+                                  title="Edit"
+                                  onClick={() => handleEditMedicalRecord(record)}
+                                >
+                                  <Edit size={18} className="text-green-800" />
+                                </button>
+                                <button 
+                                  className="p-1 rounded hover:bg-red-100 transition-colors" 
+                                  title="Delete"
+                                  onClick={() => handleDeleteMedicalRecord(record)}
+                                >
+                                  <Trash2 size={18} className="text-red-600" />
+                                </button>
+                              </td>
                             </tr>
                           ))
                       )}
@@ -965,83 +1012,85 @@ const PetRecordsPage: React.FC = () => {
 
           {/* Pet Records Table */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-green-800 text-white">
-                <tr>
-                  {TABLE_COLUMNS.map(col => (
-                    <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+            <div className="max-h-96 overflow-y-auto" style={{ scrollPaddingTop: '64px' }}>
+              <table className="w-full">
+                <thead className="bg-green-800 text-white sticky top-0 z-10">
                   <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="px-6 py-8 text-center text-gray-500">
-                      Loading pets...
-                    </td>
+                    {TABLE_COLUMNS.map(col => (
+                      <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
+                    ))}
                   </tr>
-                ) : pets.length === 0 ? (
-                  <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="px-6 py-8 text-center text-gray-500">
-                      No pets found. Add your first pet to get started!
-                    </td>
-                  </tr>
-                ) : (
-                  pets.map((pet, i) => (
-                    <tr
-                      key={pet.id}
-                      className={
-                        i % 2 === 0 ? 'bg-green-50' : 'bg-white'
-                      }
-                    >
-                      {/* Pet ID (clickable) */}
-                      <td
-                        className="px-6 py-4 text-green-800 font-bold underline cursor-pointer hover:text-green-900"
-                        onClick={() => handlePetIdClick(pet.pet_id)}
-                      >
-                        {pet.pet_id}
-                      </td>
-                      <td className="px-6 py-4">{pet.name}</td>
-                      <td className="px-6 py-4">{pet.owner_name}</td>
-                      <td className="px-6 py-4 capitalize">{pet.species}</td>
-                      <td className="px-6 py-4">{formatDate(pet.date_of_birth)}</td>
-                      <td className="px-6 py-4">{calculateAge(pet.date_of_birth)}</td>
-                      <td className="px-6 py-4">{pet.color || '-'}</td>
-                      <td className="px-6 py-4">{pet.breed || '-'}</td>
-                      <td className="px-6 py-4 capitalize">{pet.gender || '-'}</td>
-                      {/* Reproductive Status */}
-                      <td className="px-6 py-4">
-                        {pet.reproductive_status ? (
-                          <span className="capitalize text-sm font-medium">
-                            {pet.reproductive_status === 'intact' ? 'Intact' : 
-                             pet.reproductive_status === 'castrated' ? 'Castrated' : 
-                             pet.reproductive_status === 'spayed' ? 'Spayed' : 
-                             pet.reproductive_status}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">-</span>
-                        )}
-                      </td>
-                      {/* Action icons */}
-                      <td className="px-6 py-4 flex items-center gap-2">
-                        <button 
-                          className="p-1 rounded hover:bg-green-200 transition-colors"
-                          onClick={() => openEditModal(pet)}
-                        >
-                          <Edit size={18} className="text-green-800" />
-                        </button>
-                        <button 
-                          className="p-1 rounded hover:bg-red-100 transition-colors"
-                          onClick={() => openDeleteModal(pet)}
-                        >
-                          <Trash2 size={18} className="text-red-600" />
-                        </button>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={TABLE_COLUMNS.length} className="px-6 py-8 text-center text-gray-500">
+                        Loading pets...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : pets.length === 0 ? (
+                    <tr>
+                      <td colSpan={TABLE_COLUMNS.length} className="px-6 py-8 text-center text-gray-500">
+                        No pets found. Add your first pet to get started!
+                      </td>
+                    </tr>
+                  ) : (
+                    pets.map((pet, i) => (
+                      <tr
+                        key={pet.id}
+                        className={
+                          i % 2 === 0 ? 'bg-green-50' : 'bg-white'
+                        }
+                      >
+                        {/* Pet ID (clickable) */}
+                        <td
+                          className="px-6 py-4 text-green-800 font-bold underline cursor-pointer hover:text-green-900"
+                          onClick={() => handlePetIdClick(pet.pet_id)}
+                        >
+                          {pet.pet_id}
+                        </td>
+                        <td className="px-6 py-4">{pet.name}</td>
+                        <td className="px-6 py-4">{pet.owner_name}</td>
+                        <td className="px-6 py-4 capitalize">{pet.species}</td>
+                        <td className="px-6 py-4">{formatDate(pet.date_of_birth)}</td>
+                        <td className="px-6 py-4">{calculateAge(pet.date_of_birth)}</td>
+                        <td className="px-6 py-4">{pet.color || '-'}</td>
+                        <td className="px-6 py-4">{pet.breed || '-'}</td>
+                        <td className="px-6 py-4 capitalize">{pet.gender || '-'}</td>
+                        {/* Reproductive Status */}
+                        <td className="px-6 py-4">
+                          {pet.reproductive_status ? (
+                            <span className="capitalize text-sm font-medium">
+                              {pet.reproductive_status === 'intact' ? 'Intact' : 
+                               pet.reproductive_status === 'castrated' ? 'Castrated' : 
+                               pet.reproductive_status === 'spayed' ? 'Spayed' : 
+                               pet.reproductive_status}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
+                        </td>
+                        {/* Action icons */}
+                        <td className="px-6 py-4 flex items-center gap-2">
+                          <button 
+                            className="p-1 rounded hover:bg-green-200 transition-colors"
+                            onClick={() => openEditModal(pet)}
+                          >
+                            <Edit size={18} className="text-green-800" />
+                          </button>
+                          <button 
+                            className="p-1 rounded hover:bg-red-100 transition-colors"
+                            onClick={() => openDeleteModal(pet)}
+                          >
+                            <Trash2 size={18} className="text-red-600" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </main>
       </div>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import type { Pet } from './petService';
+import type { User as AppUser } from './userService';
 
 export interface Appointment {
   id: number;
@@ -15,6 +16,7 @@ export interface Appointment {
   created_at: string;
   updated_at?: string | null;
   pet?: Pet; // nested relationship from backend
+  user?: AppUser; // nested relationship from backend
 }
 
 export interface AppointmentCreate {

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from typing import List, Dict
 from core.database import get_db
 from core.models import VaccinationRecord, Pet, User
@@ -31,18 +31,21 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
         else:
             target_date = datetime.now().date()
         
-        # Query vaccination records for the specific date
-        stats = db.query(
+        print(f"Target date for vaccination statistics: {target_date}")
+        
+        # Get all vaccination records
+        # Since vaccination_date is stored as string, we need to filter in Python
+        all_records = db.query(
+            VaccinationRecord.vaccination_date,
             Pet.species,
-            Pet.gender,
-            func.count(VaccinationRecord.id).label('count')
+            Pet.gender
         ).join(
             VaccinationRecord, Pet.id == VaccinationRecord.pet_id
-        ).filter(
-            func.date(VaccinationRecord.vaccination_date) == target_date
-        ).group_by(
-            Pet.species, Pet.gender
         ).all()
+        
+        print(f"Total vaccination records found: {len(all_records)}")
+        print(f"Sample vaccination dates: {[r.vaccination_date for r in all_records[:5]]}")
+        print(f"Target date type: {type(target_date)}, Target date: {target_date}")
 
         result = {
             "feline": {"male": 0, "female": 0, "total": 0},
@@ -50,31 +53,156 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
             "total_vaccinations": 0
         }
 
-        for stat in stats:
-            species = stat.species.lower()
-            gender = stat.gender.lower() if stat.gender else "unknown"
-            count = stat.count
+        # Process the records and filter by date
+        for record in all_records:
+            try:
+                # Parse the vaccination_date string to datetime
+                vaccination_date_str = record.vaccination_date
+                if not vaccination_date_str:
+                    continue
+                
+                # Try different date formats
+                parsed_date = None
+                date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']
+                
+                for date_format in date_formats:
+                    try:
+                        parsed_date = datetime.strptime(vaccination_date_str, date_format)
+                        break
+                    except ValueError:
+                        continue
+                
+                if not parsed_date or parsed_date.date() != target_date:
+                    continue
+                
+                print(f"Found matching record: date={parsed_date.date()}, species={record.species}, gender={record.gender}")
+                print(f"Parsed date type: {type(parsed_date.date())}, Parsed date: {parsed_date.date()}")
+                
+                species = record.species.lower() if record.species else "unknown"
+                gender = record.gender.lower() if record.gender else "unknown"
 
-            if species in ["feline", "cat"]:
-                if gender in ["male", "m"]:
-                    result["feline"]["male"] = count
-                elif gender in ["female", "f"]:
-                    result["feline"]["female"] = count
-            elif species in ["canine", "dog"]:
-                if gender in ["male", "m"]:
-                    result["canine"]["male"] = count
-                elif gender in ["female", "f"]:
-                    result["canine"]["female"] = count
+                if species in ["feline", "cat"]:
+                    if gender in ["male", "m"]:
+                        result["feline"]["male"] += 1
+                    elif gender in ["female", "f"]:
+                        result["feline"]["female"] += 1
+                elif species in ["canine", "dog"]:
+                    if gender in ["male", "m"]:
+                        result["canine"]["male"] += 1
+                    elif gender in ["female", "f"]:
+                        result["canine"]["female"] += 1
 
-            result["total_vaccinations"] += count
+                result["total_vaccinations"] += 1
+                        
+            except Exception as e:
+                # Skip records with invalid date formats
+                print(f"Error parsing date '{record.vaccination_date}': {e}")
+                continue
 
         result["feline"]["total"] = result["feline"]["male"] + result["feline"]["female"]
         result["canine"]["total"] = result["canine"]["male"] + result["canine"]["female"]
 
+        print(f"Final vaccination statistics result: {result}")
         return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching vaccination statistics: {str(e)}")
+
+@router.get("/statistics/yearly", response_model=Dict)
+def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(get_db)):
+    """
+    Get yearly vaccination statistics for dashboard display
+    Returns monthly counts by species (feline/canine) and gender (male/female) for a specific year
+    If no year is provided, uses current year
+    """
+    try:
+        from datetime import datetime
+        
+        # Use provided year or current year
+        if year is None:
+            year = datetime.now().year
+        
+        # Get all vaccination records for the year
+        # Since vaccination_date is stored as string, we need to filter in Python
+        all_records = db.query(
+            VaccinationRecord.vaccination_date,
+            Pet.species,
+            Pet.gender
+        ).join(
+            VaccinationRecord, Pet.id == VaccinationRecord.pet_id
+        ).all()
+
+        # Initialize monthly data structure
+        monthly_data = {}
+        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        
+        for i in range(1, 13):
+            monthly_data[i] = {
+                'month': month_names[i-1],
+                'canineMale': 0,
+                'canineFemale': 0,
+                'felineMale': 0,
+                'felineFemale': 0
+            }
+
+        # Process the records and filter by year
+        for record in all_records:
+            try:
+                # Parse the vaccination_date string to datetime
+                vaccination_date_str = record.vaccination_date
+                if not vaccination_date_str:
+                    continue
+                
+                # Try different date formats
+                parsed_date = None
+                date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']
+                
+                for date_format in date_formats:
+                    try:
+                        parsed_date = datetime.strptime(vaccination_date_str, date_format)
+                        break
+                    except ValueError:
+                        continue
+                
+                if not parsed_date or parsed_date.year != year:
+                    continue
+                
+                month = parsed_date.month
+                species = record.species.lower() if record.species else "unknown"
+                gender = record.gender.lower() if record.gender else "unknown"
+
+                if species in ["feline", "cat"]:
+                    if gender in ["male", "m"]:
+                        monthly_data[month]['felineMale'] += 1
+                    elif gender in ["female", "f"]:
+                        monthly_data[month]['felineFemale'] += 1
+                elif species in ["canine", "dog"]:
+                    if gender in ["male", "m"]:
+                        monthly_data[month]['canineMale'] += 1
+                    elif gender in ["female", "f"]:
+                        monthly_data[month]['canineFemale'] += 1
+                        
+            except Exception as e:
+                # Skip records with invalid date formats
+                print(f"Error parsing date '{record.vaccination_date}': {e}")
+                continue
+
+        # Convert to list format and calculate totals
+        result = {
+            'year': year,
+            'monthly_data': list(monthly_data.values()),
+            'summary': {
+                'total_canine': sum(data['canineMale'] + data['canineFemale'] for data in monthly_data.values()),
+                'total_feline': sum(data['felineMale'] + data['felineFemale'] for data in monthly_data.values()),
+                'peak_month': max(monthly_data.items(), key=lambda x: x[1]['canineMale'] + x[1]['canineFemale'] + x[1]['felineMale'] + x[1]['felineFemale'])[1]['month']
+            }
+        }
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching yearly vaccination statistics: {str(e)}")
 
 @router.get("/{record_id}", response_model=VaccinationRecordSchema)
 def get_vaccination_record(record_id: int, db: Session = Depends(get_db)):
