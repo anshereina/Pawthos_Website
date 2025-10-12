@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.env
+.venv
+venv/
+ENV/
+.env.*
+*.sqlite3
+*.db
+
+# AI/ML Model files (IMPORTANT!)
+*.pth
+*.pkl
+*.h5
+*.onnx
+models/*.pth
+models/*.pkl
+eld/*.pkl
+
+# Uploads and media
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test and coverage
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+
+# Misc
+*.bak
+*.swp
+
+# FastAPI
+instance/
+
+# Ignore local settings
+local_settings.py
