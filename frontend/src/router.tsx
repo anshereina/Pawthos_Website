@@ -19,6 +19,7 @@ import MedicalRecordsPage from './pages/MedicalRecordsPage';
 import MeatInspectionRecordsPage from './pages/MeatInspectionRecordsPage';
 import AnimalControlRecordsPage from './pages/AnimalControlRecordsPage';
 import ShippingPermitRecordsPage from './pages/ShippingPermitRecordsPage';
+import ReproductiveRecordsPage from './pages/ReproductiveRecordsPage';
 import ReportsAlertsPage from './pages/ReportsAlertsPage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import PainAssessmentPage from './pages/PainAssessmentPage';
@@ -108,6 +109,12 @@ const shippingPermitRecordsRoute = new Route({
   component: ShippingPermitRecordsPage,
 });
 
+const reproductiveRecordsRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/records/reproductive',
+  component: ReproductiveRecordsPage,
+});
+
 const petRecordsRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/pets',
@@ -162,6 +169,7 @@ rootRoute.children = [
   meatInspectionRecordsRoute,
   animalControlRecordsRoute,
   shippingPermitRecordsRoute,
+  reproductiveRecordsRoute,
   petRecordsRoute,
   reportsAlertsRoute,
   appointmentsRoute,

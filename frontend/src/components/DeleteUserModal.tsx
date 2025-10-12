@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, Trash2, Shield } from 'lucide-react';
 import axios from 'axios';
-import { API_BASE_URL } from '../../../config';
+import { API_BASE_URL } from '../config';
 
 interface DeleteUserModalProps {
   isOpen: boolean;
@@ -204,4 +204,4 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
   );
 };
 
-export default DeleteUserModal; 
+export default DeleteUserModal;

@@ -1,10 +1,130 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Union
+from typing import List, Union, Optional
+from datetime import datetime, timedelta, timezone
 from core import models, schemas, auth
 from core.database import get_db
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+# Database inspection endpoints
+@router.get("/inspect/admins")
+def inspect_admins(
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Inspect all admins in the database with detailed information"""
+    try:
+        admins = db.query(models.Admin).all()
+        
+        admin_data = []
+        for admin in admins:
+            admin_info = {
+                "id": admin.id,
+                "name": admin.name,
+                "email": admin.email,
+                "is_confirmed": admin.is_confirmed,
+                "created_at": admin.created_at.isoformat() if admin.created_at else None,
+                "has_otp_code": bool(admin.otp_code),
+                "otp_expires_at": admin.otp_expires_at.isoformat() if admin.otp_expires_at else None,
+                "password_hash_length": len(admin.password_hash) if admin.password_hash else 0
+            }
+            admin_data.append(admin_info)
+        
+        return {
+            "total_admins": len(admins),
+            "admins": admin_data,
+            "summary": {
+                "confirmed_admins": len([a for a in admins if a.is_confirmed == 1]),
+                "unconfirmed_admins": len([a for a in admins if a.is_confirmed == 0]),
+                "admins_with_otp": len([a for a in admins if a.otp_code]),
+                "recent_admins": len([a for a in admins if a.created_at and (datetime.now() - a.created_at).days <= 7])
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@router.delete("/inspect/admins/{admin_id}")
+def delete_admin_by_id(
+    admin_id: int,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Delete a specific admin by ID"""
+    try:
+        # Prevent deleting your own account
+        if admin_id == current_admin.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete your own account"
+            )
+        
+        admin = db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+        if not admin:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Admin not found"
+            )
+        
+        # Store admin info before deletion
+        admin_info = {
+            "id": admin.id,
+            "name": admin.name,
+            "email": admin.email,
+            "is_confirmed": admin.is_confirmed,
+            "created_at": admin.created_at.isoformat() if admin.created_at else None
+        }
+        
+        db.delete(admin)
+        db.commit()
+        
+        return {
+            "message": "Admin deleted successfully",
+            "deleted_admin": admin_info
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@router.delete("/inspect/admins/cleanup/unconfirmed")
+def cleanup_unconfirmed_admins(
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Delete all unconfirmed admins (is_confirmed = 0)"""
+    try:
+        unconfirmed_admins = db.query(models.Admin).filter(models.Admin.is_confirmed == 0).all()
+        
+        if not unconfirmed_admins:
+            return {
+                "message": "No unconfirmed admins found",
+                "deleted_count": 0
+            }
+        
+        deleted_info = []
+        for admin in unconfirmed_admins:
+            admin_info = {
+                "id": admin.id,
+                "name": admin.name,
+                "email": admin.email,
+                "created_at": admin.created_at.isoformat() if admin.created_at else None
+            }
+            deleted_info.append(admin_info)
+            db.delete(admin)
+        
+        db.commit()
+        
+        return {
+            "message": f"Deleted {len(unconfirmed_admins)} unconfirmed admins",
+            "deleted_count": len(unconfirmed_admins),
+            "deleted_admins": deleted_info
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 # Recipients endpoints (for alerts) - accessible by any authenticated user
 @router.get("/recipients", response_model=List[dict])
@@ -134,6 +254,87 @@ def delete_admin(
     db.delete(admin)
     db.commit()
     return {"message": "Admin deleted successfully"}
+
+@router.post("/admins/send-otp")
+def send_otp_to_existing_email(
+    email_data: schemas.EmailRequest,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Send OTP to real email address for admin creation"""
+    # Check if email is already registered as admin
+    existing_admin = auth.get_admin(db, email=email_data.email)
+    
+    if existing_admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered as admin"
+        )
+    
+    # Generate OTP
+    otp_code = auth.generate_otp()
+    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+    
+    # Send OTP email - this will validate if the email is real and can receive emails
+    try:
+        auth.send_email_otp(email_data.email, otp_code)
+    except Exception as e:
+        # If email sending fails, it means the email is invalid or doesn't exist
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"Invalid email address or unable to send email to '{email_data.email}'. Please check the email address and try again."
+        )
+    
+    return {
+        "message": "OTP sent successfully",
+        "email": email_data.email,
+        "otp_expires_at": otp_expires_at
+    }
+
+@router.post("/admins/verify-otp")
+def verify_otp_and_create_admin(
+    admin_data: schemas.AdminCreateWithOTP,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Create admin and issue OTP for first login and password change."""
+    existing_admin = auth.get_admin(db, email=admin_data.email)
+    if existing_admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered as admin"
+        )
+
+    # Generate OTP for first login and send it to the admin's email
+    otp_code = auth.generate_otp()
+    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+    # Set initial password to the OTP so user can log in with it once
+    hashed_password = auth.get_password_hash(otp_code)
+
+    db_admin = models.Admin(
+        name=admin_data.name,
+        email=admin_data.email,
+        password_hash=hashed_password,
+        is_confirmed=1,
+        must_change_password=True,
+        otp_code=otp_code,
+        otp_expires_at=otp_expires_at,
+    )
+
+    db.add(db_admin)
+    db.commit()
+    db.refresh(db_admin)
+
+    # Send OTP email; if this fails, roll back creation
+    try:
+        auth.send_email_otp(admin_data.email, otp_code)
+    except Exception as e:
+        db.delete(db_admin)
+        db.commit()
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
+
+    return db_admin
 
 @router.post("/admins", response_model=schemas.Admin)
 def create_admin(
@@ -266,4 +467,134 @@ def create_user(
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user 
+    return db_user
+
+# Mobile-specific endpoints
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    address: Optional[str] = None
+    photo_url: Optional[str] = None
+
+class DashboardUser(BaseModel):
+    id: int
+    name: Optional[str]
+    email: str
+    phoneNumber: Optional[str]
+    address: Optional[str]
+    createdAt: datetime
+
+class DashboardResponse(BaseModel):
+    user: DashboardUser
+    pets_count: int
+    upcoming_appointments: List[dict]
+    recent_pets: List[dict]
+
+@router.put("/update-profile", response_model=schemas.User)
+def update_profile(
+    user_update: UserUpdate,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mobile app profile update endpoint"""
+    # Update only the fields that are provided
+    if user_update.name is not None:
+        current_user.name = user_update.name
+    if user_update.email is not None:
+        # Check if email is already taken by another user
+        existing_user = db.query(models.User).filter(
+            models.User.email == user_update.email,
+            models.User.id != current_user.id
+        ).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already taken")
+        current_user.email = user_update.email
+    if user_update.phone_number is not None:
+        current_user.phone_number = user_update.phone_number
+    if user_update.address is not None:
+        current_user.address = user_update.address
+    if user_update.photo_url is not None:
+        current_user.photo_url = user_update.photo_url
+    
+    try:
+        db.commit()
+        db.refresh(current_user)
+        return current_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+
+@router.get("/dashboard", response_model=DashboardResponse)
+def get_dashboard(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    """Mobile app dashboard endpoint"""
+    try:
+        # Pets owned by the current user
+        pets_query = db.query(models.Pet).filter(models.Pet.user_id == current_user.id)
+        pets_count = pets_query.count()
+        recent_pets = pets_query.order_by(models.Pet.created_at.desc()).limit(3).all()
+
+        # Upcoming appointments for the current user
+        upcoming_appointments = (
+            db.query(models.Appointment)
+            .filter(models.Appointment.user_id == current_user.id, models.Appointment.status == "scheduled")
+            .order_by(models.Appointment.date.asc())
+            .limit(5)
+            .all()
+        )
+
+        dashboard_user = DashboardUser(
+            id=current_user.id,
+            name=current_user.name,
+            email=current_user.email,
+            phoneNumber=current_user.phone_number,
+            address=current_user.address,
+            createdAt=current_user.created_at,
+        )
+
+        # Map ORM objects to response models
+        recent_pets_response = []
+        for pet in recent_pets:
+            pet_data = {
+                "id": pet.id,
+                "pet_id": pet.pet_id,
+                "name": pet.name,
+                "owner_name": pet.owner_name,
+                "species": pet.species,
+                "date_of_birth": pet.date_of_birth,
+                "color": pet.color,
+                "breed": pet.breed,
+                "gender": pet.gender,
+                "reproductive_status": pet.reproductive_status,
+                "photo_url": pet.photo_url,
+                "user_id": pet.user_id,
+                "created_at": pet.created_at,
+                "updated_at": pet.updated_at,
+            }
+            recent_pets_response.append(pet_data)
+
+        upcoming_appointments_response = []
+        for appt in upcoming_appointments:
+            appt_data = {
+                "id": appt.id,
+                "pet_id": appt.pet_id,
+                "user_id": appt.user_id,
+                "type": appt.type,
+                "date": str(appt.date) if appt.date else "",
+                "time": str(appt.time) if appt.time else "",
+                "veterinarian": appt.veterinarian,
+                "notes": appt.notes,
+                "status": appt.status,
+                "created_at": appt.created_at,
+                "updated_at": appt.updated_at,
+            }
+            upcoming_appointments_response.append(appt_data)
+
+        return DashboardResponse(
+            user=dashboard_user,
+            pets_count=pets_count,
+            upcoming_appointments=upcoming_appointments_response,
+            recent_pets=recent_pets_response,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Server error retrieving dashboard data") 

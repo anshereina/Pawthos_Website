@@ -36,13 +36,36 @@ def create_alert(alert: schemas.AlertCreate, db: Session = Depends(get_db)):
         if isinstance(alert.recipients, str):
             try:
                 # Check if it's already valid JSON
-                json.loads(alert.recipients)
-                recipients_json = alert.recipients
+                recipients_list = json.loads(alert.recipients)
             except json.JSONDecodeError:
                 # If it's not valid JSON, treat it as a regular string
-                recipients_json = json.dumps([alert.recipients])
+                recipients_list = [alert.recipients]
         else:
-            recipients_json = json.dumps(alert.recipients)
+            recipients_list = alert.recipients
+        
+        # Check if ALL_USERS is in the recipients list
+        if 'ALL_USERS' in recipients_list:
+            # Remove ALL_USERS from the list
+            recipients_list = [r for r in recipients_list if r != 'ALL_USERS']
+            
+            # Get all users from the database
+            all_users = db.query(models.User).all()
+            all_user_emails = [user.email for user in all_users]
+            
+            # Add all user emails to the recipients list
+            recipients_list.extend(all_user_emails)
+            
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_recipients = []
+            for recipient in recipients_list:
+                if recipient not in seen:
+                    seen.add(recipient)
+                    unique_recipients.append(recipient)
+            
+            recipients_list = unique_recipients
+        
+        recipients_json = json.dumps(recipients_list)
         print(f"Creating alert with recipients: {recipients_json}")
     else:
         print("Creating alert with no recipients")
@@ -95,13 +118,36 @@ def update_alert(alert_id: str, alert_update: schemas.AlertUpdate, db: Session =
             if isinstance(update_data['recipients'], str):
                 try:
                     # Check if it's already valid JSON
-                    json.loads(update_data['recipients'])
-                    recipients_json = update_data['recipients']
+                    recipients_list = json.loads(update_data['recipients'])
                 except json.JSONDecodeError:
                     # If it's not valid JSON, treat it as a regular string
-                    recipients_json = json.dumps([update_data['recipients']])
+                    recipients_list = [update_data['recipients']]
             else:
-                recipients_json = json.dumps(update_data['recipients'])
+                recipients_list = update_data['recipients']
+            
+            # Check if ALL_USERS is in the recipients list
+            if 'ALL_USERS' in recipients_list:
+                # Remove ALL_USERS from the list
+                recipients_list = [r for r in recipients_list if r != 'ALL_USERS']
+                
+                # Get all users from the database
+                all_users = db.query(models.User).all()
+                all_user_emails = [user.email for user in all_users]
+                
+                # Add all user emails to the recipients list
+                recipients_list.extend(all_user_emails)
+                
+                # Remove duplicates while preserving order
+                seen = set()
+                unique_recipients = []
+                for recipient in recipients_list:
+                    if recipient not in seen:
+                        seen.add(recipient)
+                        unique_recipients.append(recipient)
+                
+                recipients_list = unique_recipients
+            
+            recipients_json = json.dumps(recipients_list)
         update_data['recipients'] = recipients_json
     
     for field, value in update_data.items():

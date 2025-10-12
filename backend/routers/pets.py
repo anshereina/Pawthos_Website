@@ -7,7 +7,6 @@ import re
 from core.database import get_db
 from core.models import Pet
 from core.schemas import PetCreate, PetUpdate, Pet as PetSchema
-from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
@@ -90,7 +89,7 @@ def get_pets(
     db: Session = Depends(get_db)
 ):
     """Get all pets with optional filtering"""
-    query = db.query(Pet).options(joinedload(Pet.user))
+    query = db.query(Pet)
     
     if species and species.lower() != 'all':
         query = query.filter(Pet.species.ilike(f"%{species}%"))
@@ -105,23 +104,21 @@ def get_pets(
         )
     
     pets = query.offset(skip).limit(limit).all()
-
-    # Prefer linked user.name over placeholder owner_name if available
-    for p in pets:
-        if getattr(p, 'user', None) and getattr(p.user, 'name', None):
-            p.owner_name = p.user.name
-
     return pets
 
 @router.get("/{pet_id}", response_model=PetSchema)
 def get_pet(pet_id: str, db: Session = Depends(get_db)):
-    """Get a specific pet by pet_id"""
-    pet = db.query(Pet).options(joinedload(Pet.user)).filter(Pet.pet_id == pet_id).first()
+    """Get a specific pet by pet_id or numeric ID"""
+    # Try to get by numeric ID first (for mobile app)
+    if pet_id.isdigit():
+        pet = db.query(Pet).filter(Pet.id == int(pet_id)).first()
+    else:
+        # Get by pet_id string (like "PET-0001")
+        pet = db.query(Pet).filter(Pet.pet_id == pet_id).first()
+    
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
-    # Prefer linked user.name if present
-    if getattr(pet, 'user', None) and getattr(pet.user, 'name', None):
-        pet.owner_name = pet.user.name
+    
     return pet
 
 @router.put("/{pet_id}", response_model=PetSchema)
@@ -129,7 +126,12 @@ def update_pet(pet_id: str, pet_update: PetUpdate, db: Session = Depends(get_db)
     """Update a pet record"""
     print(f"Updating pet {pet_id} with data: {pet_update.dict()}")
     
-    db_pet = db.query(Pet).filter(Pet.pet_id == pet_id).first()
+    # Try to get by numeric ID first (for mobile app)
+    if pet_id.isdigit():
+        db_pet = db.query(Pet).filter(Pet.id == int(pet_id)).first()
+    else:
+        db_pet = db.query(Pet).filter(Pet.pet_id == pet_id).first()
+    
     if db_pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
     
@@ -182,7 +184,12 @@ def update_pet(pet_id: str, pet_update: PetUpdate, db: Session = Depends(get_db)
 @router.delete("/{pet_id}")
 def delete_pet(pet_id: str, db: Session = Depends(get_db)):
     """Delete a pet record and all related records"""
-    db_pet = db.query(Pet).filter(Pet.pet_id == pet_id).first()
+    # Try to get by numeric ID first (for mobile app)
+    if pet_id.isdigit():
+        db_pet = db.query(Pet).filter(Pet.id == int(pet_id)).first()
+    else:
+        db_pet = db.query(Pet).filter(Pet.pet_id == pet_id).first()
+    
     if db_pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
     

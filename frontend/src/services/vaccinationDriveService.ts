@@ -63,6 +63,17 @@ class VaccinationDriveService {
 
     return response.json();
   }
+
+  async deleteVaccinationDrivesByEvent(eventId: number): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/event/${eventId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete vaccination drives');
+    }
+  }
 }
 
 export const vaccinationDriveService = new VaccinationDriveService(); 

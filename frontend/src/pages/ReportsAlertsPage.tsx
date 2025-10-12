@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Search, FileText, Bell, ChevronDown, ArrowLeft, UserCircle, User, Settings, LogOut, Edit, Trash2 } from 'lucide-react';
+import { Search, FileText, Bell, ChevronDown, ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
 import { useAuth } from '../features/auth/AuthContext';
+import PageHeader from '../components/PageHeader';
 import { useReports } from '../hooks/useReports';
 import { useAlerts } from '../hooks/useAlerts';
 import AddReportModal from '../components/AddReportModal';
@@ -26,10 +27,11 @@ const ReportsAlertsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
   const [debugClick, setDebugClick] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Modal states
   const [isAddReportModalOpen, setIsAddReportModalOpen] = useState(false);
@@ -71,12 +73,7 @@ const ReportsAlertsPage: React.FC = () => {
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      if (
-        target.closest('.user-info-area') === null &&
-        target.closest('.user-dropdown-menu') === null &&
-        target.closest('.status-dropdown') === null
-      ) {
-        setIsDropdownOpen(false);
+      if (target.closest('.status-dropdown') === null) {
         setStatusDropdownOpen(null);
       }
     }
@@ -85,6 +82,28 @@ const ReportsAlertsPage: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Reset to first page when tab or search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search]);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   if (user === undefined) {
     return <div>Loading...</div>;
@@ -163,9 +182,6 @@ const ReportsAlertsPage: React.FC = () => {
     }
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(prev => !prev);
-  };
 
   // Table columns based on tab
   const columns = activeTab === 'reports'
@@ -175,6 +191,13 @@ const ReportsAlertsPage: React.FC = () => {
   const isLoading = reportsLoading || alertsLoading;
   const currentData = activeTab === 'reports' ? reports : alerts;
   
+  // Pagination logic
+  const totalItems = currentData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentDataPage = currentData.slice(startIndex, endIndex);
+  
   // Debug logging
   console.log('Active tab:', activeTab);
   console.log('Reports:', reports);
@@ -183,7 +206,7 @@ const ReportsAlertsPage: React.FC = () => {
   console.log('Status dropdown open:', statusDropdownOpen);
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-inter w-full">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -196,49 +219,22 @@ const ReportsAlertsPage: React.FC = () => {
           isExpanded ? 'ml-64' : 'ml-16'
         }`}
       >
-        {/* Header */}
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Reports & Alerts</h1>
-          <div className="relative flex items-center space-x-4 user-info-area">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={toggleDropdown}>
-              <UserCircle size={28} className="text-gray-600" />
-              <div className="flex flex-col items-start">
-                <span className="text-gray-800 font-medium">{user?.name || ''}</span>
-                <span className="text-gray-500 text-sm">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</span>
-              </div>
-              <ChevronDown size={20} className="text-gray-500" />
-            </div>
-            {isDropdownOpen && (
-              <div className="user-dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 top-full">
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => { e.preventDefault(); router.navigate({ to: '/profile' }); setIsDropdownOpen(false); }}>
-                  <User size={16} className="mr-2" /> Profile
-                </button>
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => { e.preventDefault(); router.navigate({ to: '/account-settings' }); setIsDropdownOpen(false); }}>
-                  <Settings size={16} className="mr-2" /> Account Settings
-                </button>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => { logout(); setIsDropdownOpen(false); }}>
-                  <LogOut size={16} className="mr-2" /> Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
+        <PageHeader title="Reports & Alerts" />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Top Control Panel */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 mb-4 hover:shadow-md transition-shadow duration-300">
             <div className="flex justify-between items-center">
               {/* Tabs */}
               <div className="flex space-x-2">
                 {TABS.map(tab => (
                   <button
                     key={tab.value}
-                    className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                       activeTab === tab.value
-                        ? 'bg-green-800 text-white'
-                        : 'bg-white text-green-800 border border-green-800 hover:bg-green-50'
+                        ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                        : 'bg-white text-green-700 border border-green-300 hover:bg-green-50 hover:border-green-400'
                     }`}
                     onClick={() => setActiveTab(tab.value)}
                   >
@@ -250,31 +246,31 @@ const ReportsAlertsPage: React.FC = () => {
               <div className="flex items-center space-x-4">
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
                   <input
                     type="text"
                     placeholder="Search here"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     onKeyPress={e => e.key === 'Enter' && handleSearch()}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
                 {/* Generate Report Button */}
                 <button 
-                  className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
                   onClick={() => setIsAddReportModalOpen(true)}
                 >
                   <FileText size={20} />
-                  <span>Generate Report</span>
+                  <span className="font-semibold">Generate Report</span>
                 </button>
                 {/* Send New Alert Button */}
                 <button 
-                  className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
                   onClick={() => setIsAddAlertModalOpen(true)}
                 >
                   <Bell size={20} />
-                  <span>Send New Alert</span>
+                  <span className="font-semibold">Send New Alert</span>
                 </button>
               </div>
             </div>
@@ -288,29 +284,30 @@ const ReportsAlertsPage: React.FC = () => {
           )}
 
           {/* Reports & Alerts Table */}
-          <div className="bg-white rounded-lg shadow-md relative">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <LoadingSpinner />
-              </div>
-            ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <table className="w-full">
-              <thead className="bg-green-800 text-white">
+              <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   {columns.map(col => (
-                    <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
+                    <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                  {currentData.length === 0 ? (
-                    <tr>
-                      <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500">
-                        No {activeTab === 'reports' ? 'reports' : 'alerts'} found
-                      </td>
-                    </tr>
-                  ) : (
-                    currentData.map((item, i) => {
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                      Loading {activeTab === 'reports' ? 'reports' : 'alerts'}...
+                    </td>
+                  </tr>
+                ) : currentData.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                      No {activeTab === 'reports' ? 'reports' : 'alerts'} found
+                    </td>
+                  </tr>
+                ) : (
+                  currentDataPage.map((item, i) => {
                       console.log('Rendering item:', item, 'index:', i);
                       if (activeTab === 'reports') {
                         const report = item as any;
@@ -318,12 +315,12 @@ const ReportsAlertsPage: React.FC = () => {
                         return (
                   <tr
                     key={i}
-                    className={i % 2 === 0 ? 'bg-green-50' : 'bg-white'}
+                    className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
                   >
-                            <td className="px-6 py-4">{report.report_id}</td>
-                            <td className="px-6 py-4">{report.title}</td>
-                            <td className="px-6 py-4">{report.submitted_by}</td>
-                            <td className="px-6 py-4">
+                            <td className="px-4 py-3">{report.report_id}</td>
+                            <td className="px-4 py-3">{report.title}</td>
+                            <td className="px-4 py-3">{report.submitted_by}</td>
+                            <td className="px-4 py-3">
                               <div className="relative status-dropdown">
                               <button
                                   type="button"
@@ -374,15 +371,15 @@ const ReportsAlertsPage: React.FC = () => {
                               )}
                             </div>
                         </td>
-                        <td className="px-6 py-4 flex items-center gap-2">
+                        <td className="px-4 py-3 flex items-center gap-2">
                           <button 
-                            className="p-1 rounded hover:bg-green-200 transition-colors"
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
                             onClick={() => handleEditReport(report)}
                           >
-                            <Edit size={18} className="text-green-800" />
+                            <Edit size={18} className="text-green-600" />
                           </button>
                           <button 
-                            className="p-1 rounded hover:bg-red-100 transition-colors"
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                             onClick={() => handleDeleteReport(report)}
                           >
                             <Trash2 size={18} className="text-red-600" />
@@ -395,12 +392,12 @@ const ReportsAlertsPage: React.FC = () => {
                         return (
                           <tr
                             key={i}
-                            className={i % 2 === 0 ? 'bg-green-50' : 'bg-white'}
+                            className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
                           >
-                            <td className="px-6 py-4">{alert.alert_id}</td>
-                            <td className="px-6 py-4">{alert.title}</td>
-                            <td className="px-6 py-4">{alert.submitted_by}</td>
-                            <td className="px-6 py-4">
+                            <td className="px-4 py-3">{alert.alert_id}</td>
+                            <td className="px-4 py-3">{alert.title}</td>
+                            <td className="px-4 py-3">{alert.submitted_by}</td>
+                            <td className="px-4 py-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 alert.priority === 'Critical' ? 'bg-red-100 text-red-800' :
                                 alert.priority === 'High' ? 'bg-orange-100 text-orange-800' :
@@ -410,7 +407,7 @@ const ReportsAlertsPage: React.FC = () => {
                                 {alert.priority}
                               </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3">
                           {(() => {
                             console.log('Alert recipients data:', alert.recipients);
                             if (alert.recipients) {
@@ -458,15 +455,15 @@ const ReportsAlertsPage: React.FC = () => {
                             return <span className="text-gray-500 text-sm">No recipients</span>;
                           })()}
                         </td>
-                        <td className="px-6 py-4 flex items-center gap-2">
+                        <td className="px-4 py-3 flex items-center gap-2">
                           <button 
-                            className="p-1 rounded hover:bg-green-200 transition-colors"
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
                             onClick={() => handleEditAlert(alert)}
                           >
-                            <Edit size={18} className="text-green-800" />
+                            <Edit size={18} className="text-green-600" />
                           </button>
                           <button 
-                            className="p-1 rounded hover:bg-red-100 transition-colors"
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                             onClick={() => handleDeleteAlert(alert)}
                           >
                             <Trash2 size={18} className="text-red-600" />
@@ -479,6 +476,85 @@ const ReportsAlertsPage: React.FC = () => {
                     )}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            {currentData.length > 0 && totalPages > 1 && (
+              <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-700">
+                  <span>
+                    Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === 1
+                        ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                        : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first page, last page, current page, and pages around current page
+                      const shouldShow = 
+                        page === 1 || 
+                        page === totalPages || 
+                        (page >= currentPage - 1 && page <= currentPage + 1);
+                      
+                      if (!shouldShow) {
+                        // Show ellipsis for gaps
+                        if (page === 2 && currentPage > 4) {
+                          return (
+                            <span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        if (page === totalPages - 1 && currentPage < totalPages - 3) {
+                          return (
+                            <span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      }
+                      
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? 'bg-green-600 text-white'
+                              : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === totalPages
+                        ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                        : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </main>

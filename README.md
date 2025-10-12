@@ -17,6 +17,10 @@ Pawthos/
   documentation/          # this guide and feature docs
 ```
 
+## GitHub Repository Location
+
+- The `Pawthos` folder is the repository root on GitHub. Access it at: `https://github.com/<your-username-or-org>/Pawthos` (replace with your actual GitHub path).
+
 ## Prerequisites
 
 - Python 3.11+
@@ -114,8 +118,3 @@ cd ../frontend
 npm install
 npm start
 ```
-
-For feature-specific docs, see:
-- `documentation/ANIMAL_CONTROL_DASHBOARD_INTEGRATION.md`
-- `documentation/VACCINATION_DASHBOARD_INTEGRATION.md`
-- `documentation/REPORTS_ALERTS_SETUP.md`

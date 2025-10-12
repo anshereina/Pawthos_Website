@@ -62,6 +62,19 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
     onRecipientsChange(newRecipients);
   };
 
+  const handleAllUsersToggle = () => {
+    const isAllUsersSelected = safeSelectedRecipients.includes('ALL_USERS');
+    if (isAllUsersSelected) {
+      // Remove ALL_USERS from selection
+      const newRecipients = safeSelectedRecipients.filter(r => r !== 'ALL_USERS');
+      onRecipientsChange(newRecipients);
+    } else {
+      // Add ALL_USERS to selection
+      const newRecipients = [...safeSelectedRecipients, 'ALL_USERS'];
+      onRecipientsChange(newRecipients);
+    }
+  };
+
   const removeRecipient = (email: string) => {
     const newRecipients = safeSelectedRecipients.filter(r => r !== email);
     onRecipientsChange(newRecipients);
@@ -82,6 +95,26 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
                 <span className="text-gray-500">{placeholder}</span>
               ) : (
                 safeSelectedRecipients.map(email => {
+                  if (email === 'ALL_USERS') {
+                    return (
+                      <span
+                        key={email}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      >
+                        <span>All Users</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecipient(email);
+                          }}
+                          className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    );
+                  }
                   const recipient = recipients.find(r => r.email === email);
                   return (
                     <span
@@ -126,6 +159,25 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
           </div>
 
           <div className="py-1">
+            {/* All Users option */}
+            <div
+              className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-200"
+              onClick={handleAllUsersToggle}
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <div className="font-medium text-sm text-blue-600">All Users</div>
+                  <div className="text-xs text-gray-500">Notify all users in the system</div>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">
+                  Broadcast
+                </span>
+              </div>
+              {safeSelectedRecipients.includes('ALL_USERS') && (
+                <Check size={16} className="text-blue-600" />
+              )}
+            </div>
+
             {loading ? (
               <div className="px-3 py-2 text-gray-500 text-sm">Loading...</div>
             ) : recipients.length === 0 ? (

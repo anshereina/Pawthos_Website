@@ -3,8 +3,9 @@ import React from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
-import { UserCircle, ChevronDown, User, Settings, LogOut, Cat, Dog, PieChart, LineChart, Bell, Calendar, AlertTriangle, FileText } from 'lucide-react';
+import { Cat, Dog, PieChart, LineChart, Bell, AlertTriangle, FileText } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
+import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useVaccinationStatistics, useYearlyVaccinationStatistics } from '../hooks/useVaccinationStatistics';
 import { useAnimalControlStatistics } from '../hooks/useAnimalControlStatistics';
@@ -131,8 +132,11 @@ const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistic
   });
 
   return (
-    <div className="border border-black rounded-lg p-4 flex flex-col w-full h-full" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold text-lg mb-2">Feline</div>
+    <div className="border border-gray-200 rounded-xl p-6 flex flex-col w-full h-full bg-gradient-to-br from-white to-green-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-200">
+      <div className="font-bold text-lg mb-3 text-green-700 flex items-center">
+        <Cat size={20} className="mr-2" />
+        Feline
+      </div>
       <div className="flex items-center flex-1">
         {/* Legend */}
         <div className="flex flex-col items-start mr-4">
@@ -149,7 +153,7 @@ const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistic
         <DonutChart maleCount={statistics.male} femaleCount={statistics.female} total={statistics.total} maleColor="#7ed957" femaleColor="#388e3c" />
         {/* KPI */}
         <div className="flex flex-col items-center ml-4">
-          <span className="text-3xl font-bold">{statistics.total.toString().padStart(2, '0')}</span>
+          <span className="text-3xl font-bold text-green-700">{statistics.total.toString().padStart(2, '0')}</span>
           <span className="text-xs text-gray-600">Total Vaccine on {displayDate}</span>
         </div>
       </div>
@@ -176,8 +180,11 @@ const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistic
   });
 
   return (
-    <div className="border border-black rounded-lg p-4 flex flex-col w-full h-full" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold text-lg mb-2">Canine</div>
+    <div className="border border-gray-200 rounded-xl p-6 flex flex-col w-full h-full bg-gradient-to-br from-white to-blue-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-200">
+      <div className="font-bold text-lg mb-3 text-blue-700 flex items-center">
+        <Dog size={20} className="mr-2" />
+        Canine
+      </div>
       <div className="flex items-center flex-1">
         {/* Legend */}
         <div className="flex flex-col items-start mr-4">
@@ -194,7 +201,7 @@ const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistic
         <DonutChart maleCount={statistics.male} femaleCount={statistics.female} total={statistics.total} maleColor="#7ed957" femaleColor="#388e3c" />
         {/* KPI */}
         <div className="flex flex-col items-center ml-4">
-          <span className="text-3xl font-bold">{statistics.total.toString().padStart(2, '0')}</span>
+          <span className="text-3xl font-bold text-green-700">{statistics.total.toString().padStart(2, '0')}</span>
           <span className="text-xs text-gray-600">Total Vaccine on {displayDate}</span>
         </div>
       </div>
@@ -219,8 +226,11 @@ const TotalCatchCard: React.FC<TotalCatchCardProps> = ({ statistics, selectedDat
   });
 
   return (
-    <div className="border border-black rounded-lg p-4 flex flex-col w-full h-full" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold text-lg mb-2">Total Catch</div>
+    <div className="border border-gray-200 rounded-xl p-6 flex flex-col w-full h-full bg-gradient-to-br from-white to-orange-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-orange-200">
+      <div className="font-bold text-lg mb-3 text-orange-700 flex items-center">
+        <AlertTriangle size={20} className="mr-2" />
+        Total Catch
+      </div>
       <div className="flex items-center flex-1">
         {/* Legend */}
         <div className="flex flex-col items-start mr-4">
@@ -261,9 +271,9 @@ const YearlyVaccinationReportCard = () => {
 
   if (loading) {
     return (
-      <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-        <div className="font-bold mb-2 flex items-center gap-2">
-          <LineChart size={20} /> 
+      <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-green-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-200">
+        <div className="font-bold mb-3 flex items-center gap-2 text-green-700">
+          <LineChart size={20} className="text-green-600" /> 
           Yearly Vaccination Report
           <select
             value={selectedYear}
@@ -284,9 +294,9 @@ const YearlyVaccinationReportCard = () => {
 
   if (error) {
     return (
-      <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-        <div className="font-bold mb-2 flex items-center gap-2">
-          <LineChart size={20} /> 
+      <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-green-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-200">
+        <div className="font-bold mb-3 flex items-center gap-2 text-green-700">
+          <LineChart size={20} className="text-green-600" /> 
           Yearly Vaccination Report
           <select
             value={selectedYear}
@@ -344,9 +354,9 @@ const YearlyVaccinationReportCard = () => {
   );
 
   return (
-    <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold mb-2 flex items-center gap-2">
-        <LineChart size={20} /> 
+    <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-green-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-200">
+      <div className="font-bold mb-3 flex items-center gap-2 text-green-700">
+        <LineChart size={20} className="text-green-600" /> 
         Yearly Vaccination Report
         <select
           value={selectedYear}
@@ -525,8 +535,8 @@ const NotificationsCenterCard: React.FC<NotificationsCenterCardProps> = ({
 
   if (loading) {
     return (
-      <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-        <div className="font-bold mb-2 flex items-center gap-2"><Bell size={20} /> Notifications Center</div>
+      <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-purple-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-purple-200">
+        <div className="font-bold mb-3 flex items-center gap-2 text-purple-700"><Bell size={20} className="text-purple-600" /> Notifications Center</div>
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner />
         </div>
@@ -536,8 +546,8 @@ const NotificationsCenterCard: React.FC<NotificationsCenterCardProps> = ({
 
   if (error) {
     return (
-      <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-        <div className="font-bold mb-2 flex items-center gap-2"><Bell size={20} /> Notifications Center</div>
+      <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-purple-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-purple-200">
+        <div className="font-bold mb-3 flex items-center gap-2 text-purple-700"><Bell size={20} className="text-purple-600" /> Notifications Center</div>
         <div className="flex-1 flex items-center justify-center text-red-500 text-sm">
           Error loading notifications
         </div>
@@ -546,12 +556,12 @@ const NotificationsCenterCard: React.FC<NotificationsCenterCardProps> = ({
   }
 
   return (
-    <div className="border border-black rounded-lg p-4 w-full h-full flex flex-col" style={{ backgroundColor: '#A8F6B5' }}>
-      <div className="font-bold mb-2 flex items-center gap-2">
-        <Bell size={20} /> 
+    <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-purple-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-purple-200">
+      <div className="font-bold mb-3 flex items-center gap-2 text-purple-700">
+        <Bell size={20} className="text-purple-600" /> 
         Notifications Center
         {notifications.length > 0 && (
-          <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+            <span className="ml-auto bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-full px-2 py-1 shadow-sm">
             {notifications.filter(n => !n.isRead).length}
           </span>
         )}
@@ -560,10 +570,10 @@ const NotificationsCenterCard: React.FC<NotificationsCenterCardProps> = ({
         <button
           onClick={markAllAsRead}
           disabled={notifications.length === 0}
-          className={`text-xs px-2 py-1 rounded transition-colors ${
+          className={`text-xs px-3 py-1.5 rounded-lg transition-all duration-200 ${
             notifications.length === 0 
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-              : 'bg-green-500 text-white hover:bg-green-600'
+              : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-sm hover:shadow-md'
           }`}
         >
           Mark All as Read
@@ -571,17 +581,17 @@ const NotificationsCenterCard: React.FC<NotificationsCenterCardProps> = ({
         <button
           onClick={clearNotifications}
           disabled={notifications.length === 0}
-          className={`text-xs px-2 py-1 rounded transition-colors ${
+          className={`text-xs px-3 py-1.5 rounded-lg transition-all duration-200 ${
             notifications.length === 0 
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-              : 'bg-green-300 text-green-800 hover:bg-green-400'
+              : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
           }`}
         >
           Clear All
         </button>
         <button
           onClick={resetClearedNotifications}
-          className="text-xs px-2 py-1 rounded transition-colors bg-blue-500 text-white hover:bg-blue-600"
+          className="text-xs px-3 py-1.5 rounded-lg transition-all duration-200 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-sm hover:shadow-md"
         >
           Reset Cleared
         </button>
@@ -715,7 +725,6 @@ const DashboardDetailRow: React.FC<DashboardDetailRowProps> = ({
 const DashboardPage: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
-  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   
   // Date state management
@@ -760,21 +769,7 @@ const DashboardPage: React.FC = () => {
     };
   }, [refreshVaccinationStats, refreshCatchStats, fetchNotifications]);
 
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      if (
-        target.closest('.user-info-area') === null &&
-        target.closest('.user-dropdown-menu') === null
-      ) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  
 
   // Show loading state while restoring session or loading statistics
   if (isLoading || vaccinationLoading || catchLoading || notificationsLoading) {
@@ -788,10 +783,6 @@ const DashboardPage: React.FC = () => {
 
   const handleItemClick = (path: string) => {
     router.navigate({ to: path });
-  };
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(prev => !prev);
   };
 
   // Use default values if statistics are not available
@@ -815,7 +806,7 @@ const DashboardPage: React.FC = () => {
   console.log('Dashboard - Notifications:', notifications);
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-inter w-full">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -828,55 +819,12 @@ const DashboardPage: React.FC = () => {
           isExpanded ? 'ml-64' : 'ml-16'
         }`}
       >
-        {/* Top Header/Navbar */}
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-            {/* Date Picker */}
-            <div className="flex items-center space-x-2">
-              <Calendar size={20} className="text-gray-600" />
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          <div className="relative flex items-center space-x-4 user-info-area">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={toggleDropdown}>
-              <UserCircle size={28} className="text-gray-600" />
-              <div className="flex flex-col items-start">
-                <span className="text-gray-800 font-medium">{user?.name || ''}</span>
-                <span className="text-gray-500 text-sm">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</span>
-              </div>
-              <ChevronDown size={20} className="text-gray-500" />
-            </div>
-            {isDropdownOpen && (
-              <div className="user-dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 top-full">
-                <button
-                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={(e) => { e.preventDefault(); router.navigate({ to: '/profile' }); setIsDropdownOpen(false); }}
-                >
-                  <User size={16} className="mr-2" /> Profile
-                </button>
-                <button
-                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={(e) => { e.preventDefault(); router.navigate({ to: '/account-settings' }); setIsDropdownOpen(false); }}
-                >
-                  <Settings size={16} className="mr-2" /> Account Settings
-                </button>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button
-                  className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
-                  onClick={() => { logout(); setIsDropdownOpen(false); }}
-                >
-                  <LogOut size={16} className="mr-2" /> Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
+        <PageHeader 
+          title="Dashboard"
+          showDatePicker
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
         {/* Dashboard Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           {(vaccinationError || catchError || notificationsError) && (

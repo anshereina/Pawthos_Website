@@ -6,10 +6,9 @@ module.exports = {
     "./public/index.html",
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        inter: ['Inter', 'sans-serif'], // Ensure 'Inter' font is defined if you use it
-      },
+    extend: {},
+    fontFamily: {
+      sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
     },
   },
   plugins: [],

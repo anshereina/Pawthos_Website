@@ -204,17 +204,91 @@ def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(ge
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching yearly vaccination statistics: {str(e)}")
 
+@router.get("/test")
+def test_endpoint():
+    """Test endpoint to check if the server is working"""
+    return {"message": "Vaccination records endpoint is working", "status": "ok"}
+
+@router.get("/simple")
+def simple_vaccination_records():
+    """Simple endpoint that returns empty array"""
+    return []
+
+@router.get("/with-pets")
+def get_vaccination_records_with_pets(db: Session = Depends(get_db)):
+    """Get all vaccination records with pet information"""
+    try:
+        print("=== FETCHING VACCINATION RECORDS WITH PETS ===")
+        
+        # First, let's check if there are any vaccination records at all
+        total_records = db.query(VaccinationRecord).count()
+        print(f"Total vaccination records in database: {total_records}")
+        
+        if total_records == 0:
+            print("No vaccination records found, returning empty list")
+            return []
+        
+        # Try a simpler approach - get all vaccination records first
+        vaccination_records = db.query(VaccinationRecord).all()
+        print(f"Found {len(vaccination_records)} vaccination records")
+        
+        # Convert to list of dictionaries with pet information
+        result = []
+        for i, record in enumerate(vaccination_records):
+            print(f"Processing record {i+1}/{len(vaccination_records)}: ID={record.id}")
+            
+            # Get pet information separately
+            pet = db.query(Pet).filter(Pet.id == record.pet_id).first()
+            print(f"  Pet found: {pet.name if pet else 'None'}")
+            
+            record_data = {
+                'id': record.id,
+                'pet_id': record.pet_id,
+                'user_id': record.user_id,
+                'vaccine_name': record.vaccine_name,
+                'vaccination_date': record.vaccination_date,
+                'expiration_date': record.expiration_date,
+                'veterinarian': record.veterinarian,
+                'batch_lot_no': record.batch_lot_no,
+                'created_at': record.created_at.isoformat() if record.created_at else None,
+                'updated_at': record.updated_at.isoformat() if record.updated_at else None,
+                'pet_name': pet.name if pet else 'Unknown Pet',
+                'pet_species': pet.species if pet else 'Unknown',
+                'pet_breed': pet.breed if pet else '',
+                'pet_color': pet.color if pet else '',
+                'pet_gender': pet.gender if pet else '',
+                'pet_owner_name': pet.owner_name if pet else 'Unknown Owner'
+            }
+            
+            result.append(record_data)
+            print(f"  Record data: {record_data}")
+        
+        print(f"=== RETURNING {len(result)} RECORDS ===")
+        return result
+        
+    except Exception as e:
+        print(f"=== ERROR FETCHING VACCINATION RECORDS WITH PETS: {str(e)} ===")
+        import traceback
+        traceback.print_exc()
+        # Return a more detailed error response
+        return {
+            "error": True,
+            "message": f"Error fetching vaccination records: {str(e)}",
+            "details": str(e),
+            "records": []
+        }
+
+@router.get("/pet/{pet_id}", response_model=List[VaccinationRecordSchema])
+def get_vaccination_records_by_pet(pet_id: int, db: Session = Depends(get_db)):
+    records = db.query(VaccinationRecord).filter(VaccinationRecord.pet_id == pet_id).all()
+    return records
+
 @router.get("/{record_id}", response_model=VaccinationRecordSchema)
 def get_vaccination_record(record_id: int, db: Session = Depends(get_db)):
     record = db.query(VaccinationRecord).filter(VaccinationRecord.id == record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="Vaccination record not found")
     return record
-
-@router.get("/pet/{pet_id}", response_model=List[VaccinationRecordSchema])
-def get_vaccination_records_by_pet(pet_id: int, db: Session = Depends(get_db)):
-    records = db.query(VaccinationRecord).filter(VaccinationRecord.pet_id == pet_id).all()
-    return records
 
 @router.post("/", response_model=VaccinationRecordSchema, status_code=status.HTTP_201_CREATED)
 def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Depends(get_db)):

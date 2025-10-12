@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Filter, Upload, Trash2, ChevronDown, UserCircle, User, Settings, LogOut } from 'lucide-react';
+import { Search, Filter, Upload, Trash2, ChevronDown } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
+import PageHeader from '../components/PageHeader';
 import { useAppointments, useServiceRequests } from '../hooks/useAppointments';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
@@ -23,7 +24,6 @@ const AppointmentsPage: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('appointments');
   const [search, setSearch] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Appointment | ServiceRequest | null>(null);
@@ -61,12 +61,6 @@ const AppointmentsPage: React.FC = () => {
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      if (
-        target.closest('.user-info-area') === null &&
-        target.closest('.user-dropdown-menu') === null
-      ) {
-        setIsDropdownOpen(false);
-      }
       // Close status dropdown when clicking outside
       if (target.closest('.status-dropdown') === null) {
         setStatusDropdownOpen(null);
@@ -102,9 +96,6 @@ const AppointmentsPage: React.FC = () => {
     router.navigate({ to: path });
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(prev => !prev);
-  };
 
   const handleStatusChange = async (id: number, newStatus: string, type: 'appointment' | 'request') => {
     try {
@@ -212,7 +203,7 @@ const AppointmentsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-inter w-full">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -225,49 +216,22 @@ const AppointmentsPage: React.FC = () => {
           isExpanded ? 'ml-64' : 'ml-16'
         }`}
       >
-        {/* Header */}
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Appointment</h1>
-          <div className="relative flex items-center space-x-4 user-info-area">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={toggleDropdown}>
-              <UserCircle size={28} className="text-gray-600" />
-              <div className="flex flex-col items-start">
-                <span className="text-gray-800 font-medium">{user?.name || ''}</span>
-                <span className="text-gray-500 text-sm">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</span>
-              </div>
-              <ChevronDown size={20} className="text-gray-500" />
-            </div>
-            {isDropdownOpen && (
-              <div className="user-dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 top-full">
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => { e.preventDefault(); router.navigate({ to: '/profile' }); setIsDropdownOpen(false); }}>
-                  <User size={16} className="mr-2" /> Profile
-                </button>
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => { e.preventDefault(); router.navigate({ to: '/account-settings' }); setIsDropdownOpen(false); }}>
-                  <Settings size={16} className="mr-2" /> Account Settings
-                </button>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => { logout(); setIsDropdownOpen(false); }}>
-                  <LogOut size={16} className="mr-2" /> Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
+        <PageHeader title="Appointments" />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Top Control Panel */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-6 mb-6 hover:shadow-md transition-shadow duration-300">
             <div className="flex justify-between items-center">
               {/* Tabs */}
               <div className="flex space-x-2">
                 {TABS.map(tab => (
                   <button
                     key={tab.value}
-                    className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                       activeTab === tab.value
-                        ? 'bg-green-800 text-white'
-                        : 'bg-white text-green-800 border border-green-800 hover:bg-green-50'
+                        ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                        : 'bg-white text-green-700 border border-green-300 hover:bg-green-50 hover:border-green-400'
                     }`}
                     onClick={() => setActiveTab(tab.value)}
                   >
@@ -279,24 +243,24 @@ const AppointmentsPage: React.FC = () => {
               <div className="flex items-center space-x-4">
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
                   <input
                     type="text"
                     placeholder="Search here"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
                 {/* Filter Button */}
-                <button className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200">
+                <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg">
                   <Filter size={20} />
-                  <span>Filter</span>
+                  <span className="font-semibold">Filter</span>
                 </button>
                 {/* Export Button */}
-                <button className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200">
+                <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg">
                   <Upload size={20} />
-                  <span>Export</span>
+                  <span className="font-semibold">Export</span>
                 </button>
               </div>
             </div>
@@ -318,12 +282,12 @@ const AppointmentsPage: React.FC = () => {
 
           {/* Appointments & Requests Table */}
           {!isLoading && (
-            <div className="bg-white rounded-lg shadow-md">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
               <table className="w-full">
-                <thead className="bg-green-800 text-white">
+                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                   <tr>
                     {columns.map(col => (
-                      <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
+                      <th key={col} className="px-6 py-4 text-left font-semibold text-sm">{col}</th>
                     ))}
                   </tr>
                 </thead>
@@ -338,7 +302,7 @@ const AppointmentsPage: React.FC = () => {
                     currentData.map((item: any, i: number) => (
                       <tr
                         key={item.id}
-                        className={`${i % 2 === 0 ? 'bg-green-50' : 'bg-white'} cursor-pointer hover:bg-green-100 transition-colors duration-200`}
+                        className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} cursor-pointer hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
                         onClick={() => handleRowClick(item, activeTab === 'appointments' ? 'appointment' : 'request')}
                       >
                         {/* Appointments Tab */}
@@ -352,18 +316,18 @@ const AppointmentsPage: React.FC = () => {
                             <td className="px-6 py-4 relative" onClick={(e) => e.stopPropagation()}>
                               <div className="inline-block relative status-dropdown">
                                 <button
-                                  className="flex items-center space-x-1 px-3 py-1 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                                  className="flex items-center space-x-1 px-3 py-2 border border-green-300 bg-white text-green-700 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all duration-300"
                                   onClick={() => setStatusDropdownOpen(statusDropdownOpen === item.id ? null : item.id)}
                                 >
                                   <span>{item.status || 'Pending'}</span>
                                   <ChevronDown size={18} />
                                 </button>
                                 {statusDropdownOpen === item.id && (
-                                  <div className="absolute left-0 mt-1 w-full bg-white border border-green-800 rounded-lg shadow-lg z-50 min-w-max">
+                                  <div className="absolute left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-max">
                                     {STATUS_OPTIONS.map((option: string) => (
                                       <div
                                         key={option}
-                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-800 whitespace-nowrap"
+                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200"
                                         onClick={() => {
                                           setStatusDropdownOpen(null);
                                           openStatusModal(option as any, item.id, 'appointment');
@@ -378,7 +342,7 @@ const AppointmentsPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <button 
-                                className="p-1 rounded hover:bg-red-100 transition-colors"
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                                 onClick={() => handleDelete(item.id, 'appointment')}
                               >
                                 <Trash2 size={18} className="text-red-600" />
@@ -401,18 +365,18 @@ const AppointmentsPage: React.FC = () => {
                             <td className="px-6 py-4 relative" onClick={(e) => e.stopPropagation()}>
                               <div className="inline-block relative status-dropdown">
                                 <button
-                                  className="flex items-center space-x-1 px-3 py-1 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                                  className="flex items-center space-x-1 px-3 py-2 border border-green-300 bg-white text-green-700 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all duration-300"
                                   onClick={() => setStatusDropdownOpen(statusDropdownOpen === item.id ? null : item.id)}
                                 >
                                   <span>{item.status || 'Pending'}</span>
                                   <ChevronDown size={18} />
                                 </button>
                                 {statusDropdownOpen === item.id && (
-                                  <div className="absolute left-0 mt-1 w-full bg-white border border-green-800 rounded-lg shadow-lg z-50 min-w-max">
+                                  <div className="absolute left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-max">
                                     {STATUS_OPTIONS.map((option: string) => (
                                       <div
                                         key={option}
-                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-800 whitespace-nowrap"
+                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200"
                                         onClick={() => {
                                           setStatusDropdownOpen(null);
                                           openStatusModal(option as any, item.id, 'request');
@@ -427,7 +391,7 @@ const AppointmentsPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <button 
-                                className="p-1 rounded hover:bg-red-100 transition-colors"
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                                 onClick={() => handleDelete(item.id, 'request')}
                               >
                                 <Trash2 size={18} className="text-red-600" />
@@ -459,7 +423,7 @@ const AppointmentsPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <button 
-                                className="p-1 rounded hover:bg-red-100 transition-colors"
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                                 onClick={() => handleDelete(
                                   item.id, 
                                   item.request_id ? 'request' : 'appointment'

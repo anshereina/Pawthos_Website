@@ -15,20 +15,24 @@ class Admin(Base):
     is_confirmed = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
     otp_code = Column(String(10), nullable=True)
     otp_expires_at = Column(DateTime(timezone=True), nullable=True)
+    must_change_password = Column(Boolean, nullable=False, default=False)
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)  # Made nullable to match mobile backend
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     address = Column(Text, nullable=True)
     phone_number = Column(String(20), nullable=True)
+    photo_url = Column(String(500), nullable=True)  # Add photo URL column
     is_confirmed = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
     otp_code = Column(String(10), nullable=True)
     otp_expires_at = Column(DateTime(timezone=True), nullable=True)
+    reset_token = Column(String(255), nullable=True)  # Password reset token
+    reset_token_expiry = Column(DateTime(timezone=True), nullable=True)  # Password reset token expiry
     
     # Relationship
     pets = relationship("Pet", back_populates="user", cascade="all, delete-orphan")
@@ -37,19 +41,19 @@ class Pet(Base):
     __tablename__ = "pets"
 
     id = Column(Integer, primary_key=True, index=True)
-    pet_id = Column(String(20), unique=True, index=True, nullable=False)  # PET-0001 format
+    pet_id = Column(String(20), nullable=False)  # Character varying field - not unique to match mobile backend
     name = Column(String(255), nullable=False)
     owner_name = Column(String(255), nullable=False)  # Keep for backward compatibility
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)  # New foreign key
     species = Column(String(50), nullable=False)  # feline, canine, etc.
-    date_of_birth = Column(Date, nullable=True)
+    date_of_birth = Column(String(255), nullable=True)  # Changed to String to match mobile backend
     color = Column(String(100), nullable=True)
     breed = Column(String(100), nullable=True)
     gender = Column(String(20), nullable=True)  # male, female
     reproductive_status = Column(String(20), nullable=True)  # intact, castrated, spayed
     photo_url = Column(String(500), nullable=True)  # URL to pet photo
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
+    updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
     
     # Relationship
     user = relationship("User", back_populates="pets") 
@@ -157,28 +161,27 @@ class VaccinationRecord(Base):
     __tablename__ = "vaccination_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    pet_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
+    user_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
     vaccine_name = Column(String(255), nullable=False)
-    vaccination_date = Column(String(255), nullable=False)  # Changed to String to match your DB
-    expiration_date = Column(String(255), nullable=True)    # Changed to String to match your DB
-    veterinarian = Column(String(255), nullable=False)
+    date_given = Column(DateTime(timezone=True), nullable=True)  # Changed to DateTime to match mobile backend
+    next_due_date = Column(DateTime(timezone=True), nullable=True)  # Changed to match mobile backend
+    veterinarian = Column(String(255), nullable=True)  # Made nullable to match mobile backend
+    clinic = Column(String(255), nullable=True)  # Added to match mobile backend
+    notes = Column(Text, nullable=True)  # Added to match mobile backend
     batch_lot_no = Column(String(255), nullable=False)      # Added to match your DB
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    pet = relationship("Pet")
-    user = relationship("User") 
+    updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend 
 
 class VaccinationEvent(Base):
     __tablename__ = "vaccination_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_date = Column(Date, nullable=False)
+    event_title = Column(String(255), nullable=False)  # Moved to match mobile backend order
     barangay = Column(String(255), nullable=False)
-    service_coordinator = Column(String(255), nullable=False)
+    event_date = Column(DateTime(timezone=True), nullable=False)  # Changed to DateTime to match mobile backend
     status = Column(String(50), nullable=False, default="Scheduled")  # Scheduled, Confirmed, Completed, Cancelled
-    event_title = Column(String(255), nullable=False)
+    service_coordinator = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -220,8 +223,15 @@ class MedicalRecord(Base):
     __tablename__ = "medical_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    pet_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
+    user_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
+    record_type = Column(String(255), nullable=True)  # Added to match mobile backend
+    title = Column(String(255), nullable=True)  # Added to match mobile backend
+    description = Column(Text, nullable=True)  # Added to match mobile backend
+    date = Column(DateTime(timezone=True), nullable=False)  # Changed to DateTime to match mobile backend
+    veterinarian = Column(String(255), nullable=True)
+    clinic = Column(String(255), nullable=True)  # Added to match mobile backend
+    next_due_date = Column(DateTime(timezone=True), nullable=True)  # Changed to DateTime to match mobile backend
     reason_for_visit = Column(String(255), nullable=False)
     date_visited = Column(Date, nullable=False)
     date_of_next_visit = Column(Date, nullable=True)
@@ -230,32 +240,23 @@ class MedicalRecord(Base):
     recommendations = Column(Text, nullable=True)
     medications = Column(Text, nullable=True)
     vaccine_used = Column(String(255), nullable=True)
-    veterinarian = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # Relationships
-    pet = relationship("Pet")
-    user = relationship("User")
+    updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
 
 class Appointment(Base):
     __tablename__ = "appointments"
 
     id = Column(Integer, primary_key=True, index=True)
-    pet_id = Column(Integer, ForeignKey("pets.id"), nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    pet_id = Column(Integer, nullable=True)  # Removed ForeignKey to match mobile backend
+    user_id = Column(Integer, nullable=True)  # Removed ForeignKey to match mobile backend
     type = Column(String(255), nullable=False)  # service type
-    date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)  # time without time zone
-    veterinarian = Column(String(255), nullable=True, default="Dr. Ma Fe Templado")
+    date = Column(String(255), nullable=False)  # Changed to String to match mobile backend
+    time = Column(String(255), nullable=False)  # Changed to String to match mobile backend
+    veterinarian = Column(String(255), nullable=True)
     notes = Column(Text, nullable=True)
-    status = Column(String(255), nullable=True, default="Pending")
+    status = Column(String(255), nullable=True, default="pending")  # Changed default to lowercase
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # Relationships
-    pet = relationship("Pet")
-    user = relationship("User")
+    updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
 
 class ServiceRequest(Base):
     __tablename__ = "service_requests"
@@ -279,18 +280,31 @@ class PainAssessment(Base):
     __tablename__ = "pain_assessments"
 
     id = Column(Integer, primary_key=True, index=True)
-    pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    pet_name = Column(String(255), nullable=False)
-    pet_type = Column(String(255), nullable=False)
-    pain_level = Column(String(255), nullable=False)
-    assessment_date = Column(String(255), nullable=False)
+    pet_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
+    user_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
+    pet_name = Column(String(255), nullable=True)  # Made nullable to match mobile backend
+    pet_type = Column(String(255), nullable=True)  # Made nullable to match mobile backend
+    pain_level = Column(String(255), nullable=True)  # Made nullable to match mobile backend
+    pain_score = Column(Integer, nullable=False)  # Made required to match mobile backend
+    assessment_date = Column(DateTime(timezone=True), server_default=func.now())  # Changed to DateTime with default
     recommendations = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
     image_url = Column(String(255), nullable=True)
-    created_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())  # Changed to DateTime with default
     basic_answers = Column(Text, nullable=True)
     assessment_answers = Column(Text, nullable=True)
-    questions_completed = Column(Boolean, nullable=True)
+    questions_completed = Column(Boolean, nullable=True) 
 
-    pet = relationship("Pet")
-    user = relationship("User") 
+class ReproductiveRecord(Base):
+    __tablename__ = "reproductive_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pet_name = Column(String(255), nullable=False)
+    owner_name = Column(String(255), nullable=False)
+    species = Column(String(50), nullable=False)
+    color = Column(String(100), nullable=True)
+    breed = Column(String(100), nullable=True)
+    gender = Column(String(20), nullable=True)
+    reproductive_status = Column(String(20), nullable=True)
+    date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

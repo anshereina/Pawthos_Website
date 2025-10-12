@@ -191,7 +191,7 @@ class VaccinationRecordService {
 
   // Enhanced method to get vaccination records with pet information
   async getVaccinationRecordsWithPets(): Promise<VaccinationRecordWithPet[]> {
-    const response = await fetch(`${this.baseUrl}/`, {
+    const response = await fetch(`${this.baseUrl}/with-pets`, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {

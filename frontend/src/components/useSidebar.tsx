@@ -11,18 +11,16 @@ import {
 } from 'lucide-react';
 
 export const useSidebar = () => {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const router = useRouter();
-  
-  // Initialize from localStorage
-  useEffect(() => {
+  // Initialize with saved state from localStorage, default to true if not found
+  const [isExpanded, setIsExpanded] = useState(() => {
     try {
       const saved = localStorage.getItem('sidebarExpanded');
-      if (saved !== null) {
-        setIsExpanded(saved === 'true');
-      }
-    } catch {}
-  }, []);
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+  const router = useRouter();
 
   // Persist to localStorage when it changes
   useEffect(() => {

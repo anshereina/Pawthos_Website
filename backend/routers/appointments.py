@@ -4,7 +4,6 @@ from typing import List, Optional
 from core import models, schemas, auth
 from core.database import get_db
 from datetime import date
-from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
@@ -48,10 +47,7 @@ def get_appointments(
     db: Session = Depends(get_db)
 ):
     """Get all appointments with optional filtering"""
-    query = db.query(models.Appointment).options(
-        joinedload(models.Appointment.pet).joinedload(models.Pet.user),
-        joinedload(models.Appointment.user)
-    )
+    query = db.query(models.Appointment)
     
     if search:
         search_filter = f"%{search}%"

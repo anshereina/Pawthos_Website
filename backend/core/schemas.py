@@ -9,13 +9,24 @@ class AdminBase(BaseModel):
 class AdminCreate(AdminBase):
     password: str
 
-class Admin(AdminBase):
+class AdminCreateWithOTP(AdminBase):
+    password: str
+    otp_code: str
+
+class Admin(BaseModel):
     id: int
+    name: str
+    email: EmailStr
     created_at: datetime
     is_confirmed: int
+    must_change_password: bool | None = None
 
     class Config:
         from_attributes = True
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str | None = None
+    new_password: str
 
 class UserBase(BaseModel):
     name: str
@@ -44,10 +55,14 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class EmailRequest(BaseModel):
+    email: EmailStr
+
 class Token(BaseModel):
     access_token: str
     token_type: str
     user_type: str
+    require_password_change: bool | None = None
 
 class TokenData(BaseModel):
     email: Optional[str] = None
@@ -283,20 +298,24 @@ class VaccinationRecordBase(BaseModel):
     pet_id: int
     user_id: Optional[int] = None
     vaccine_name: str
-    vaccination_date: str
-    expiration_date: Optional[str] = None
-    veterinarian: str
+    date_given: Optional[datetime] = None
+    next_due_date: Optional[datetime] = None
+    veterinarian: Optional[str] = None
     batch_lot_no: str
+    clinic: Optional[str] = None
+    notes: Optional[str] = None
 
 class VaccinationRecordCreate(VaccinationRecordBase):
     pass
 
 class VaccinationRecordUpdate(BaseModel):
     vaccine_name: Optional[str] = None
-    vaccination_date: Optional[str] = None
-    expiration_date: Optional[str] = None
+    date_given: Optional[datetime] = None
+    next_due_date: Optional[datetime] = None
     veterinarian: Optional[str] = None
     batch_lot_no: Optional[str] = None
+    clinic: Optional[str] = None
+    notes: Optional[str] = None
 
 class VaccinationRecord(VaccinationRecordBase):
     id: int
@@ -495,8 +514,10 @@ class PainAssessmentBase(BaseModel):
     pet_name: str
     pet_type: str
     pain_level: str
+    pain_score: Optional[int] = None  # Add pain_score field (0-2)
     assessment_date: str
     recommendations: Optional[str] = None
+    notes: Optional[str] = None  # Add notes field
     image_url: Optional[str] = None
     basic_answers: Optional[str] = None
     assessment_answers: Optional[str] = None
@@ -511,8 +532,10 @@ class PainAssessmentUpdate(BaseModel):
     pet_name: Optional[str] = None
     pet_type: Optional[str] = None
     pain_level: Optional[str] = None
+    pain_score: Optional[int] = None  # Add pain_score field
     assessment_date: Optional[str] = None
     recommendations: Optional[str] = None
+    notes: Optional[str] = None  # Add notes field
     image_url: Optional[str] = None
     basic_answers: Optional[str] = None
     assessment_answers: Optional[str] = None

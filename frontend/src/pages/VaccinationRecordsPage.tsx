@@ -3,10 +3,12 @@ import { UserCircle, ChevronDown, CalendarClock, Upload, Search, Edit, Trash2, A
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
+import PageHeader from '../components/PageHeader';
 import { vaccinationRecordService, VaccinationRecord, VaccinationRecordWithPet } from '../services/vaccinationRecordService';
 import { petService, Pet } from '../services/petService';
 import { useVaccinationEvents } from '../hooks/useVaccinationEvents';
 import { VaccinationEvent } from '../services/vaccinationEventService';
+import { vaccinationDriveService } from '../services/vaccinationDriveService';
 import AddVaccinationEventModal from '../components/AddVaccinationEventModal';
 import EditVaccinationEventModal from '../components/EditVaccinationEventModal';
 import DeleteVaccinationEventModal from '../components/DeleteVaccinationEventModal';
@@ -51,6 +53,8 @@ const VaccinationRecordsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'feline' | 'canine'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
   
   // Vaccination events hook
   const {
@@ -58,7 +62,6 @@ const VaccinationRecordsPage: React.FC = () => {
     loading: eventsLoading,
     error: eventsError,
     fetchAllEvents,
-    fetchUpcomingEvents,
     createEvent,
     updateEvent,
     deleteEvent,
@@ -82,23 +85,13 @@ const VaccinationRecordsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch both vaccination records and pets
-      const [recordsData, petsData] = await Promise.all([
-        vaccinationRecordService.getVaccinationRecordsWithPets(),
-        petService.getPets()
-      ]);
+      // Fetch vaccination records with pet information (now includes all pet data)
+      const recordsData = await vaccinationRecordService.getVaccinationRecordsWithPets();
       
-      // Combine records with pet information
-      const recordsWithPets = recordsData.map(record => {
-        const pet = petsData.find(p => p.id === record.pet_id);
-        return {
-          ...record,
-          pet_name: pet?.name || 'Unknown Pet',
-          pet_species: pet?.species || 'Unknown'
-        };
-      });
+      // Also fetch pets for the add record modal
+      const petsData = await petService.getPets();
       
-      setRecords(recordsWithPets);
+      setRecords(recordsData);
       setPets(petsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch records');
@@ -111,12 +104,11 @@ const VaccinationRecordsPage: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'vaccine-records') {
       fetchRecords();
-    } else if (activeTab === 'upcoming') {
-      fetchUpcomingEvents();
-    } else if (activeTab === 'all') {
+    } else {
+      // For both 'upcoming' and 'all' tabs, fetch all events and filter by status on frontend
       fetchAllEvents();
     }
-  }, [activeTab, fetchRecords, fetchUpcomingEvents, fetchAllEvents]);
+  }, [activeTab, fetchRecords, fetchAllEvents]);
 
   // Get current data based on active tab
   const getCurrentData = () => {
@@ -167,12 +159,8 @@ const VaccinationRecordsPage: React.FC = () => {
     try {
       await createEvent(eventData);
       setIsAddModalOpen(false);
-      // Refetch data
-      if (activeTab === 'upcoming') {
-        fetchUpcomingEvents();
-      } else if (activeTab === 'all') {
-        fetchAllEvents();
-      }
+      // Refetch data for both upcoming and all tabs
+      fetchAllEvents();
     } catch (error) {
       console.error('Error adding event:', error);
     }
@@ -184,12 +172,8 @@ const VaccinationRecordsPage: React.FC = () => {
       await updateEvent(selectedEvent.id, eventData);
       setIsEditModalOpen(false);
       setSelectedEvent(null);
-      // Refetch data
-      if (activeTab === 'upcoming') {
-        fetchUpcomingEvents();
-      } else if (activeTab === 'all') {
-        fetchAllEvents();
-      }
+      // Refetch data for both upcoming and all tabs
+      fetchAllEvents();
     } catch (error) {
       console.error('Error updating event:', error);
     }
@@ -198,17 +182,30 @@ const VaccinationRecordsPage: React.FC = () => {
   const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
     try {
+      // First, try to delete vaccination drives associated with this event
+      try {
+        await vaccinationDriveService.deleteVaccinationDrivesByEvent(selectedEvent.id);
+      } catch (driveError) {
+        // If there are no vaccination drives, this is fine - continue with event deletion
+        console.log('No vaccination drives to delete for this event');
+      }
+      
+      // Then delete the vaccination event
       await deleteEvent(selectedEvent.id);
       setIsDeleteModalOpen(false);
       setSelectedEvent(null);
-      // Refetch data
-      if (activeTab === 'upcoming') {
-        fetchUpcomingEvents();
-      } else if (activeTab === 'all') {
-        fetchAllEvents();
-      }
-    } catch (error) {
+      // Refetch data for both upcoming and all tabs
+      fetchAllEvents();
+    } catch (error: any) {
       console.error('Error deleting event:', error);
+      
+      // Check if it's a 400 error (foreign key constraint)
+      if (error?.response?.status === 400) {
+        const errorMessage = error.response?.data?.detail || 'Cannot delete this vaccination event';
+        alert(`Error: ${errorMessage}`);
+      } else {
+        alert('An error occurred while deleting the vaccination event. Please try again.');
+      }
     }
   };
 
@@ -278,12 +275,69 @@ const VaccinationRecordsPage: React.FC = () => {
     }
   };
 
+  // Reset to first page when tab, search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search, filter]);
+
   const currentData = getCurrentData();
   const isLoading = getCurrentLoading();
   const currentError = getCurrentError();
 
+  // Build filtered arrays per tab for pagination
+  const vaccineRecordsFiltered = records.filter(record => {
+    if (activeTab !== 'vaccine-records') return false;
+    if (filter !== 'all' && record.pet_species !== filter) return false;
+    const searchLower = search.toLowerCase();
+    return (
+      record.pet_name?.toLowerCase().includes(searchLower) ||
+      record.vaccine_name.toLowerCase().includes(searchLower) ||
+      record.veterinarian.toLowerCase().includes(searchLower) ||
+      record.batch_lot_no?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const eventsFiltered = (activeTab === 'upcoming' || activeTab === 'all' ? vaccinationEvents : []).filter((event: VaccinationEvent) => {
+    // Filter by status based on active tab
+    if (activeTab === 'upcoming') {
+      // Only show 'Scheduled' and 'Confirmed' events in upcoming tab
+      if (event.status !== 'Scheduled' && event.status !== 'Confirmed') {
+        return false;
+      }
+    } else if (activeTab === 'all') {
+      // Show all other statuses (not 'Scheduled' and 'Confirmed') in all tab
+      if (event.status === 'Scheduled' || event.status === 'Confirmed') {
+        return false;
+      }
+    }
+    
+    // Apply search filter
+    const searchLower = search.toLowerCase();
+    return (
+      event.event_title?.toLowerCase().includes(searchLower) ||
+      event.barangay?.toLowerCase().includes(searchLower) ||
+      event.service_coordinator?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const isVaccineTab = activeTab === 'vaccine-records';
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const totalItems = isVaccineTab ? vaccineRecordsFiltered.length : eventsFiltered.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const currentRecordsPage: VaccinationRecordWithPet[] = isVaccineTab
+    ? vaccineRecordsFiltered.slice(startIndex, endIndex)
+    : [];
+  const currentEventsPage: VaccinationEvent[] = !isVaccineTab
+    ? eventsFiltered.slice(startIndex, endIndex)
+    : [];
+
+  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
+  const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+
   return (
-    <div className="flex h-screen bg-gray-50 font-inter">
+    <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -296,34 +350,22 @@ const VaccinationRecordsPage: React.FC = () => {
           isExpanded ? 'ml-64' : 'ml-16'
         }`}
       >
-        {/* Header */}
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <button
-              className="text-green-800 hover:text-green-900 p-1 mr-1"
-              onClick={handleBack}
-              aria-label="Back to Records"
-            >
-              <ArrowLeft size={24} />
-            </button>
-            <h1 className="text-2xl font-bold text-gray-800">Vaccination Records</h1>
-          </div>
-        </header>
+        <PageHeader title="Vaccination Records" />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Top Control Panel */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 mb-4 hover:shadow-md transition-shadow duration-300">
             <div className="flex justify-between items-center">
               {/* Tabs */}
-              <div className="flex space-x-1">
+              <div className="flex space-x-2">
                 {TABS.map(tab => (
                   <button
                     key={tab.value}
-                    className={`px-3 py-1 text-sm rounded-md font-medium transition-colors duration-200 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                       activeTab === tab.value
-                        ? 'bg-green-800 text-white'
-                        : 'bg-white text-green-800 border border-green-800 hover:bg-green-50'
+                        ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow'
+                        : 'bg-white text-green-700 border border-green-300 hover:bg-green-50 hover:border-green-400'
                     }`}
                     onClick={() => setActiveTab(tab.value)}
                   >
@@ -335,22 +377,22 @@ const VaccinationRecordsPage: React.FC = () => {
               <div className="flex items-center space-x-4">
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
                   <input
                     type="text"
                     placeholder="Search here"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
                 {/* Schedule New Vaccination Button - only show for events tabs */}
                 {(activeTab === 'upcoming' || activeTab === 'all') && (
                   <button 
                     onClick={() => setIsAddModalOpen(true)}
-                    className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow"
                   >
-                    <CalendarClock size={20} />
+                    <CalendarClock size={16} />
                     <span>Schedule New Vaccination</span>
                   </button>
                 )}
@@ -358,16 +400,16 @@ const VaccinationRecordsPage: React.FC = () => {
                 {activeTab === 'vaccine-records' && (
                   <button 
                     onClick={() => setIsAddRecordModalOpen(true)}
-                    className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow"
                   >
-                    <Plus size={20} />
+                    <Plus size={16} />
                     <span>Add Record</span>
                   </button>
                 )}
                 {/* Export Button */}
-                <button className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200">
-                  <Upload size={20} />
-                  <span>Export</span>
+                <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow">
+                  <Upload size={16} />
+                  <span className="font-semibold">Export</span>
                 </button>
               </div>
             </div>
@@ -377,7 +419,7 @@ const VaccinationRecordsPage: React.FC = () => {
           {activeTab === 'vaccine-records' ? (
             <div className="space-y-4">
               {/* Filter Buttons */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Filter by:</span>
                   <button
@@ -414,64 +456,57 @@ const VaccinationRecordsPage: React.FC = () => {
               </div>
               
               {/* Records Table */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
               {loading ? (
                 <div className="p-6 text-center">Loading...</div>
               ) : error ? (
                 <div className="p-6 text-center text-red-600">{error}</div>
               ) : (
+                <>
                 <table className="w-full">
-                  <thead className="bg-green-800 text-white">
+                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINE_RECORDS_COLUMNS.map(col => (
-                        <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
+                        <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {records.length === 0 ? (
-                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-6 py-4 text-center">No vaccine records found.</td></tr>
+                    {loading ? (
+                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading records...</td></tr>
+                    ) : error ? (
+                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-red-600">{error}</td></tr>
+                    ) : currentRecordsPage.length === 0 ? (
+                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">No vaccine records found.</td></tr>
                     ) : (
-                      records
-                        .filter(record => {
-                            if (filter !== 'all' && record.pet_species !== filter) {
-                              return false;
-                            }
-                          const searchLower = search.toLowerCase();
-                          return (
-                            record.pet_name?.toLowerCase().includes(searchLower) ||
-                            record.vaccine_name.toLowerCase().includes(searchLower) ||
-                            record.veterinarian.toLowerCase().includes(searchLower) ||
-                            record.batch_lot_no?.toLowerCase().includes(searchLower)
-                          );
-                        })
-                        .map((record, i) => (
+                      currentRecordsPage
+                        .map((record: VaccinationRecordWithPet, i: number) => (
                             <tr 
                               key={record.id} 
-                              className={`${i % 2 === 0 ? 'bg-green-50' : 'bg-white'} cursor-pointer hover:bg-green-100 transition-colors`}
+                              className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
                               onClick={() => router.navigate({ to: `/pets/${record.pet_id}` })}
                             >
-                              <td className="px-6 py-4">{record.pet_name || 'Unknown'}</td>
-                              <td className="px-6 py-4">{record.pet_species || 'Unknown'}</td>
-                              <td className="px-6 py-4">{record.vaccine_name}</td>
-                              <td className="px-6 py-4">{record.vaccination_date}</td>
-                              <td className="px-6 py-4">{record.expiration_date || '-'}</td>
-                              <td className="px-6 py-4">{record.veterinarian}</td>
-                              <td className="px-6 py-4">{record.batch_lot_no || '-'}</td>
-                              <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <td className="px-4 py-3">{record.pet_name || 'Unknown'}</td>
+                              <td className="px-4 py-3 capitalize">{record.pet_species || 'Unknown'}</td>
+                              <td className="px-4 py-3">{record.vaccine_name}</td>
+                              <td className="px-4 py-3">{record.vaccination_date}</td>
+                              <td className="px-4 py-3">{record.expiration_date || '-'}</td>
+                              <td className="px-4 py-3">{record.veterinarian}</td>
+                              <td className="px-4 py-3">{record.batch_lot_no || '-'}</td>
+                              <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                   onClick={() => handleEditVaccinationRecord(record)}
-                                  className="p-1 rounded hover:bg-green-200 transition-colors"
+                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
                                   title="Edit"
                                 >
-                                  <Edit size={18} className="text-green-800" />
+                                  <Edit size={16} className="text-green-600" />
                                 </button>
                                 <button 
                                   onClick={() => handleDeleteVaccinationRecord(record)}
-                                  className="p-1 rounded hover:bg-red-100 transition-colors"
+                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
                                   title="Delete"
                                 >
-                                  <Trash2 size={18} className="text-red-600" />
+                                  <Trash2 size={16} className="text-red-600" />
                                 </button>
                             </td>
                           </tr>
@@ -479,51 +514,117 @@ const VaccinationRecordsPage: React.FC = () => {
                     )}
                   </tbody>
                 </table>
+                {/* Pagination Controls */}
+                {activeTab === 'vaccine-records' && totalPages > 1 && (
+                  <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-700">
+                      <span>
+                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePreviousPage()}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Previous
+                      </button>
+                      <div className="flex space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                          if (!shouldShow) {
+                            if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
+                            if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                            return null;
+                          }
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={() => handleNextPage()}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
             </div>
           ) : (activeTab === 'upcoming' || activeTab === 'all') ? (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
               {isLoading ? (
                 <div className="p-6 text-center">Loading...</div>
               ) : currentError ? (
                 <div className="p-6 text-center text-red-600">{currentError}</div>
               ) : (
+                <>
                 <table className="w-full">
-                  <thead className="bg-green-800 text-white">
+                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINATION_EVENTS_COLUMNS.map(col => (
-                        <th key={col} className="px-6 py-4 text-left font-medium">{col}</th>
+                        <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentData.length === 0 ? (
+                    {isLoading ? (
                       <tr>
-                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-6 py-4 text-center text-gray-400 italic">
+                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading events...</td>
+                      </tr>
+                    ) : currentError ? (
+                      <tr>
+                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-red-600">{currentError}</td>
+                      </tr>
+                    ) : eventsFiltered.length === 0 ? (
+                      <tr>
+                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">
                           {activeTab === 'upcoming' ? 'No Upcoming Vaccination Events' : 'No Vaccination Events Found'}
                         </td>
                       </tr>
                     ) : (
-                      (currentData as VaccinationEvent[])
-                        .filter((event: VaccinationEvent) => {
-                          const searchLower = search.toLowerCase();
-                          return (
-                            event.event_title?.toLowerCase().includes(searchLower) ||
-                            event.barangay?.toLowerCase().includes(searchLower) ||
-                            event.service_coordinator?.toLowerCase().includes(searchLower)
-                          );
-                        })
+                      currentEventsPage
                         .map((event: VaccinationEvent, i: number) => (
                         <tr 
                           key={event.id} 
-                          className={`${i % 2 === 0 ? 'bg-green-50' : 'bg-white'} cursor-pointer hover:bg-green-100 transition-colors`}
-                          onClick={() => handleRowClick(event)}
+                          className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} ${
+                            activeTab === 'upcoming' && event.status !== 'Confirmed' 
+                              ? 'cursor-default' 
+                              : 'hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 cursor-pointer'
+                          } transition-all duration-300 border-b border-gray-100`}
+                          onClick={() => {
+                            if (activeTab === 'upcoming' && event.status !== 'Confirmed') {
+                              return; // Don't handle click for non-confirmed events in upcoming tab
+                            }
+                            handleRowClick(event);
+                          }}
                         >
-                          <td className="px-6 py-4">{event.event_date}</td>
-                          <td className="px-6 py-4">{event.barangay}</td>
-                          <td className="px-6 py-4">{event.service_coordinator}</td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">{event.event_date}</td>
+                          <td className="px-4 py-3">{event.barangay}</td>
+                          <td className="px-4 py-3">{event.service_coordinator}</td>
+                          <td className="px-4 py-3">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               event.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
                               event.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
@@ -533,19 +634,19 @@ const VaccinationRecordsPage: React.FC = () => {
                               {event.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4">{event.event_title}</td>
-                          <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <td className="px-4 py-3">{event.event_title}</td>
+                          <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button 
                               onClick={() => handleEditClick(event)}
-                              className="p-1 rounded hover:bg-green-200 transition-colors"
+                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
                             >
-                              <Edit size={18} className="text-green-800" />
+                              <Edit size={16} className="text-green-600" />
                             </button>
                             <button 
                               onClick={() => handleDeleteClick(event)}
-                              className="p-1 rounded hover:bg-red-100 transition-colors"
+                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
                             >
-                              <Trash2 size={18} className="text-red-600" />
+                              <Trash2 size={16} className="text-red-600" />
                             </button>
                           </td>
                         </tr>
@@ -553,6 +654,62 @@ const VaccinationRecordsPage: React.FC = () => {
                     )}
                   </tbody>
                 </table>
+                {/* Pagination Controls */}
+                {(activeTab === 'upcoming' || activeTab === 'all') && totalPages > 1 && (
+                  <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-700">
+                      <span>
+                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePreviousPage()}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Previous
+                      </button>
+                      <div className="flex space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                          if (!shouldShow) {
+                            if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
+                            if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                            return null;
+                          }
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={() => handleNextPage()}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
           ) : null}
@@ -584,6 +741,7 @@ const VaccinationRecordsPage: React.FC = () => {
         isOpen={isAntiRabiesModalOpen}
         onClose={() => setIsAntiRabiesModalOpen(false)}
         event={selectedEvent}
+        readOnly={activeTab === 'all'} // Read-only for completed events (all tab)
       />
       
       <AddVaccinationRecordFromListModal

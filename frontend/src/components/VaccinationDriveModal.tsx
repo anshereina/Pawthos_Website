@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Search, ChevronDown } from 'lucide-react';
+import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Search, ChevronDown, Download } from 'lucide-react';
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
 import { petService, Pet } from '../services/petService';
 import { userService, User as UserType } from '../services/userService';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface VaccinationEvent {
   id: number;
@@ -30,12 +32,14 @@ interface VaccinationDriveModalProps {
   isOpen: boolean;
   onClose: () => void;
   event: VaccinationEvent | null;
+  readOnly?: boolean;
 }
 
 const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   isOpen,
   onClose,
   event,
+  readOnly = false,
 }) => {
   const [formData, setFormData] = useState({
     date: '',
@@ -57,6 +61,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   // Dropdown visibility states - track which record is showing dropdown
   const [activeOwnerDropdown, setActiveOwnerDropdown] = useState<number | null>(null);
   const [activePetDropdown, setActivePetDropdown] = useState<number | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Update form data when event changes
   useEffect(() => {
@@ -164,6 +172,23 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
   const speciesOptions = ['Dog', 'Cat', 'Other'];
   const sexOptions = ['Male', 'Female'];
+
+  // Helper function to calculate age from date of birth
+  const calculateAge = (dateOfBirth: string): string => {
+    if (!dateOfBirth) return '';
+    
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    const ageInMs = today.getTime() - birthDate.getTime();
+    const ageInYears = Math.floor(ageInMs / (365.25 * 24 * 60 * 60 * 1000));
+    
+    if (ageInYears < 1) {
+      const ageInMonths = Math.floor(ageInMs / (30.44 * 24 * 60 * 60 * 1000));
+      return `${ageInMonths} months`;
+    } else {
+      return `${ageInYears} years`;
+    }
+  };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -297,6 +322,158 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   };
 
+  // Pagination logic
+  const totalItems = petRecords.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPetRecords = petRecords.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to first page when records change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [petRecords.length]);
+
+  const handleExportPDF = () => {
+    if (!event) return;
+
+    const doc = new jsPDF();
+    
+    // Set up colors
+    const primaryColor = [34, 139, 34]; // Green
+    const secondaryColor = [240, 248, 255]; // Light blue
+    
+    // Header
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 30, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Vaccination Drive Report', 20, 20);
+    
+    // Event Information Section
+    let yPosition = 45;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Event Information', 20, yPosition);
+    yPosition += 10;
+    
+    // Event details
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    const eventInfo = [
+      ['Event Title:', event.event_title || 'N/A'],
+      ['Date:', event.event_date || 'N/A'],
+      ['Barangay:', event.barangay || 'N/A'],
+      ['Service Coordinator:', event.service_coordinator || 'N/A'],
+      ['Vaccine Used:', formData.vaccineUsed || 'N/A'],
+      ['Batch/Lot No.:', formData.batchNoLotNo || 'N/A']
+    ];
+    
+    eventInfo.forEach(([label, value]) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, 20, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value, 70, yPosition);
+      yPosition += 6;
+    });
+    
+    yPosition += 10;
+    
+    // Pet Records Section
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Pet Vaccination Records', 20, yPosition);
+    yPosition += 10;
+    
+    // Summary statistics
+    const totalRecords = petRecords.length;
+    const completedRecords = petRecords.filter(r => r.ownerName && r.petName && r.ownerContact).length;
+    const incompleteRecords = totalRecords - completedRecords;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Records: ${totalRecords}`, 20, yPosition);
+    doc.text(`Completed: ${completedRecords}`, 80, yPosition);
+    doc.text(`Incomplete: ${incompleteRecords}`, 130, yPosition);
+    yPosition += 15;
+    
+    // Prepare table data
+    const tableData = petRecords.map((record, index) => [
+      index + 1,
+      record.ownerName || '',
+      record.petName || '',
+      record.ownerContact || '',
+      record.species || '',
+      record.breed || '',
+      record.color || '',
+      record.age || '',
+      record.sex || '',
+      record.otherServices.join(', ') || ''
+    ]);
+    
+    // Create table
+    autoTable(doc, {
+      head: [['#', 'Owner Name', 'Pet Name', 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Other Services']],
+      body: tableData,
+      startY: yPosition,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      margin: { left: 20, right: 20 },
+      didDrawPage: (data: any) => {
+        // Footer
+        const pageSize = doc.internal.pageSize;
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Page ${data.pageNumber}`,
+          pageSize.width / 2,
+          pageSize.height - 10,
+          { align: 'center' }
+        );
+        doc.text(
+          `Generated on: ${new Date().toLocaleDateString()}`,
+          20,
+          pageSize.height - 10
+        );
+      }
+    });
+    
+    // Save the PDF
+    const fileName = `Vaccination_Drive_${event.event_title || 'Report'}_${event.event_date || new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+  };
+
   if (!isOpen || !event) return null;
 
   return (
@@ -411,7 +588,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                     name="vaccineUsed"
                     value={formData.vaccineUsed}
                     onChange={handleFormChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                    disabled={readOnly}
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
                   >
                     <option value="">Select Vaccine</option>
                     {vaccineOptions.map(option => (
@@ -433,7 +611,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                     name="batchNoLotNo"
                     value={formData.batchNoLotNo}
                     onChange={handleFormChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={readOnly}
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
                     placeholder="Enter batch/lot number"
                   />
                 </div>
@@ -445,44 +624,61 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
 
         {/* Individual Pet Vaccination Records Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800">Individual Pet Vaccination Records</h2>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm font-medium text-gray-700">Add rows:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    defaultValue="5"
-                    className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-                    id="rowCount"
-                  />
+              {!readOnly && (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700">Add rows:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      defaultValue="5"
+                      className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                      id="rowCount"
+                    />
+                    <button
+                      onClick={() => {
+                        const count = parseInt((document.getElementById('rowCount') as HTMLInputElement)?.value || '5');
+                        addMultiplePetRecords(count);
+                      }}
+                      className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+                    >
+                      <Plus size={16} />
+                      <span>Add Multiple</span>
+                    </button>
+                  </div>
                   <button
-                    onClick={() => {
-                      const count = parseInt((document.getElementById('rowCount') as HTMLInputElement)?.value || '5');
-                      addMultiplePetRecords(count);
-                    }}
-                    className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    onClick={addPetRecord}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
-                    <Plus size={16} />
-                    <span>Add Multiple</span>
+                    <Plus size={20} />
+                    <span>Add Single</span>
                   </button>
                 </div>
-                <button
-                  onClick={addPetRecord}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors"
-                >
-                  <Plus size={20} />
-                  <span>Add Single</span>
-                </button>
-              </div>
+              )}
+              {readOnly && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
+                    📖 View Only Mode
+                  </span>
+                  <button
+                    onClick={handleExportPDF}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Download size={16} />
+                    <span>Export PDF</span>
+                  </button>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Total Records: {petRecords.length}</span>
-              <span>Filled Records: {petRecords.filter(r => r.ownerName && r.petName).length}</span>
+              <span>Total Records: <span className="font-semibold text-gray-800">{petRecords.length}</span></span>
+              <span>Completed: <span className="font-semibold text-green-600">{petRecords.filter(r => r.ownerName && r.petName && r.ownerContact).length}</span></span>
+              <span>Incomplete: <span className="font-semibold text-yellow-600">{petRecords.filter(r => !r.ownerName || !r.petName || !r.ownerContact).length}</span></span>
             </div>
           </div>
 
@@ -493,45 +689,54 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
               <p className="text-sm">Click "Add Single" or "Add Multiple" to start logging vaccinations</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead className="bg-green-800 text-white sticky top-0">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">#</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Owner's Name</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Pet's Name</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Contact No.</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Species</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Breed</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Color</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Age</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Sex</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Other Service</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs border border-green-700">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {petRecords.map((record, index) => (
-                    <tr key={record.id} className={`${index % 2 === 0 ? 'bg-green-50' : 'bg-white'} hover:bg-green-100 transition-colors`}>
-                      <td className="px-3 py-2 text-center text-xs font-medium border border-gray-200 bg-gray-50">
-                        {index + 1}
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200 relative">
-                        <div className="dropdown-container">
-                          <input
-                            type="text"
-                            value={record.ownerName}
-                            onChange={(e) => updatePetRecord(record.id, 'ownerName', e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(e, record.id, 'ownerName')}
-                            onFocus={() => {
-                              setActiveOwnerDropdown(record.id);
-                            }}
-                            className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                            placeholder="Owner name"
-                            data-record-id={record.id}
-                            data-field="ownerName"
-                          />
-                                                    {activeOwnerDropdown === record.id && (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Name</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Pet's Name</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Contact No.</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Species</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Breed</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Color</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Age</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Sex</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Other Service</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentPetRecords.map((record, index) => {
+                      const globalIndex = startIndex + index;
+                      return (
+                        <tr 
+                          key={record.id}
+                          className={`${
+                            globalIndex % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
+                          } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                        >
+                          <td className="px-4 py-3 text-gray-900 font-medium">
+                            {globalIndex + 1}
+                          </td>
+                          <td className="px-4 py-3 text-gray-900 relative">
+                            <div className="dropdown-container">
+                              <input
+                                type="text"
+                                value={record.ownerName}
+                                onChange={(e) => updatePetRecord(record.id, 'ownerName', e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, record.id, 'ownerName')}
+                                onFocus={() => {
+                                  if (!readOnly) setActiveOwnerDropdown(record.id);
+                                }}
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                                placeholder="Owner name"
+                                data-record-id={record.id}
+                                data-field="ownerName"
+                              />
+                                                    {!readOnly && activeOwnerDropdown === record.id && (
                             <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               <div className="p-2 text-xs bg-gray-100 border-b">DEBUG: Found {getFilteredOwners(record.ownerName).length} users</div>
                               {getFilteredOwners(record.ownerName).length > 0 ? (
@@ -561,22 +766,23 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                 </div>
                               )}
                             </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200 relative">
-                        <div className="dropdown-container">
-                          <input
-                            type="text"
-                            value={record.petName}
-                            onChange={(e) => updatePetRecord(record.id, 'petName', e.target.value)}
-                            onFocus={() => {
-                              setActivePetDropdown(record.id);
-                            }}
-                            className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                            placeholder="Pet name"
-                          />
-                          {activePetDropdown === record.id && (
+                            )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900 relative">
+                            <div className="dropdown-container">
+                              <input
+                                type="text"
+                                value={record.petName}
+                                onChange={(e) => updatePetRecord(record.id, 'petName', e.target.value)}
+                                onFocus={() => {
+                                  if (!readOnly) setActivePetDropdown(record.id);
+                                }}
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                                placeholder="Pet name"
+                              />
+                          {!readOnly && activePetDropdown === record.id && (
                             <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               {getFilteredPets(record.petName, record.ownerName).map((pet) => (
                                 <div
@@ -584,10 +790,24 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                   className="px-3 py-2 hover:bg-green-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
                                   onClick={() => {
                                     updatePetRecord(record.id, 'petName', pet.name);
-                                    updatePetRecord(record.id, 'species', pet.species);
+                                    // Map species to match dropdown options
+                                    let mappedSpecies = '';
+                                    if (pet.species) {
+                                      if (pet.species.toLowerCase() === 'canine') {
+                                        mappedSpecies = 'Dog';
+                                      } else if (pet.species.toLowerCase() === 'feline') {
+                                        mappedSpecies = 'Cat';
+                                      } else {
+                                        mappedSpecies = 'Other';
+                                      }
+                                    }
+                                    updatePetRecord(record.id, 'species', mappedSpecies);
                                     updatePetRecord(record.id, 'breed', pet.breed || '');
                                     updatePetRecord(record.id, 'color', pet.color || '');
-                                    updatePetRecord(record.id, 'sex', pet.gender || '');
+                                    // Capitalize gender to match dropdown options
+                                    updatePetRecord(record.id, 'sex', pet.gender ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1) : '');
+                                    // Calculate age from date of birth
+                                    updatePetRecord(record.id, 'age', pet.date_of_birth ? calculateAge(pet.date_of_birth) : '');
                                     setActivePetDropdown(null);
                                   }}
                                 >
@@ -598,109 +818,204 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                 </div>
                               ))}
                             </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <input
-                          type="tel"
-                          value={record.ownerContact}
-                          onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                          placeholder="Contact"
-                        />
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <select
-                          value={record.species}
-                          onChange={(e) => updatePetRecord(record.id, 'species', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                        >
-                          <option value="">-</option>
-                          {speciesOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <input
-                          type="text"
-                          value={record.breed}
-                          onChange={(e) => updatePetRecord(record.id, 'breed', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                          placeholder="Breed"
-                        />
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <input
-                          type="text"
-                          value={record.color}
-                          onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                          placeholder="Color"
-                        />
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <input
-                          type="text"
-                          value={record.age}
-                          onChange={(e) => updatePetRecord(record.id, 'age', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                          placeholder="Age"
-                        />
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <select
-                          value={record.sex}
-                          onChange={(e) => updatePetRecord(record.id, 'sex', e.target.value)}
-                          className="w-full px-1 py-1 text-xs border-0 focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                        >
-                          <option value="">-</option>
-                          {sexOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <div className="flex flex-wrap gap-1">
-                          {record.otherServices.map((service, serviceIndex) => (
-                            <span key={serviceIndex} className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">
-                              {service}
-                            </span>
-                          ))}
+                            )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <input
+                              type="tel"
+                              value={record.ownerContact}
+                              onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              placeholder="Contact"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <select
+                              value={record.species}
+                              onChange={(e) => updatePetRecord(record.id, 'species', e.target.value)}
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                            >
+                              <option value="">-</option>
+                              {speciesOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <input
+                              type="text"
+                              value={record.breed}
+                              onChange={(e) => updatePetRecord(record.id, 'breed', e.target.value)}
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              placeholder="Breed"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <input
+                              type="text"
+                              value={record.color}
+                              onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              placeholder="Color"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <input
+                              type="text"
+                              value={record.age}
+                              onChange={(e) => updatePetRecord(record.id, 'age', e.target.value)}
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              placeholder="Age"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <select
+                              value={record.sex}
+                              onChange={(e) => updatePetRecord(record.id, 'sex', e.target.value)}
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                            >
+                              <option value="">-</option>
+                              {sexOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <div className="flex flex-wrap gap-1">
+                              {record.otherServices.map((service, serviceIndex) => (
+                                <span key={serviceIndex} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  {service}
+                                </span>
+                              ))}
+                              {!readOnly && (
+                                <button
+                                  onClick={() => {
+                                    const service = prompt('Enter other service:');
+                                    if (service) addOtherService(record.id, service);
+                                  }}
+                                  className="text-xs text-green-600 hover:text-green-800 px-2 py-1 rounded-full border border-green-300 hover:bg-green-50 transition-colors"
+                                  title="Add service"
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-center space-x-1">
+                              {!readOnly && (
+                                <button 
+                                  onClick={() => deletePetRecord(record.id)}
+                                  className="p-2.5 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:shadow-sm"
+                                  title="Delete row"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              )}
+                              {readOnly && (
+                                <span className="text-xs text-gray-400">View Only</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              {petRecords.length > 0 && totalPages > 1 && (
+                <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span>
+                      Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === 1
+                          ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                          : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current page
+                        const shouldShow = 
+                          page === 1 || 
+                          page === totalPages || 
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+                        
+                        if (!shouldShow) {
+                          // Show ellipsis for gaps
+                          if (page === 2 && currentPage > 4) {
+                            return (
+                              <span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">
+                                ...
+                              </span>
+                            );
+                          }
+                          if (page === totalPages - 1 && currentPage < totalPages - 3) {
+                            return (
+                              <span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        }
+                        
+                        return (
                           <button
-                            onClick={() => {
-                              const service = prompt('Enter other service:');
-                              if (service) addOtherService(record.id, service);
-                            }}
-                            className="text-xs text-green-600 hover:text-green-800"
-                            title="Add service"
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === page
+                                ? 'bg-green-600 text-white'
+                                : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                            }`}
                           >
-                            +
+                            {page}
                           </button>
-                        </div>
-                      </td>
-                      <td className="px-2 py-1 border border-gray-200">
-                        <div className="flex items-center justify-center space-x-1">
-                          <button 
-                            onClick={() => deletePetRecord(record.id)}
-                            className="text-red-500 hover:text-red-700 text-xs"
-                            title="Delete row"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === totalPages
+                          ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                          : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Summary and Save Section */}
-        <div className="mt-6 bg-gray-50 rounded-lg p-4">
+        <div className="mt-6 bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6 text-sm text-gray-600">
               <span>Total Records: <span className="font-semibold text-gray-800">{petRecords.length}</span></span>
@@ -708,26 +1023,36 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
               <span>Incomplete: <span className="font-semibold text-yellow-600">{petRecords.filter(r => !r.ownerName || !r.petName || !r.ownerContact).length}</span></span>
             </div>
             <div className="flex items-center space-x-3">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center space-x-2 px-6 py-3 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save size={20} />
-                    <span>Save Details</span>
-                  </>
-                )}
-              </button>
+              {!readOnly ? (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={20} />
+                      <span>Save Details</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={handleExportPDF}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  <Download size={20} />
+                  <span>Export PDF Report</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

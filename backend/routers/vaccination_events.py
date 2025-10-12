@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List
 from core.database import get_db
-from core.models import VaccinationEvent
+from core.models import VaccinationEvent, VaccinationDrive
 from core.schemas import VaccinationEvent as VaccinationEventSchema, VaccinationEventCreate, VaccinationEventUpdate
 
 router = APIRouter(prefix="/vaccination-events", tags=["vaccination-events"])
@@ -17,6 +18,13 @@ def get_upcoming_vaccination_events(db: Session = Depends(get_db)):
     today = date.today()
     return db.query(VaccinationEvent).filter(
         VaccinationEvent.event_date >= today
+    ).order_by(VaccinationEvent.event_date.asc()).all()
+
+@router.get("/scheduled", response_model=List[VaccinationEventSchema])
+def get_scheduled_vaccination_events(db: Session = Depends(get_db)):
+    """Get all scheduled vaccination events (for mobile app)"""
+    return db.query(VaccinationEvent).filter(
+        VaccinationEvent.status == "Scheduled"
     ).order_by(VaccinationEvent.event_date.asc()).all()
 
 @router.get("/{event_id}", response_model=VaccinationEventSchema)
@@ -50,6 +58,22 @@ def delete_vaccination_event(event_id: int, db: Session = Depends(get_db)):
     db_event = db.query(VaccinationEvent).filter(VaccinationEvent.id == event_id).first()
     if not db_event:
         raise HTTPException(status_code=404, detail="Vaccination event not found")
-    db.delete(db_event)
-    db.commit()
-    return None 
+    
+    # Check if there are any vaccination drives associated with this event
+    vaccination_drives = db.query(VaccinationDrive).filter(VaccinationDrive.event_id == event_id).first()
+    if vaccination_drives:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot delete vaccination event. There are vaccination drives associated with this event. Please delete the vaccination drives first."
+        )
+    
+    try:
+        db.delete(db_event)
+        db.commit()
+        return None
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete vaccination event due to existing related records. Please remove all associated vaccination drives first."
+        ) 

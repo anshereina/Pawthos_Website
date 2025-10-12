@@ -15,6 +15,7 @@ from email.mime.multipart import MIMEMultipart
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme_mobile = OAuth2PasswordBearer(tokenUrl="api/login", auto_error=False)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -132,4 +133,28 @@ def get_current_admin(current_user: Union[models.Admin, models.User] = Depends(g
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
-    return current_user 
+    return current_user
+
+def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Session = Depends(get_db)):
+    """Get current user for mobile app endpoints"""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    if not token:
+        raise credentials_exception
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = get_user(db, email=email)
+    if user is None:
+        raise credentials_exception
+    return user 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Calendar, User, PawPrint, Activity, FileText } from 'lucide-react';
 import { PainAssessment } from '../services/painAssessmentService';
+import { API_BASE_URL } from '../config';
 
 interface PainAssessmentDetailsModalProps {
   isOpen: boolean;
@@ -17,7 +18,20 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      // Handle date strings that might be in local time without timezone info
+      let date: Date;
+      
+      if (dateString.includes(' ')) {
+        // Parse as local time
+        const [datePart, timePart] = dateString.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+        date = new Date(year, month - 1, day, hours, minutes, seconds || 0);
+      } else {
+        date = new Date(dateString);
+      }
+      
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -29,7 +43,20 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
 
   const formatDateTime = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString('en-US', {
+      // Handle date strings that might be in local time without timezone info
+      let date: Date;
+      
+      if (dateString.includes(' ')) {
+        // Parse as local time
+        const [datePart, timePart] = dateString.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+        date = new Date(year, month - 1, day, hours, minutes, seconds || 0);
+      } else {
+        date = new Date(dateString);
+      }
+      
+      return date.toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -93,7 +120,7 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Assessment Date
                 </label>
-                <p className="text-gray-900 font-medium">{assessment.assessment_date}</p>
+                <p className="text-gray-900 font-medium">{formatDateTime(assessment.assessment_date)}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -345,22 +372,7 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
             </div>
           )}
 
-          {/* Image URL */}
-          {assessment.image_url && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Attached Image</h3>
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <a 
-                  href={assessment.image_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-green-600 hover:text-green-700 underline break-all"
-                >
-                  {assessment.image_url}
-                </a>
-              </div>
-            </div>
-          )}
+          {/* Image display removed as requested */}
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">

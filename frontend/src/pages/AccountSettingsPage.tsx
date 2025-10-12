@@ -23,6 +23,8 @@ import {
   CalendarClock
 } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const AccountSettingsPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -37,6 +39,7 @@ const AccountSettingsPage: React.FC = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   // Notification preferences
   const [notifications, setNotifications] = useState({
@@ -129,20 +132,45 @@ const AccountSettingsPage: React.FC = () => {
     setSecurity(prev => ({ ...prev, [key]: value }));
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
       alert('New passwords do not match!');
       return;
     }
-    if (newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters long!');
       return;
     }
-    // Here you would typically call API to change password
-    console.log('Changing password...');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      alert('Not authenticated');
+      router.navigate({ to: '/login' });
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      await axios.post(
+        `${API_BASE_URL}/auth/change-password`,
+        {
+          current_password: currentPassword || undefined,
+          new_password: newPassword,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert('Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || 'Failed to change password';
+      alert(message);
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   return (
@@ -261,10 +289,11 @@ const AccountSettingsPage: React.FC = () => {
                 <div className="flex items-end">
                   <button
                     onClick={handlePasswordChange}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    disabled={isSavingPassword}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
                     <Save size={16} />
-                    <span>Update Password</span>
+                    <span>{isSavingPassword ? 'Updating...' : 'Update Password'}</span>
                   </button>
                 </div>
               </div>

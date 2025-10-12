@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, MapPin, Phone } from 'lucide-react';
 import axios from 'axios';
-import { API_BASE_URL } from '../../../config';
+import { API_BASE_URL } from '../config';
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -301,4 +301,4 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   );
 };
 
-export default EditUserModal; 
+export default EditUserModal;
