@@ -14,9 +14,12 @@ from routers import file_uploads
 from routers import ai_predictions
 from routers import mobile_auth
 from routers import mobile_dashboard
+import os
 
-# Create database tables
-models.Base.metadata.create_all(bind=engine)
+# Create database tables (skip in production/serverless environments)
+# Use Alembic migrations instead for production deployments
+if os.getenv("ENVIRONMENT") != "production":
+    models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Pawthos API", version="1.0.0")
 
@@ -80,4 +83,6 @@ def test_cors():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    # Use PORT from environment (Railway, Render, etc.) or default to 8000
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
