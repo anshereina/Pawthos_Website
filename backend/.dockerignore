@@ -1,0 +1,102 @@
+# Python cache and compiled files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation and markdown
+*.md
+README*
+DEPLOYMENT*
+WHY_*
+INSTALL_*
+FIX_*
+QUICK_*
+START_*
+MODEL_*
+VERCEL_*
+RAILWAY_*
+
+# Test files
+test_*.py
+*_test.py
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Deployment configs for other platforms
+vercel.json
+.vercelignore
+api/
+
+# Logs
+*.log
+logs/
+
+# Database files (not needed in image)
+*.db
+*.sqlite3
+
+# Alembic versions (keep only the migration system, versions will be in DB)
+# alembic/versions/*.py
+
+# Backups and temp files
+*.bak
+*.tmp
+*.backup
+nixpacks.toml.backup
+nixpacks.toml.disabled
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads directory (use persistent volume instead)
+uploads/*
+!uploads/.gitkeep
+
+# Large model files - KEEPING THEM IN THE IMAGE
+# Models need to be in the image for Railway deployment
+# The main size reduction comes from CPU-only PyTorch
+# models/best_efficientnet_model.pth
+# eld/eld_pain_model.pkl
+
+# Training data and results
+eld/eld_training_results.json
+eld/eld_training_results.png
+
+# Other unnecessary files
+run.txt
+START_SERVER.bat
+start_server.py
+
