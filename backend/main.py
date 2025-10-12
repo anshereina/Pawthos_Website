@@ -11,7 +11,8 @@ from routers import vaccination_drives
 from routers import appointments
 from routers import pain_assessments
 from routers import file_uploads
-from routers import ai_predictions
+# AI features temporarily disabled to reduce deployment size
+# from routers import ai_predictions
 from routers import mobile_auth
 from routers import mobile_dashboard
 import os
@@ -66,7 +67,8 @@ app.include_router(vaccination_events.router, prefix="/api")  # Mobile: /api/vac
 app.include_router(vaccination_records.router, prefix="/api")  # Mobile: /api/vaccination-records
 app.include_router(medical_records.router, prefix="/api")  # Mobile: /api/medical-records
 app.include_router(pain_assessments.router, prefix="/api")  # Mobile: /api/pain-assessments
-app.include_router(ai_predictions.router, prefix="/api")  # Mobile: /api/predict, /api/predict-eld
+# AI predictions temporarily disabled to reduce deployment size
+# app.include_router(ai_predictions.router, prefix="/api")  # Mobile: /api/predict, /api/predict-eld
 app.include_router(file_uploads.router, prefix="/api")  # Mobile: /api/uploads
 
 @app.get("/")
