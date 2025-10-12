@@ -1,3 +1,6 @@
+# Backup of nixpacks.toml
+# If Railway build fails, try deleting nixpacks.toml and let Railway auto-detect
+
 [phases.setup]
 nixPkgs = ["python310", "postgresql"]
 
