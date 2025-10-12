@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from core.database import get_db
-from core import models, schemas
+from core import models, schemas, auth
 from datetime import datetime
 import uuid
 import shutil
@@ -11,23 +11,16 @@ from pathlib import Path
 router = APIRouter(prefix="/pain-assessments", tags=["Pain Assessments"])
 
 @router.post("/", response_model=schemas.PainAssessment, status_code=status.HTTP_201_CREATED)
-def create_pain_assessment(assessment: schemas.PainAssessmentCreate, db: Session = Depends(get_db)):
+def create_pain_assessment(assessment: schemas.PainAssessmentCreate, current_user: models.User = Depends(auth.get_current_mobile_user), db: Session = Depends(get_db)):
     """Create a new pain assessment"""
-    # Verify pet exists
-    pet = db.query(models.Pet).filter(models.Pet.id == assessment.pet_id).first()
-    if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
-    
-    # Verify user exists
-    user = db.query(models.User).filter(models.User.id == assessment.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    # Match old backend behavior: don't validate pet/user existence, just create the assessment
+    # Store pet_type as-is without normalization (like old backend)
     
     db_assessment = models.PainAssessment(
         pet_id=assessment.pet_id,
-        user_id=assessment.user_id,
-        pet_name=assessment.pet_name,
-        pet_type=assessment.pet_type,
+        user_id=current_user.id,  # Use authenticated user's ID
+        pet_name=assessment.pet_name or "Pet",
+        pet_type=assessment.pet_type,  # Store as-is without normalization
         pain_level=assessment.pain_level,
         pain_score=assessment.pain_score,
         assessment_date=assessment.assessment_date,
@@ -48,30 +41,22 @@ def create_pain_assessment(assessment: schemas.PainAssessmentCreate, db: Session
 @router.post("/with-image/", response_model=schemas.PainAssessment, status_code=status.HTTP_201_CREATED)
 async def create_pain_assessment_with_image(
     pet_id: int = Form(...),
-    user_id: int = Form(...),
-    pet_name: str = Form(...),
-    pet_type: str = Form(...),
-    pain_level: str = Form(...),
-    pain_score: Optional[int] = Form(None),
-    assessment_date: str = Form(...),
+    pet_name: Optional[str] = Form(None),
+    pet_type: Optional[str] = Form(None),
+    pain_level: Optional[str] = Form(None),
+    pain_score: int = Form(...),
+    assessment_date: Optional[str] = Form(None),
     recommendations: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
     basic_answers: Optional[str] = Form(None),
     assessment_answers: Optional[str] = Form(None),
     questions_completed: bool = Form(False),
-    file: Optional[UploadFile] = File(None),  # Changed from 'image' to 'file' to match mobile app
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(auth.get_current_mobile_user),
     db: Session = Depends(get_db)
 ):
     """Create a new pain assessment with image upload"""
-    # Verify pet exists
-    pet = db.query(models.Pet).filter(models.Pet.id == pet_id).first()
-    if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
-    
-    # Verify user exists
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    # Match old backend behavior: don't validate pet/user existence
     
     # Handle image upload
     image_url = None
@@ -110,9 +95,9 @@ async def create_pain_assessment_with_image(
     
     db_assessment = models.PainAssessment(
         pet_id=pet_id,
-        user_id=user_id,
+        user_id=current_user.id,  # Use authenticated user's ID
         pet_name=pet_name,
-        pet_type=pet_type,
+        pet_type=pet_type,  # Store as-is without normalization
         pain_level=pain_level,
         pain_score=pain_score,
         assessment_date=assessment_date,
