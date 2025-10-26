@@ -120,7 +120,7 @@ export const appointmentService = {
 
   // Get appointment by ID
   getAppointment: async (id: number): Promise<Appointment> => {
-    const response = await axios.get(`${API_BASE_URL}/appointments/${id}`, {
+    const response = await axios.get(`${API_BASE_URL}/appointments/${id}/`, {
       headers: getAuthHeaders()
     });
     return response.data;
@@ -136,7 +136,7 @@ export const appointmentService = {
 
   // Update appointment
   updateAppointment: async (id: number, appointment: AppointmentUpdate): Promise<Appointment> => {
-    const response = await axios.put(`${API_BASE_URL}/appointments/${id}`, appointment, {
+    const response = await axios.put(`${API_BASE_URL}/appointments/${id}/`, appointment, {
       headers: getAuthHeaders()
     });
     return response.data;
@@ -144,7 +144,7 @@ export const appointmentService = {
 
   // Delete appointment
   deleteAppointment: async (id: number): Promise<void> => {
-    await axios.delete(`${API_BASE_URL}/appointments/${id}`, {
+    await axios.delete(`${API_BASE_URL}/appointments/${id}/`, {
       headers: getAuthHeaders()
     });
   }
@@ -166,7 +166,7 @@ export const serviceRequestService = {
 
   // Get service request by ID
   getServiceRequest: async (id: number): Promise<ServiceRequest> => {
-    const response = await axios.get(`${API_BASE_URL}/appointments/requests/${id}`, {
+    const response = await axios.get(`${API_BASE_URL}/appointments/requests/${id}/`, {
       headers: getAuthHeaders()
     });
     return response.data;
@@ -182,7 +182,7 @@ export const serviceRequestService = {
 
   // Update service request
   updateServiceRequest: async (id: number, request: ServiceRequestUpdate): Promise<ServiceRequest> => {
-    const response = await axios.put(`${API_BASE_URL}/appointments/requests/${id}`, request, {
+    const response = await axios.put(`${API_BASE_URL}/appointments/requests/${id}/`, request, {
       headers: getAuthHeaders()
     });
     return response.data;
@@ -190,7 +190,7 @@ export const serviceRequestService = {
 
   // Delete service request
   deleteServiceRequest: async (id: number): Promise<void> => {
-    await axios.delete(`${API_BASE_URL}/appointments/requests/${id}`, {
+    await axios.delete(`${API_BASE_URL}/appointments/requests/${id}/`, {
       headers: getAuthHeaders()
     });
   }
