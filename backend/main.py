@@ -19,10 +19,9 @@ except Exception as e:
     print(f"⚠️ .env file loading failed: {e}")
     print("📋 Using system environment variables instead")
 
-# Force set DATABASE_URL if not found
-if not os.getenv("DATABASE_URL"):
-    print("🔧 Setting DATABASE_URL from Railway configuration")
-    os.environ["DATABASE_URL"] = "postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@postgres.railway.internal:5432/railway"
+# Force set DATABASE_URL for Railway
+print("🔧 Setting DATABASE_URL for Railway")
+os.environ["DATABASE_URL"] = "postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@postgres.railway.internal:5432/railway"
 
 # Debug: Check if AI_API_KEY is loaded
 ai_key = os.getenv("AI_API_KEY")
