@@ -3,8 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# Use Railway database URL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@postgres.railway.internal:5432/railway")
+# Use Railway database URL with public external URL
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@shuttle.proxy.rlwy.net:43936/railway")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
