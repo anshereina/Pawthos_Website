@@ -120,7 +120,12 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Pawthos API"}
+    return {
+        "message": "Welcome to Pawthos API",
+        "version": "NUCLEAR-CORS-FIX-v1",
+        "timestamp": datetime.utcnow().isoformat(),
+        "cors_status": "SUPER_PERMISSIVE"
+    }
 
 @app.get("/health")
 def health_check():
