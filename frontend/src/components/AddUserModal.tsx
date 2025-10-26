@@ -109,8 +109,17 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   };
 
   const createAdminWithOTP = async () => {
+    console.log('🔧 Making API request to:', `${API_BASE_URL}/users/admins/verify-otp`);
+    console.log('🔧 Request headers:', { Authorization: `Bearer ${token}` });
+    console.log('🔧 Request data:', {
+      name: formData.name,
+      email: formData.email,
+      password: 'temp_password',
+      otp_code: '000000'
+    });
+    
     // Create the admin account and send OTP for first login
-    await axios.post(
+    const response = await axios.post(
       `${API_BASE_URL}/users/admins/verify-otp`,
       {
         name: formData.name,
@@ -120,6 +129,9 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
+    
+    console.log('✅ API response:', response);
+    return response;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,12 +152,16 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       setIsSubmitting(true);
       setSubmitError(null);
       try {
+        console.log('🔧 Creating admin with data:', { name: formData.name, email: formData.email });
         // Create admin account and send OTP for first login
         await createAdminWithOTP();
+        console.log('✅ Admin created successfully');
         setOtpSent(true);
         onSuccess();
         handleClose();
       } catch (err: any) {
+        console.error('❌ Admin creation error:', err);
+        console.error('❌ Error response:', err.response);
         const errorMessage = err.response?.data?.detail || 
                             (typeof err.response?.data === 'string' ? err.response.data : 'Failed to create admin');
         setSubmitError(errorMessage);
