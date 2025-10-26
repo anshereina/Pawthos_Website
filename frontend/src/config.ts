@@ -1,9 +1,12 @@
 // Centralized config for API endpoints and other constants
 // Using pawthos_app backend (mobile backend) for both mobile and web apps
 
-// Force HTTPS for Railway backend - AGGRESSIVE FIX
+// Force HTTPS for Railway backend - NUCLEAR FIX
 const getApiBaseUrl = () => {
-  const envUrl = process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE_URL || 'https://pawthoswebsite-production.up.railway.app';
+  // Ignore localhost URLs completely
+  const envUrl = process.env.REACT_APP_API_URL || 
+    (process.env.REACT_APP_API_BASE_URL && !process.env.REACT_APP_API_BASE_URL.includes('localhost') ? process.env.REACT_APP_API_BASE_URL : null) ||
+    'https://pawthoswebsite-production.up.railway.app';
   
   // Always force HTTPS for Railway
   if (envUrl.includes('pawthoswebsite-production.up.railway.app')) {

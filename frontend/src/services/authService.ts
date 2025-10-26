@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pawthoswebsite-production.up.railway.app';
+import { API_BASE_URL } from '../config';
 
 export interface ForgotPasswordRequest {
   email: string;
