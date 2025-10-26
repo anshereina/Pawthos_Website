@@ -37,6 +37,15 @@ if db_url:
 else:
     print("❌ DATABASE_URL not found in environment variables")
 
+# Create database tables
+print("🔧 Creating database tables...")
+try:
+    from core.database import Base
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully")
+except Exception as e:
+    print(f"❌ Error creating database tables: {e}")
+
 # Environment variables are set in run.txt
 from routers import auth, users, pets, reports, alerts, animal_control_records, meat_inspection_records, shipping_permit_records
 from routers import vaccination_records
