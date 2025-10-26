@@ -30,7 +30,7 @@ export interface UpdateAlertData {
 }
 
 class AlertService {
-  private baseUrl = `${API_BASE_URL}/alerts`;
+  private baseUrl = `${API_BASE_URL}/alerts/`;
 
   constructor() {
     console.log('🔧 AlertService baseUrl:', this.baseUrl);

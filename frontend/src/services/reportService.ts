@@ -33,7 +33,7 @@ export interface UpdateReportData {
 }
 
 class ReportService {
-  private baseUrl = `${API_BASE_URL}/reports`;
+  private baseUrl = `${API_BASE_URL}/reports/`;
 
   constructor() {
     console.log('🔧 ReportService baseUrl:', this.baseUrl);
