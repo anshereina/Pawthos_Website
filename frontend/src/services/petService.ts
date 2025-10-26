@@ -41,7 +41,7 @@ export interface UpdatePetData {
 }
 
 class PetService {
-  private baseUrl = `${API_BASE_URL}/pets/`;
+  private baseUrl = `${API_BASE_URL}/pets`;
 
   async getPets(species?: string, search?: string): Promise<Pet[]> {
     const params = new URLSearchParams();
