@@ -218,13 +218,19 @@ def send_email_otp(email: str, otp_code: str):
         
         msg.attach(MIMEText(body, 'plain'))
         
-        # Send email
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        # Send email with timeout
+        print(f"🔧 Attempting to send email to {email}")
+        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+        print(f"🔧 SMTP connection established")
         server.starttls()
+        print(f"🔧 TLS started")
         server.login(SMTP_USER, SMTP_PASS)
+        print(f"🔧 SMTP login successful")
         text = msg.as_string()
         server.sendmail(SMTP_USER, email, text)
+        print(f"🔧 Email sent successfully")
         server.quit()
+        print(f"🔧 SMTP connection closed")
         
         print(f"✅ OTP email sent to {email}")
         return True
