@@ -36,8 +36,13 @@ from routers import vaccination_drives
 from routers import appointments
 from routers import pain_assessments
 from routers import file_uploads
-# AI features enabled
-from routers import ai_predictions
+# AI features (optional - may not be available in Railway)
+try:
+    from routers import ai_predictions
+    AI_ENABLED = True
+except ImportError as e:
+    print(f"⚠️ AI features disabled: {e}")
+    AI_ENABLED = False
 from routers import mobile_auth
 from routers import mobile_dashboard
 from datetime import datetime
@@ -86,6 +91,10 @@ app.include_router(pain_assessments.router)
 app.include_router(file_uploads.router)
 app.include_router(reproductive_records.router)
 
+# AI predictions (only if available)
+if AI_ENABLED:
+    app.include_router(ai_predictions.router)
+
 # Mobile-specific endpoints with /api prefix
 app.include_router(mobile_auth.router)  # Mobile: /api/register, /api/login, /api/verify-otp, /api/me
 app.include_router(mobile_dashboard.router)  # Mobile: /api/dashboard, /api/update-profile
@@ -95,8 +104,9 @@ app.include_router(vaccination_events.router, prefix="/api")  # Mobile: /api/vac
 app.include_router(vaccination_records.router, prefix="/api")  # Mobile: /api/vaccination-records
 app.include_router(medical_records.router, prefix="/api")  # Mobile: /api/medical-records
 app.include_router(pain_assessments.router, prefix="/api")  # Mobile: /api/pain-assessments
-# AI predictions enabled
-app.include_router(ai_predictions.router, prefix="/api")  # Mobile: /api/predict, /api/predict-eld
+# AI predictions (only if available)
+if AI_ENABLED:
+    app.include_router(ai_predictions.router, prefix="/api")  # Mobile: /api/predict, /api/predict-eld
 app.include_router(file_uploads.router, prefix="/api")  # Mobile: /api/uploads
 app.include_router(alerts.router, prefix="/api")  # Mobile: /api/alerts
 

@@ -14,13 +14,15 @@ pydantic==2.10.4
 pydantic-settings==2.6.1
 fastapi-mail==1.5.0
 
-# AI/ML Dependencies 
-numpy>=1.26.0
-torch>=2.1.0
-torchvision>=0.16.0
-efficientnet-pytorch>=0.7.1
-Pillow>=10.1.0
-opencv-python-headless>=4.8.1.78
-scikit-learn>=1.3.2
-joblib>=1.3.2
-google-generativeai>=0.3.2
+# Lightweight AI/ML Dependencies for Railway
+numpy==1.26.4
+Pillow==10.4.0
+scikit-learn==1.4.2
+joblib==1.4.2
+
+# Optional heavy dependencies (commented out for Railway)
+# torch>=2.1.0
+# torchvision>=0.16.0
+# efficientnet-pytorch>=0.7.1
+# opencv-python-headless>=4.8.1.78
+# google-generativeai>=0.3.2

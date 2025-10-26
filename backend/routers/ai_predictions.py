@@ -2,8 +2,16 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from core.auth import get_current_user
 from core.models import User
-from services.ai_service import ai_service
 import logging
+
+# Optional AI service import
+try:
+    from services.ai_service import ai_service
+    AI_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ AI service not available: {e}")
+    AI_SERVICE_AVAILABLE = False
+    ai_service = None
 
 router = APIRouter()
 security = HTTPBearer()
@@ -13,6 +21,11 @@ async def predict_pain_basic(file: UploadFile = File(...)):
     """
     Basic pain prediction endpoint using Haar cascades and heuristics
     """
+    if not AI_SERVICE_AVAILABLE:
+        raise HTTPException(
+            status_code=503, 
+            detail="AI service not available. Please contact administrator."
+        )
     try:
         if not file.content_type or not file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="File must be an image")
@@ -67,6 +80,11 @@ async def predict_pain_eld(
     """
     Enhanced pain prediction using Ensemble Landmark Detector (ELD) with 48 landmarks
     """
+    if not AI_SERVICE_AVAILABLE:
+        raise HTTPException(
+            status_code=503, 
+            detail="AI service not available. Please contact administrator."
+        )
     try:
         if not file.content_type or not file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="File must be an image")
