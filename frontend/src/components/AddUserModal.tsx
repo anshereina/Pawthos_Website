@@ -111,6 +111,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   const createAdminWithOTP = async () => {
     console.log('🔧 Making API request to:', `${API_BASE_URL}/users/admins/verify-otp`);
     console.log('🔧 Request headers:', { Authorization: `Bearer ${token}` });
+    console.log('🔧 Token exists:', !!token);
+    console.log('🔧 Token length:', token ? token.length : 0);
     console.log('🔧 Request data:', {
       name: formData.name,
       email: formData.email,
@@ -127,7 +129,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
         password: 'temp_password', // This will be replaced by the OTP on the backend
         otp_code: '000000' // Backend ignores this validation
       },
-      { headers: { Authorization: `Bearer ${token}` } }
+      { 
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 30000 // 30 second timeout
+      }
     );
     
     console.log('✅ API response:', response);
