@@ -26,6 +26,13 @@ if ai_key:
 else:
     print("❌ AI_API_KEY not found in environment variables")
 
+# Debug: Check DATABASE_URL
+db_url = os.getenv("DATABASE_URL")
+if db_url:
+    print(f"✅ DATABASE_URL loaded: {db_url[:20]}...")
+else:
+    print("❌ DATABASE_URL not found in environment variables")
+
 # Environment variables are set in run.txt
 from routers import auth, users, pets, reports, alerts, animal_control_records, meat_inspection_records, shipping_permit_records
 from routers import vaccination_records

@@ -118,32 +118,46 @@ def login(login_data: schemas.UserLogin, db: Session = Depends(get_db), response
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "*"
     
-    user = auth.authenticate_admin(db, login_data.email, login_data.password)
-    user_type = "admin"
-    if not user:
-        user = auth.authenticate_user(db, login_data.email, login_data.password)
-        user_type = "user"
+    try:
+        print(f"🔐 Login attempt for: {login_data.email}")
+        
+        user = auth.authenticate_admin(db, login_data.email, login_data.password)
+        print(f"👤 Admin auth result: {user is not None}")
+        
+        user_type = "admin"
+        if not user:
+            user = auth.authenticate_user(db, login_data.email, login_data.password)
+            user_type = "user"
+            print(f"👤 User auth result: {user is not None}")
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email, password, or account not confirmed",
-            headers={"WWW-Authenticate": "Bearer"},
+        if not user:
+            print(f"❌ Authentication failed for: {login_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email, password, or account not confirmed",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        print(f"✅ Authentication successful for: {login_data.email} (type: {user_type})")
+        
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = auth.create_access_token(
+            data={"sub": user.email, "user_type": user_type}, expires_delta=access_token_expires
         )
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
-        data={"sub": user.email, "user_type": user_type}, expires_delta=access_token_expires
-    )
+        require_password_change = bool(getattr(user, "must_change_password", False)) if user_type == "admin" else False
 
-    require_password_change = bool(getattr(user, "must_change_password", False)) if user_type == "admin" else False
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user_type": user_type,
-        "require_password_change": require_password_change,
-    }
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user_type": user_type,
+            "require_password_change": require_password_change,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"💥 Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 @router.post("/change-password")
 def change_password(
