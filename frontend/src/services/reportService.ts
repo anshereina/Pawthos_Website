@@ -35,6 +35,10 @@ export interface UpdateReportData {
 class ReportService {
   private baseUrl = `${API_BASE_URL}/reports`;
 
+  constructor() {
+    console.log('🔧 ReportService baseUrl:', this.baseUrl);
+  }
+
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('access_token');
     return {

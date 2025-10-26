@@ -32,6 +32,10 @@ export interface UpdateAlertData {
 class AlertService {
   private baseUrl = `${API_BASE_URL}/alerts`;
 
+  constructor() {
+    console.log('🔧 AlertService baseUrl:', this.baseUrl);
+  }
+
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('access_token');
     return {
