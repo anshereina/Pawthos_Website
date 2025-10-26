@@ -202,9 +202,20 @@ def test_endpoint():
 @app.get("/test-cors")
 def test_cors():
     return {
-        "message": "CORS is working", 
+        "message": "CORS is working",
         "timestamp": datetime.utcnow().isoformat(),
         "cors_origins": ["*", "https://pawthos-website.vercel.app"]
+    }
+
+@app.get("/test-smtp")
+def test_smtp():
+    from core.config import SMTP_USER, SMTP_PASS
+    return {
+        "message": "SMTP Configuration Test",
+        "timestamp": datetime.utcnow().isoformat(),
+        "smtp_user_configured": bool(SMTP_USER),
+        "smtp_pass_configured": bool(SMTP_PASS),
+        "smtp_user_value": SMTP_USER[:3] + "***" if SMTP_USER else None
     }
 
 # Mobile app photo upload endpoints (UPLOAD_DIR already created above)
