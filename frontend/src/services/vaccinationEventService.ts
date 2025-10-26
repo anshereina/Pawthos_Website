@@ -28,7 +28,7 @@ export interface VaccinationEventUpdate {
 }
 
 class VaccinationEventService {
-  private baseUrl = `${config.apiUrl}/vaccination-events`;
+  private baseUrl = `${config.apiUrl}/vaccination-events/`;
 
   async getAllVaccinationEvents(): Promise<VaccinationEvent[]> {
     const response = await fetch(this.baseUrl, {
