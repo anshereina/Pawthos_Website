@@ -65,7 +65,7 @@ app.add_middleware(
         "http://192.168.1.13:8000",  # Mobile app backend IP
         "http://192.168.1.13:3000",  # Mobile app frontend IP
         "https://pawthos-website.vercel.app",  # Production Vercel frontend
-        "*"  # Allow all origins for development (remove in production)
+        "*"  # Allow all origins for development
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -138,7 +138,11 @@ def test_endpoint():
 
 @app.get("/test-cors")
 def test_cors():
-    return {"message": "CORS is working", "timestamp": datetime.utcnow().isoformat()}
+    return {
+        "message": "CORS is working", 
+        "timestamp": datetime.utcnow().isoformat(),
+        "cors_origins": ["*", "https://pawthos-website.vercel.app"]
+    }
 
 # Mobile app photo upload endpoints (UPLOAD_DIR already created above)
 @app.post("/api/upload-user-photo")

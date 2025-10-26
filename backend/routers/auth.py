@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from core import models, schemas, auth
@@ -102,7 +102,13 @@ def confirm_otp(data: schemas.OTPConfirm, db: Session = Depends(get_db)):
     return {"message": f"{user_type.capitalize()} email confirmed successfully."}
 
 @router.post("/login", response_model=schemas.Token)
-def login(login_data: schemas.UserLogin, db: Session = Depends(get_db)):
+def login(login_data: schemas.UserLogin, db: Session = Depends(get_db), response: Response = None):
+    # Add CORS headers manually
+    if response:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    
     user = auth.authenticate_admin(db, login_data.email, login_data.password)
     user_type = "admin"
     if not user:
