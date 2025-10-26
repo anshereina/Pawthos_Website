@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 
 interface UserData {
   id: number;
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userType = payload.user_type || 'admin';
             
             // Fetch user data using the stored token
-            const response = await axios.get('http://localhost:8000/auth/me', {
+            const response = await axios.get(`${API_BASE_URL}/auth/me`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           } catch (decodeError) {
             console.error('Token decode error:', decodeError);
             // Fallback: try to determine user type from user data
-            const response = await axios.get('http://localhost:8000/auth/me', {
+            const response = await axios.get(`${API_BASE_URL}/auth/me`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             

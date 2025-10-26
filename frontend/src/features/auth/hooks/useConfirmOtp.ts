@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../config';
 
 interface ConfirmOtpForm {
   email: string;
@@ -17,7 +18,7 @@ export default function useConfirmOtp(options: UseConfirmOtpOptions) {
   const confirmOtp = async (form: ConfirmOtpForm) => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:8000/auth/confirm-otp', form);
+      await axios.post(`${API_BASE_URL}/auth/confirm-otp`, form);
       setLoading(false);
       options.onSuccess && options.onSuccess();
     } catch (err: any) {
