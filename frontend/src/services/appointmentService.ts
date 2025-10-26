@@ -111,9 +111,14 @@ export const appointmentService = {
     date_from?: string;
     date_to?: string;
   }) => {
+    // Filter out empty parameters
+    const filteredParams = params ? Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== '')
+    ) : undefined;
+    
     const response = await axios.get(`${API_BASE_URL}/appointments/`, {
       headers: getAuthHeaders(),
-      params
+      params: filteredParams
     });
     return response.data;
   },
@@ -157,9 +162,14 @@ export const serviceRequestService = {
     search?: string;
     status?: string;
   }) => {
+    // Filter out empty parameters
+    const filteredParams = params ? Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== '')
+    ) : undefined;
+    
     const response = await axios.get(`${API_BASE_URL}/appointments/requests/`, {
       headers: getAuthHeaders(),
-      params
+      params: filteredParams
     });
     return response.data;
   },
