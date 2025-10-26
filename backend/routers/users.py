@@ -307,20 +307,29 @@ def verify_otp_and_create_admin(
     current_admin: models.Admin = Depends(auth.get_current_admin)
 ):
     """Create admin and issue OTP for first login and password change."""
+    print(f"🔧 Admin creation request received: {admin_data}")
+    
+    # Check if email is already registered as admin
+    print(f"🔧 Checking if email {admin_data.email} is already an admin...")
     existing_admin = auth.get_admin(db, email=admin_data.email)
     if existing_admin:
+        print(f"❌ Email {admin_data.email} is already registered as admin")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered as admin"
         )
+    print(f"✅ Email {admin_data.email} is not registered as admin")
     
     # Check if email is already registered as a regular user
+    print(f"🔧 Checking if email {admin_data.email} is already a user...")
     existing_user = auth.get_user(db, email=admin_data.email)
     if existing_user:
+        print(f"❌ Email {admin_data.email} is already registered as user")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered as a user. Cannot add existing users as admins."
         )
+    print(f"✅ Email {admin_data.email} is not registered as user")
 
     # Check if there's a stored OTP from the send-otp call
     # For now, we'll generate a new OTP and use it as the password
