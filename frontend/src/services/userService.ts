@@ -18,7 +18,7 @@ export interface Recipient {
 }
 
 class UserService {
-  private baseUrl = `${API_BASE_URL}/users`;
+  private baseUrl = `${API_BASE_URL}/users/`;
 
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('access_token');

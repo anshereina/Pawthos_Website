@@ -62,7 +62,7 @@ export interface UpdateMedicalRecordData {
 }
 
 class MedicalRecordService {
-  private baseUrl = `${API_BASE_URL}/medical-records`;
+  private baseUrl = `${API_BASE_URL}/medical-records/`;
 
   private getHeaders(): Record<string, string> {
     const token = localStorage.getItem('access_token');
