@@ -59,7 +59,7 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://192.168.1.13:8000",  # Mobile app backend IP
         "http://192.168.1.13:3000",  # Mobile app frontend IP
-        "https://your-frontend.vercel.app",  # TODO: Replace with your actual Vercel URL
+        "https://pawthos-website.vercel.app",  # Production Vercel frontend
         "*"  # Allow all origins for development (remove in production)
     ],
     allow_credentials=True,

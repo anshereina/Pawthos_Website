@@ -30,8 +30,10 @@ export default function useLogin(options: UseLoginOptions) {
     try {
       console.log('Attempting login with:', form.email);
       
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pawthoswebsite-production.up.railway.app';
+      
       const loginRes = await axios.post(
-        'http://localhost:8000/auth/login',
+        `${API_BASE_URL}/auth/login`,
         { email: form.email, password: form.password },
         { headers: { 'Content-Type': 'application/json' } }
       );
@@ -43,7 +45,7 @@ export default function useLogin(options: UseLoginOptions) {
       // Fallback: if user_type is not in response, determine from user data
       let finalUserType = user_type;
       
-      const userRes = await axios.get('http://localhost:8000/auth/me', {
+      const userRes = await axios.get(`${API_BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${access_token}` }
       });
       
