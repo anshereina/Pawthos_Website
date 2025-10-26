@@ -110,11 +110,15 @@ def send_email_otp(to_email: str, otp_code: str):
 def authenticate_admin(db: Session, email: str, password: str):
     user = get_admin(db, email)
     if not user:
+        print(f"❌ Admin not found: {email}")
         return False
     if not verify_password(password, user.password_hash):
+        print(f"❌ Password verification failed for: {email}")
         return False
     if not user.is_confirmed:
+        print(f"❌ Admin not confirmed: {email} (is_confirmed: {user.is_confirmed})")
         return False
+    print(f"✅ Admin authentication successful: {email}")
     return user
 
 def authenticate_user(db: Session, email: str, password: str):

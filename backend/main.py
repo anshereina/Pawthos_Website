@@ -46,6 +46,41 @@ try:
 except Exception as e:
     print(f"❌ Error creating database tables: {e}")
 
+# Create default admin account
+print("🔧 Creating default admin account...")
+try:
+    from core.database import SessionLocal
+    from core.models import Admin
+    from core.auth import get_password_hash
+    
+    db = SessionLocal()
+    
+    # Check if admin already exists
+    existing_admin = db.query(Admin).filter(Admin.email == "admin@pawthos.com").first()
+    
+    if not existing_admin:
+        # Create new admin
+        admin = Admin(
+            name="Admin User",
+            email="admin@pawthos.com",
+            password_hash=get_password_hash("admin123"),
+            is_confirmed=1,  # Set as confirmed
+            must_change_password=False
+        )
+        db.add(admin)
+        db.commit()
+        print("✅ Default admin account created: admin@pawthos.com / admin123")
+    else:
+        # Update existing admin to be confirmed
+        existing_admin.is_confirmed = 1
+        existing_admin.password_hash = get_password_hash("admin123")
+        db.commit()
+        print("✅ Existing admin account updated: admin@pawthos.com / admin123")
+    
+    db.close()
+except Exception as e:
+    print(f"❌ Error creating admin account: {e}")
+
 # Environment variables are set in run.txt
 from routers import auth, users, pets, reports, alerts, animal_control_records, meat_inspection_records, shipping_permit_records
 from routers import vaccination_records
