@@ -101,6 +101,15 @@ def confirm_otp(data: schemas.OTPConfirm, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"{user_type.capitalize()} email confirmed successfully."}
 
+@router.options("/login")
+def login_options(response: Response):
+    """Handle preflight OPTIONS request for login"""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return {"message": "OK"}
+
 @router.post("/login", response_model=schemas.Token)
 def login(login_data: schemas.UserLogin, db: Session = Depends(get_db), response: Response = None):
     # Add CORS headers manually
