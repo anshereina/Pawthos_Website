@@ -108,9 +108,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     }
   };
 
-  const createAdminRecordAfterOTP = async () => {
-    // Create the admin with the OTP as the initial password
-    // The OTP was already sent in the previous step, now we create the admin account
+  const createAdminWithOTP = async () => {
+    // Create the admin account and send OTP for first login
     await axios.post(
       `${API_BASE_URL}/users/admins/verify-otp`,
       {
@@ -141,8 +140,9 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       setIsSubmitting(true);
       setSubmitError(null);
       try {
-        // Skip the separate sendOTP call and go directly to creating admin with OTP
-        await createAdminRecordAfterOTP();
+        // Create admin account and send OTP for first login
+        await createAdminWithOTP();
+        setOtpSent(true);
         onSuccess();
         handleClose();
       } catch (err: any) {
@@ -276,7 +276,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               )}
               {userType === 'admin' && otpSent && (
                 <p className="mt-1 text-sm text-green-600">
-                  ✓ OTP sent to {formData.email} and admin account created. The user must change password on first login.
+                  ✓ Admin account created and OTP sent to {formData.email}. Use the OTP as password for first login.
                 </p>
               )}
             </div>
@@ -372,7 +372,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
                 className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
                 {userType === 'admin'
-                  ? (isSubmitting || isSendingOtp ? 'Sending OTP...' : 'Send OTP')
+                  ? (isSubmitting || isSendingOtp ? 'Creating Admin...' : 'Create Admin')
                   : (isSubmitting ? 'Creating...' : 'Create User')}
               </button>
             </div>
