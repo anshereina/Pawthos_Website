@@ -138,7 +138,7 @@ def test_endpoint():
 
 @app.get("/test-cors")
 def test_cors():
-    return {"message": "CORS is working"}
+    return {"message": "CORS is working", "timestamp": datetime.utcnow().isoformat()}
 
 # Mobile app photo upload endpoints (UPLOAD_DIR already created above)
 @app.post("/api/upload-user-photo")
