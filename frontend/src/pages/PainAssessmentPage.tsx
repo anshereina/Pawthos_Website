@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Upload, Eye, Trash2 } from 'lucide-react';
+import { Search, Filter, Upload, Eye, Trash2, Camera } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
@@ -275,7 +275,16 @@ const PainAssessmentPage: React.FC = () => {
                         <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
                         <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
                         <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pet_type}</td>
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{formatAssessmentDate(assessment.assessment_date)}</td>
+                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">
+                          <div className="flex items-center space-x-2">
+                            <span>{formatAssessmentDate(assessment.assessment_date)}</span>
+                            {assessment.image_url && (
+                              <div title="Has photo">
+                                <Camera size={16} className="text-green-600" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
                         <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${

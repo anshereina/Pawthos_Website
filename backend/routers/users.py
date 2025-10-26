@@ -271,6 +271,15 @@ def send_otp_to_existing_email(
             detail="Email already registered as admin"
         )
     
+    # Check if email is already registered as a regular user
+    existing_user = auth.get_user(db, email=email_data.email)
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered as a user. Cannot add existing users as admins."
+        )
+    
     # Generate OTP
     otp_code = auth.generate_otp()
     otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
@@ -304,8 +313,17 @@ def verify_otp_and_create_admin(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered as admin"
         )
+    
+    # Check if email is already registered as a regular user
+    existing_user = auth.get_user(db, email=admin_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered as a user. Cannot add existing users as admins."
+        )
 
-    # Generate OTP for first login and send it to the admin's email
+    # Check if there's a stored OTP from the send-otp call
+    # For now, we'll generate a new OTP and use it as the password
     otp_code = auth.generate_otp()
     otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
@@ -326,7 +344,7 @@ def verify_otp_and_create_admin(
     db.commit()
     db.refresh(db_admin)
 
-    # Send OTP email; if this fails, roll back creation
+    # Send OTP email with the same OTP used as password
     try:
         auth.send_email_otp(admin_data.email, otp_code)
     except Exception as e:
@@ -347,7 +365,15 @@ def create_admin(
     if existing_admin:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Email already registered as admin"
+        )
+    
+    # Check if email is already registered as a regular user
+    existing_user = auth.get_user(db, email=admin_create.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered as a user. Cannot add existing users as admins."
         )
     
     hashed_password = auth.get_password_hash(admin_create.password)

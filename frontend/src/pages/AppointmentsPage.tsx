@@ -282,16 +282,17 @@ const AppointmentsPage: React.FC = () => {
 
           {/* Appointments & Requests Table */}
           {!isLoading && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                  <tr>
-                    {columns.map(col => (
-                      <th key={col} className="px-6 py-4 text-left font-semibold text-sm">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                    <tr>
+                      {columns.map(col => (
+                        <th key={col} className="px-6 py-4 text-left font-semibold text-sm">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
                   {currentData.length === 0 ? (
                     <tr>
                       <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500">
@@ -310,34 +311,22 @@ const AppointmentsPage: React.FC = () => {
                           <>
                             <td className="px-6 py-4">{item.id}</td>
                             <td className="px-6 py-4">{item.client_name || item.user?.name || item.pet?.owner_name || '-'}</td>
-                            <td className="px-6 py-4">{item.pet?.name || '-'}</td>
+                            <td className="px-6 py-4">{item.pet_name || item.pet?.name || '-'}</td>
                             <td className="px-6 py-4">{item.type}</td>
                             <td className="px-6 py-4">{item.date} {item.time}</td>
-                            <td className="px-6 py-4 relative" onClick={(e) => e.stopPropagation()}>
-                              <div className="inline-block relative status-dropdown">
+                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative inline-block status-dropdown">
                                 <button
+                                  id={`status-btn-${item.id}`}
                                   className="flex items-center space-x-1 px-3 py-2 border border-green-300 bg-white text-green-700 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all duration-300"
-                                  onClick={() => setStatusDropdownOpen(statusDropdownOpen === item.id ? null : item.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStatusDropdownOpen(statusDropdownOpen === item.id ? null : item.id);
+                                  }}
                                 >
                                   <span>{item.status || 'Pending'}</span>
                                   <ChevronDown size={18} />
                                 </button>
-                                {statusDropdownOpen === item.id && (
-                                  <div className="absolute left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-max">
-                                    {STATUS_OPTIONS.map((option: string) => (
-                                      <div
-                                        key={option}
-                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200"
-                                        onClick={() => {
-                                          setStatusDropdownOpen(null);
-                                          openStatusModal(option as any, item.id, 'appointment');
-                                        }}
-                                      >
-                                        {option}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -362,31 +351,19 @@ const AppointmentsPage: React.FC = () => {
                                 ? `${item.preferred_date} ${item.preferred_time}` 
                                 : '-'}
                             </td>
-                            <td className="px-6 py-4 relative" onClick={(e) => e.stopPropagation()}>
-                              <div className="inline-block relative status-dropdown">
+                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative inline-block status-dropdown">
                                 <button
+                                  id={`status-btn-${item.id}`}
                                   className="flex items-center space-x-1 px-3 py-2 border border-green-300 bg-white text-green-700 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all duration-300"
-                                  onClick={() => setStatusDropdownOpen(statusDropdownOpen === item.id ? null : item.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStatusDropdownOpen(statusDropdownOpen === item.id ? null : item.id);
+                                  }}
                                 >
                                   <span>{item.status || 'Pending'}</span>
                                   <ChevronDown size={18} />
                                 </button>
-                                {statusDropdownOpen === item.id && (
-                                  <div className="absolute left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-max">
-                                    {STATUS_OPTIONS.map((option: string) => (
-                                      <div
-                                        key={option}
-                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200"
-                                        onClick={() => {
-                                          setStatusDropdownOpen(null);
-                                          openStatusModal(option as any, item.id, 'request');
-                                        }}
-                                      >
-                                        {option}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -439,6 +416,46 @@ const AppointmentsPage: React.FC = () => {
                   )}
                 </tbody>
               </table>
+              </div>
+
+              {/* Status Dropdown Menu - Rendered outside table to avoid z-index issues */}
+              {statusDropdownOpen !== null && (() => {
+                const buttonElement = document.getElementById(`status-btn-${statusDropdownOpen}`);
+                if (!buttonElement) return null;
+                
+                const rect = buttonElement.getBoundingClientRect();
+                const dropdownStyle = {
+                  position: 'fixed' as const,
+                  top: `${rect.bottom + 8}px`,
+                  left: `${rect.left}px`,
+                  minWidth: '150px',
+                  zIndex: 9999
+                };
+
+                return (
+                  <div 
+                    className="bg-white border border-gray-200 rounded-xl shadow-2xl"
+                    style={dropdownStyle}
+                  >
+                    {STATUS_OPTIONS.map((option: string) => (
+                      <div
+                        key={option}
+                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
+                        onClick={() => {
+                          setStatusDropdownOpen(null);
+                          openStatusModal(
+                            option as any, 
+                            statusDropdownOpen, 
+                            activeTab === 'appointments' ? 'appointment' : 'request'
+                          );
+                        }}
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </main>

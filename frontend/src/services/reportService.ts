@@ -8,6 +8,8 @@ export interface Report {
   status: string;
   submitted_by: string;
   submitted_by_email: string;
+  image_url?: string;
+  recipient?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -18,12 +20,16 @@ export interface CreateReportData {
   status?: string;
   submitted_by: string;
   submitted_by_email: string;
+  image_url?: string;
+  recipient?: string;
 }
 
 export interface UpdateReportData {
   title?: string;
   description?: string;
   status?: string;
+  image_url?: string;
+  recipient?: string;
 }
 
 class ReportService {
@@ -138,6 +144,31 @@ class ReportService {
       return await response.json();
     } catch (error) {
       console.error('Error searching reports:', error);
+      throw error;
+    }
+  }
+
+  async uploadImage(file: File): Promise<{ url: string; filename: string }> {
+    try {
+      const token = localStorage.getItem('access_token');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${this.baseUrl}/upload-image`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error uploading image:', error);
       throw error;
     }
   }

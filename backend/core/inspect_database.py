@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 # Add the backend directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from core.database import SessionLocal
-from core import models
+from .database import SessionLocal
+from . import models
 
 def inspect_admins():
     """Inspect all admins in the database"""
@@ -151,4 +151,4 @@ if __name__ == "__main__":
         inspect_admins()
         print()
         print("To clean up unconfirmed admins, run:")
-        print("python inspect_database.py cleanup")
+        print("python core/inspect_database.py cleanup")

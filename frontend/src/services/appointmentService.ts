@@ -15,8 +15,18 @@ export interface Appointment {
   status?: string;
   created_at: string;
   updated_at?: string | null;
-  pet?: Pet; // nested relationship from backend
-  user?: AppUser; // nested relationship from backend
+  // Pet details stored directly in appointment
+  pet_name?: string;
+  pet_species?: string;
+  pet_breed?: string;
+  pet_age?: string;
+  pet_gender?: string;
+  pet_weight?: string;
+  owner_name?: string;
+  // Nested relationships from backend
+  pet?: Pet;
+  user?: AppUser;
+  client_name?: string;
 }
 
 export interface AppointmentCreate {

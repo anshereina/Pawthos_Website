@@ -141,6 +141,15 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
                     value={confirmationText}
                     onChange={(e) => setConfirmationText(e.target.value)}
                     placeholder="Type 'delete' to confirm"
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    data-form-type="other"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    name="delete-confirmation-field"
+                    id="delete-confirmation-field"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                       confirmationText && !isConfirmationValid 
                         ? 'border-red-300 bg-red-50' 

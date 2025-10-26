@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from core import models, schemas, auth
 from core.database import get_db
@@ -38,7 +38,7 @@ def generate_request_id(db: Session) -> str:
     return f"REQ-{new_num:04d}"
 
 # Appointment endpoints
-@router.get("/", response_model=List[schemas.Appointment])
+@router.get("", response_model=List[schemas.Appointment])
 def get_appointments(
     search: Optional[str] = Query(None, description="Search appointments"),
     status: Optional[str] = Query(None, description="Filter by status"),
@@ -87,6 +87,11 @@ def get_appointments(
         if not name and getattr(apt, 'pet', None) is not None:
             name = getattr(apt.pet, 'owner_name', None)
         setattr(apt, 'client_name', name)
+        
+        # Ensure time is a string for response
+        from datetime import time as datetime_time
+        if isinstance(getattr(apt, 'time', None), datetime_time):
+            apt.time = apt.time.strftime("%H:%M:%S")
 
     return appointments
 
@@ -129,10 +134,15 @@ def get_appointment(
     if not name and getattr(appointment, 'pet', None) is not None:
         name = getattr(appointment.pet, 'owner_name', None)
     setattr(appointment, 'client_name', name)
+    
+    # Ensure time is a string for response
+    from datetime import time as datetime_time
+    if isinstance(getattr(appointment, 'time', None), datetime_time):
+        appointment.time = appointment.time.strftime("%H:%M:%S")
 
     return appointment
 
-@router.post("/", response_model=schemas.Appointment)
+@router.post("", response_model=schemas.Appointment)
 def create_appointment(
     appointment: schemas.AppointmentCreate,
     db: Session = Depends(get_db),
@@ -147,21 +157,46 @@ def create_appointment(
         payload['user_id'] = current_user.id
 
     # If still missing, try to infer from pet (pet.user_id or by owner_name match)
-    if not payload.get('user_id') and payload.get('pet_id'):
+    # Also populate pet details
+    if payload.get('pet_id'):
         pet = db.query(models.Pet).filter(models.Pet.id == payload['pet_id']).first()
         if pet is not None:
-            if getattr(pet, 'user_id', None):
-                payload['user_id'] = pet.user_id
-            else:
-                # Try to match by owner_name to a User record
-                owner_user = db.query(models.User).filter(models.User.name == pet.owner_name).first()
-                if owner_user is not None:
-                    payload['user_id'] = owner_user.id
+            # Set user_id if not provided
+            if not payload.get('user_id'):
+                if getattr(pet, 'user_id', None):
+                    payload['user_id'] = pet.user_id
+                else:
+                    # Try to match by owner_name to a User record
+                    owner_user = db.query(models.User).filter(models.User.name == pet.owner_name).first()
+                    if owner_user is not None:
+                        payload['user_id'] = owner_user.id
+            
+            # Populate pet details from the pet record
+            if not payload.get('pet_name'):
+                payload['pet_name'] = getattr(pet, 'name', None)
+            if not payload.get('pet_species'):
+                payload['pet_species'] = getattr(pet, 'species', None)
+            if not payload.get('pet_breed'):
+                payload['pet_breed'] = getattr(pet, 'breed', None)
+            if not payload.get('pet_age'):
+                payload['pet_age'] = str(getattr(pet, 'age', '')) if getattr(pet, 'age', None) is not None else None
+            if not payload.get('pet_gender'):
+                payload['pet_gender'] = getattr(pet, 'gender', None)
+            if not payload.get('pet_weight'):
+                payload['pet_weight'] = str(getattr(pet, 'weight', '')) if getattr(pet, 'weight', None) is not None else None
+            if not payload.get('owner_name'):
+                payload['owner_name'] = getattr(pet, 'owner_name', None)
 
     db_appointment = models.Appointment(**payload)
     db.add(db_appointment)
     db.commit()
     db.refresh(db_appointment)
+    
+    # Ensure time is a string
+    from datetime import time as datetime_time
+    if isinstance(db_appointment.time, datetime_time):
+        db_appointment.time = db_appointment.time.strftime("%H:%M:%S")
+    
     return db_appointment
 
 @router.put("/{appointment_id}", response_model=schemas.Appointment)
@@ -184,6 +219,12 @@ def update_appointment(
     
     db.commit()
     db.refresh(appointment)
+    
+    # Ensure time is a string for response
+    from datetime import time as datetime_time
+    if isinstance(getattr(appointment, 'time', None), datetime_time):
+        appointment.time = appointment.time.strftime("%H:%M:%S")
+    
     return appointment
 
 @router.delete("/{appointment_id}")

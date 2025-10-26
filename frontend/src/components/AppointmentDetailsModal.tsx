@@ -17,7 +17,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 }) => {
   if (!isOpen || !data) return null;
 
-  const formatDate = (dateString: string | undefined) => {
+  const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -125,33 +125,104 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     </div>
                   </div>
 
-                  
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Created At
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {formatDate(data.created_at)}
+                  {(data as Appointment).pet_id && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Pet ID
+                      </label>
+                      <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                        {(data as Appointment).pet_id}
+                      </div>
                     </div>
+                  )}
+
+                  {(data as Appointment).user_id && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        User ID
+                      </label>
+                      <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                        {(data as Appointment).user_id}
+                      </div>
+                    </div>
+                  )}
+
+                  {(data as Appointment).updated_at && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Updated
+                      </label>
+                      <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                        {formatDate((data as Appointment).updated_at)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Client/Owner Information */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Client/Owner Information
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                    {(() => {
+                      const appointment = data as Appointment;
+                      const clientName = appointment.client_name || appointment.owner_name || appointment.user?.name || appointment.pet?.owner_name;
+                      const clientEmail = appointment.user?.email;
+                      const clientPhone = appointment.user?.phone_number;
+                      const clientAddress = appointment.user?.address;
+
+                      if (!clientName && !clientEmail && !clientPhone && !clientAddress) {
+                        return 'No client information available';
+                      }
+
+                      return (
+                        <div className="space-y-1">
+                          {clientName && <div><strong>Name:</strong> {clientName}</div>}
+                          {clientEmail && <div><strong>Email:</strong> {clientEmail}</div>}
+                          {clientPhone && <div><strong>Phone:</strong> {clientPhone}</div>}
+                          {clientAddress && <div><strong>Address:</strong> {clientAddress}</div>}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
+                {/* Pet Information */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Pet Information
                   </label>
                   <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                    {(data as Appointment).pet ? (
-                      <div className="space-y-1">
-                        <div><strong>Name:</strong> {(data as Appointment).pet?.name}</div>
-                        <div><strong>Owner:</strong> {(data as Appointment).pet?.owner_name}</div>
-                        <div><strong>Species:</strong> {(data as Appointment).pet?.species}</div>
-                        <div><strong>Breed:</strong> {(data as Appointment).pet?.breed || '-'}</div>
-                      </div>
-                    ) : (
-                      'No pet information available'
-                    )}
+                    {(() => {
+                      const appointment = data as Appointment;
+                      // Check for pet info from nested pet object or direct fields
+                      const petName = appointment.pet_name || appointment.pet?.name;
+                      const petSpecies = appointment.pet_species || appointment.pet?.species;
+                      const petBreed = appointment.pet_breed || appointment.pet?.breed;
+                      const petAge = appointment.pet_age;
+                      const petGender = appointment.pet_gender || appointment.pet?.gender;
+                      const petWeight = appointment.pet_weight;
+                      const petColor = appointment.pet?.color;
+                      const petDOB = appointment.pet?.date_of_birth;
+
+                      if (!petName && !petSpecies && !petBreed && !petAge && !petGender && !petWeight && !petColor && !petDOB) {
+                        return 'No pet information available';
+                      }
+
+                      return (
+                        <div className="space-y-1">
+                          {petName && <div><strong>Name:</strong> {petName}</div>}
+                          {petSpecies && <div><strong>Species:</strong> {petSpecies}</div>}
+                          {petBreed && <div><strong>Breed:</strong> {petBreed}</div>}
+                          {petAge && <div><strong>Age:</strong> {petAge}</div>}
+                          {petGender && <div><strong>Gender:</strong> {petGender}</div>}
+                          {petWeight && <div><strong>Weight:</strong> {petWeight}</div>}
+                          {petColor && <div><strong>Color:</strong> {petColor}</div>}
+                          {petDOB && <div><strong>Date of Birth:</strong> {formatDate(petDOB.toString())}</div>}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -239,15 +310,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     </label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                       {(data as ServiceRequest).handled_by || '-'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Created At
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {formatDate(data.created_at)}
                     </div>
                   </div>
                 </div>

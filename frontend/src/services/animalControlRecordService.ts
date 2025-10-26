@@ -10,6 +10,7 @@ export interface AnimalControlRecord {
   species?: string;  // feline, canine, etc.
   gender?: string;   // male, female
   date: string;
+  image_url?: string;  // URL to animal photo
   created_at: string;
   updated_at?: string;
 }
@@ -23,6 +24,7 @@ export interface AnimalControlRecordCreate {
   species?: string;
   gender?: string;
   date: string;
+  image_url?: string;  // URL to animal photo
 }
 
 export interface AnimalControlRecordUpdate {
@@ -34,6 +36,7 @@ export interface AnimalControlRecordUpdate {
   species?: string;
   gender?: string;
   date?: string;
+  image_url?: string;  // URL to animal photo
 }
 
 export interface AnimalControlStatistics {

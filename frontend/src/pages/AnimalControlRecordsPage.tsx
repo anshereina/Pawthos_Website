@@ -95,9 +95,9 @@ const AnimalControlRecordsPage: React.FC = () => {
   // Table columns based on tab
   const getColumns = () => {
     if (activeTab === 'catch') {
-      return ['Owner Name', 'Contact Number', 'Address', 'Date', 'Action'];
+      return ['Photo', 'Owner Name', 'Contact Number', 'Address', 'Date', 'Action'];
     } else {
-      return ['Owner Name', 'Contact Number', 'Address', 'Detail/Purpose', 'Date', 'Action'];
+      return ['Photo', 'Owner Name', 'Contact Number', 'Address', 'Detail/Purpose', 'Date', 'Action'];
     }
   };
 
@@ -241,6 +241,22 @@ const AnimalControlRecordsPage: React.FC = () => {
                       key={record.id}
                       className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
                     >
+                      <td className="px-4 py-3">
+                        {record.image_url ? (
+                          <img
+                            src={record.image_url}
+                            alt="Animal photo"
+                            className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                            <span className="text-gray-400 text-xs">No photo</span>
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 font-medium">{record.owner_name}</td>
                       <td className="px-4 py-3">{record.contact_number || '-'}</td>
                       <td className="px-4 py-3">{record.address || '-'}</td>

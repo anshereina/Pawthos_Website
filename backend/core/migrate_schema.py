@@ -7,7 +7,7 @@ import os
 import sys
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from core.config import DATABASE_URL
+from .config import DATABASE_URL
 import logging
 
 logging.basicConfig(level=logging.INFO)

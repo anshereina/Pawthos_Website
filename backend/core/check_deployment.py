@@ -3,7 +3,7 @@ Simple script to verify Railway deployment is working correctly.
 Run this locally to check if your deployed API is responding.
 
 Usage:
-    python check_deployment.py https://your-app.up.railway.app
+    python core/check_deployment.py https://your-app.up.railway.app
 """
 
 import sys
@@ -34,7 +34,7 @@ def check_endpoint(base_url, endpoint, method="GET", description=""):
 def main():
     if len(sys.argv) < 2:
         print("❌ Error: Please provide your Railway app URL")
-        print("Usage: python check_deployment.py https://your-app.up.railway.app")
+        print("Usage: python core/check_deployment.py https://your-app.up.railway.app")
         sys.exit(1)
     
     base_url = sys.argv[1].rstrip('/')

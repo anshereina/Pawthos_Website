@@ -68,6 +68,8 @@ class Report(Base):
     status = Column(String(20), nullable=False, default="New")  # New, In Progress, Resolved
     submitted_by = Column(String(255), nullable=False)
     submitted_by_email = Column(String(255), nullable=False)
+    image_url = Column(String(500), nullable=True)  # Optional image URL
+    recipient = Column(String(255), nullable=True)  # Optional recipient
     admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the report
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -105,6 +107,7 @@ class AnimalControlRecord(Base):
     species = Column(String(50), nullable=True)  # feline, canine, etc.
     gender = Column(String(20), nullable=True)  # male, female
     date = Column(Date, nullable=False)
+    image_url = Column(String(500), nullable=True)  # URL to animal photo
     admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the record
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -164,7 +167,7 @@ class VaccinationRecord(Base):
     pet_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
     user_id = Column(Integer, nullable=False)  # Removed ForeignKey to match mobile backend
     vaccine_name = Column(String(255), nullable=False)
-    date_given = Column(DateTime(timezone=True), nullable=True)  # Changed to DateTime to match mobile backend
+    vaccination_date = Column(DateTime(timezone=True), nullable=False)  # Changed from date_given to vaccination_date to match DB
     next_due_date = Column(DateTime(timezone=True), nullable=True)  # Changed to match mobile backend
     veterinarian = Column(String(255), nullable=True)  # Made nullable to match mobile backend
     clinic = Column(String(255), nullable=True)  # Added to match mobile backend
@@ -254,7 +257,15 @@ class Appointment(Base):
     time = Column(String(255), nullable=False)  # Changed to String to match mobile backend
     veterinarian = Column(String(255), nullable=True)
     notes = Column(Text, nullable=True)
-    status = Column(String(255), nullable=True, default="pending")  # Changed default to lowercase
+    status = Column(String(255), nullable=True, default="scheduled")  # Changed default to scheduled
+    # Pet details columns
+    pet_name = Column(String(255), nullable=True)
+    pet_species = Column(String(255), nullable=True)
+    pet_breed = Column(String(255), nullable=True)
+    pet_age = Column(String(50), nullable=True)
+    pet_gender = Column(String(50), nullable=True)
+    pet_weight = Column(String(50), nullable=True)
+    owner_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
 

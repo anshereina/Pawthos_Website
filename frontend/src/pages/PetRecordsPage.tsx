@@ -9,6 +9,7 @@ import { usePets } from '../hooks/usePets';
 import { petService, Pet } from '../services/petService';
 import { medicalRecordService, MedicalRecord } from '../services/medicalRecordService';
 import { vaccinationRecordService, VaccinationRecord } from '../services/vaccinationRecordService';
+import { API_BASE_URL } from '../config';
 import AddPetModal from '../components/AddPetModal';
 import EditPetModal from '../components/EditPetModal';
 import DeletePetModal from '../components/DeletePetModal';
@@ -430,9 +431,35 @@ const PetRecordsPage: React.FC = () => {
     }
   };
 
+  // Helper function to construct full photo URL for display
+  const getPhotoUrlForDisplay = (photoUrl?: string): string | undefined => {
+    if (!photoUrl) return undefined;
+    
+    // If it's already a full URL, return as is
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return photoUrl;
+    }
+    
+    // If it's a relative path, construct full URL
+    // Remove any /api prefix from API_BASE_URL if present
+    const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+    
+    // Ensure photoUrl starts with /
+    const path = photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`;
+    
+    return `${baseUrl}${path}`;
+  };
+
   // Pet Profile Section
   const PetProfileSection = () => {
     if (!selectedPet) return null;
+
+    // Debug logging for photo URL
+    console.log('=== PET PHOTO DEBUG ===');
+    console.log('Selected Pet:', selectedPet);
+    console.log('Photo URL from database:', selectedPet.photo_url);
+    console.log('Constructed Photo URL:', getPhotoUrlForDisplay(selectedPet.photo_url));
+    console.log('API_BASE_URL:', API_BASE_URL);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans overflow-y-auto">
@@ -463,8 +490,39 @@ const PetRecordsPage: React.FC = () => {
             {/* Left: Photo and Basic Info */}
             <div className="flex flex-col items-center gap-6 min-w-[280px]">
               {/* Photo Holder */}
-              <div className="w-48 h-64 bg-white border-2 border-green-600 rounded-xl flex items-center justify-center text-gray-300 text-lg font-semibold shadow-lg">
-                Photo
+              <div className="w-48 h-64 bg-white border-2 border-green-600 rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
+                {selectedPet.photo_url ? (
+                  <img 
+                    src={getPhotoUrlForDisplay(selectedPet.photo_url)} 
+                    alt={`${selectedPet.name}'s photo`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load pet image:', selectedPet.photo_url);
+                      console.error('Attempted URL:', getPhotoUrlForDisplay(selectedPet.photo_url));
+                      // Show placeholder on error
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLElement).parentElement;
+                      if (parent && !parent.querySelector('.fallback-text')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'fallback-text text-gray-400 text-lg font-semibold flex flex-col items-center justify-center w-full h-full';
+                        fallback.innerHTML = `
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>No Photo</span>
+                        `;
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="text-gray-400 text-lg font-semibold flex flex-col items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>No Photo</span>
+                  </div>
+                )}
               </div>
               
               {/* Name and Pet ID */}

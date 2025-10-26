@@ -6,6 +6,8 @@ from core.database import get_db
 from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from pydantic import BaseModel
 from typing import Optional
+import random
+import string
 
 router = APIRouter(prefix="/api", tags=["mobile-authentication"])
 
@@ -29,6 +31,13 @@ class VerifyOTPRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 @router.post("/register", response_model=schemas.User)
 async def register(user: UserCreate, db: Session = Depends(get_db)):
@@ -134,4 +143,90 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
 def read_users_me_mobile(current_user: models.User = Depends(auth.get_current_mobile_user)):
     """Mobile app current user endpoint"""
     return current_user
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Request password reset for a user"""
+    try:
+        # Check if user exists
+        user = db.query(models.User).filter(models.User.email == request.email).first()
+        if not user:
+            # Don't reveal if user exists or not for security
+            return {"message": "If an account with this email exists, you will receive password reset instructions shortly."}
+        
+        # Generate reset token
+        reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        reset_token_expiry = datetime.now(timezone.utc) + timedelta(hours=1)  # 1 hour expiry
+        
+        # Store reset token in database
+        user.reset_token = reset_token
+        user.reset_token_expiry = reset_token_expiry
+        db.commit()
+        
+        # Send email with reset link
+        reset_link = f"pawthos://reset-password?token={reset_token}"
+        
+        try:
+            # Send email using existing email infrastructure
+            subject = "Password Reset Request - Pawthos"
+            body = f"""
+            Hello,
+            
+            You have requested to reset your password for your Pawthos account.
+            
+            Click the following link to reset your password:
+            {reset_link}
+            
+            This link will expire in 1 hour.
+            
+            If you did not request this password reset, please ignore this email.
+            
+            Best regards,
+            The Pawthos Team
+            """
+            # Use the send_email_otp function structure but with custom message
+            auth.send_email_otp(request.email, f"Reset Token: {reset_token}")
+        except Exception as e:
+            # Log error but don't reveal to user
+            print(f"Error sending reset email: {e}")
+        
+        return {"message": "If an account with this email exists, you will receive password reset instructions shortly."}
+        
+    except Exception as e:
+        print(f"Password reset request error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process password reset request")
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Reset password using reset token"""
+    try:
+        # Find user with valid reset token
+        user = db.query(models.User).filter(
+            models.User.reset_token == request.token,
+            models.User.reset_token_expiry > datetime.now(timezone.utc)
+        ).first()
+        
+        if not user:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+        # Validate new password
+        if len(request.new_password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+        
+        # Hash new password
+        hashed_password = auth.get_password_hash(request.new_password)
+        
+        # Update user password and clear reset token
+        user.password_hash = hashed_password
+        user.reset_token = None
+        user.reset_token_expiry = None
+        db.commit()
+        
+        return {"message": "Password reset successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Password reset error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset password")
 

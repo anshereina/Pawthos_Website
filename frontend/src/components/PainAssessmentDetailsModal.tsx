@@ -159,6 +159,27 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
             </div>
           </div>
 
+          {/* Assessment Image */}
+          {assessment.image_url && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <PawPrint className="mr-2" size={20} />
+                Assessment Photo
+              </h3>
+              <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <img
+                  src={assessment.image_url.startsWith('http') ? assessment.image_url : `${API_BASE_URL}${assessment.image_url}`}
+                  alt="Assessment Photo"
+                  className="w-full max-w-md mx-auto rounded-lg shadow-sm"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Recommendations */}
           {assessment.recommendations && (
             <div className="bg-gray-50 rounded-lg p-4">

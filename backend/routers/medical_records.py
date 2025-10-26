@@ -1,21 +1,56 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from core.database import get_db
 from core.models import MedicalRecord, Pet, User
 from core.schemas import MedicalRecord as MedicalRecordSchema, MedicalRecordCreate, MedicalRecordUpdate
 from core import auth
+from jose import JWTError, jwt
+from core.config import SECRET_KEY, ALGORITHM
 
 router = APIRouter(prefix="/medical-records", tags=["medical-records"])
+security = HTTPBearer(auto_error=False)
+
+def get_optional_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None"""
+    if not credentials:
+        return None
+    
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+        
+        user = db.query(User).filter(User.email == email).first()
+        return user
+    except JWTError:
+        return None
+    except Exception:
+        return None
 
 @router.get("/pet/{pet_id}", response_model=List[MedicalRecordSchema])
 def get_medical_records_by_pet(pet_id: int, db: Session = Depends(get_db)):
     records = db.query(MedicalRecord).filter(MedicalRecord.pet_id == pet_id).all()
     return records  # Always return a list, even if empty
 
-@router.get("/", response_model=List[MedicalRecordSchema])
-def get_all_medical_records(db: Session = Depends(get_db)):
-    return db.query(MedicalRecord).all()
+@router.get("", response_model=List[MedicalRecordSchema])
+def get_all_medical_records(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user)
+):
+    # If user is authenticated, return their medical records
+    if current_user:
+        records = db.query(MedicalRecord).filter(MedicalRecord.user_id == current_user.id).all()
+        return records
+    
+    # If not authenticated, return empty array
+    return []
 
 @router.get("/{record_id}", response_model=MedicalRecordSchema)
 def get_medical_record(record_id: int, db: Session = Depends(get_db)):
@@ -24,7 +59,7 @@ def get_medical_record(record_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Medical record not found")
     return record
 
-@router.post("/", response_model=MedicalRecordSchema, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=MedicalRecordSchema, status_code=status.HTTP_201_CREATED)
 def create_medical_record(record: MedicalRecordCreate, db: Session = Depends(get_db)):
     payload = record.dict(exclude_unset=True)
     # Remove unsupported fields if present (e.g., 'notes' after schema change)

@@ -109,16 +109,15 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   };
 
   const createAdminRecordAfterOTP = async () => {
-    // Create the admin immediately with a temporary password and must_change_password enforced by backend
-    // Backend /users/admins/verify-otp requires otp_code in schema but ignores validation server-side
-    const temporaryPassword = Math.random().toString(36).slice(-12);
+    // Create the admin with the OTP as the initial password
+    // The OTP was already sent in the previous step, now we create the admin account
     await axios.post(
       `${API_BASE_URL}/users/admins/verify-otp`,
       {
         name: formData.name,
         email: formData.email,
-        password: temporaryPassword,
-        otp_code: '000000'
+        password: 'temp_password', // This will be replaced by the OTP on the backend
+        otp_code: '000000' // Backend ignores this validation
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -142,12 +141,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       setIsSubmitting(true);
       setSubmitError(null);
       try {
-        const sent = await sendOTP();
-        if (sent) {
-          await createAdminRecordAfterOTP();
-          onSuccess();
-          handleClose();
-        }
+        // Skip the separate sendOTP call and go directly to creating admin with OTP
+        await createAdminRecordAfterOTP();
+        onSuccess();
+        handleClose();
       } catch (err: any) {
         const errorMessage = err.response?.data?.detail || 
                             (typeof err.response?.data === 'string' ? err.response.data : 'Failed to create admin');

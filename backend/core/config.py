@@ -11,5 +11,5 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # Database Settings
 DATABASE_URL = config('DATABASE_URL', cast=str, default="postgresql://user:password@localhost/dbname")
 
-SMTP_USER = config('SMTP_USER', cast=str, default=None)
-SMTP_PASS = config('SMTP_PASS', cast=str, default=None)
+SMTP_USER = config('SMTP_USER', cast=str, default=os.getenv('SMTP_USER'))
+SMTP_PASS = config('SMTP_PASS', cast=str, default=os.getenv('SMTP_PASS'))

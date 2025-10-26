@@ -33,6 +33,7 @@ class UserBase(BaseModel):
     email: EmailStr
     address: Optional[str] = None
     phone_number: Optional[str] = None
+    photo_url: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -42,6 +43,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     address: Optional[str] = None
     phone_number: Optional[str] = None
+    photo_url: Optional[str] = None
 
 class User(UserBase):
     id: int
@@ -78,6 +80,8 @@ class ReportBase(BaseModel):
     status: Optional[str] = "New"
     submitted_by: str
     submitted_by_email: EmailStr
+    image_url: Optional[str] = None
+    recipient: Optional[str] = None
     admin_id: Optional[int] = None
 
 class ReportCreate(ReportBase):
@@ -87,6 +91,8 @@ class ReportUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
+    image_url: Optional[str] = None
+    recipient: Optional[str] = None
     admin_id: Optional[int] = None
 
 class Report(ReportBase):
@@ -181,6 +187,7 @@ class AnimalControlRecordBase(BaseModel):
     species: Optional[str] = None  # feline, canine, etc.
     gender: Optional[str] = None  # male, female
     date: date
+    image_url: Optional[str] = None  # URL to animal photo
     admin_id: Optional[int] = None
 
 class AnimalControlRecordCreate(AnimalControlRecordBase):
@@ -195,6 +202,7 @@ class AnimalControlRecordUpdate(BaseModel):
     species: Optional[str] = None
     gender: Optional[str] = None
     date: Optional[str] = None  # Changed from Optional[date] to Optional[str] to handle string dates
+    image_url: Optional[str] = None  # URL to animal photo
     admin_id: Optional[int] = None
 
     class Config:
@@ -435,10 +443,18 @@ class AppointmentBase(BaseModel):
     user_id: Optional[int] = None
     type: str  # service type
     date: date
-    time: time  # datetime.time object
-    veterinarian: Optional[str] = "Dr. Ma Fe Templado"
+    time: str  # Accept time as string (e.g., "01:00 PM" or "13:00")
+    veterinarian: Optional[str] = "Dr. Templado"
     notes: Optional[str] = None
-    status: Optional[str] = "Pending"
+    status: Optional[str] = "scheduled"
+    # Pet details
+    pet_name: Optional[str] = None
+    pet_species: Optional[str] = None
+    pet_breed: Optional[str] = None
+    pet_age: Optional[str] = None
+    pet_gender: Optional[str] = None
+    pet_weight: Optional[str] = None
+    owner_name: Optional[str] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
@@ -448,10 +464,18 @@ class AppointmentUpdate(BaseModel):
     user_id: Optional[int] = None
     type: Optional[str] = None
     date: Optional[date] = None
-    time: Optional[time] = None
+    time: Optional[str] = None
     veterinarian: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = None
+    # Pet details
+    pet_name: Optional[str] = None
+    pet_species: Optional[str] = None
+    pet_breed: Optional[str] = None
+    pet_age: Optional[str] = None
+    pet_gender: Optional[str] = None
+    pet_weight: Optional[str] = None
+    owner_name: Optional[str] = None
 
 class Appointment(AppointmentBase):
     id: int

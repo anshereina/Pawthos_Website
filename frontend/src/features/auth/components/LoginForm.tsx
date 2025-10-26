@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import useLogin from '../hooks/useLogin';
+import { rememberMeService } from '../../../services/authService';
 
 interface UserData {
   id: number;
@@ -21,6 +23,49 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null);
+  const navigate = useNavigate();
+
+  // Don't load saved credentials - start fresh every time
+  // const loadSavedCredentials = () => {
+  //   const credentials = rememberMeService.getCredentials();
+  //   if (credentials) {
+  //     setSavedCredentials(credentials);
+  //     setRememberMe(true);
+  //     console.log('✅ Remember Me credentials loaded but not auto-filled');
+  //   }
+  // };
+
+  const saveCredentials = (email: string, password: string) => {
+    rememberMeService.saveCredentials(email, password);
+  };
+
+  const clearCredentials = () => {
+    rememberMeService.clearCredentials();
+    setSavedCredentials(null);
+    setRememberMe(false);
+    setEmail('');
+    setPassword('');
+  };
+
+  // Clear old credentials on component mount to ensure clean start
+  useEffect(() => {
+    // Clear any existing credentials to start fresh
+    rememberMeService.clearAllAuthData();
+    setSavedCredentials(null);
+    setRememberMe(false);
+    setEmail('');
+    setPassword('');
+    console.log('🧹 Cleared all authentication data for fresh start');
+  }, []);
+
+  // Remove the aggressive clearing that was preventing typing
+  // useEffect(() => {
+  //   setEmail('');
+  //   setPassword('');
+  //   setRememberMe(false);
+  // });
 
   const { login, loading } = useLogin({
     onSuccess: (user) => {
@@ -29,10 +74,44 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         return;
       }
       setMessage('Login successful!');
+      
+      // Don't save credentials - start fresh every time
+      // if (rememberMe) {
+      //   saveCredentials(email, password);
+      // } else {
+      //   clearCredentials();
+      // }
+      
       onLoginSuccess(user);
     },
     onError: (msg) => setMessage(msg),
   });
+
+  const handleEmailChange = (newEmail: string) => {
+    setEmail(newEmail);
+    // Only clear password if there are saved credentials to prevent autofill
+    if (savedCredentials && newEmail.trim() !== '' && newEmail.toLowerCase().trim() === savedCredentials.email.toLowerCase()) {
+      setPassword(savedCredentials.password);
+    } else {
+      setPassword('');
+    }
+  };
+
+  const handleEmailFocus = () => {
+    // Only clear if there are saved credentials to prevent autofill
+    if (savedCredentials) {
+      setEmail('');
+      setPassword('');
+      setRememberMe(false);
+    }
+  };
+
+  const handlePasswordFocus = () => {
+    // Only clear if there are saved credentials to prevent autofill
+    if (savedCredentials) {
+      setPassword('');
+    }
+  };
 
   const handleLogin = () => {
     setMessage('');
@@ -44,7 +123,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <>
+    <form onSubmit={(e) => e.preventDefault()}>
+      {/* Hidden inputs to prevent browser autofill */}
+      <input type="text" style={{ display: 'none' }} autoComplete="username" />
+      <input type="password" style={{ display: 'none' }} autoComplete="current-password" />
+      
       {/* Instructional Text */}
       <p className="text-white text-center mb-8 text-lg">
         Login to your account
@@ -64,8 +147,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
             id="loginEmail"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => handleEmailChange(e.target.value)}
+            onFocus={handleEmailFocus}
             className="w-full pl-12 pr-4 py-4 rounded-lg bg-green-700 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 border border-green-600"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +182,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onFocus={handlePasswordFocus}
             className="w-full pl-12 pr-12 py-4 rounded-lg bg-green-700 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 border border-green-600"
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -161,15 +254,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
           <input
             type="checkbox"
             id="rememberMe"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
             className="form-checkbox h-4 w-4 text-green-400 rounded border-gray-300 focus:ring-green-400"
           />
           <label htmlFor="rememberMe" className="ml-2 text-gray-200">
             Remember me
           </label>
         </div>
-        <a href="#" className="text-green-300 hover:underline" onClick={(e) => e.preventDefault()}>
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/forgot-password' })}
+          className="text-green-300 hover:underline"
+        >
           Forgot Password?
-        </a>
+        </button>
       </div>
 
       {/* Log In Button */}
@@ -182,8 +281,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         {loading ? 'Logging in...' : 'Log In'}
       </button>
 
-
-    </>
+    </form>
   );
 };
 

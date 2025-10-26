@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Upload, Download, Edit, Trash2, ArrowLeft, Plus, ChevronDown } from 'lucide-react';
+import { Search, Upload, Download, Edit, Trash2, ArrowLeft, ChevronDown } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import { useMedicalRecords } from '../hooks/useMedicalRecords';
 import { useAppointments } from '../hooks/useAppointments';
-import { usePets } from '../hooks/usePets';
-import { medicalRecordService } from '../services/medicalRecordService';
 import { appointmentService } from '../services/appointmentService';
-import AddMedicalRecordModal from '../components/AddMedicalRecordModal';
 import EditMedicalRecordModal from '../components/EditMedicalRecordModal';
 import DeleteMedicalRecordModal from '../components/DeleteMedicalRecordModal';
 
@@ -28,7 +25,6 @@ const MedicalRecordsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -41,7 +37,6 @@ const MedicalRecordsPage: React.FC = () => {
   // Fetch data from backend
   const { medicalRecords, loading: medicalRecordsLoading, error: medicalRecordsError, updateMedicalRecord, deleteMedicalRecord } = useMedicalRecords();
   const { appointments, loading: appointmentsLoading, error: appointmentsError, updateAppointment } = useAppointments();
-  const { pets, loading: petsLoading, error: petsError, fetchPets } = usePets();
 
   const handleItemClick = (path: string) => {
     router.navigate({ to: path });
@@ -49,34 +44,6 @@ const MedicalRecordsPage: React.FC = () => {
 
   const handleBack = () => {
     router.navigate({ to: '/records' });
-  };
-
-  const handleAddRecord = async (data: any) => {
-    try {
-      // For now, we'll use the first pet as default
-      // In a real application, you'd want to add pet selection to the modal
-      if (pets.length === 0) {
-        alert('No pets available. Please add a pet first.');
-        return;
-      }
-      
-      const petId = pets[0].id; // Use first pet as default
-      await medicalRecordService.createMedicalRecord(petId, {
-        reason_for_visit: data.reasonForVisit,
-        date_visited: data.dateOfVisit,
-        date_of_next_visit: data.nextVisit || undefined,
-        procedures_done: data.procedureDone,
-        findings: data.findings,
-        recommendations: data.recommendation,
-        medications: data.vaccineUsedMedication,
-        veterinarian: "Dr. Ma Fe Templado", // Default veterinarian
-      });
-      setIsAddModalOpen(false);
-      // Refresh the medical records
-      window.location.reload();
-    } catch (error) {
-      console.error('Failed to create medical record:', error);
-    }
   };
 
   const handleEditRecord = async (data: any) => {
@@ -156,11 +123,6 @@ const MedicalRecordsPage: React.FC = () => {
     setIsDeleteAppointmentModalOpen(true);
   };
 
-  // Fetch pets on component mount
-  useEffect(() => {
-    fetchPets();
-  }, [fetchPets]);
-
   // Close status dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -209,7 +171,7 @@ const MedicalRecordsPage: React.FC = () => {
     columns = ['Date of Visit', 'Reason for Visit', 'Type of Species', 'Pet Name', 'Next Visit', 'Action'];
   }
 
-  const isLoading = medicalRecordsLoading || appointmentsLoading || petsLoading;
+  const isLoading = medicalRecordsLoading || appointmentsLoading;
 
   return (
     <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen">
@@ -261,14 +223,6 @@ const MedicalRecordsPage: React.FC = () => {
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
-                {/* Add Button */}
-                <button 
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                  onClick={() => setIsAddModalOpen(true)}
-                >
-                  <Plus size={20} />
-                  <span className="font-semibold">Add Record</span>
-                </button>
                 {/* Export Button */}
                 <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg">
                   <Upload size={20} />
@@ -284,11 +238,10 @@ const MedicalRecordsPage: React.FC = () => {
           </div>
 
           {/* Error Messages */}
-          {(medicalRecordsError || appointmentsError || petsError) && (
+          {(medicalRecordsError || appointmentsError) && (
             <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
               {medicalRecordsError && <p>Medical Records Error: {medicalRecordsError}</p>}
               {appointmentsError && <p>Appointments Error: {appointmentsError}</p>}
-              {petsError && <p>Pets Error: {petsError}</p>}
             </div>
           )}
 
@@ -306,8 +259,9 @@ const MedicalRecordsPage: React.FC = () => {
 
           {/* Data Table */}
           {!isLoading && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
-              <table className="w-full">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
+              <div className="overflow-x-auto">
+                <table className="w-full">
                 <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                   <tr>
                     {columns.map(col => (
@@ -343,28 +297,19 @@ const MedicalRecordsPage: React.FC = () => {
                       <td className="px-4 py-3">{appointment.type}</td>
                       <td className="px-4 py-3 capitalize">{appointment.pet?.species || '-'}</td>
                       <td className="px-4 py-3">{appointment.pet?.name || '-'}</td>
-                      <td className="px-4 py-3 relative" onClick={(e) => e.stopPropagation()}>
-                        <div className="inline-block relative status-dropdown">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative inline-block status-dropdown">
                           <button
-                            className="flex items-center space-x-1 px-3 py-1 border rounded-lg transition-colors duration-200 border-green-800 bg-white text-green-800 hover:bg-green-50"
-                            onClick={() => setStatusDropdownOpen(statusDropdownOpen === appointment.id ? null : appointment.id)}
+                            id={`status-btn-${appointment.id}`}
+                            className="flex items-center space-x-1 px-3 py-2 border border-green-300 bg-white text-green-700 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all duration-300"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStatusDropdownOpen(statusDropdownOpen === appointment.id ? null : appointment.id);
+                            }}
                           >
                             <span>{appointment.status || 'Pending'}</span>
                             <ChevronDown size={18} />
                           </button>
-                          {statusDropdownOpen === appointment.id && (
-                            <div className="absolute left-0 top-full mt-1 w-32 bg-white border border-green-800 rounded-lg shadow-xl z-[9999]">
-                              {['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Rescheduled'].map((option: string) => (
-                                <div
-                                  key={option}
-                                  className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-800 whitespace-nowrap"
-                                  onClick={() => handleStatusChange(appointment, option)}
-                                >
-                                  {option}
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -418,6 +363,45 @@ const MedicalRecordsPage: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
+
+              {/* Status Dropdown Menu - Rendered outside table to avoid z-index issues */}
+              {statusDropdownOpen !== null && (() => {
+                const buttonElement = document.getElementById(`status-btn-${statusDropdownOpen}`);
+                if (!buttonElement) return null;
+                
+                const rect = buttonElement.getBoundingClientRect();
+                const dropdownStyle = {
+                  position: 'fixed' as const,
+                  top: `${rect.bottom + 8}px`,
+                  left: `${rect.left}px`,
+                  minWidth: '150px',
+                  zIndex: 9999
+                };
+
+                return (
+                  <div 
+                    className="bg-white border border-gray-200 rounded-xl shadow-2xl"
+                    style={dropdownStyle}
+                  >
+                    {['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Rescheduled'].map((option: string) => (
+                      <div
+                        key={option}
+                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
+                        onClick={() => {
+                          const appointment = filteredAppointments.find((apt: any) => apt.id === statusDropdownOpen);
+                          if (appointment) {
+                            handleStatusChange(appointment, option);
+                          }
+                        }}
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {totalPages > 1 && (
                 <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
                   <div className="flex items-center text-sm text-gray-700">
@@ -478,12 +462,6 @@ const MedicalRecordsPage: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <AddMedicalRecordModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddRecord}
-      />
-
       <EditMedicalRecordModal
         isOpen={isEditModalOpen}
         onClose={() => {

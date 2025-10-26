@@ -25,6 +25,8 @@ import AppointmentsPage from './pages/AppointmentsPage';
 import PainAssessmentPage from './pages/PainAssessmentPage';
 import ProfilePage from './pages/ProfilePage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Component to redirect to dashboard
 const RedirectToDashboard: React.FC = () => {
@@ -55,6 +57,18 @@ const loginRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/login',
   component: LoginPage,
+});
+
+const forgotPasswordRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  component: ForgotPasswordPage,
+});
+
+const resetPasswordRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  component: ResetPasswordPage,
 });
 
 
@@ -161,6 +175,8 @@ const accountSettingsRoute = new Route({
 rootRoute.children = [
   indexRoute,
   loginRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
   dashboardRoute,
   userManagementRoute,
   recordsRoute,

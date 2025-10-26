@@ -10,7 +10,7 @@ from pathlib import Path
 
 router = APIRouter(prefix="/pain-assessments", tags=["Pain Assessments"])
 
-@router.post("/", response_model=schemas.PainAssessment, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=schemas.PainAssessment, status_code=status.HTTP_201_CREATED)
 def create_pain_assessment(assessment: schemas.PainAssessmentCreate, current_user: models.User = Depends(auth.get_current_mobile_user), db: Session = Depends(get_db)):
     """Create a new pain assessment"""
     # Match old backend behavior: don't validate pet/user existence, just create the assessment
@@ -36,6 +36,14 @@ def create_pain_assessment(assessment: schemas.PainAssessmentCreate, current_use
     db.add(db_assessment)
     db.commit()
     db.refresh(db_assessment)
+    
+    # Debug logging
+    print(f"=== PAIN ASSESSMENT CREATED (JSON) ===")
+    print(f"Assessment ID: {db_assessment.id}")
+    print(f"Image URL: {db_assessment.image_url}")
+    print(f"Pet Name: {db_assessment.pet_name}")
+    print(f"Pain Level: {db_assessment.pain_level}")
+    
     return db_assessment
 
 @router.post("/with-image/", response_model=schemas.PainAssessment, status_code=status.HTTP_201_CREATED)
@@ -113,9 +121,17 @@ async def create_pain_assessment_with_image(
     db.add(db_assessment)
     db.commit()
     db.refresh(db_assessment)
+    
+    # Debug logging
+    print(f"=== PAIN ASSESSMENT CREATED ===")
+    print(f"Assessment ID: {db_assessment.id}")
+    print(f"Image URL: {db_assessment.image_url}")
+    print(f"Pet Name: {db_assessment.pet_name}")
+    print(f"Pain Level: {db_assessment.pain_level}")
+    
     return db_assessment
 
-@router.get("/", response_model=List[schemas.PainAssessment])
+@router.get("", response_model=List[schemas.PainAssessment])
 def get_pain_assessments(
     skip: int = 0, 
     limit: int = 100, 

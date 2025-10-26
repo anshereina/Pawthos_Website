@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, FileText, Bell, ChevronDown, ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { Search, FileText, Bell, ChevronDown, ArrowLeft, Edit, Trash2, Image as ImageIcon, Eye } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -14,6 +14,8 @@ import DeleteReportModal from '../components/DeleteReportModal';
 import EditAlertModal from '../components/EditAlertModal';
 import DeleteAlertModal from '../components/DeleteAlertModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import RecipientsPreview from '../components/RecipientsPreview';
+import { API_BASE_URL } from '../config';
 
 const TABS = [
   { label: 'Submitted Reports', value: 'reports' },
@@ -185,7 +187,7 @@ const ReportsAlertsPage: React.FC = () => {
 
   // Table columns based on tab
   const columns = activeTab === 'reports'
-    ? ['Report ID', 'Title', 'Submitted By', 'Status', 'Action']
+    ? ['Report ID', 'Title', 'Submitted By', 'Recipient', 'Image', 'Status', 'Action']
     : ['Alert ID', 'Title', 'Submitted By', 'Priority', 'Recipients', 'Action'];
 
   const isLoading = reportsLoading || alertsLoading;
@@ -284,8 +286,9 @@ const ReportsAlertsPage: React.FC = () => {
           )}
 
           {/* Reports & Alerts Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
-            <table className="w-full">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
+            <div className="overflow-x-auto">
+              <table className="w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   {columns.map(col => (
@@ -321,56 +324,46 @@ const ReportsAlertsPage: React.FC = () => {
                             <td className="px-4 py-3">{report.title}</td>
                             <td className="px-4 py-3">{report.submitted_by}</td>
                             <td className="px-4 py-3">
-                              <div className="relative status-dropdown">
-                              <button
+                              {report.recipient ? (
+                                <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                  {report.recipient}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-400 italic">No recipient</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {report.image_url ? (
+                                <a
+                                  href={`${API_BASE_URL}${report.image_url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors"
+                                >
+                                  <Eye size={14} />
+                                  <span className="text-xs">View</span>
+                                </a>
+                              ) : (
+                                <span className="text-sm text-gray-400 italic">No image</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative inline-block status-dropdown">
+                                <button
+                                  id={`status-btn-report-${report.id}`}
                                   type="button"
-                                  className={`flex items-center space-x-1 px-3 py-1 border rounded-lg transition-colors duration-200 ${
-                                    statusDropdownOpen === i 
-                                      ? 'border-green-600 bg-green-50 text-green-700' 
-                                      : 'border-green-800 bg-white text-green-800 hover:bg-green-50'
-                                  }`}
+                                  className="flex items-center space-x-1 px-3 py-2 border border-green-300 bg-white text-green-700 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all duration-300"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setDebugClick(prev => prev + 1);
-                                    console.log('Dropdown clicked! Click count:', debugClick + 1);
-                                    console.log('Current state:', statusDropdownOpen, 'new state:', statusDropdownOpen === i ? null : i);
-                                    setStatusDropdownOpen(statusDropdownOpen === i ? null : i);
+                                    setStatusDropdownOpen(statusDropdownOpen === report.id ? null : report.id);
                                   }}
-                              >
+                                >
                                   <span>{report.status}</span>
-                                <ChevronDown size={18} />
-                              </button>
-                              {statusDropdownOpen === i && (
-                                  <div 
-                                    className="absolute left-0 top-full mt-1 w-32 bg-white border border-green-800 rounded-lg shadow-xl z-[9999]"
-                                    style={{
-                                      position: 'absolute',
-                                      zIndex: 9999,
-                                      backgroundColor: 'white',
-                                      border: '1px solid #166534',
-                                      borderRadius: '8px',
-                                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                                    }}
-                                  >
-                                  {STATUS_OPTIONS.map((option: string) => (
-                                    <div
-                                      key={option}
-                                        className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-800 first:rounded-t-lg last:rounded-b-lg"
-                                        style={{
-                                          padding: '8px 16px',
-                                          cursor: 'pointer',
-                                          borderBottom: option !== STATUS_OPTIONS[STATUS_OPTIONS.length - 1] ? '1px solid #e5e7eb' : 'none'
-                                        }}
-                                        onClick={() => handleStatusChange(report.report_id, option)}
-                                    >
-                                      {option}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                        </td>
+                                  <ChevronDown size={18} />
+                                </button>
+                              </div>
+                            </td>
                         <td className="px-4 py-3 flex items-center gap-2">
                           <button 
                             className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
@@ -427,21 +420,10 @@ const ReportsAlertsPage: React.FC = () => {
                                 
                                 if (Array.isArray(recipientsList) && recipientsList.length > 0) {
                                   return (
-                                    <div className="flex flex-wrap gap-1">
-                                      {recipientsList.slice(0, 3).map((recipient: string, index: number) => (
-                                        <span
-                                          key={index}
-                                          className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                        >
-                                          {recipient}
-                                        </span>
-                                      ))}
-                                      {recipientsList.length > 3 && (
-                                        <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                          +{recipientsList.length - 3} more
-                                        </span>
-                                      )}
-                                    </div>
+                                    <RecipientsPreview 
+                                      recipients={recipientsList}
+                                      maxVisible={3}
+                                    />
                                   );
                                 } else {
                                   console.log('Recipients list is not an array or is empty:', recipientsList);
@@ -476,6 +458,44 @@ const ReportsAlertsPage: React.FC = () => {
                     )}
               </tbody>
             </table>
+            </div>
+
+            {/* Status Dropdown Menu - Rendered outside table to avoid z-index issues */}
+            {activeTab === 'reports' && statusDropdownOpen !== null && (() => {
+              const buttonElement = document.getElementById(`status-btn-report-${statusDropdownOpen}`);
+              if (!buttonElement) return null;
+              
+              const rect = buttonElement.getBoundingClientRect();
+              const dropdownStyle = {
+                position: 'fixed' as const,
+                top: `${rect.bottom + 8}px`,
+                left: `${rect.left}px`,
+                minWidth: '150px',
+                zIndex: 9999
+              };
+
+              return (
+                <div 
+                  className="bg-white border border-gray-200 rounded-xl shadow-2xl"
+                  style={dropdownStyle}
+                >
+                  {STATUS_OPTIONS.map((option: string) => (
+                    <div
+                      key={option}
+                      className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
+                      onClick={() => {
+                        const report = reports.find((r: any) => r.id === statusDropdownOpen);
+                        if (report) {
+                          handleStatusChange(report.report_id, option);
+                        }
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Pagination Controls */}
             {currentData.length > 0 && totalPages > 1 && (

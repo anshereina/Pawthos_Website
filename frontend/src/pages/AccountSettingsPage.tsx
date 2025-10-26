@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
+import LogoutConfirmationModal from '../components/LogoutConfirmationModal';
 import { 
   UserCircle, 
   ChevronDown, 
@@ -30,6 +31,7 @@ const AccountSettingsPage: React.FC = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
 
   // Form states
@@ -208,7 +210,7 @@ const AccountSettingsPage: React.FC = () => {
                   <Settings size={16} className="mr-2" /> Account Settings
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => { logout(); setIsDropdownOpen(false); }}>
+                <button className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => { setShowLogoutModal(true); setIsDropdownOpen(false); }}>
                   <LogOut size={16} className="mr-2" /> Logout
                 </button>
               </div>
@@ -555,6 +557,14 @@ const AccountSettingsPage: React.FC = () => {
           </div>
         </main>
       </div>
+      
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={logout}
+        userName={user?.name}
+      />
     </div>
   );
 };

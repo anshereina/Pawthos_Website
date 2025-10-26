@@ -27,6 +27,15 @@ except ImportError as e:
     ELD_AVAILABLE = False
     logging.warning(f"ELD model not available: {e}")
 
+# Import Enhanced AI Processor
+try:
+    from services.enhanced_ai_processor import process_image_with_enhanced_ai
+    ENHANCED_AI_AVAILABLE = True
+    logging.info("Enhanced AI processor imported successfully")
+except ImportError as e:
+    ENHANCED_AI_AVAILABLE = False
+    logging.warning(f"Enhanced AI processor not available: {e}")
+
 class AIService:
     """Service for AI-powered pain assessment functionality"""
     
@@ -83,9 +92,16 @@ class AIService:
     
     def predict_pain_eld(self, image_bytes: bytes) -> Dict[str, Any]:
         """
-        Enhanced prediction using Ensemble Landmark Detector (ELD) with 48 landmarks
+        Enhanced prediction using Gemini AI with comprehensive analysis
         """
         try:
+            # Use Enhanced AI Processor if available
+            if ENHANCED_AI_AVAILABLE:
+                logging.info("Using Enhanced AI Processor with Gemini AI")
+                return process_image_with_enhanced_ai(image_bytes)
+            
+            # Fallback to original ELD model
+            logging.info("Falling back to original ELD model")
             # Robust image load with EXIF orientation fix
             try:
                 pil_image = Image.open(BytesIO(image_bytes)).convert('RGB')

@@ -5,11 +5,12 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from core import models, schemas
-from core.database import get_db
-from core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SMTP_USER, SMTP_PASS
+from . import models, schemas
+from .database import get_db
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SMTP_USER, SMTP_PASS
 import random
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -66,6 +67,15 @@ def send_email_otp(to_email: str, otp_code: str):
     smtp_port = 587
     sender_email = SMTP_USER
     password = SMTP_PASS
+    
+    # Debug logging
+    print(f"SMTP_USER: {SMTP_USER}")
+    print(f"SMTP_PASS: {'*' * len(SMTP_PASS) if SMTP_PASS else 'None'}")
+    print(f"Sending email to: {to_email}")
+    
+    if not sender_email or not password:
+        raise Exception(f"SMTP credentials not configured. SMTP_USER: {sender_email}, SMTP_PASS: {'set' if password else 'not set'}")
+    
     subject = "Your Pawthos OTP Code"
     body = f"Your OTP code is: {otp_code}. It will expire in 10 minutes."
 
@@ -75,10 +85,27 @@ def send_email_otp(to_email: str, otp_code: str):
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
 
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()
-        server.login(sender_email, password)
-        server.sendmail(sender_email, to_email, msg.as_string())
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            print(f"Connected to SMTP server: {smtp_server}:{smtp_port}")
+            server.starttls()
+            print("TLS started successfully")
+            server.login(sender_email, password)
+            print("SMTP login successful")
+            server.sendmail(sender_email, to_email, msg.as_string())
+            print("Email sent successfully")
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"SMTP Authentication Error: {e}")
+        raise Exception(f"SMTP authentication failed: {e}")
+    except smtplib.SMTPRecipientsRefused as e:
+        print(f"SMTP Recipients Refused: {e}")
+        raise Exception(f"Email address rejected: {e}")
+    except smtplib.SMTPServerDisconnected as e:
+        print(f"SMTP Server Disconnected: {e}")
+        raise Exception(f"SMTP server disconnected: {e}")
+    except Exception as e:
+        print(f"SMTP Error: {e}")
+        raise Exception(f"Failed to send email: {e}")
 
 def authenticate_admin(db: Session, email: str, password: str):
     user = get_admin(db, email)
@@ -144,17 +171,106 @@ def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Sess
     )
     
     if not token:
+        logging.error("No token provided to get_current_mobile_user")
         raise credentials_exception
     
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
+            logging.error("No email in token payload")
             raise credentials_exception
-    except JWTError:
+        logging.info(f"Token validated for user: {email}")
+    except JWTError as e:
+        logging.error(f"JWT decode error: {str(e)}")
         raise credentials_exception
     
     user = get_user(db, email=email)
     if user is None:
+        logging.error(f"User not found for email: {email}")
         raise credentials_exception
-    return user 
+    return user
+
+def send_email_otp(email: str, otp_code: str):
+    """Send OTP code via email"""
+    try:
+        if not SMTP_USER or not SMTP_PASS:
+            print("⚠️ SMTP credentials not configured, skipping email send")
+            return False
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USER
+        msg['To'] = email
+        msg['Subject'] = "Pawthos OTP Code"
+        
+        body = f"""
+        Your OTP code is: {otp_code}
+        
+        This code will expire in 10 minutes.
+        
+        If you did not request this code, please ignore this email.
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        text = msg.as_string()
+        server.sendmail(SMTP_USER, email, text)
+        server.quit()
+        
+        print(f"✅ OTP email sent to {email}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error sending email to {email}: {str(e)}")
+        return False
+
+def send_password_reset_email(email: str, reset_token: str, reset_link: str):
+    """Send password reset email"""
+    try:
+        if not SMTP_USER or not SMTP_PASS:
+            print("⚠️ SMTP credentials not configured, skipping email send")
+            return False
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USER
+        msg['To'] = email
+        msg['Subject'] = "Password Reset Request - Pawthos"
+        
+        body = f"""
+        Hello,
+        
+        You have requested to reset your password for your Pawthos account.
+        
+        Click the following link to reset your password:
+        {reset_link}
+        
+        This link will expire in 1 hour.
+        
+        If you did not request this password reset, please ignore this email.
+        
+        Best regards,
+        The Pawthos Team
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        text = msg.as_string()
+        server.sendmail(SMTP_USER, email, text)
+        server.quit()
+        
+        print(f"✅ Password reset email sent to {email}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error sending password reset email to {email}: {str(e)}")
+        return False 

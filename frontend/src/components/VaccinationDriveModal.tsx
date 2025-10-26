@@ -3,6 +3,7 @@ import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, 
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
 import { petService, Pet } from '../services/petService';
 import { userService, User as UserType } from '../services/userService';
+import OtherServiceModal from './OtherServiceModal';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -66,6 +67,13 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
+  // Other Service Modal state
+  const [isOtherServiceModalOpen, setIsOtherServiceModalOpen] = useState(false);
+  const [currentRecordId, setCurrentRecordId] = useState<number | null>(null);
+  
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+
   // Update form data when event changes
   useEffect(() => {
     if (event) {
@@ -83,6 +91,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     if (isOpen) {
       fetchPets();
       fetchUsers();
+      setIsEditMode(false); // Reset edit mode when modal opens
     }
   }, [isOpen]);
 
@@ -246,6 +255,20 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   };
 
+  const handleAddOtherService = (recordId: number) => {
+    setCurrentRecordId(recordId);
+    setIsOtherServiceModalOpen(true);
+  };
+
+  const handleOtherServiceSubmit = (serviceData: any) => {
+    if (currentRecordId) {
+      // Create a formatted service string with vaccine, expiry, and payment information
+      const serviceString = `Vaccine: ${serviceData.vaccineUsed}, Expiry: ${serviceData.dateExpiration}, Payment: ${serviceData.payment}`;
+      addOtherService(currentRecordId, serviceString);
+    }
+    setCurrentRecordId(null);
+  };
+
   const removeOtherService = (recordId: number, serviceIndex: number) => {
     const record = petRecords.find(r => r.id === recordId);
     if (record) {
@@ -350,6 +373,9 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [petRecords.length]);
+
+  // Determine if modal is editable
+  const isEditable = !readOnly || isEditMode;
 
   const handleExportPDF = () => {
     if (!event) return;
@@ -515,7 +541,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                 <input
                   type="text"
                   value={event.event_title || ''}
-                  readOnly
+                  disabled={!isEditable}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                   placeholder="Event title from vaccination event"
                 />
@@ -532,7 +558,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                 <input
                   type="date"
                   value={formData.date}
-                  readOnly
+                  disabled={!isEditable}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                 />
               </div>
@@ -548,7 +574,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                 <input
                   type="text"
                   value={formData.barangay}
-                  readOnly
+                  disabled={!isEditable}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                   placeholder="Barangay from vaccination event"
                 />
@@ -565,7 +591,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                 <input
                   type="text"
                   value={event.service_coordinator || ''}
-                  readOnly
+                  disabled={!isEditable}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                   placeholder="Service coordinator from vaccination event"
                 />
@@ -588,8 +614,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                     name="vaccineUsed"
                     value={formData.vaccineUsed}
                     onChange={handleFormChange}
-                    disabled={readOnly}
-                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                    disabled={!isEditable}
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                   >
                     <option value="">Select Vaccine</option>
                     {vaccineOptions.map(option => (
@@ -611,8 +637,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                     name="batchNoLotNo"
                     value={formData.batchNoLotNo}
                     onChange={handleFormChange}
-                    disabled={readOnly}
-                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                    disabled={!isEditable}
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                     placeholder="Enter batch/lot number"
                   />
                 </div>
@@ -628,7 +654,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800">Individual Pet Vaccination Records</h2>
-              {!readOnly && (
+              {isEditable && (
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
                     <label className="text-sm font-medium text-gray-700">Add rows:</label>
@@ -660,10 +686,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                   </button>
                 </div>
               )}
-              {readOnly && (
+              {!isEditable && (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
-                    📖 View Only Mode
+                    📖 View Only Mode - Click Edit to Modify
                   </span>
                   <button
                     onClick={handleExportPDF}
@@ -728,15 +754,15 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                 onChange={(e) => updatePetRecord(record.id, 'ownerName', e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, record.id, 'ownerName')}
                                 onFocus={() => {
-                                  if (!readOnly) setActiveOwnerDropdown(record.id);
+                                  if (isEditable) setActiveOwnerDropdown(record.id);
                                 }}
-                                disabled={readOnly}
-                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                                disabled={!isEditable}
+                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                                 placeholder="Owner name"
                                 data-record-id={record.id}
                                 data-field="ownerName"
                               />
-                                                    {!readOnly && activeOwnerDropdown === record.id && (
+                                                    {isEditable && activeOwnerDropdown === record.id && (
                             <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               <div className="p-2 text-xs bg-gray-100 border-b">DEBUG: Found {getFilteredOwners(record.ownerName).length} users</div>
                               {getFilteredOwners(record.ownerName).length > 0 ? (
@@ -776,13 +802,13 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                 value={record.petName}
                                 onChange={(e) => updatePetRecord(record.id, 'petName', e.target.value)}
                                 onFocus={() => {
-                                  if (!readOnly) setActivePetDropdown(record.id);
+                                  if (isEditable) setActivePetDropdown(record.id);
                                 }}
-                                disabled={readOnly}
-                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                                disabled={!isEditable}
+                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                                 placeholder="Pet name"
                               />
-                          {!readOnly && activePetDropdown === record.id && (
+                          {isEditable && activePetDropdown === record.id && (
                             <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               {getFilteredPets(record.petName, record.ownerName).map((pet) => (
                                 <div
@@ -826,8 +852,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               type="tel"
                               value={record.ownerContact}
                               onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
-                              disabled={readOnly}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Contact"
                             />
                           </td>
@@ -835,8 +861,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                             <select
                               value={record.species}
                               onChange={(e) => updatePetRecord(record.id, 'species', e.target.value)}
-                              disabled={readOnly}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                             >
                               <option value="">-</option>
                               {speciesOptions.map(option => (
@@ -849,8 +875,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               type="text"
                               value={record.breed}
                               onChange={(e) => updatePetRecord(record.id, 'breed', e.target.value)}
-                              disabled={readOnly}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Breed"
                             />
                           </td>
@@ -859,8 +885,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               type="text"
                               value={record.color}
                               onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
-                              disabled={readOnly}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Color"
                             />
                           </td>
@@ -869,8 +895,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               type="text"
                               value={record.age}
                               onChange={(e) => updatePetRecord(record.id, 'age', e.target.value)}
-                              disabled={readOnly}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Age"
                             />
                           </td>
@@ -878,8 +904,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                             <select
                               value={record.sex}
                               onChange={(e) => updatePetRecord(record.id, 'sex', e.target.value)}
-                              disabled={readOnly}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${readOnly ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                             >
                               <option value="">-</option>
                               {sexOptions.map(option => (
@@ -894,12 +920,9 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                   {service}
                                 </span>
                               ))}
-                              {!readOnly && (
+                              {isEditable && (
                                 <button
-                                  onClick={() => {
-                                    const service = prompt('Enter other service:');
-                                    if (service) addOtherService(record.id, service);
-                                  }}
+                                  onClick={() => handleAddOtherService(record.id)}
                                   className="text-xs text-green-600 hover:text-green-800 px-2 py-1 rounded-full border border-green-300 hover:bg-green-50 transition-colors"
                                   title="Add service"
                                 >
@@ -909,18 +932,33 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center justify-center space-x-1">
-                              {!readOnly && (
-                                <button 
-                                  onClick={() => deletePetRecord(record.id)}
-                                  className="p-2.5 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:shadow-sm"
-                                  title="Delete row"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
+                            <div className="flex items-center justify-center gap-2">
+                              {isEditable && (
+                                <>
+                                  <button 
+                                    onClick={() => setEditingRecord(record)}
+                                    className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                                    title="Edit row"
+                                  >
+                                    <Edit size={18} className="text-green-600" />
+                                  </button>
+                                  <button 
+                                    onClick={() => deletePetRecord(record.id)}
+                                    className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                                    title="Delete row"
+                                  >
+                                    <Trash2 size={18} className="text-red-600" />
+                                  </button>
+                                </>
                               )}
-                              {readOnly && (
-                                <span className="text-xs text-gray-400">View Only</span>
+                              {!isEditable && (
+                                <button 
+                                  onClick={() => setIsEditMode(true)}
+                                  className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                                  title="Edit mode"
+                                >
+                                  <Edit size={18} className="text-green-600" />
+                                </button>
                               )}
                             </div>
                           </td>
@@ -1023,7 +1061,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
               <span>Incomplete: <span className="font-semibold text-yellow-600">{petRecords.filter(r => !r.ownerName || !r.petName || !r.ownerContact).length}</span></span>
             </div>
             <div className="flex items-center space-x-3">
-              {!readOnly ? (
+              {isEditable ? (
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -1057,6 +1095,16 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Other Service Modal */}
+      <OtherServiceModal
+        isOpen={isOtherServiceModalOpen}
+        onClose={() => {
+          setIsOtherServiceModalOpen(false);
+          setCurrentRecordId(null);
+        }}
+        onSubmit={handleOtherServiceSubmit}
+      />
     </div>
   );
 };

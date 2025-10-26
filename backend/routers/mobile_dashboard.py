@@ -5,6 +5,7 @@ from datetime import datetime
 from core import models, schemas, auth
 from core.database import get_db
 from pydantic import BaseModel
+import logging
 
 router = APIRouter(prefix="/api", tags=["mobile-dashboard"])
 
@@ -94,40 +95,48 @@ def get_dashboard(current_user: models.User = Depends(auth.get_current_mobile_us
         # Map ORM objects to response models
         recent_pets_response = []
         for pet in recent_pets:
-            pet_data = {
-                "id": pet.id,
-                "pet_id": pet.pet_id,
-                "name": pet.name,
-                "owner_name": pet.owner_name,
-                "species": pet.species,
-                "date_of_birth": pet.date_of_birth,
-                "color": pet.color,
-                "breed": pet.breed,
-                "gender": pet.gender,
-                "reproductive_status": pet.reproductive_status,
-                "photo_url": pet.photo_url,
-                "user_id": pet.user_id,
-                "created_at": pet.created_at,
-                "updated_at": pet.updated_at,
-            }
-            recent_pets_response.append(pet_data)
+            try:
+                pet_data = {
+                    "id": pet.id,
+                    "pet_id": pet.pet_id,
+                    "name": pet.name,
+                    "owner_name": pet.owner_name,
+                    "species": pet.species,
+                    "date_of_birth": pet.date_of_birth,
+                    "color": pet.color,
+                    "breed": pet.breed,
+                    "gender": pet.gender,
+                    "reproductive_status": pet.reproductive_status,
+                    "photo_url": pet.photo_url,
+                    "user_id": pet.user_id,
+                    "created_at": pet.created_at.isoformat() if pet.created_at else None,
+                    "updated_at": pet.updated_at.isoformat() if pet.updated_at else None,
+                }
+                recent_pets_response.append(pet_data)
+            except Exception as pet_error:
+                logging.error(f"Error serializing pet {pet.id}: {str(pet_error)}")
+                continue
 
         upcoming_appointments_response = []
         for appt in upcoming_appointments:
-            appt_data = {
-                "id": appt.id,
-                "pet_id": appt.pet_id,
-                "user_id": appt.user_id,
-                "type": appt.type,
-                "date": str(appt.date) if appt.date else "",
-                "time": str(appt.time) if appt.time else "",
-                "veterinarian": appt.veterinarian,
-                "notes": appt.notes,
-                "status": appt.status,
-                "created_at": appt.created_at,
-                "updated_at": appt.updated_at,
-            }
-            upcoming_appointments_response.append(appt_data)
+            try:
+                appt_data = {
+                    "id": appt.id,
+                    "pet_id": appt.pet_id,
+                    "user_id": appt.user_id,
+                    "type": appt.type,
+                    "date": str(appt.date) if appt.date else "",
+                    "time": str(appt.time) if appt.time else "",
+                    "veterinarian": appt.veterinarian,
+                    "notes": appt.notes,
+                    "status": appt.status,
+                    "created_at": appt.created_at.isoformat() if appt.created_at else None,
+                    "updated_at": appt.updated_at.isoformat() if appt.updated_at else None,
+                }
+                upcoming_appointments_response.append(appt_data)
+            except Exception as appt_error:
+                logging.error(f"Error serializing appointment {appt.id}: {str(appt_error)}")
+                continue
 
         return DashboardResponse(
             user=dashboard_user,
@@ -136,5 +145,8 @@ def get_dashboard(current_user: models.User = Depends(auth.get_current_mobile_us
             recent_pets=recent_pets_response,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Server error retrieving dashboard data")
+        logging.error(f"Dashboard error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Server error retrieving dashboard data: {str(e)}")
 

@@ -26,9 +26,14 @@ def find_or_create_user(owner_name: str, owner_contact: str, db: Session) -> Use
         temp_email = f"{original_email.split('@')[0]}{counter}@temp.local"
         counter += 1
     
+    # Generate a temporary password hash
+    from core.auth import get_password_hash
+    temp_password_hash = get_password_hash("temp_password_123")
+    
     user = User(
         name=owner_name,
         email=temp_email,
+        password_hash=temp_password_hash,
         phone_number=owner_contact,
         address="",  # Empty address for now
         is_confirmed=1  # Auto-confirm for vaccination drive users
@@ -154,11 +159,25 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
             )
             
             # Create vaccination record
+            from datetime import datetime
+            try:
+                # Try to parse the date string
+                vaccination_date_str = pet_record_data["vaccination_date"]
+                if 'T' in vaccination_date_str:
+                    # ISO format with time
+                    vaccination_date = datetime.fromisoformat(vaccination_date_str.replace('Z', '+00:00'))
+                else:
+                    # Date only format
+                    vaccination_date = datetime.strptime(vaccination_date_str, '%Y-%m-%d')
+            except ValueError:
+                # Fallback to current date if parsing fails
+                vaccination_date = datetime.now()
+            
             vaccination_record = VaccinationRecord(
                 pet_id=pet.id,
                 user_id=user.id,
                 vaccine_name=pet_record_data["vaccine_used"],
-                vaccination_date=pet_record_data["vaccination_date"],
+                vaccination_date=vaccination_date,
                 veterinarian="Vaccination Drive",  # Default veterinarian for drive records
                 batch_lot_no=pet_record_data["batch_no_lot_no"]
             )
@@ -169,6 +188,10 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
         
     except Exception as e:
         db.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Vaccination drive creation error: {str(e)}")
+        print(f"Error details: {error_details}")
         raise HTTPException(status_code=500, detail=f"Failed to create vaccination drive: {str(e)}")
 
 @router.get("/event/{event_id}", response_model=List[VaccinationDriveRecordSchema])

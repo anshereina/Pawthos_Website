@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { AnimalControlRecordCreate } from '../services/animalControlRecordService';
 
 interface AddAnimalControlRecordModalProps {
@@ -24,8 +24,10 @@ const AddAnimalControlRecordModal: React.FC<AddAnimalControlRecordModalProps> = 
     species: '',
     gender: '',
     date: new Date().toISOString().split('T')[0],
+    image_url: '',
   });
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,9 @@ const AddAnimalControlRecordModal: React.FC<AddAnimalControlRecordModalProps> = 
         species: '',
         gender: '',
         date: new Date().toISOString().split('T')[0],
+        image_url: '',
       });
+      setImagePreview(null);
     } catch (error) {
       console.error('Error creating record:', error);
     } finally {
@@ -55,6 +59,33 @@ const AddAnimalControlRecordModal: React.FC<AddAnimalControlRecordModalProps> = 
     setFormData(prev => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a preview URL for the image
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      
+      // For now, we'll store the file name as the image_url
+      // In a real implementation, you'd upload the file to a server
+      setFormData(prev => ({
+        ...prev,
+        image_url: file.name,
+      }));
+    }
+  };
+
+  const removeImage = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      image_url: '',
     }));
   };
 
@@ -184,6 +215,45 @@ const AddAnimalControlRecordModal: React.FC<AddAnimalControlRecordModalProps> = 
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 disabled={loading}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Animal Photo
+              </label>
+              {!imagePreview ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                    disabled={loading}
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Upload size={32} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600">Click to upload animal photo</p>
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG up to 10MB</p>
+                  </label>
+                </div>
+              ) : (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Animal preview"
+                    className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    disabled={loading}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-3 pt-6 border-t">

@@ -79,7 +79,7 @@ export const pdfExportService = {
   },
 
   generateAnimalControlPDF(records: AnimalControlRecord[], options: ExportOptions = {}) {
-    const doc = new jsPDF();
+    const doc = new jsPDF('landscape');
       
       // Title
       const title = `Animal Control Records Report`;
@@ -125,31 +125,42 @@ export const pdfExportService = {
         body: tableData,
         startY: 50,
         styles: {
-          fontSize: 10,
-          cellPadding: 3,
+          fontSize: 9,
+          cellPadding: 4,
+          overflow: 'linebreak',
+          cellWidth: 'wrap',
         },
         headStyles: {
           fillColor: [34, 139, 34], // Green color
           textColor: 255,
           fontStyle: 'bold',
+          fontSize: 10,
         },
         alternateRowStyles: {
           fillColor: [245, 245, 245],
         },
-        margin: { top: 50 },
+        margin: { top: 50, left: 10, right: 10 },
         columnStyles: options.recordType === 'surrendered' ? {
-          0: { cellWidth: 35 }, // Owner Name
-          1: { cellWidth: 25 }, // Contact Number
-          2: { cellWidth: 40 }, // Address
-          3: { cellWidth: 35 }, // Detail/Purpose
-          4: { cellWidth: 20 }, // Date
-          5: { cellWidth: 20 }, // Created
+          0: { cellWidth: 50 }, // Owner Name
+          1: { cellWidth: 35 }, // Contact Number
+          2: { cellWidth: 60 }, // Address
+          3: { cellWidth: 50 }, // Detail/Purpose
+          4: { cellWidth: 30 }, // Date
+          5: { cellWidth: 30 }, // Created
         } : {
-          0: { cellWidth: 35 }, // Owner Name
-          1: { cellWidth: 25 }, // Contact Number
-          2: { cellWidth: 40 }, // Address
-          3: { cellWidth: 20 }, // Date
-          4: { cellWidth: 20 }, // Created
+          0: { cellWidth: 50 }, // Owner Name
+          1: { cellWidth: 35 }, // Contact Number
+          2: { cellWidth: 70 }, // Address
+          3: { cellWidth: 30 }, // Date
+          4: { cellWidth: 30 }, // Created
+        },
+        didDrawPage: function (data) {
+          // Add page numbers
+          const pageNumber = doc.internal.getNumberOfPages();
+          const pageSize = doc.internal.pageSize;
+          const pageHeight = pageSize.height || pageSize.getHeight();
+          doc.setFontSize(8);
+          doc.text(`Page ${data.pageNumber} of ${pageNumber}`, pageSize.width - 30, pageHeight - 10);
         }
       });
 

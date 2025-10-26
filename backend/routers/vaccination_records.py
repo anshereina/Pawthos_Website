@@ -8,7 +8,7 @@ from core.schemas import VaccinationRecord as VaccinationRecordSchema, Vaccinati
 
 router = APIRouter(prefix="/vaccination-records", tags=["vaccination-records"])
 
-@router.get("/", response_model=List[VaccinationRecordSchema])
+@router.get("", response_model=List[VaccinationRecordSchema])
 def get_all_vaccination_records(db: Session = Depends(get_db)):
     return db.query(VaccinationRecord).all()
 
@@ -34,13 +34,13 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
         print(f"Target date for vaccination statistics: {target_date}")
         
         # Get all vaccination records
-        # Since vaccination_date is stored as string, we need to filter in Python
+        # Since vaccination_date is stored as DateTime, we can filter by date
         all_records = db.query(
             VaccinationRecord.vaccination_date,
             Pet.species,
             Pet.gender
         ).join(
-            VaccinationRecord, Pet.id == VaccinationRecord.pet_id
+            Pet, Pet.id == VaccinationRecord.pet_id
         ).all()
         
         print(f"Total vaccination records found: {len(all_records)}")
@@ -56,27 +56,17 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
         # Process the records and filter by date
         for record in all_records:
             try:
-                # Parse the vaccination_date string to datetime
-                vaccination_date_str = record.vaccination_date
-                if not vaccination_date_str:
+                # vaccination_date is a DateTime object
+                if not record.vaccination_date:
                     continue
                 
-                # Try different date formats
-                parsed_date = None
-                date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']
+                # Extract date part from datetime
+                vaccination_date = record.vaccination_date.date() if hasattr(record.vaccination_date, 'date') else record.vaccination_date
                 
-                for date_format in date_formats:
-                    try:
-                        parsed_date = datetime.strptime(vaccination_date_str, date_format)
-                        break
-                    except ValueError:
-                        continue
-                
-                if not parsed_date or parsed_date.date() != target_date:
+                if vaccination_date != target_date:
                     continue
                 
-                print(f"Found matching record: date={parsed_date.date()}, species={record.species}, gender={record.gender}")
-                print(f"Parsed date type: {type(parsed_date.date())}, Parsed date: {parsed_date.date()}")
+                print(f"Found matching record: date={vaccination_date}, species={record.species}, gender={record.gender}")
                 
                 species = record.species.lower() if record.species else "unknown"
                 gender = record.gender.lower() if record.gender else "unknown"
@@ -106,6 +96,10 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
         return result
 
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in get_vaccination_statistics: {str(e)}")
+        print(f"Traceback: {error_details}")
         raise HTTPException(status_code=500, detail=f"Error fetching vaccination statistics: {str(e)}")
 
 @router.get("/statistics/yearly", response_model=Dict)
@@ -123,13 +117,13 @@ def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(ge
             year = datetime.now().year
         
         # Get all vaccination records for the year
-        # Since vaccination_date is stored as string, we need to filter in Python
+        # Since vaccination_date is stored as DateTime, we can filter by year
         all_records = db.query(
             VaccinationRecord.vaccination_date,
             Pet.species,
             Pet.gender
         ).join(
-            VaccinationRecord, Pet.id == VaccinationRecord.pet_id
+            Pet, Pet.id == VaccinationRecord.pet_id
         ).all()
 
         # Initialize monthly data structure
@@ -149,26 +143,18 @@ def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(ge
         # Process the records and filter by year
         for record in all_records:
             try:
-                # Parse the vaccination_date string to datetime
-                vaccination_date_str = record.vaccination_date
-                if not vaccination_date_str:
+                # vaccination_date is a DateTime object
+                if not record.vaccination_date:
                     continue
                 
-                # Try different date formats
-                parsed_date = None
-                date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']
+                # Extract datetime
+                vaccination_datetime = record.vaccination_date
                 
-                for date_format in date_formats:
-                    try:
-                        parsed_date = datetime.strptime(vaccination_date_str, date_format)
-                        break
-                    except ValueError:
-                        continue
-                
-                if not parsed_date or parsed_date.year != year:
+                # Check if it's the right year
+                if vaccination_datetime.year != year:
                     continue
                 
-                month = parsed_date.month
+                month = vaccination_datetime.month
                 species = record.species.lower() if record.species else "unknown"
                 gender = record.gender.lower() if record.gender else "unknown"
 
@@ -184,8 +170,8 @@ def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(ge
                         monthly_data[month]['canineFemale'] += 1
                         
             except Exception as e:
-                # Skip records with invalid date formats
-                print(f"Error parsing date '{record.vaccination_date}': {e}")
+                # Skip records with invalid dates
+                print(f"Error processing date '{record.vaccination_date}': {e}")
                 continue
 
         # Convert to list format and calculate totals
@@ -202,6 +188,10 @@ def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(ge
         return result
 
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in get_yearly_vaccination_statistics: {str(e)}")
+        print(f"Traceback: {error_details}")
         raise HTTPException(status_code=500, detail=f"Error fetching yearly vaccination statistics: {str(e)}")
 
 @router.get("/test")
@@ -247,7 +237,7 @@ def get_vaccination_records_with_pets(db: Session = Depends(get_db)):
                 'user_id': record.user_id,
                 'vaccine_name': record.vaccine_name,
                 'vaccination_date': record.vaccination_date,
-                'expiration_date': record.expiration_date,
+                'expiration_date': record.next_due_date,
                 'veterinarian': record.veterinarian,
                 'batch_lot_no': record.batch_lot_no,
                 'created_at': record.created_at.isoformat() if record.created_at else None,
@@ -290,7 +280,7 @@ def get_vaccination_record(record_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Vaccination record not found")
     return record
 
-@router.post("/", response_model=VaccinationRecordSchema, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=VaccinationRecordSchema, status_code=status.HTTP_201_CREATED)
 def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Depends(get_db)):
     # Get the pet to find the owner name
     pet = db.query(Pet).filter(Pet.id == record.pet_id).first()

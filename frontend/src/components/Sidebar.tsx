@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface SidebarItem {
 	label: string;
@@ -22,6 +22,35 @@ const Sidebar: React.FC<SidebarProps> = ({
 	onToggleExpand 
 }) => {
 	const sidebarRef = React.useRef<HTMLElement | null>(null);
+	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+	const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+
+	const handleMouseEnter = (itemLabel: string) => {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+		const timeout = setTimeout(() => {
+			setHoveredItem(itemLabel);
+		}, 500); // 500ms delay before showing tooltip
+		setHoverTimeout(timeout);
+	};
+
+	const handleMouseLeave = () => {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			setHoverTimeout(null);
+		}
+		setHoveredItem(null);
+	};
+
+	// Cleanup timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (hoverTimeout) {
+				clearTimeout(hoverTimeout);
+			}
+		};
+	}, [hoverTimeout]);
 
 	return (
 		<>
@@ -94,7 +123,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 											e.stopPropagation();
 											onItemClick(item.path);
 										}}
-											className={`w-full flex items-center ${isExpanded ? 'px-4 justify-start' : 'px-1 justify-center'} py-3 rounded-xl transition-all duration-300 group relative transform hover:scale-105 ${
+										onMouseEnter={() => handleMouseEnter(item.label)}
+										onMouseLeave={handleMouseLeave}
+											className={`w-full flex items-center ${isExpanded ? 'px-4 justify-start' : 'px-1 justify-center'} py-3 rounded-xl transition-all duration-300 group relative transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/50 ${
 												activeItem === item.path
 													? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg border border-green-500/30'
 													: 'text-green-100 hover:bg-gradient-to-r hover:from-green-700/50 hover:to-green-600/50 hover:text-white hover:shadow-md border border-transparent hover:border-green-500/20'
@@ -119,8 +150,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 													{item.label}
 												</span>
 												{/* Enhanced Tooltip for collapsed state */}
-												{!isExpanded && (
-													<div className="absolute left-full ml-3 px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap z-50 shadow-lg border border-gray-600/50 transform group-hover:translate-x-1">
+												{!isExpanded && hoveredItem === item.label && (
+													<div className="absolute left-full ml-3 px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm rounded-xl opacity-100 transition-all duration-300 whitespace-nowrap z-50 shadow-lg border border-gray-600/50 transform translate-x-1 pointer-events-none">
 														<div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45"></div>
 														{item.label}
 													</div>

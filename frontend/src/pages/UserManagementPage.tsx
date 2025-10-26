@@ -334,6 +334,9 @@ const UserManagementPage: React.FC = () => {
                     placeholder="Search here"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    autoComplete="off"
+                    name="user-search-field"
+                    id="user-search-field"
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>

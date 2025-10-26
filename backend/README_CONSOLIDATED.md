@@ -92,7 +92,7 @@ SMTP_PASS=your_app_password
 ### 3. Database Setup
 ```bash
 # Run migrations
-python migrate_schema.py
+python core/migrate_schema.py
 
 # Create database tables
 python -c "from core.database import engine; from core import models; models.Base.metadata.create_all(bind=engine)"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Report, UpdateReportData } from '../services/reportService';
+import { X, Upload, Eye } from 'lucide-react';
+import { Report, UpdateReportData, reportService } from '../services/reportService';
+import { API_BASE_URL } from '../config';
 
 interface EditReportModalProps {
   isOpen: boolean;
@@ -19,8 +20,13 @@ const EditReportModal: React.FC<EditReportModalProps> = ({
     title: '',
     description: '',
     status: 'New',
+    recipient: '',
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Initialize form data when report changes
   useEffect(() => {
@@ -29,7 +35,11 @@ const EditReportModal: React.FC<EditReportModalProps> = ({
         title: report.title,
         description: report.description,
         status: report.status,
+        recipient: report.recipient || '',
       });
+      setCurrentImageUrl(report.image_url || null);
+      setImagePreview(null);
+      setSelectedFile(null);
     }
   }, [report]);
 
@@ -41,7 +51,29 @@ const EditReportModal: React.FC<EditReportModalProps> = ({
 
     setLoading(true);
     try {
-      await onSubmit(report.report_id, formData);
+      let imageUrl: string | undefined = currentImageUrl || undefined;
+
+      // Upload new image if selected
+      if (selectedFile) {
+        setUploadingImage(true);
+        try {
+          const uploadResult = await reportService.uploadImage(selectedFile);
+          imageUrl = uploadResult.url;
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          alert('Failed to upload image. Please try again.');
+          setLoading(false);
+          setUploadingImage(false);
+          return;
+        }
+        setUploadingImage(false);
+      }
+
+      await onSubmit(report.report_id, {
+        ...formData,
+        image_url: imageUrl,
+        recipient: formData.recipient.trim() || undefined,
+      });
       onClose();
     } catch (error) {
       console.error('Error updating report:', error);
@@ -55,11 +87,43 @@ const EditReportModal: React.FC<EditReportModalProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+
+      setSelectedFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+    setCurrentImageUrl(null);
+  };
+
   if (!isOpen || !report) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Edit Report</h2>
           <button
@@ -104,6 +168,76 @@ const EditReportModal: React.FC<EditReportModalProps> = ({
           </div>
 
           <div>
+            <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 mb-1">
+              Recipient (Optional)
+            </label>
+            <input
+              type="text"
+              id="recipient"
+              name="recipient"
+              value={formData.recipient}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter recipient name or email"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Image (Optional)
+            </label>
+            
+            {!imagePreview && !currentImageUrl ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-500 transition-colors">
+                <label htmlFor="image-upload-edit" className="cursor-pointer">
+                  <div className="flex flex-col items-center space-y-2">
+                    <Upload size={32} className="text-gray-400" />
+                    <span className="text-sm text-gray-600">Click to upload image</span>
+                    <span className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</span>
+                  </div>
+                  <input
+                    id="image-upload-edit"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="relative border border-gray-300 rounded-lg p-2">
+                <img
+                  src={imagePreview || `${API_BASE_URL}${currentImageUrl}`}
+                  alt="Preview"
+                  className="w-full h-48 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-4 right-4 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+                {!imagePreview && currentImageUrl && (
+                  <div className="mt-2">
+                    <label htmlFor="image-upload-edit" className="cursor-pointer inline-flex items-center px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                      <Upload size={16} className="mr-2" />
+                      Change Image
+                    </label>
+                    <input
+                      id="image-upload-edit"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
               Status
             </label>
@@ -130,10 +264,10 @@ const EditReportModal: React.FC<EditReportModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.title.trim() || !formData.description.trim()}
+              disabled={loading || uploadingImage || !formData.title.trim() || !formData.description.trim()}
               className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Updating...' : 'Update Report'}
+              {uploadingImage ? 'Uploading Image...' : loading ? 'Updating...' : 'Update Report'}
             </button>
           </div>
         </form>

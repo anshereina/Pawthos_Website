@@ -11,7 +11,7 @@ interface ExportOptions {
 
 export const shippingPermitExportService = {
   generateShippingPermitPDF(records: ShippingPermitRecord[], options: ExportOptions = {}) {
-    const doc = new jsPDF();
+    const doc = new jsPDF('landscape');
     
     // Title
     const title = `Shipping Permit Records Report`;
@@ -36,76 +36,84 @@ export const shippingPermitExportService = {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
 
-    // Prepare table data
+    // Prepare table data - combine some fields to reduce columns
     const tableData = records.map(record => [
       record.owner_name,
       record.contact_number || '-',
-      new Date(record.birthdate).toLocaleDateString(),
       record.pet_name,
-      `${record.pet_age} years`,
-      record.pet_species || '-',
-      record.pet_breed || '-',
+      `${record.pet_species || '-'} - ${record.pet_breed || '-'}`,
       record.destination || '-',
       record.purpose || '-',
       record.permit_number || '-',
-      new Date(record.issue_date).toLocaleDateString(),
-      new Date(record.expiry_date).toLocaleDateString(),
+      `${new Date(record.issue_date).toLocaleDateString()} to ${new Date(record.expiry_date).toLocaleDateString()}`,
       record.status || 'Active',
       record.remarks || '-'
     ]);
 
-    // Define table headers
+    // Define table headers - reduced from 14 to 10 columns
     const headers = [
       'Owner Name',
-      'Contact Number',
-      'Birthdate',
+      'Contact',
       'Pet Name',
-      'Pet Age',
-      'Species',
-      'Breed',
+      'Species/Breed',
       'Destination',
       'Purpose',
-      'Permit Number',
-      'Issue Date',
-      'Expiry Date',
+      'Permit No.',
+      'Validity Period',
       'Status',
       'Remarks'
     ];
 
-    // Add table to PDF
+    // Add table to PDF with better handling for large datasets
     autoTable(doc, {
       head: [headers],
       body: tableData,
       startY: 50,
       styles: {
-        fontSize: 8,
+        fontSize: 7,
         cellPadding: 2,
+        overflow: 'linebreak',
+        cellWidth: 'wrap',
+        halign: 'left',
+        valign: 'top',
+        lineWidth: 0.1,
       },
       headStyles: {
         fillColor: [34, 139, 34], // Green color
         textColor: 255,
         fontStyle: 'bold',
+        fontSize: 8,
+        halign: 'center',
+        lineWidth: 0.1,
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
+        lineWidth: 0.1,
       },
-      margin: { top: 50 },
+      margin: { top: 50, left: 3, right: 3 },
       columnStyles: {
-        0: { cellWidth: 25 }, // Owner Name
-        1: { cellWidth: 20 }, // Contact Number
-        2: { cellWidth: 20 }, // Birthdate
-        3: { cellWidth: 20 }, // Pet Name
-        4: { cellWidth: 15 }, // Pet Age
-        5: { cellWidth: 15 }, // Species
-        6: { cellWidth: 15 }, // Breed
-        7: { cellWidth: 20 }, // Destination
-        8: { cellWidth: 20 }, // Purpose
-        9: { cellWidth: 20 }, // Permit Number
-        10: { cellWidth: 20 }, // Issue Date
-        11: { cellWidth: 20 }, // Expiry Date
-        12: { cellWidth: 15 }, // Status
-        13: { cellWidth: 25 }, // Remarks
-      }
+        0: { cellWidth: 55 }, // Owner Name
+        1: { cellWidth: 40 }, // Contact
+        2: { cellWidth: 45 }, // Pet Name
+        3: { cellWidth: 50 }, // Species/Breed
+        4: { cellWidth: 55 }, // Destination
+        5: { cellWidth: 55 }, // Purpose
+        6: { cellWidth: 45 }, // Permit No.
+        7: { cellWidth: 65 }, // Validity Period
+        8: { cellWidth: 35 }, // Status
+        9: { cellWidth: 55 }, // Remarks
+      },
+      didDrawPage: function (data) {
+        // Add page numbers
+        const pageNumber = doc.internal.getNumberOfPages();
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height || pageSize.getHeight();
+        doc.setFontSize(7);
+        doc.text(`Page ${data.pageNumber} of ${pageNumber}`, pageSize.width - 25, pageHeight - 8);
+      },
+      // Ensure all content fits by allowing multiple pages
+      pageBreak: 'auto',
+      showHead: 'everyPage',
     });
 
     // Add summary at the bottom

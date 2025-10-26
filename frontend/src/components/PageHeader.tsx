@@ -3,6 +3,7 @@ import React from 'react';
 import { Calendar, UserCircle, ChevronDown, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
+import LogoutConfirmationModal from './LogoutConfirmationModal';
 
 interface PageHeaderProps {
   title: string;
@@ -15,6 +16,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
 
@@ -91,7 +93,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
             <div className="border-t border-gray-100 my-2"></div>
             <button
               className="flex items-center w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-transparent transition-all duration-200"
-              onClick={() => { logout(); setIsDropdownOpen(false); }}
+              onClick={() => { setShowLogoutModal(true); setIsDropdownOpen(false); }}
             >
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
                 <LogOut size={16} className="text-red-600" />
@@ -101,6 +103,14 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
           </div>
         )}
       </div>
+      
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={logout}
+        userName={user?.name}
+      />
     </header>
   );
 };

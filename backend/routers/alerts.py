@@ -181,4 +181,26 @@ def search_alerts(query: str, db: Session = Depends(get_db)):
 def get_alerts_by_priority(priority: str, db: Session = Depends(get_db)):
     """Get alerts by priority level"""
     alerts = db.query(models.Alert).filter(models.Alert.priority == priority).all()
-    return alerts 
+    return alerts
+
+@router.get("/user/{email}", response_model=List[schemas.Alert])
+def get_user_alerts(email: str, db: Session = Depends(get_db)):
+    """Get alerts for a specific user by email"""
+    # Get all alerts
+    all_alerts = db.query(models.Alert).all()
+    
+    # Filter alerts that include this user's email in recipients
+    user_alerts = []
+    for alert in all_alerts:
+        if alert.recipients:
+            try:
+                recipients_list = json.loads(alert.recipients)
+                if email in recipients_list:
+                    user_alerts.append(alert)
+            except json.JSONDecodeError:
+                continue
+    
+    # Sort by created_at descending (most recent first)
+    user_alerts.sort(key=lambda x: x.created_at, reverse=True)
+    
+    return user_alerts 

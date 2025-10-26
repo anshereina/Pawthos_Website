@@ -305,10 +305,8 @@ const VaccinationRecordsPage: React.FC = () => {
         return false;
       }
     } else if (activeTab === 'all') {
-      // Show all other statuses (not 'Scheduled' and 'Confirmed') in all tab
-      if (event.status === 'Scheduled' || event.status === 'Confirmed') {
-        return false;
-      }
+      // Show ALL events in the "Vaccination Events List" tab regardless of status
+      // No status filtering needed - show everything
     }
     
     // Apply search filter
@@ -609,17 +607,8 @@ const VaccinationRecordsPage: React.FC = () => {
                         .map((event: VaccinationEvent, i: number) => (
                         <tr 
                           key={event.id} 
-                          className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} ${
-                            activeTab === 'upcoming' && event.status !== 'Confirmed' 
-                              ? 'cursor-default' 
-                              : 'hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 cursor-pointer'
-                          } transition-all duration-300 border-b border-gray-100`}
-                          onClick={() => {
-                            if (activeTab === 'upcoming' && event.status !== 'Confirmed') {
-                              return; // Don't handle click for non-confirmed events in upcoming tab
-                            }
-                            handleRowClick(event);
-                          }}
+                          className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                          onClick={() => handleRowClick(event)}
                         >
                           <td className="px-4 py-3">{event.event_date}</td>
                           <td className="px-4 py-3">{event.barangay}</td>
@@ -638,15 +627,17 @@ const VaccinationRecordsPage: React.FC = () => {
                           <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button 
                               onClick={() => handleEditClick(event)}
-                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
+                              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                              title="Edit"
                             >
-                              <Edit size={16} className="text-green-600" />
+                              <Edit size={18} className="text-green-600" />
                             </button>
                             <button 
                               onClick={() => handleDeleteClick(event)}
-                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
+                              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                              title="Delete"
                             >
-                              <Trash2 size={16} className="text-red-600" />
+                              <Trash2 size={18} className="text-red-600" />
                             </button>
                           </td>
                         </tr>
@@ -741,7 +732,7 @@ const VaccinationRecordsPage: React.FC = () => {
         isOpen={isAntiRabiesModalOpen}
         onClose={() => setIsAntiRabiesModalOpen(false)}
         event={selectedEvent}
-        readOnly={activeTab === 'all'} // Read-only for completed events (all tab)
+        readOnly={activeTab === 'all'} // Read-only for Vaccination Events List tab
       />
       
       <AddVaccinationRecordFromListModal

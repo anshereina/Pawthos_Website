@@ -1,10 +1,15 @@
 import os
 import uuid
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse
 from typing import List
 import shutil
 from pathlib import Path
+from datetime import datetime
+from sqlalchemy.orm import Session
+from core.database import get_db
+from core.models import User, Pet
+from core.auth import get_current_user
 
 router = APIRouter(prefix="/uploads", tags=["File Uploads"])
 
@@ -82,4 +87,81 @@ async def delete_uploaded_file(filename: str):
         return {"message": "File deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
+
+@router.post("/upload-user-photo")
+async def upload_user_photo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload user profile photo (for mobile app)"""
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        # Generate unique filename
+        file_extension = Path(file.filename).suffix.lower() if file.filename else '.jpg'
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        filename = f"user_{current_user.id}_{timestamp}{file_extension}"
+        file_path = UPLOAD_DIR / filename
+        
+        # Save file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Update user photo URL in database
+        photo_url = f"/uploads/{filename}"
+        current_user.photo_url = photo_url
+        db.commit()
+        
+        return {"photo_url": photo_url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload photo: {str(e)}")
+    finally:
+        file.file.close()
+
+@router.post("/upload-pet-photo")
+async def upload_pet_photo(
+    pet_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload pet photo (for mobile app)"""
+    try:
+        # Verify pet belongs to user
+        pet = db.query(Pet).filter(Pet.id == pet_id, Pet.user_id == current_user.id).first()
+        if not pet:
+            raise HTTPException(status_code=404, detail="Pet not found")
+        
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        # Generate unique filename
+        file_extension = Path(file.filename).suffix.lower() if file.filename else '.jpg'
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        filename = f"pet_{pet_id}_{timestamp}{file_extension}"
+        file_path = UPLOAD_DIR / filename
+        
+        # Save file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Update pet photo URL in database
+        photo_url = f"/uploads/{filename}"
+        pet.photo_url = photo_url
+        pet.updated_at = datetime.utcnow()
+        db.commit()
+        
+        return {"photo_url": photo_url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload photo: {str(e)}")
+    finally:
+        file.file.close()
 

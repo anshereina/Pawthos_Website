@@ -22,7 +22,39 @@ async def predict_pain_basic(file: UploadFile = File(...)):
         return result
         
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        # Handle specific error types with appropriate status codes
+        if "NO_CAT_DETECTED" in error_msg:
+            raise HTTPException(status_code=422, detail={
+                "error_type": "NO_CAT_DETECTED",
+                "message": "No cat detected in the image. Please upload a clear photo of a cat's face.",
+                "guidance": "Make sure you're uploading a photo of a cat, not a dog or human."
+            })
+        elif "CAT_TOO_FAR" in error_msg or "CAT_TOO_CLOSE" in error_msg:
+            raise HTTPException(status_code=422, detail={
+                "error_type": "CAT_POSITION_ERROR", 
+                "message": "Cat detected but face positioning needs adjustment.",
+                "guidance": "Please follow the guidelines: take photo at eye level, ensure cat's face is clearly visible, and avoid extreme angles."
+            })
+        else:
+            # Other errors - try heuristic fallback
+            logging.warning(f"ELD primary analysis failed, using heuristic fallback: {e}")
+            try:
+                fallback = ai_service.predict_pain_basic(image_bytes)
+                return {
+                    "pain_level": fallback.get("pain_level", "Unknown"),
+                    "confidence": fallback.get("confidence", 0.72),
+                    "model_type": fallback.get("model_type", "Heuristic Fallback"),
+                    "landmarks_detected": fallback.get("landmarks_detected", 0),
+                    "expected_landmarks": fallback.get("expected_landmarks", 48),
+                    "fgs_breakdown": fallback.get("fgs_breakdown", {}),
+                    "detailed_explanation": fallback.get("detailed_explanation", {}),
+                    "actionable_advice": fallback.get("actionable_advice", {}),
+                    "landmark_analysis": fallback.get("landmark_analysis", {}),
+                }
+            except Exception as fe:
+                logging.error(f"Heuristic fallback also failed: {fe}")
+                raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logging.error(f"Prediction error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process image")
@@ -41,6 +73,20 @@ async def predict_pain_eld(
         
         image_bytes = file.file.read()
         result = ai_service.predict_pain_eld(image_bytes)
+        
+        # Check if the result contains an error (no cat detected)
+        if result.get("error") and result.get("error_type") == "NO_CAT_DETECTED":
+            error_guidance = result.get('error_guidance', 'Please upload a clear photo of a cat\'s face for pain assessment.')
+            raise HTTPException(
+                status_code=400, 
+                detail={
+                    "error": True,
+                    "error_type": "NO_CAT_DETECTED",
+                    "error_message": "No cat face detected in the image",
+                    "error_guidance": error_guidance
+                }
+            )
+        
         return result
         
     except ValueError as e:

@@ -7,6 +7,7 @@ import re
 from core.database import get_db
 from core.models import Pet
 from core.schemas import PetCreate, PetUpdate, Pet as PetSchema
+from core import models, auth
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
@@ -36,8 +37,8 @@ def calculate_age(date_of_birth: Optional[date]) -> Optional[int]:
         age -= 1
     return age
 
-@router.post("/", response_model=PetSchema, status_code=status.HTTP_201_CREATED)
-def create_pet(pet: PetCreate, db: Session = Depends(get_db)):
+@router.post("", response_model=PetSchema, status_code=status.HTTP_201_CREATED)
+def create_pet(pet: PetCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_mobile_user)):
     """Create a new pet record"""
     # Validate species
     species = pet.species.lower()
@@ -72,7 +73,8 @@ def create_pet(pet: PetCreate, db: Session = Depends(get_db)):
         color=pet.color,
         breed=pet.breed,
         gender=pet.gender,
-        reproductive_status=pet.reproductive_status
+        reproductive_status=pet.reproductive_status,
+        user_id=current_user.id  # Set the user_id to the authenticated user
     )
     
     db.add(db_pet)
@@ -80,7 +82,7 @@ def create_pet(pet: PetCreate, db: Session = Depends(get_db)):
     db.refresh(db_pet)
     return db_pet
 
-@router.get("/", response_model=List[PetSchema])
+@router.get("", response_model=List[PetSchema])
 def get_pets(
     skip: int = 0,
     limit: int = 100,
