@@ -58,7 +58,9 @@ class PetService {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
+    const queryString = params.toString();
+    const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
+    const response = await fetch(url, {
       headers,
     });
     if (!response.ok) {
