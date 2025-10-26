@@ -82,7 +82,7 @@ class VaccinationRecordService {
   }
 
   async getVaccinationStatistics(date?: string): Promise<VaccinationStatistics> {
-    const url = new URL(`${this.baseUrl}/statistics/dashboard`);
+    const url = new URL(`${this.baseUrl}statistics/dashboard`);
     if (date) {
       url.searchParams.append('date', date);
     }
@@ -99,7 +99,7 @@ class VaccinationRecordService {
   }
 
   async getYearlyVaccinationStatistics(year?: number): Promise<YearlyVaccinationStatistics> {
-    const url = new URL(`${this.baseUrl}/statistics/yearly`);
+    const url = new URL(`${this.baseUrl}statistics/yearly`);
     if (year) {
       url.searchParams.append('year', year.toString());
     }
