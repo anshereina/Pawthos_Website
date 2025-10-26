@@ -30,6 +30,9 @@ export default function useLogin(options: UseLoginOptions) {
     setLoading(true);
     try {
       console.log('Attempting login with:', form.email);
+      console.log('API_BASE_URL:', API_BASE_URL);
+      console.log('REACT_APP_API_URL env:', process.env.REACT_APP_API_URL);
+      console.log('REACT_APP_API_BASE_URL env:', process.env.REACT_APP_API_BASE_URL);
       
       const loginRes = await axios.post(
         `${API_BASE_URL}/auth/login`,
