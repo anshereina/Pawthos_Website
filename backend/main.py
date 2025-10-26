@@ -218,6 +218,22 @@ def test_smtp():
         "smtp_user_value": SMTP_USER[:3] + "***" if SMTP_USER else None
     }
 
+@app.post("/test-email")
+def test_email_send(email_data: dict):
+    from core.auth import send_email_otp
+    email = email_data.get("email")
+    if not email:
+        return {"error": "Email is required"}
+    
+    otp_code = "123456"  # Test OTP
+    result = send_email_otp(email, otp_code)
+    
+    return {
+        "message": f"Test email sent to {email}",
+        "success": result,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
 # Mobile app photo upload endpoints (UPLOAD_DIR already created above)
 @app.post("/api/upload-user-photo")
 async def upload_user_photo(
