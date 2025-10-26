@@ -220,10 +220,16 @@ def send_email_otp(email: str, otp_code: str):
         
         # Send email with timeout
         print(f"🔧 Attempting to send email to {email}")
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-        print(f"🔧 SMTP connection established")
-        server.starttls()
-        print(f"🔧 TLS started")
+        # Try different Gmail SMTP settings
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+            print(f"🔧 SMTP connection established on port 587")
+            server.starttls()
+            print(f"🔧 TLS started")
+        except Exception as e:
+            print(f"🔧 Port 587 failed, trying port 465: {e}")
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+            print(f"🔧 SMTP SSL connection established on port 465")
         server.login(SMTP_USER, SMTP_PASS)
         print(f"🔧 SMTP login successful")
         text = msg.as_string()
