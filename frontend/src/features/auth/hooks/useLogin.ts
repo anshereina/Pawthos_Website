@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../config';
 
 interface LoginForm {
   email: string;
@@ -29,8 +30,6 @@ export default function useLogin(options: UseLoginOptions) {
     setLoading(true);
     try {
       console.log('Attempting login with:', form.email);
-      
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pawthoswebsite-production.up.railway.app';
       
       const loginRes = await axios.post(
         `${API_BASE_URL}/auth/login`,
