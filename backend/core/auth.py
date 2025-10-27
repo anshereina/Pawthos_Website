@@ -11,6 +11,7 @@ from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SMTP_USE
 import random
 import smtplib
 import logging
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -220,26 +221,44 @@ def send_email_otp(email: str, otp_code: str):
         
         # Send email with timeout
         print(f"🔧 Attempting to send email to {email}")
-        # Try different Gmail SMTP settings
-        try:
-            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-            print(f"🔧 SMTP connection established on port 587")
-            server.starttls()
-            print(f"🔧 TLS started")
-        except Exception as e:
-            print(f"🔧 Port 587 failed, trying port 465: {e}")
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
-            print(f"🔧 SMTP SSL connection established on port 465")
-        server.login(SMTP_USER, SMTP_PASS)
-        print(f"🔧 SMTP login successful")
-        text = msg.as_string()
-        server.sendmail(SMTP_USER, email, text)
-        print(f"🔧 Email sent successfully")
-        server.quit()
-        print(f"🔧 SMTP connection closed")
         
-        print(f"✅ OTP email sent to {email}")
-        return True
+        # Try multiple SMTP servers and ports
+        smtp_configs = [
+            ('smtp.gmail.com', 587, False),  # Gmail TLS
+            ('smtp.gmail.com', 465, True),   # Gmail SSL
+            ('smtp-mail.outlook.com', 587, False),  # Outlook TLS
+            ('smtp-mail.outlook.com', 465, True),    # Outlook SSL
+        ]
+        
+        for host, port, use_ssl in smtp_configs:
+            try:
+                print(f"🔧 Trying {host}:{port} (SSL: {use_ssl})")
+                if use_ssl:
+                    server = smtplib.SMTP_SSL(host, port, timeout=10)
+                    print(f"🔧 SMTP SSL connection established on {host}:{port}")
+                else:
+                    server = smtplib.SMTP(host, port, timeout=10)
+                    print(f"🔧 SMTP connection established on {host}:{port}")
+                    server.starttls()
+                    print(f"🔧 TLS started")
+                
+                server.login(SMTP_USER, SMTP_PASS)
+                print(f"🔧 SMTP login successful")
+                text = msg.as_string()
+                server.sendmail(SMTP_USER, email, text)
+                print(f"🔧 Email sent successfully")
+                server.quit()
+                print(f"🔧 SMTP connection closed")
+                
+                print(f"✅ OTP email sent to {email} via {host}:{port}")
+                return True
+                
+            except Exception as e:
+                print(f"❌ Failed {host}:{port}: {str(e)}")
+                continue
+        
+        print(f"❌ All SMTP servers failed for {email}")
+        return False
         
     except Exception as e:
         print(f"❌ Error sending email to {email}: {str(e)}")
