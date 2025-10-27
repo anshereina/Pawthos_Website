@@ -167,6 +167,11 @@ def get_current_admin(current_user: Union[models.Admin, models.User] = Depends(g
         )
     return current_user
 
+def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Session = Depends(get_db)):
+    """Get current user for mobile app endpoints - now redirects to admin auth for website"""
+    # Since the website is admin-only, redirect mobile user auth to admin auth
+    return get_current_admin(token, db)
+
 def send_email_otp(email: str, otp_code: str):
     """Send OTP code via email"""
     try:
