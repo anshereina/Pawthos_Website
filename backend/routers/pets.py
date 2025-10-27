@@ -39,7 +39,7 @@ def calculate_age(date_of_birth: Optional[date]) -> Optional[int]:
 
 @router.post("", response_model=PetSchema, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=PetSchema, status_code=status.HTTP_201_CREATED)
-def create_pet(pet: PetCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_mobile_user)):
+def create_pet(pet: PetCreate, db: Session = Depends(get_db), current_user: models.Admin = Depends(auth.get_current_admin)):
     """Create a new pet record"""
     # Validate species
     species = pet.species.lower()

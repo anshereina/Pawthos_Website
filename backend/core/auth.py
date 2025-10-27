@@ -167,35 +167,6 @@ def get_current_admin(current_user: Union[models.Admin, models.User] = Depends(g
         )
     return current_user
 
-def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Session = Depends(get_db)):
-    """Get current user for mobile app endpoints"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    if not token:
-        logging.error("No token provided to get_current_mobile_user")
-        raise credentials_exception
-    
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            logging.error("No email in token payload")
-            raise credentials_exception
-        logging.info(f"Token validated for user: {email}")
-    except JWTError as e:
-        logging.error(f"JWT decode error: {str(e)}")
-        raise credentials_exception
-    
-    user = get_user(db, email=email)
-    if user is None:
-        logging.error(f"User not found for email: {email}")
-        raise credentials_exception
-    return user
-
 def send_email_otp(email: str, otp_code: str):
     """Send OTP code via email"""
     try:
