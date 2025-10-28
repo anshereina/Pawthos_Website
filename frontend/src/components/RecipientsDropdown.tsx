@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, ChevronDown, Check } from 'lucide-react';
+import { X, ChevronDown, Check } from 'lucide-react';
 import { userService, Recipient } from '../services/userService';
 
 interface RecipientsDropdownProps {
@@ -16,7 +16,6 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
   // Ensure selectedRecipients is always an array
   const safeSelectedRecipients = Array.isArray(selectedRecipients) ? selectedRecipients : [];
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,9 +35,7 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
     const fetchRecipients = async () => {
       setLoading(true);
       try {
-        console.log('Fetching recipients with search term:', searchTerm);
-        const fetchedRecipients = await userService.getRecipients(searchTerm);
-        console.log('Fetched recipients:', fetchedRecipients);
+        const fetchedRecipients = await userService.getRecipients('');
         setRecipients(fetchedRecipients);
       } catch (error) {
         console.error('Error fetching recipients:', error);
@@ -47,13 +44,10 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
       }
     };
 
-    // Debounce search
-    const timeoutId = setTimeout(() => {
+    if (isOpen && recipients.length === 0) {
       fetchRecipients();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+    }
+  }, [isOpen, recipients.length]);
 
   const handleRecipientToggle = (email: string) => {
     const newRecipients = safeSelectedRecipients.includes(email)
@@ -144,20 +138,6 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          <div className="p-2 border-b border-gray-200">
-            <div className="relative">
-              <Search size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search users and admins..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          </div>
-
           <div className="py-1">
             {/* All Users option */}
             <div

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { CreateReportData, reportService } from '../services/reportService';
+import RecipientsDropdown from './RecipientsDropdown';
 
 interface AddReportModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ const AddReportModal: React.FC<AddReportModalProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,11 +61,12 @@ const AddReportModal: React.FC<AddReportModalProps> = ({
         submitted_by: userName,
         submitted_by_email: userEmail,
         image_url: imageUrl,
-        recipient: formData.recipient.trim() || undefined,
+        recipient: selectedRecipient || undefined,
       });
       
       // Reset form
       setFormData({ title: '', description: '', status: 'New', recipient: '' });
+      setSelectedRecipient('');
       setSelectedFile(null);
       setImagePreview(null);
       onClose();
@@ -159,17 +162,17 @@ const AddReportModal: React.FC<AddReportModalProps> = ({
           </div>
 
           <div>
-            <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Recipient (Optional)
             </label>
-            <input
-              type="text"
-              id="recipient"
-              name="recipient"
-              value={formData.recipient}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="Enter recipient name or email"
+            <RecipientsDropdown
+              selectedRecipients={selectedRecipient ? [selectedRecipient] : []}
+              onRecipientsChange={(recipients) => {
+                // Only allow a single recipient for reports
+                const first = Array.isArray(recipients) && recipients.length > 0 ? recipients[0] : '';
+                setSelectedRecipient(first);
+              }}
+              placeholder="Select a recipient (optional)..."
             />
           </div>
 
