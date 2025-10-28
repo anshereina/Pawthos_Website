@@ -102,7 +102,7 @@ class MedicalRecordService {
   }
 
   async getMedicalRecord(recordId: number): Promise<MedicalRecord> {
-    const response = await fetch(`${this.baseUrl}${recordId}`, {
+    const response = await fetch(`${this.baseUrl}/${recordId}`, {
       headers: this.getHeaders(),
     });
     
@@ -128,7 +128,7 @@ class MedicalRecordService {
   }
 
   async updateMedicalRecord(recordId: number, recordData: UpdateMedicalRecordData): Promise<MedicalRecord> {
-    const response = await fetch(`${this.baseUrl}${recordId}`, {
+    const response = await fetch(`${this.baseUrl}/${recordId}`, {
       method: 'PUT',
       headers: this.getHeaders(),
       body: JSON.stringify(recordData),
@@ -142,7 +142,7 @@ class MedicalRecordService {
   }
 
   async deleteMedicalRecord(recordId: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}${recordId}`, {
+    const response = await fetch(`${this.baseUrl}/${recordId}`, {
       method: 'DELETE',
       headers: this.getHeaders(),
     });

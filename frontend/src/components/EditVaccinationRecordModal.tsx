@@ -75,8 +75,10 @@ const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({
                 <option value="Rabisin">Rabisin</option>
                 <option value="4in1(Tricats)">4in1(Tricats)</option>
                 <option value="4in1 (Parasites)">4in1 (Parasites)</option>
-                <option value="5in1 (Anti-Parvo)">5in1 (Anti-Parvo)</option>
-                <option value="8in1 (All Viruses)">8in1 (All Viruses)</option>
+                <option value="5in1">5in1</option>
+                <option value="8in1">8in1</option>
+                <option value="DEFENSOR 3">DEFENSOR 3</option>
+                <option value="NOVIBAC RABIES">NOVIBAC RABIES</option>
               </select>
             </div>
             <div>

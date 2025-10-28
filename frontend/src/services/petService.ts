@@ -83,7 +83,7 @@ class PetService {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${this.baseUrl}${petId}`, {
+      const response = await fetch(`${this.baseUrl}/${petId}`, {
         headers,
       });
       console.log('Response status:', response.status);
@@ -131,7 +131,7 @@ class PetService {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    const response = await fetch(`${this.baseUrl}${petId}`, {
+    const response = await fetch(`${this.baseUrl}/${petId}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(petData),
@@ -151,7 +151,7 @@ class PetService {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    const deleteUrl = `${this.baseUrl}${petId}`;
+    const deleteUrl = `${this.baseUrl}/${petId}`;
     console.log('Delete URL:', deleteUrl);
     
     const response = await fetch(deleteUrl, {
