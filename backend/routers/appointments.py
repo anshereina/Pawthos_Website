@@ -38,7 +38,9 @@ def generate_request_id(db: Session) -> str:
     return f"REQ-{new_num:04d}"
 
 # Appointment endpoints
+# Support both with and without trailing slash
 @router.get("", response_model=List[schemas.Appointment])
+@router.get("/", response_model=List[schemas.Appointment])
 def get_appointments(
     search: Optional[str] = Query(None, description="Search appointments"),
     status: Optional[str] = Query(None, description="Filter by status"),
@@ -143,6 +145,7 @@ def get_appointment(
     return appointment
 
 @router.post("", response_model=schemas.Appointment)
+@router.post("/", response_model=schemas.Appointment)
 def create_appointment(
     appointment: schemas.AppointmentCreate,
     db: Session = Depends(get_db),
