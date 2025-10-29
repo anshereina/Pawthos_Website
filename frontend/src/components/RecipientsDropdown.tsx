@@ -18,6 +18,8 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const searchTimeoutRef = useRef<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,22 +34,36 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
   }, []);
 
   useEffect(() => {
-    const fetchRecipients = async () => {
+    const fetchRecipients = async (q: string) => {
       setLoading(true);
       try {
-        const fetchedRecipients = await userService.getRecipients('');
+        const fetchedRecipients = await userService.getRecipients(q);
         setRecipients(fetchedRecipients);
       } catch (error) {
         console.error('Error fetching recipients:', error);
+        setRecipients([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (isOpen && recipients.length === 0) {
-      fetchRecipients();
+    if (isOpen) {
+      // Debounce search
+      if (searchTimeoutRef.current) {
+        window.clearTimeout(searchTimeoutRef.current);
+      }
+      // @ts-ignore - setTimeout returns number in browser
+      searchTimeoutRef.current = window.setTimeout(() => {
+        fetchRecipients(search.trim());
+      }, 250);
     }
-  }, [isOpen, recipients.length]);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        window.clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [isOpen, search]);
 
   const handleRecipientToggle = (email: string) => {
     const newRecipients = safeSelectedRecipients.includes(email)
@@ -80,8 +96,12 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
     <div className="relative" ref={dropdownRef}>
       <div className="relative">
         <div
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent cursor-pointer bg-white"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+          role="combobox"
+          aria-expanded={isOpen}
+          tabIndex={0}
           onClick={() => setIsOpen(!isOpen)}
+          onFocus={() => setIsOpen(true)}
         >
           <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-1 min-h-6">
@@ -139,6 +159,17 @@ const RecipientsDropdown: React.FC<RecipientsDropdownProps> = ({
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           <div className="py-1">
+            {/* Search */}
+            <div className="px-3 py-2 border-b border-gray-200 sticky top-0 bg-white">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Search name or email..."
+              />
+            </div>
             {/* All Users option */}
             <div
               className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-200"

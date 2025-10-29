@@ -135,7 +135,7 @@ const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistic
 
   return (
     <div className="border border-gray-200 rounded-xl p-6 flex flex-col w-full h-full bg-gradient-to-br from-white to-green-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-200">
-      <div className="font-bold text-lg mb-3 text-green-700 flex items-center">
+      <div className="font-bold text-lg mb-1 text-green-700 flex items-center">
         <Cat size={20} className="mr-2" />
         Feline
       </div>
@@ -154,9 +154,11 @@ const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistic
         {/* Donut Chart */}
         <DonutChart maleCount={statistics.male} femaleCount={statistics.female} total={statistics.total} maleColor="#7ed957" femaleColor="#388e3c" />
         {/* KPI */}
-        <div className="flex flex-col items-center ml-4">
+        <div className="flex flex-col items-start ml-4 min-w-0">
           <span className="text-3xl font-bold text-green-700">{statistics.total.toString().padStart(2, '0')}</span>
-          <span className="text-xs text-gray-600">Total Vaccine on {displayDate} — Barangay: {barangayLabel || 'N/A'}</span>
+          <span className="text-[11px] text-gray-600 leading-snug break-words whitespace-normal max-w-[180px]">
+            Total Vaccine on {displayDate} — Barangay: {barangayLabel || 'N/A'}
+          </span>
         </div>
       </div>
     </div>
@@ -184,7 +186,7 @@ const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistic
 
   return (
     <div className="border border-gray-200 rounded-xl p-6 flex flex-col w-full h-full bg-gradient-to-br from-white to-blue-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-200">
-      <div className="font-bold text-lg mb-3 text-blue-700 flex items-center">
+      <div className="font-bold text-lg mb-1 text-blue-700 flex items-center">
         <Dog size={20} className="mr-2" />
         Canine
       </div>
@@ -203,9 +205,11 @@ const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistic
         {/* Donut Chart */}
         <DonutChart maleCount={statistics.male} femaleCount={statistics.female} total={statistics.total} maleColor="#7ed957" femaleColor="#388e3c" />
         {/* KPI */}
-        <div className="flex flex-col items-center ml-4">
+        <div className="flex flex-col items-start ml-4 min-w-0">
           <span className="text-3xl font-bold text-green-700">{statistics.total.toString().padStart(2, '0')}</span>
-          <span className="text-xs text-gray-600">Total Vaccine on {displayDate} — Barangay: {barangayLabel || 'N/A'}</span>
+          <span className="text-[11px] text-gray-600 leading-snug break-words whitespace-normal max-w-[180px]">
+            Total Vaccine on {displayDate} — Barangay: {barangayLabel || 'N/A'}
+          </span>
         </div>
       </div>
     </div>

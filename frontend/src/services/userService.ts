@@ -35,7 +35,7 @@ class UserService {
         params.append('search', search);
       }
 
-      const response = await fetch(`${this.baseUrl}/recipients?${params.toString()}`, {
+      const response = await fetch(`${this.baseUrl}recipients?${params.toString()}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -57,7 +57,7 @@ class UserService {
         params.append('search', search);
       }
 
-      const response = await fetch(`${this.baseUrl}/?${params.toString()}`, {
+      const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
         headers: this.getAuthHeaders(),
       });
 
