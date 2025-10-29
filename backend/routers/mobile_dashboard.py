@@ -23,7 +23,7 @@ class DashboardUser(BaseModel):
     email: str
     phoneNumber: Optional[str]
     address: Optional[str]
-    createdAt: datetime
+    createdAt: Optional[str]
 
 class DashboardResponse(BaseModel):
     user: DashboardUser
@@ -83,13 +83,20 @@ def get_dashboard(current_user: models.User = Depends(auth.get_current_mobile_us
             .all()
         )
 
+        created_at_value = None
+        try:
+            if getattr(current_user, "created_at", None):
+                created_at_value = current_user.created_at.isoformat()
+        except Exception:
+            created_at_value = None
+
         dashboard_user = DashboardUser(
             id=current_user.id,
             name=current_user.name,
             email=current_user.email,
             phoneNumber=current_user.phone_number,
             address=current_user.address,
-            createdAt=current_user.created_at,
+            createdAt=created_at_value,
         )
 
         # Map ORM objects to response models

@@ -168,9 +168,22 @@ def get_current_admin(current_user: Union[models.Admin, models.User] = Depends(g
     return current_user
 
 def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Session = Depends(get_db)):
-    """Get current user for mobile app endpoints - now redirects to admin auth for website"""
-    # Since the website is admin-only, redirect mobile user auth to admin auth
-    return get_current_admin(token, db)
+    """Get current authenticated mobile user (regular user)."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_token(token, credentials_exception)
+    if token_data.user_type != "user":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User access required"
+        )
+    user = get_user(db, token_data.email)
+    if user is None:
+        raise credentials_exception
+    return user
 
 def send_email_otp(email: str, otp_code: str):
     """Send OTP code via email"""
