@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from typing import List
 from core.database import get_db
 from core.models import VaccinationEvent, VaccinationDrive
@@ -18,6 +19,19 @@ def get_upcoming_vaccination_events(db: Session = Depends(get_db)):
     today = date.today()
     return db.query(VaccinationEvent).filter(
         VaccinationEvent.event_date >= today
+    ).order_by(VaccinationEvent.event_date.asc()).all()
+
+@router.get("/by-date", response_model=List[VaccinationEventSchema])
+def get_vaccination_events_by_date(date: str, db: Session = Depends(get_db)):
+    """Return vaccination events occurring on the provided YYYY-MM-DD date."""
+    from datetime import datetime
+    try:
+        target_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+    return db.query(VaccinationEvent).filter(
+        func.date(VaccinationEvent.event_date) == target_date
     ).order_by(VaccinationEvent.event_date.asc()).all()
 
 @router.get("/scheduled", response_model=List[VaccinationEventSchema])

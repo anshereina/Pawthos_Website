@@ -66,7 +66,7 @@ class ReportService {
 
   async getReport(reportId: string): Promise<Report> {
     try {
-      const response = await fetch(`${this.baseUrl}/${reportId}`, {
+      const response = await fetch(`${this.baseUrl}${reportId}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -102,7 +102,7 @@ class ReportService {
 
   async updateReport(reportId: string, data: UpdateReportData): Promise<Report> {
     try {
-      const response = await fetch(`${this.baseUrl}/${reportId}`, {
+      const response = await fetch(`${this.baseUrl}${reportId}`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),
@@ -121,7 +121,7 @@ class ReportService {
 
   async deleteReport(reportId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/${reportId}`, {
+      const response = await fetch(`${this.baseUrl}${reportId}`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
       });
@@ -137,7 +137,7 @@ class ReportService {
 
   async searchReports(query: string): Promise<Report[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/search/?query=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${this.baseUrl}search/?query=${encodeURIComponent(query)}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -158,7 +158,7 @@ class ReportService {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${this.baseUrl}/upload-image`, {
+      const response = await fetch(`${this.baseUrl}upload-image`, {
         method: 'POST',
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),

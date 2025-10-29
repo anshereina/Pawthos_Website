@@ -62,6 +62,25 @@ class VaccinationEventService {
     return response.json();
   }
 
+  async getVaccinationEventsByDate(date: string): Promise<VaccinationEvent[]> {
+    const url = new URL(`${this.baseUrl}/by-date`);
+    url.searchParams.append('date', date);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch vaccination events by date');
+    }
+
+    return response.json();
+  }
+
   async getVaccinationEvent(id: number): Promise<VaccinationEvent> {
     const response = await fetch(`${this.baseUrl}/${id}`, {
       method: 'GET',

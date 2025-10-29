@@ -65,7 +65,7 @@ class AlertService {
 
   async getAlert(alertId: string): Promise<Alert> {
     try {
-      const response = await fetch(`${this.baseUrl}/${alertId}`, {
+      const response = await fetch(`${this.baseUrl}${alertId}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -101,7 +101,7 @@ class AlertService {
 
   async updateAlert(alertId: string, data: UpdateAlertData): Promise<Alert> {
     try {
-      const response = await fetch(`${this.baseUrl}/${alertId}`, {
+      const response = await fetch(`${this.baseUrl}${alertId}`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),
@@ -120,7 +120,7 @@ class AlertService {
 
   async deleteAlert(alertId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/${alertId}`, {
+      const response = await fetch(`${this.baseUrl}${alertId}`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
       });
@@ -136,7 +136,7 @@ class AlertService {
 
   async searchAlerts(query: string): Promise<Alert[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/search/?query=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${this.baseUrl}search/?query=${encodeURIComponent(query)}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -153,7 +153,7 @@ class AlertService {
 
   async getAlertsByPriority(priority: string): Promise<Alert[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/priority/${priority}`, {
+      const response = await fetch(`${this.baseUrl}priority/${priority}`, {
         headers: this.getAuthHeaders(),
       });
 

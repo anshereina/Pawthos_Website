@@ -8,6 +8,7 @@ import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useVaccinationStatistics, useYearlyVaccinationStatistics } from '../hooks/useVaccinationStatistics';
+import { vaccinationEventService, VaccinationEvent } from '../services/vaccinationEventService';
 import { useAnimalControlStatistics } from '../hooks/useAnimalControlStatistics';
 import { useNotifications, Notification } from '../hooks/useNotifications';
 
@@ -120,9 +121,10 @@ interface FelineVaccinationCardProps {
     total: number;
   };
   selectedDate: string;
+  barangayLabel?: string;
 }
 
-const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistics, selectedDate }) => {
+const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistics, selectedDate, barangayLabel }) => {
   const malePercentage = statistics.total > 0 ? Math.round((statistics.male / statistics.total) * 100) : 0;
   const femalePercentage = statistics.total > 0 ? Math.round((statistics.female / statistics.total) * 100) : 0;
   const displayDate = new Date(selectedDate).toLocaleDateString('en-US', { 
@@ -154,7 +156,7 @@ const FelineVaccinationCard: React.FC<FelineVaccinationCardProps> = ({ statistic
         {/* KPI */}
         <div className="flex flex-col items-center ml-4">
           <span className="text-3xl font-bold text-green-700">{statistics.total.toString().padStart(2, '0')}</span>
-          <span className="text-xs text-gray-600">Total Vaccine on {displayDate}</span>
+          <span className="text-xs text-gray-600">Total Vaccine on {displayDate} — Barangay: {barangayLabel || 'N/A'}</span>
         </div>
       </div>
     </div>
@@ -168,9 +170,10 @@ interface CanineVaccinationCardProps {
     total: number;
   };
   selectedDate: string;
+  barangayLabel?: string;
 }
 
-const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistics, selectedDate }) => {
+const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistics, selectedDate, barangayLabel }) => {
   const malePercentage = statistics.total > 0 ? Math.round((statistics.male / statistics.total) * 100) : 0;
   const femalePercentage = statistics.total > 0 ? Math.round((statistics.female / statistics.total) * 100) : 0;
   const displayDate = new Date(selectedDate).toLocaleDateString('en-US', { 
@@ -202,7 +205,7 @@ const CanineVaccinationCard: React.FC<CanineVaccinationCardProps> = ({ statistic
         {/* KPI */}
         <div className="flex flex-col items-center ml-4">
           <span className="text-3xl font-bold text-green-700">{statistics.total.toString().padStart(2, '0')}</span>
-          <span className="text-xs text-gray-600">Total Vaccine on {displayDate}</span>
+          <span className="text-xs text-gray-600">Total Vaccine on {displayDate} — Barangay: {barangayLabel || 'N/A'}</span>
         </div>
       </div>
     </div>
@@ -670,13 +673,13 @@ interface DashboardSummaryRowProps {
   selectedDate: string;
 }
 
-const DashboardSummaryRow: React.FC<DashboardSummaryRowProps> = ({ vaccinationStats, catchStats, selectedDate }) => (
+const DashboardSummaryRow: React.FC<DashboardSummaryRowProps & { barangayLabel?: string }> = ({ vaccinationStats, catchStats, selectedDate, barangayLabel }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 w-full">
     <div className="h-32">
-      <FelineVaccinationCard statistics={vaccinationStats.feline} selectedDate={selectedDate} />
+      <FelineVaccinationCard statistics={vaccinationStats.feline} selectedDate={selectedDate} barangayLabel={barangayLabel} />
     </div>
     <div className="h-32">
-      <CanineVaccinationCard statistics={vaccinationStats.canine} selectedDate={selectedDate} />
+      <CanineVaccinationCard statistics={vaccinationStats.canine} selectedDate={selectedDate} barangayLabel={barangayLabel} />
     </div>
     <div className="h-32">
       <TotalCatchCard statistics={catchStats} selectedDate={selectedDate} />
@@ -732,6 +735,7 @@ const DashboardPage: React.FC = () => {
     const today = new Date();
     return today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
   });
+  const [barangayLabel, setBarangayLabel] = React.useState<string | undefined>(undefined);
   
   const { statistics: vaccinationStats, loading: vaccinationLoading, error: vaccinationError, refreshStatistics: refreshVaccinationStats } = useVaccinationStatistics(selectedDate);
   const { statistics: catchStats, loading: catchLoading, error: catchError, refreshStatistics: refreshCatchStats } = useAnimalControlStatistics(selectedDate);
@@ -745,6 +749,27 @@ const DashboardPage: React.FC = () => {
     markAsRead,
     resetClearedNotifications
   } = useNotifications();
+
+  React.useEffect(() => {
+    let isActive = true;
+    const loadBarangay = async () => {
+      try {
+        const events = await vaccinationEventService.getVaccinationEventsByDate(selectedDate);
+        if (!isActive) return;
+        if (events && events.length > 0) {
+          // If multiple events, join barangay names uniquely
+          const uniqueBarangays = Array.from(new Set(events.map(e => e.barangay).filter(Boolean)));
+          setBarangayLabel(uniqueBarangays.join(', '));
+        } else {
+          setBarangayLabel(undefined);
+        }
+      } catch (e) {
+        setBarangayLabel(undefined);
+      }
+    };
+    loadBarangay();
+    return () => { isActive = false; };
+  }, [selectedDate]);
 
   React.useEffect(() => {
     if (!isLoading && user === null) {
@@ -838,6 +863,7 @@ const DashboardPage: React.FC = () => {
             vaccinationStats={currentVaccinationStats} 
             catchStats={currentCatchStats} 
             selectedDate={selectedDate}
+            barangayLabel={barangayLabel}
           />
           <DashboardDetailRow 
             notifications={notifications}
