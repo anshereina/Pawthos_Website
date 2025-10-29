@@ -19,9 +19,11 @@ except Exception as e:
     print(f"⚠️ .env file loading failed: {e}")
     print("📋 Using system environment variables instead")
 
-# Force set DATABASE_URL for Railway
-print("🔧 Setting DATABASE_URL for Railway")
-os.environ["DATABASE_URL"] = "postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@postgres.railway.internal:5432/railway"
+# Configure DATABASE_URL
+# Do NOT force Railway internal URL when running locally; default to local SQLite if not provided
+if not os.getenv("DATABASE_URL"):
+    print("🔧 DATABASE_URL not set; using local SQLite database ./pawthos.db")
+    os.environ["DATABASE_URL"] = "sqlite:///./pawthos.db"
 
 # Debug: Check if AI_API_KEY is loaded
 ai_key = os.getenv("AI_API_KEY")

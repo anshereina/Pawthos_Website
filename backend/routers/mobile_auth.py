@@ -50,10 +50,6 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     # Hash password
     hashed_password = auth.get_password_hash(user.password)
     
-    # Generate OTP
-    otp_code = auth.generate_otp()
-    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
-    
     # Create user
     db_user = models.User(
         name=user.name,
@@ -61,20 +57,12 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         password_hash=hashed_password,
         phone_number=user.phone_number,
         address=user.address,
-        otp_code=otp_code,
-        otp_expires_at=otp_expires_at
+        is_confirmed=1
     )
     
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
-    # Send OTP via email
-    if user.email:
-        try:
-            auth.send_email_otp(user.email, otp_code)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
     
     return db_user
 
