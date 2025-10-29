@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import date
 import re
 
@@ -39,7 +39,11 @@ def calculate_age(date_of_birth: Optional[date]) -> Optional[int]:
 
 @router.post("", response_model=PetSchema, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=PetSchema, status_code=status.HTTP_201_CREATED)
-def create_pet(pet: PetCreate, db: Session = Depends(get_db), current_user: models.Admin = Depends(auth.get_current_admin)):
+def create_pet(
+    pet: PetCreate,
+    db: Session = Depends(get_db),
+    current_user: Union[models.Admin, models.User] = Depends(auth.get_current_user)
+):
     """Create a new pet record"""
     # Validate species
     species = pet.species.lower()

@@ -3,6 +3,7 @@ python-3.10.12
 .\venv\Scripts\Activate.ps1
 python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
+npx --yes expo@54.0.21 start --clear
 npm run start
 
 railway

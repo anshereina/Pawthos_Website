@@ -50,9 +50,17 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     # Hash password
     hashed_password = auth.get_password_hash(user.password)
     
+    # Derive a default name if not provided
+    derived_name = user.name
+    try:
+        if not derived_name and user.email and "@" in user.email:
+            derived_name = user.email.split("@")[0]
+    except Exception:
+        pass
+
     # Create user
     db_user = models.User(
-        name=user.name,
+        name=derived_name,
         email=user.email,
         password_hash=hashed_password,
         phone_number=user.phone_number,
