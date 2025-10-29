@@ -165,6 +165,10 @@ const AppointmentsPage: React.FC = () => {
         });
       }
       closeStatusModal();
+      // If completed, navigate to History tab
+      if (status === 'Completed') {
+        setActiveTab('history');
+      }
     } catch (error) {
       console.error('Failed to update status:', error);
     } finally {
@@ -176,9 +180,11 @@ const AppointmentsPage: React.FC = () => {
   const getCurrentData = () => {
     switch (activeTab) {
       case 'appointments':
-        return appointments;
+        // Show only non-completed appointments in Appointments tab
+        return appointments.filter(apt => apt.status !== 'Completed');
       case 'request':
-        return serviceRequests;
+        // Show only non-completed service requests in Requests tab
+        return serviceRequests.filter(req => req.status !== 'Completed');
       case 'history':
         // Filter completed appointments and requests
         const completedAppointments = appointments.filter(apt => apt.status === 'Completed');
@@ -441,13 +447,28 @@ const AppointmentsPage: React.FC = () => {
                       <div
                         key={option}
                         className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
-                        onClick={() => {
+                        onClick={async () => {
                           setStatusDropdownOpen(null);
-                          openStatusModal(
-                            option as any, 
-                            statusDropdownOpen, 
-                            activeTab === 'appointments' ? 'appointment' : 'request'
-                          );
+                          const type = activeTab === 'appointments' ? 'appointment' : 'request';
+                          // If selecting Completed, update immediately without modal and switch to History
+                          if (option === 'Completed') {
+                            try {
+                              if (type === 'appointment') {
+                                await updateAppointment(statusDropdownOpen as number, { status: 'Completed' });
+                              } else {
+                                await updateServiceRequest(statusDropdownOpen as number, { status: 'Completed' });
+                              }
+                              setActiveTab('history');
+                            } catch (err) {
+                              console.error('Failed to complete item:', err);
+                            }
+                          } else {
+                            openStatusModal(
+                              option as any,
+                              statusDropdownOpen,
+                              type
+                            );
+                          }
                         }}
                       >
                         {option}
