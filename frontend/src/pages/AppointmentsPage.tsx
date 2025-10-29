@@ -434,7 +434,7 @@ const AppointmentsPage: React.FC = () => {
 
                 return (
                   <div 
-                    className="bg-white border border-gray-200 rounded-xl shadow-2xl"
+                    className="status-dropdown bg-white border border-gray-200 rounded-xl shadow-2xl"
                     style={dropdownStyle}
                   >
                     {STATUS_OPTIONS.map((option: string) => (

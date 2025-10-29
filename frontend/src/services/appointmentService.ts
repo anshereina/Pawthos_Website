@@ -149,7 +149,7 @@ export const appointmentService = {
 
   // Delete appointment
   deleteAppointment: async (id: number): Promise<void> => {
-    await axios.delete(`${API_BASE_URL}/appointments/${id}/`, {
+    await axios.delete(`${API_BASE_URL}/appointments/${id}`, {
       headers: getAuthHeaders()
     });
   }
@@ -200,7 +200,7 @@ export const serviceRequestService = {
 
   // Delete service request
   deleteServiceRequest: async (id: number): Promise<void> => {
-    await axios.delete(`${API_BASE_URL}/appointments/requests/${id}/`, {
+    await axios.delete(`${API_BASE_URL}/appointments/requests/${id}`, {
       headers: getAuthHeaders()
     });
   }
