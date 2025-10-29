@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
+import { config } from '../config';
 import { useAnimalControlRecords } from '../hooks/useAnimalControlRecords';
 import AddAnimalControlRecordModal from '../components/AddAnimalControlRecordModal';
 import EditAnimalControlRecordModal from '../components/EditAnimalControlRecordModal';
@@ -120,6 +121,14 @@ const AnimalControlRecordsPage: React.FC = () => {
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
   const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    // Ensure it points to backend uploads
+    const path = url.startsWith('/uploads/') ? url : `/uploads/${url.replace(/^\//, '')}`;
+    return `${config.apiUrl}${path}`;
+  };
 
   if (loading) {
     return (
@@ -239,12 +248,13 @@ const AnimalControlRecordsPage: React.FC = () => {
                   currentRows.map((record, index) => (
                     <tr
                       key={record.id}
-                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                      onClick={() => openEditModal(record)}
+                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                     >
                       <td className="px-4 py-3">
                         {record.image_url ? (
                           <img
-                            src={record.image_url}
+                            src={resolveImageUrl(record.image_url)}
                             alt="Animal photo"
                             className="w-12 h-12 object-cover rounded-lg border border-gray-200"
                             onError={(e) => {
@@ -266,14 +276,14 @@ const AnimalControlRecordsPage: React.FC = () => {
                       <td className="px-4 py-3">{formatDate(record.date)}</td>
                       <td className="px-4 py-3 flex items-center gap-2">
                         <button 
-                          onClick={() => openEditModal(record)}
+                          onClick={(e) => { e.stopPropagation(); openEditModal(record); }}
                           className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
                           title="Edit record"
                         >
                           <Edit size={18} className="text-green-800" />
                         </button>
                         <button 
-                          onClick={() => openDeleteModal(record)}
+                          onClick={(e) => { e.stopPropagation(); openDeleteModal(record); }}
                           className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                           title="Delete record"
                         >

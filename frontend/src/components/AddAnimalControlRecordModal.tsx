@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { AnimalControlRecordCreate } from '../services/animalControlRecordService';
+import { config } from '../config';
 
 interface AddAnimalControlRecordModalProps {
   isOpen: boolean;
@@ -65,16 +66,31 @@ const AddAnimalControlRecordModal: React.FC<AddAnimalControlRecordModalProps> = 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create a preview URL for the image
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      
-      // For now, we'll store the file name as the image_url
-      // In a real implementation, you'd upload the file to a server
-      setFormData(prev => ({
-        ...prev,
-        image_url: file.name,
-      }));
+      // Upload the image to backend and use returned URL
+      const form = new FormData();
+      form.append('file', file);
+      fetch(`${config.apiUrl}/uploads/pain-assessment-image/`, {
+        method: 'POST',
+        body: form,
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || 'Upload failed');
+          }
+          return res.json();
+        })
+        .then((data: { url: string }) => {
+          const fullUrl = `${config.apiUrl}${data.url}`;
+          setImagePreview(fullUrl);
+          setFormData(prev => ({
+            ...prev,
+            image_url: data.url,
+          }));
+        })
+        .catch((err) => {
+          console.error('Image upload error:', err);
+        });
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import { AnimalControlRecord, AnimalControlRecordUpdate } from '../services/animalControlRecordService';
+import { config } from '../config';
 
 interface EditAnimalControlRecordModalProps {
   isOpen: boolean;
@@ -45,7 +46,11 @@ const EditAnimalControlRecordModal: React.FC<EditAnimalControlRecordModalProps> 
       });
       // Set image preview if there's an existing image
       if (record.image_url) {
-        setImagePreview(record.image_url);
+        const url = record.image_url;
+        const full = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')
+          ? url
+          : `${config.apiUrl}${url.startsWith('/uploads/') ? url : `/uploads/${url.replace(/^\//, '')}`}`;
+        setImagePreview(full);
       } else {
         setImagePreview(null);
       }
@@ -78,16 +83,31 @@ const EditAnimalControlRecordModal: React.FC<EditAnimalControlRecordModalProps> 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create a preview URL for the image
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      
-      // For now, we'll store the file name as the image_url
-      // In a real implementation, you'd upload the file to a server
-      setFormData(prev => ({
-        ...prev,
-        image_url: file.name,
-      }));
+      // Upload the image to backend and use returned URL
+      const form = new FormData();
+      form.append('file', file);
+      fetch(`${config.apiUrl}/uploads/pain-assessment-image/`, {
+        method: 'POST',
+        body: form,
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || 'Upload failed');
+          }
+          return res.json();
+        })
+        .then((data: { url: string }) => {
+          const fullUrl = `${config.apiUrl}${data.url}`;
+          setImagePreview(fullUrl);
+          setFormData(prev => ({
+            ...prev,
+            image_url: data.url,
+          }));
+        })
+        .catch((err) => {
+          console.error('Image upload error:', err);
+        });
     }
   };
 
