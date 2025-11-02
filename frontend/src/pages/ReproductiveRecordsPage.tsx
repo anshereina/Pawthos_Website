@@ -6,7 +6,7 @@ import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import { useAuth } from '../features/auth/AuthContext';
 import { petService, Pet } from '../services/petService';
-import { reproductiveRecordService, CreateReproductiveRecord } from '../services/reproductiveRecordService';
+import { reproductiveRecordService, CreateReproductiveRecord, ReproductiveRecord } from '../services/reproductiveRecordService';
 import AddReproductiveRecordModal from '../components/AddReproductiveRecordModal';
 import EditReproductiveRecordModal from '../components/EditReproductiveRecordModal';
 import DeletePetModal from '../components/DeletePetModal';
@@ -42,8 +42,8 @@ const ReproductiveRecordsPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
-  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const [selectedPet, setSelectedPet] = useState<ReproductiveRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<ReproductiveRecord | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
