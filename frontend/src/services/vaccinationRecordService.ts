@@ -5,8 +5,10 @@ export interface VaccinationRecord {
   pet_id: number;
   user_id: number;
   vaccine_name: string;
-  vaccination_date: string;
-  expiration_date?: string;
+  date_given?: string; // Schema field name (mapped from vaccination_date in model)
+  vaccination_date?: string; // Also accept vaccination_date for compatibility
+  next_due_date?: string; // Schema field name
+  expiration_date?: string; // Also accept expiration_date for compatibility
   veterinarian: string;
   batch_lot_no: string;
   created_at: string;

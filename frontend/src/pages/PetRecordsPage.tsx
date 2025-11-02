@@ -783,11 +783,17 @@ const PetRecordsPage: React.FC = () => {
                               key={record.id}
                               className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
                             >
-                              <td className="px-6 py-4">{new Date(record.vaccination_date).toLocaleDateString()}</td>
+                              <td className="px-6 py-4">
+                                {(record.date_given || record.vaccination_date) 
+                                  ? new Date(record.date_given || record.vaccination_date!).toLocaleDateString() 
+                                  : 'Invalid Date'}
+                              </td>
                               <td className="px-6 py-4">{record.vaccine_name}</td>
                               <td className="px-6 py-4">{record.batch_lot_no || '-'}</td>
                               <td className="px-6 py-4">
-                                {record.expiration_date ? new Date(record.expiration_date).toLocaleDateString() : '-'}
+                                {(record.next_due_date || record.expiration_date)
+                                  ? new Date(record.next_due_date || record.expiration_date!).toLocaleDateString()
+                                  : '-'}
                               </td>
                               <td className="px-6 py-4">{record.veterinarian}</td>
                               <td className="px-6 py-4 flex items-center gap-2">
