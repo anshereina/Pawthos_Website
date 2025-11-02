@@ -5,7 +5,7 @@ from datetime import date, datetime
 import uuid
 
 from core.database import get_db
-from core.models import ShippingPermitRecord as ShippingPermitRecordModel
+from core.models import ShippingPermitRecord as ShippingPermitRecordModel, Pet, User
 from core.schemas import (
     ShippingPermitRecord,
     ShippingPermitRecordCreate,
@@ -80,35 +80,104 @@ def search_owners(
     query: Optional[str] = Query(None, description="Search term for owner name"),
     db: Session = Depends(get_db)
 ):
-    """Search for owners by name and return their most recent pet information"""
+    """Search for owners (Users) by name and return their most recent pet information"""
     if not query or len(query.strip()) < 2:
         return []
     
     search_term = f"%{query.strip()}%"
+    owner_map = {}
     
-    # Get all records matching the owner name, ordered by most recent
+    # Search in Users table (UserManagement)
+    users = db.query(User).filter(
+        User.name.ilike(search_term)
+    ).all()
+    
+    for user in users:
+        owner_name = user.name or user.email.split('@')[0]  # Use name or email prefix as fallback
+        if not owner_name:
+            continue
+            
+        # Get user's most recent pet
+        user_pets = db.query(Pet).filter(Pet.user_id == user.id).order_by(
+            Pet.created_at.desc() if Pet.created_at else Pet.id.desc()
+        ).all()
+        
+        if user_pets:
+            # Use the most recent pet's information
+            pet = user_pets[0]
+            
+            # Calculate age from date_of_birth if available
+            pet_age = 0
+            birthdate_obj = None
+            
+            if pet.date_of_birth:
+                try:
+                    birthdate_str = str(pet.date_of_birth)
+                    # Try different date formats
+                    for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']:
+                        try:
+                            birthdate_obj = datetime.strptime(birthdate_str.split()[0], fmt).date()
+                            break
+                        except (ValueError, IndexError):
+                            continue
+                    
+                    if birthdate_obj:
+                        # Calculate age
+                        today = date.today()
+                        pet_age = today.year - birthdate_obj.year - ((today.month, today.day) < (birthdate_obj.month, birthdate_obj.day))
+                except Exception:
+                    pass
+            
+            owner_map[owner_name] = {
+                'owner_name': owner_name,
+                'contact_number': user.phone_number,
+                'pet_name': pet.name,
+                'birthdate': birthdate_obj or date.today(),
+                'pet_age': pet_age,
+                'pet_species': pet.species,
+                'pet_breed': pet.breed
+            }
+        else:
+            # User has no pets yet, but still show them as an option
+            owner_map[owner_name] = {
+                'owner_name': owner_name,
+                'contact_number': user.phone_number,
+                'pet_name': '',
+                'birthdate': date.today(),
+                'pet_age': 0,
+                'pet_species': '',
+                'pet_breed': ''
+            }
+    
+    # Also search in shipping permit records for additional owners
     records = db.query(ShippingPermitRecordModel).filter(
         ShippingPermitRecordModel.owner_name.ilike(search_term)
     ).order_by(ShippingPermitRecordModel.created_at.desc()).all()
     
-    # Group by owner_name and get the most recent record for each owner
-    owner_map = {}
     for record in records:
         owner_name = record.owner_name
         if owner_name not in owner_map:
-            owner_map[owner_name] = record
+            owner_map[owner_name] = {
+                'owner_name': record.owner_name,
+                'contact_number': record.contact_number,
+                'pet_name': record.pet_name,
+                'birthdate': record.birthdate,
+                'pet_age': record.pet_age,
+                'pet_species': record.pet_species,
+                'pet_breed': record.pet_breed
+            }
     
     # Convert to OwnerSearchResult format
     results = []
-    for owner_name, record in owner_map.items():
+    for owner_name, data in owner_map.items():
         results.append(OwnerSearchResult(
-            owner_name=record.owner_name,
-            contact_number=record.contact_number,
-            pet_name=record.pet_name,
-            birthdate=record.birthdate,
-            pet_age=record.pet_age,
-            pet_species=record.pet_species,
-            pet_breed=record.pet_breed
+            owner_name=data['owner_name'],
+            contact_number=data['contact_number'],
+            pet_name=data['pet_name'],
+            birthdate=data['birthdate'],
+            pet_age=data['pet_age'],
+            pet_species=data['pet_species'],
+            pet_breed=data['pet_breed']
         ))
     
     return results
