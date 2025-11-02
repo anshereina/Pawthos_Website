@@ -1,12 +1,15 @@
 import React from 'react';
 import { X, AlertTriangle, Trash2 } from 'lucide-react';
 import { Pet } from '../services/petService';
+import { ReproductiveRecord } from '../services/reproductiveRecordService';
+
+type RecordType = Pet | ReproductiveRecord;
 
 interface DeletePetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
-  pet: Pet | null;
+  pet: RecordType | null;
   loading: boolean;
 }
 
@@ -53,10 +56,10 @@ const DeletePetModal: React.FC<DeletePetModalProps> = ({
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-medium text-gray-900">
-                Are you sure you want to delete this pet?
+                Are you sure you want to delete this record?
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                This action cannot be undone. All pet records and associated data will be permanently deleted.
+                This action cannot be undone. This record will be permanently deleted.
               </p>
             </div>
           </div>
@@ -65,10 +68,12 @@ const DeletePetModal: React.FC<DeletePetModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Pet Information</h4>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-500">Pet ID:</span>
-                <span className="ml-2 font-medium">{pet.pet_id}</span>
-              </div>
+              {(pet as any).pet_id && (
+                <div>
+                  <span className="text-gray-500">Pet ID:</span>
+                  <span className="ml-2 font-medium">{(pet as any).pet_id}</span>
+                </div>
+              )}
               <div>
                 <span className="text-gray-500">Name:</span>
                 <span className="ml-2 font-medium">{pet.name}</span>
