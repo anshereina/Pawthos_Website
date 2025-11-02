@@ -88,15 +88,25 @@ class ShippingPermitRecordService {
   }
 
   async createRecord(record: CreateShippingPermitRecord): Promise<ShippingPermitRecord> {
-    const response = await fetch(this.baseUrl, {
+    // Try with trailing slash first, then without
+    const url = `${this.baseUrl}/`;
+    console.log('Creating record at URL:', url);
+    console.log('Record data:', record);
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(record),
     });
+    
+    console.log('Create record response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Failed to create shipping permit record');
+      const errorText = await response.text();
+      console.error('Create record error response:', errorText);
+      throw new Error(`Failed to create shipping permit record: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
