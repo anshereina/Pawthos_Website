@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Save } from 'lucide-react';
-import { CreateShippingPermitRecord } from '../services/shippingPermitRecordService';
+import { CreateShippingPermitRecord, shippingPermitRecordService, OwnerSearchResult } from '../services/shippingPermitRecordService';
 
 interface AddShippingPermitRecordModalProps {
   isOpen: boolean;
@@ -29,6 +29,70 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
     remarks: '',
   });
   const [loading, setLoading] = useState(false);
+  const [ownerSuggestions, setOwnerSuggestions] = useState<OwnerSearchResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const ownerInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Search for owners when owner_name changes
+  useEffect(() => {
+    const searchOwners = async () => {
+      if (formData.owner_name && formData.owner_name.length >= 2) {
+        setIsSearching(true);
+        try {
+          const results = await shippingPermitRecordService.searchOwners(formData.owner_name);
+          setOwnerSuggestions(results);
+          setShowSuggestions(results.length > 0);
+        } catch (error) {
+          console.error('Failed to search owners:', error);
+          setOwnerSuggestions([]);
+          setShowSuggestions(false);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setOwnerSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const timeoutId = setTimeout(searchOwners, 300); // Debounce search
+    return () => clearTimeout(timeoutId);
+  }, [formData.owner_name]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        ownerInputRef.current &&
+        !ownerInputRef.current.contains(event.target as Node) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleOwnerSelect = (owner: OwnerSearchResult) => {
+    setFormData(prev => ({
+      ...prev,
+      owner_name: owner.owner_name,
+      contact_number: owner.contact_number || '',
+      pet_name: owner.pet_name,
+      birthdate: owner.birthdate,
+      pet_age: owner.pet_age,
+      pet_species: owner.pet_species || '',
+      pet_breed: owner.pet_breed || '',
+    }));
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,18 +148,46 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Owner Information */}
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Owner Name *
               </label>
               <input
+                ref={ownerInputRef}
                 type="text"
                 name="owner_name"
                 value={formData.owner_name}
                 onChange={handleChange}
+                onFocus={() => {
+                  if (ownerSuggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
+              {showSuggestions && ownerSuggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                  {ownerSuggestions.map((owner, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleOwnerSelect(owner)}
+                      className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="font-medium text-gray-900">{owner.owner_name}</div>
+                      {owner.contact_number && (
+                        <div className="text-sm text-gray-600">{owner.contact_number}</div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-1">
+                        Pet: {owner.pet_name} • {owner.pet_species || 'Unknown'} • {owner.pet_breed || 'Unknown breed'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -111,21 +203,7 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Birthdate *
-              </label>
-              <input
-                type="date"
-                name="birthdate"
-                value={formData.birthdate}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-
-            {/* Pet Information */}
+            {/* Pet Information - Swapped positions */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Pet Name *
@@ -134,6 +212,20 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
                 type="text"
                 name="pet_name"
                 value={formData.pet_name}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Birthdate *
+              </label>
+              <input
+                type="date"
+                name="birthdate"
+                value={formData.birthdate}
                 onChange={handleChange}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"

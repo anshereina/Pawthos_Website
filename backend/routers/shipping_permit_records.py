@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import date, datetime
 import uuid
 
@@ -9,7 +9,8 @@ from core.models import ShippingPermitRecord as ShippingPermitRecordModel
 from core.schemas import (
     ShippingPermitRecord,
     ShippingPermitRecordCreate,
-    ShippingPermitRecordUpdate
+    ShippingPermitRecordUpdate,
+    OwnerSearchResult
 )
 
 router = APIRouter(prefix="/shipping-permit-records", tags=["shipping-permit-records"])
@@ -17,6 +18,11 @@ router = APIRouter(prefix="/shipping-permit-records", tags=["shipping-permit-rec
 def generate_permit_number():
     """Generate a unique permit number"""
     return f"SP-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+
+@router.get("/test")
+def test_shipping_permit_router():
+    """Test endpoint to verify router is registered"""
+    return {"message": "Shipping permit records router is working", "status": "ok"}
 
 @router.post("/", response_model=ShippingPermitRecord, status_code=status.HTTP_201_CREATED)
 def create_shipping_permit_record(
@@ -150,4 +156,42 @@ def get_shipping_permit_records_by_status(
     records = db.query(ShippingPermitRecordModel).filter(
         ShippingPermitRecordModel.status == status
     ).all()
-    return records 
+    return records
+
+@router.get("/search-owners", response_model=List[OwnerSearchResult])
+def search_owners(
+    query: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Search for owners by name and return their most recent pet information"""
+    if not query or len(query.strip()) < 2:
+        return []
+    
+    search_term = f"%{query.strip()}%"
+    
+    # Get all records matching the owner name, ordered by most recent
+    records = db.query(ShippingPermitRecordModel).filter(
+        ShippingPermitRecordModel.owner_name.ilike(search_term)
+    ).order_by(ShippingPermitRecordModel.created_at.desc()).all()
+    
+    # Group by owner_name and get the most recent record for each owner
+    owner_map = {}
+    for record in records:
+        owner_name = record.owner_name
+        if owner_name not in owner_map:
+            owner_map[owner_name] = record
+    
+    # Convert to OwnerSearchResult format
+    results = []
+    for owner_name, record in owner_map.items():
+        results.append(OwnerSearchResult(
+            owner_name=record.owner_name,
+            contact_number=record.contact_number,
+            pet_name=record.pet_name,
+            birthdate=record.birthdate,
+            pet_age=record.pet_age,
+            pet_species=record.pet_species,
+            pet_breed=record.pet_breed
+        ))
+    
+    return results 

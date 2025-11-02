@@ -54,6 +54,16 @@ export interface UpdateShippingPermitRecord {
   remarks?: string;
 }
 
+export interface OwnerSearchResult {
+  owner_name: string;
+  contact_number?: string;
+  pet_name: string;
+  birthdate: string;
+  pet_age: number;
+  pet_species?: string;
+  pet_breed?: string;
+}
+
 class ShippingPermitRecordService {
   private baseUrl = `${config.apiUrl}/shipping-permit-records`;
 
@@ -126,6 +136,18 @@ class ShippingPermitRecordService {
     const response = await fetch(`${this.baseUrl}/by-status/${status}`);
     if (!response.ok) {
       throw new Error('Failed to fetch shipping permit records by status');
+    }
+    return response.json();
+  }
+
+  async searchOwners(query: string): Promise<OwnerSearchResult[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
+    const params = new URLSearchParams({ query });
+    const response = await fetch(`${this.baseUrl}/search-owners?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Failed to search owners');
     }
     return response.json();
   }
