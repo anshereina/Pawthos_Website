@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime, date
 from core.database import get_db
 from core.models import MedicalRecord, Pet, User, Admin
@@ -16,8 +16,8 @@ security = HTTPBearer(auto_error=False)
 def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
-) -> Optional[User]:
-    """Get current user if authenticated, otherwise return None"""
+) -> Optional[Union[User, Admin]]:
+    """Get current user (Admin or User) if authenticated, otherwise return None"""
     if not credentials:
         return None
     
@@ -25,10 +25,16 @@ def get_optional_current_user(
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
+        user_type: str = payload.get("user_type", "admin")  # Default to admin for backward compatibility
         if email is None:
             return None
         
-        user = db.query(User).filter(User.email == email).first()
+        # Check user_type from token to determine which table to query
+        if user_type == "admin":
+            user = db.query(Admin).filter(Admin.email == email).first()
+        else:
+            user = db.query(User).filter(User.email == email).first()
+        
         return user
     except JWTError:
         return None
@@ -43,21 +49,18 @@ def get_medical_records_by_pet(pet_id: int, db: Session = Depends(get_db)):
 @router.get("", response_model=List[MedicalRecordSchema])
 def get_all_medical_records(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user)
+    current_user: Optional[Union[User, Admin]] = Depends(get_optional_current_user)
 ):
     # If user is authenticated
     if current_user:
-        # Check if current_user is an Admin by checking if their email exists in Admin table
+        # Check if current_user is an Admin instance
         # For Admin users, return all medical records
         # For regular users, return only their medical records
-        from core.models import Admin
-        admin_user = db.query(Admin).filter(Admin.email == current_user.email).first()
-        
-        if admin_user:
+        if isinstance(current_user, Admin):
             # Admin users can see all medical records
             records = db.query(MedicalRecord).all()
             return records
-        else:
+        elif isinstance(current_user, User):
             # Regular users see only their medical records
             records = db.query(MedicalRecord).filter(MedicalRecord.user_id == current_user.id).all()
             return records
