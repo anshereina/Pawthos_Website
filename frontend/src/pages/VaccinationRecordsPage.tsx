@@ -649,17 +649,17 @@ const VaccinationRecordsPage: React.FC = () => {
                           <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button 
                               onClick={() => handleEditClick(event)}
-                              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
                               title="Edit"
                             >
-                              <Edit size={18} className="text-green-600" />
+                              <Edit size={16} className="text-green-600" />
                             </button>
                             <button 
                               onClick={() => handleDeleteClick(event)}
-                              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
                               title="Delete"
                             >
-                              <Trash2 size={18} className="text-red-600" />
+                              <Trash2 size={16} className="text-red-600" />
                             </button>
                           </td>
                         </tr>
