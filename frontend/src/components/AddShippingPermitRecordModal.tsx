@@ -145,7 +145,8 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
               <OwnerDropdown
                 selectedOwner={formData.owner_name}
                 onOwnerChange={handleOwnerChange}
-                placeholder="Search owner name..."
+                placeholder="Type or search owner name..."
+                required
               />
             </div>
 

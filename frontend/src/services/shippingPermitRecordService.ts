@@ -145,11 +145,26 @@ class ShippingPermitRecordService {
       return [];
     }
     const params = new URLSearchParams({ query });
-    const response = await fetch(`${this.baseUrl}/search-owners?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error('Failed to search owners');
+    const url = `${this.baseUrl}/search-owners?${params.toString()}`;
+    console.log('Search owners URL:', url);
+    
+    try {
+      const response = await fetch(url);
+      console.log('Search owners response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Search owners error response:', errorText);
+        throw new Error(`Failed to search owners: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Search owners response data:', data);
+      return data;
+    } catch (error) {
+      console.error('Search owners fetch error:', error);
+      throw error;
     }
-    return response.json();
   }
 }
 
