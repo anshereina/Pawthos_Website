@@ -10,6 +10,7 @@ import { reproductiveRecordService, CreateReproductiveRecord } from '../services
 import AddReproductiveRecordModal from '../components/AddReproductiveRecordModal';
 import EditPetModal from '../components/EditPetModal';
 import DeletePetModal from '../components/DeletePetModal';
+import ViewReproductiveRecordModal from '../components/ViewReproductiveRecordModal';
 
 const FILTERS = [
   { label: 'ALL', value: 'all' },
@@ -40,7 +41,9 @@ const ReproductiveRecordsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
@@ -138,6 +141,11 @@ const ReproductiveRecordsPage: React.FC = () => {
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
   const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+
+  const openViewModal = (record: any) => {
+    setSelectedRecord(record);
+    setIsViewModalOpen(true);
+  };
 
   return (
     <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen">
@@ -242,7 +250,8 @@ const ReproductiveRecordsPage: React.FC = () => {
                     .map((pet, index) => (
                       <tr
                         key={pet.id}
-                        className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                        onClick={() => openViewModal(pet)}
+                        className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                       >
                         <td className="px-4 py-3 font-medium text-gray-800">{pet.name}</td>
                         <td className="px-4 py-3">{pet.owner_name || '-'}</td>
@@ -253,7 +262,7 @@ const ReproductiveRecordsPage: React.FC = () => {
                         <td className="px-4 py-3">{pet.breed || '-'}</td>
                         <td className="px-4 py-3 capitalize">{pet.gender || '-'}</td>
                         <td className="px-4 py-3 capitalize">{pet.reproductive_status || '-'}</td>
-                        <td className="px-4 py-3 flex items-center gap-2">
+                        <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <button 
                             onClick={() => { setSelectedPet(pet); setIsEditModalOpen(true); }}
                             className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
@@ -378,6 +387,15 @@ const ReproductiveRecordsPage: React.FC = () => {
         onConfirm={handleDeletePet}
         pet={selectedPet}
         loading={loading}
+      />
+
+      <ViewReproductiveRecordModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedRecord(null);
+        }}
+        record={selectedRecord}
       />
     </div>
   );

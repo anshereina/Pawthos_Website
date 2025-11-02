@@ -74,9 +74,9 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: CreatePetData = {
+    const payload: CreatePetData & { date?: string } = {
       ...formData,
-      // Keep date_of_birth distinct; the separate 'date' will be sent to RR API via page
+      date: date || undefined,
     };
     await onSubmit(payload);
     if (!loading) {
