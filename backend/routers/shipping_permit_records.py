@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date, datetime
@@ -75,6 +75,66 @@ def get_shipping_permit_records(
     records = query.offset(skip).limit(limit).all()
     return records
 
+@router.get("/search-owners", response_model=List[OwnerSearchResult])
+def search_owners(
+    query: Optional[str] = Query(None, description="Search term for owner name"),
+    db: Session = Depends(get_db)
+):
+    """Search for owners by name and return their most recent pet information"""
+    if not query or len(query.strip()) < 2:
+        return []
+    
+    search_term = f"%{query.strip()}%"
+    
+    # Get all records matching the owner name, ordered by most recent
+    records = db.query(ShippingPermitRecordModel).filter(
+        ShippingPermitRecordModel.owner_name.ilike(search_term)
+    ).order_by(ShippingPermitRecordModel.created_at.desc()).all()
+    
+    # Group by owner_name and get the most recent record for each owner
+    owner_map = {}
+    for record in records:
+        owner_name = record.owner_name
+        if owner_name not in owner_map:
+            owner_map[owner_name] = record
+    
+    # Convert to OwnerSearchResult format
+    results = []
+    for owner_name, record in owner_map.items():
+        results.append(OwnerSearchResult(
+            owner_name=record.owner_name,
+            contact_number=record.contact_number,
+            pet_name=record.pet_name,
+            birthdate=record.birthdate,
+            pet_age=record.pet_age,
+            pet_species=record.pet_species,
+            pet_breed=record.pet_breed
+        ))
+    
+    return results
+
+@router.get("/by-date/{date}", response_model=List[ShippingPermitRecord])
+def get_shipping_permit_records_by_date(
+    date: date,
+    db: Session = Depends(get_db)
+):
+    """Get shipping permit records by issue date"""
+    records = db.query(ShippingPermitRecordModel).filter(
+        ShippingPermitRecordModel.issue_date == date
+    ).all()
+    return records
+
+@router.get("/by-status/{status}", response_model=List[ShippingPermitRecord])
+def get_shipping_permit_records_by_status(
+    status: str,
+    db: Session = Depends(get_db)
+):
+    """Get shipping permit records by status"""
+    records = db.query(ShippingPermitRecordModel).filter(
+        ShippingPermitRecordModel.status == status
+    ).all()
+    return records
+
 @router.get("/{record_id}", response_model=ShippingPermitRecord)
 def get_shipping_permit_record(record_id: int, db: Session = Depends(get_db)):
     """Get a specific shipping permit record by ID"""
@@ -135,63 +195,3 @@ def delete_shipping_permit_record(record_id: int, db: Session = Depends(get_db))
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to delete shipping permit record: {str(e)}"
         )
-
-@router.get("/by-date/{date}", response_model=List[ShippingPermitRecord])
-def get_shipping_permit_records_by_date(
-    date: date,
-    db: Session = Depends(get_db)
-):
-    """Get shipping permit records by issue date"""
-    records = db.query(ShippingPermitRecordModel).filter(
-        ShippingPermitRecordModel.issue_date == date
-    ).all()
-    return records
-
-@router.get("/by-status/{status}", response_model=List[ShippingPermitRecord])
-def get_shipping_permit_records_by_status(
-    status: str,
-    db: Session = Depends(get_db)
-):
-    """Get shipping permit records by status"""
-    records = db.query(ShippingPermitRecordModel).filter(
-        ShippingPermitRecordModel.status == status
-    ).all()
-    return records
-
-@router.get("/search-owners", response_model=List[OwnerSearchResult])
-def search_owners(
-    query: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Search for owners by name and return their most recent pet information"""
-    if not query or len(query.strip()) < 2:
-        return []
-    
-    search_term = f"%{query.strip()}%"
-    
-    # Get all records matching the owner name, ordered by most recent
-    records = db.query(ShippingPermitRecordModel).filter(
-        ShippingPermitRecordModel.owner_name.ilike(search_term)
-    ).order_by(ShippingPermitRecordModel.created_at.desc()).all()
-    
-    # Group by owner_name and get the most recent record for each owner
-    owner_map = {}
-    for record in records:
-        owner_name = record.owner_name
-        if owner_name not in owner_map:
-            owner_map[owner_name] = record
-    
-    # Convert to OwnerSearchResult format
-    results = []
-    for owner_name, record in owner_map.items():
-        results.append(OwnerSearchResult(
-            owner_name=record.owner_name,
-            contact_number=record.contact_number,
-            pet_name=record.pet_name,
-            birthdate=record.birthdate,
-            pet_age=record.pet_age,
-            pet_species=record.pet_species,
-            pet_breed=record.pet_breed
-        ))
-    
-    return results 

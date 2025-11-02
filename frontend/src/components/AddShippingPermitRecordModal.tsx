@@ -64,14 +64,18 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        ownerInputRef.current &&
-        !ownerInputRef.current.contains(event.target as Node) &&
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
+      // Small delay to allow click events on suggestions to process first
+      setTimeout(() => {
+        const target = event.target as Node;
+        if (
+          ownerInputRef.current &&
+          suggestionsRef.current &&
+          !ownerInputRef.current.contains(target) &&
+          !suggestionsRef.current.contains(target)
+        ) {
+          setShowSuggestions(false);
+        }
+      }, 100);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -81,16 +85,48 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
   }, []);
 
   const handleOwnerSelect = (owner: OwnerSearchResult) => {
-    setFormData(prev => ({
-      ...prev,
+    console.log('Owner selected:', owner);
+    
+    // Convert birthdate to YYYY-MM-DD format for HTML date input
+    let formattedBirthdate = '';
+    if (owner.birthdate) {
+      try {
+        // Handle different date formats
+        const dateStr = owner.birthdate;
+        // If it's already in YYYY-MM-DD format, use it directly
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          formattedBirthdate = dateStr;
+        } else {
+          // Try to parse and format the date
+          const date = new Date(dateStr);
+          if (!isNaN(date.getTime())) {
+            formattedBirthdate = date.toISOString().split('T')[0];
+          }
+        }
+      } catch (error) {
+        console.error('Error formatting birthdate:', error);
+        formattedBirthdate = owner.birthdate || '';
+      }
+    }
+    
+    const newFormData = {
       owner_name: owner.owner_name,
       contact_number: owner.contact_number || '',
       pet_name: owner.pet_name,
-      birthdate: owner.birthdate,
-      pet_age: owner.pet_age,
+      birthdate: formattedBirthdate,
+      pet_age: owner.pet_age || 0,
       pet_species: owner.pet_species || '',
       pet_breed: owner.pet_breed || '',
-    }));
+      destination: formData.destination,
+      purpose: formData.purpose,
+      issue_date: formData.issue_date,
+      expiry_date: formData.expiry_date,
+      status: formData.status,
+      remarks: formData.remarks,
+    };
+    
+    console.log('Setting form data:', newFormData);
+    setFormData(newFormData);
     setShowSuggestions(false);
   };
 
@@ -174,7 +210,14 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
                   {ownerSuggestions.map((owner, index) => (
                     <div
                       key={index}
-                      onClick={() => handleOwnerSelect(owner)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleOwnerSelect(owner);
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                      }}
                       className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                     >
                       <div className="font-medium text-gray-900">{owner.owner_name}</div>
