@@ -142,7 +142,7 @@ const RecordsPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full overflow-hidden">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -157,7 +157,7 @@ const RecordsPage: React.FC = () => {
       >
         <PageHeader title="Records Management" />
         {/* Main Content */}
-        <main className="flex-1 p-6 pb-4">
+        <main className="flex-1 p-6 pb-4 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             {/* Page Description */}
             <div className="mb-4 bg-gradient-to-r from-white to-gray-50 rounded-xl p-4 shadow-sm border border-gray-200">
