@@ -41,14 +41,23 @@ class VaccinationDriveService {
   }
 
   async saveVaccinationDrive(driveData: VaccinationDriveData): Promise<void> {
-    const response = await fetch(this.baseUrl, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(driveData),
-    });
+    try {
+      const response = await fetch(this.baseUrl, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(driveData),
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to save vaccination drive');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to save vaccination drive:', response.status, response.statusText, errorText);
+        throw new Error(`Failed to save vaccination drive: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error saving vaccination drive:', error);
+      throw error;
     }
   }
 

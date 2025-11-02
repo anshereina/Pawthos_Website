@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Search, ChevronDown, Download } from 'lucide-react';
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
 import { petService, Pet } from '../services/petService';
-import { userService, User as UserType } from '../services/userService';
 import OtherServiceModal from './OtherServiceModal';
+import OwnerDropdown from './OwnerDropdown';
+import { OwnerSearchResult } from '../services/shippingPermitRecordService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -55,12 +56,9 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   
   // Data for dropdowns
   const [pets, setPets] = useState<Pet[]>([]);
-  const [users, setUsers] = useState<UserType[]>([]);
   const [loadingPets, setLoadingPets] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(false);
   
   // Dropdown visibility states - track which record is showing dropdown
-  const [activeOwnerDropdown, setActiveOwnerDropdown] = useState<number | null>(null);
   const [activePetDropdown, setActivePetDropdown] = useState<number | null>(null);
 
   // Pagination state
@@ -86,11 +84,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   }, [event]);
 
-  // Fetch pets and users data when modal opens
+  // Fetch pets data when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchPets();
-      fetchUsers();
       setIsEditMode(false); // Reset edit mode when modal opens
     }
   }, [isOpen]);
@@ -100,7 +97,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (!target.closest('.dropdown-container')) {
-        setActiveOwnerDropdown(null);
         setActivePetDropdown(null);
       }
     };
@@ -121,26 +117,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     } finally {
       setLoadingPets(false);
     }
-  };
-
-  const fetchUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      const usersData = await userService.getUsers();
-      setUsers(usersData);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  // Helper functions for dropdowns
-  const getFilteredOwners = (searchTerm: string) => {
-    return users.filter(user => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
   };
 
   const getFilteredPets = (searchTerm: string, ownerName?: string) => {
@@ -326,22 +302,20 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, recordId: number, field: keyof PetVaccinationRecord) => {
-    if (e.key === 'Enter' || e.key === 'Tab') {
-      e.preventDefault();
-      const currentIndex = petRecords.findIndex(r => r.id === recordId);
-      const nextIndex = currentIndex + 1;
-      
-      if (nextIndex < petRecords.length) {
-        // Focus next row, first field
-        const nextInput = document.querySelector(`input[data-record-id="${petRecords[nextIndex].id}"][data-field="ownerName"]`) as HTMLInputElement;
-        if (nextInput) {
-          nextInput.focus();
-        }
-      } else if (e.key === 'Enter') {
-        // Add new row if pressing Enter on last row
-        addPetRecord();
-      }
+  const handleOwnerChange = (recordId: number, ownerName: string, ownerData?: OwnerSearchResult) => {
+    if (ownerData) {
+      // Auto-fill owner name and contact when owner is selected
+      updatePetRecord(recordId, 'ownerName', ownerData.owner_name);
+      updatePetRecord(recordId, 'ownerContact', ownerData.contact_number || '');
+      // Clear pet-related fields when owner changes
+      updatePetRecord(recordId, 'petName', '');
+      updatePetRecord(recordId, 'species', '');
+      updatePetRecord(recordId, 'breed', '');
+      updatePetRecord(recordId, 'color', '');
+      updatePetRecord(recordId, 'sex', '');
+    } else {
+      // Just update the owner name if manually typing
+      updatePetRecord(recordId, 'ownerName', ownerName);
     }
   };
 
@@ -747,53 +721,18 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                             {globalIndex + 1}
                           </td>
                           <td className="px-4 py-3 text-gray-900 relative">
-                            <div className="dropdown-container">
-                              <input
-                                type="text"
-                                value={record.ownerName}
-                                onChange={(e) => updatePetRecord(record.id, 'ownerName', e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(e, record.id, 'ownerName')}
-                                onFocus={() => {
-                                  if (isEditable) setActiveOwnerDropdown(record.id);
-                                }}
-                                disabled={!isEditable}
-                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                                placeholder="Owner name"
-                                data-record-id={record.id}
-                                data-field="ownerName"
+                            {isEditable ? (
+                              <OwnerDropdown
+                                selectedOwner={record.ownerName}
+                                onOwnerChange={(ownerName, ownerData) => handleOwnerChange(record.id, ownerName, ownerData)}
+                                placeholder="Type or search owner name..."
+                                required
                               />
-                                                    {isEditable && activeOwnerDropdown === record.id && (
-                            <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                              <div className="p-2 text-xs bg-gray-100 border-b">DEBUG: Found {getFilteredOwners(record.ownerName).length} users</div>
-                              {getFilteredOwners(record.ownerName).length > 0 ? (
-                                getFilteredOwners(record.ownerName).map((user) => (
-                                  <div
-                                    key={user.id}
-                                    className="px-3 py-2 hover:bg-green-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
-                                    onClick={() => {
-                                      updatePetRecord(record.id, 'ownerName', user.name);
-                                      updatePetRecord(record.id, 'ownerContact', user.phone_number || '');
-                                      // Clear pet name when owner changes
-                                      updatePetRecord(record.id, 'petName', '');
-                                      updatePetRecord(record.id, 'species', '');
-                                      updatePetRecord(record.id, 'breed', '');
-                                      updatePetRecord(record.id, 'color', '');
-                                      updatePetRecord(record.id, 'sex', '');
-                                      setActiveOwnerDropdown(null);
-                                    }}
-                                  >
-                                    <div className="font-medium">{user.name}</div>
-                                    <div className="text-gray-500">{user.email}</div>
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="p-3 text-center text-gray-500">
-                                  No users found. Total users in database: {users.length}
-                                </div>
-                              )}
-                            </div>
+                            ) : (
+                              <div className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed`}>
+                                {record.ownerName || '-'}
+                              </div>
                             )}
-                            </div>
                           </td>
                           <td className="px-4 py-3 text-gray-900 relative">
                             <div className="dropdown-container">
