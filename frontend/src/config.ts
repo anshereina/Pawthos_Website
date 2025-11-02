@@ -43,6 +43,12 @@ if (API_BASE_URL.startsWith('http://') && API_BASE_URL.includes('railway')) {
   console.log('🚨 FINAL SAFETY: Converted HTTP Railway to HTTPS:', API_BASE_URL);
 }
 
+// ABSOLUTE FINAL CHECK - Force HTTPS for ANY Railway URL (catch-all)
+if (API_BASE_URL.includes('railway.app')) {
+  API_BASE_URL = API_BASE_URL.replace(/^http:\/\//, 'https://');
+  console.log('🔒 ABSOLUTE FINAL: Forced HTTPS for Railway:', API_BASE_URL);
+}
+
 export { API_BASE_URL };
 
 // Debug logging
