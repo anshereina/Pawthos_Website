@@ -16,6 +16,7 @@ import VaccinationDriveModal from '../components/VaccinationDriveModal';
 import AddVaccinationRecordFromListModal from '../components/AddVaccinationRecordFromListModal';
 import EditVaccinationRecordModal from '../components/EditVaccinationRecordModal';
 import DeleteVaccinationRecordModal from '../components/DeleteVaccinationRecordModal';
+import ViewVaccinationRecordModal from '../components/ViewVaccinationRecordModal';
 
 const TABS = [
   { label: 'Upcoming Vaccination Events', value: 'upcoming' },
@@ -78,6 +79,7 @@ const VaccinationRecordsPage: React.FC = () => {
   // Vaccination record edit/delete states
   const [isEditRecordModalOpen, setIsEditRecordModalOpen] = useState(false);
   const [isDeleteRecordModalOpen, setIsDeleteRecordModalOpen] = useState(false);
+  const [isViewRecordModalOpen, setIsViewRecordModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<VaccinationRecordWithPet | null>(null);
 
   // Memoize fetch functions to prevent infinite re-renders
@@ -259,6 +261,11 @@ const VaccinationRecordsPage: React.FC = () => {
   const handleDeleteVaccinationRecord = (record: VaccinationRecordWithPet) => {
     setSelectedRecord(record);
     setIsDeleteRecordModalOpen(true);
+  };
+
+  const handleViewVaccinationRecord = (record: VaccinationRecordWithPet) => {
+    setSelectedRecord(record);
+    setIsViewRecordModalOpen(true);
   };
 
   const handleConfirmDeleteVaccinationRecord = async () => {
@@ -478,17 +485,31 @@ const VaccinationRecordsPage: React.FC = () => {
                       <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">No vaccine records found.</td></tr>
                     ) : (
                       currentRecordsPage
-                        .map((record: VaccinationRecordWithPet, i: number) => (
+                        .map((record: VaccinationRecordWithPet, i: number) => {
+                          // Get date values (handle both field name variants)
+                          const vaccinationDate = record.date_given || record.vaccination_date;
+                          const nextDueDate = record.next_due_date || record.expiration_date;
+                          
+                          const formatDate = (dateString?: string | null) => {
+                            if (!dateString) return '-';
+                            try {
+                              return new Date(dateString).toLocaleDateString();
+                            } catch {
+                              return '-';
+                            }
+                          };
+                          
+                          return (
                             <tr 
                               key={record.id} 
-                              className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
-                              onClick={() => router.navigate({ to: `/pets/${record.pet_id}` })}
+                              onClick={() => handleViewVaccinationRecord(record)}
+                              className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                             >
                               <td className="px-4 py-3">{record.pet_name || 'Unknown'}</td>
                               <td className="px-4 py-3 capitalize">{record.pet_species || 'Unknown'}</td>
                               <td className="px-4 py-3">{record.vaccine_name}</td>
-                              <td className="px-4 py-3">{record.vaccination_date}</td>
-                              <td className="px-4 py-3">{record.expiration_date || '-'}</td>
+                              <td className="px-4 py-3">{formatDate(vaccinationDate)}</td>
+                              <td className="px-4 py-3">{formatDate(nextDueDate)}</td>
                               <td className="px-4 py-3">{record.veterinarian}</td>
                               <td className="px-4 py-3">{record.batch_lot_no || '-'}</td>
                               <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -508,7 +529,8 @@ const VaccinationRecordsPage: React.FC = () => {
                                 </button>
                             </td>
                           </tr>
-                        ))
+                          );
+                        })
                     )}
                   </tbody>
                 </table>
@@ -755,6 +777,16 @@ const VaccinationRecordsPage: React.FC = () => {
         />
       )}
       
+      {/* Vaccination Record View Modal */}
+      <ViewVaccinationRecordModal
+        isOpen={isViewRecordModalOpen}
+        onClose={() => {
+          setIsViewRecordModalOpen(false);
+          setSelectedRecord(null);
+        }}
+        record={selectedRecord}
+      />
+
       {/* Vaccination Record Delete Modal */}
       {selectedRecord && (
         <DeleteVaccinationRecordModal
