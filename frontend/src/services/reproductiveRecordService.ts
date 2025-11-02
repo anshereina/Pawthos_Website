@@ -11,6 +11,7 @@ export interface ReproductiveRecord {
   breed?: string;
   gender?: string;
   reproductive_status?: string;
+  is_reproductive_record?: boolean;  // True for ReproductiveRecord entries, false for Pet fallback entries
 }
 
 export interface CreateReproductiveRecord {

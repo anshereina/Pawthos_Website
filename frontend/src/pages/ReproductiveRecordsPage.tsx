@@ -94,6 +94,12 @@ const ReproductiveRecordsPage: React.FC = () => {
   };
 
   const handleUpdatePet = async (id: number, petData: any) => {
+    if (!selectedPet?.is_reproductive_record) {
+      setError('Cannot edit Pet records. Only Reproductive Record entries can be edited.');
+      setIsEditModalOpen(false);
+      setSelectedPet(null);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -113,6 +119,12 @@ const ReproductiveRecordsPage: React.FC = () => {
 
   const handleDeletePet = async () => {
     if (!selectedPet) return;
+    if (!selectedPet.is_reproductive_record) {
+      setError('Cannot delete Pet records. Only Reproductive Record entries can be deleted.');
+      setIsDeleteModalOpen(false);
+      setSelectedPet(null);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -289,20 +301,26 @@ const ReproductiveRecordsPage: React.FC = () => {
                         <td className="px-4 py-3 capitalize">{pet.gender || '-'}</td>
                         <td className="px-4 py-3 capitalize">{pet.reproductive_status || '-'}</td>
                         <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
-                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                            title="Edit record"
-                          >
-                            <Edit size={18} className="text-green-600" />
-                          </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
-                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                            title="Delete record"
-                          >
-                            <Trash2 size={18} className="text-red-600" />
-                          </button>
+                          {pet.is_reproductive_record ? (
+                            <>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                                title="Edit record"
+                              >
+                                <Edit size={18} className="text-green-600" />
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                                title="Delete record"
+                              >
+                                <Trash2 size={18} className="text-red-600" />
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-500 italic">Pet record (view only)</span>
+                          )}
                         </td>
                       </tr>
                     ))

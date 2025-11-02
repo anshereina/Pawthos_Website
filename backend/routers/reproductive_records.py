@@ -56,6 +56,7 @@ def list_reproductive_records(
                     "breed": r.breed or "",
                     "gender": r.gender or "",
                     "reproductive_status": r.reproductive_status or "",
+                    "is_reproductive_record": True,  # Flag to indicate this is a ReproductiveRecord entry
                 })
             return result
 
@@ -91,6 +92,7 @@ def list_reproductive_records(
                 "breed": p.breed or "",
                 "gender": p.gender or "",
                 "reproductive_status": p.reproductive_status or "",
+                "is_reproductive_record": False,  # Flag to indicate this is a Pet entry (fallback)
             }
             for p in pets
         ]
