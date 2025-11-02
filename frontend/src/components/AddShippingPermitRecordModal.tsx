@@ -64,23 +64,24 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Small delay to allow click events on suggestions to process first
-      setTimeout(() => {
-        const target = event.target as Node;
-        if (
-          ownerInputRef.current &&
-          suggestionsRef.current &&
-          !ownerInputRef.current.contains(target) &&
-          !suggestionsRef.current.contains(target)
-        ) {
-          setShowSuggestions(false);
-        }
-      }, 100);
+      const target = event.target as Node;
+      // Don't close if clicking on suggestions dropdown
+      if (suggestionsRef.current && suggestionsRef.current.contains(target)) {
+        return;
+      }
+      // Close if clicking outside both input and suggestions
+      if (
+        ownerInputRef.current &&
+        !ownerInputRef.current.contains(target)
+      ) {
+        setShowSuggestions(false);
+      }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Use click event with capture phase to ensure it fires after onClick
+    document.addEventListener('click', handleClickOutside, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside, true);
     };
   }, []);
 
@@ -128,6 +129,11 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
     console.log('Setting form data:', newFormData);
     setFormData(newFormData);
     setShowSuggestions(false);
+    
+    // Force a small delay to ensure state update completes
+    setTimeout(() => {
+      console.log('Form data after update:', newFormData);
+    }, 100);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,16 +215,18 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
                 >
                   {ownerSuggestions.map((owner, index) => (
                     <div
-                      key={index}
+                      key={`${owner.owner_name}-${index}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur before click
+                        e.stopPropagation();
+                      }}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('Suggestion clicked:', owner);
                         handleOwnerSelect(owner);
                       }}
-                      onMouseDown={(e) => {
-                        e.preventDefault(); // Prevent input blur
-                      }}
-                      className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                      className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                     >
                       <div className="font-medium text-gray-900">{owner.owner_name}</div>
                       {owner.contact_number && (
