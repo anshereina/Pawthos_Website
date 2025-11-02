@@ -80,6 +80,7 @@ export const useMedicalRecords = (petId?: number) => {
 
   useEffect(() => {
     fetchMedicalRecords();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [petId]);
 
   return {

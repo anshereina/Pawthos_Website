@@ -121,17 +121,32 @@ class MedicalRecordService {
   }
 
   async createMedicalRecord(petId: number, recordData: CreateMedicalRecordData): Promise<MedicalRecord> {
-    const response = await fetch(`${this.baseUrl}/pet/${petId}`, {
+    const url = `${this.baseUrl}/pet/${petId}`;
+    console.log('🔧 createMedicalRecord URL:', url);
+    console.log('🔧 createMedicalRecord data:', recordData);
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(recordData),
     });
     
     if (!response.ok) {
-      throw new Error('Failed to create medical record');
+      let errorMessage = 'Failed to create medical record';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+        console.error('🔧 API error response:', errorData);
+      } catch (e) {
+        console.error('🔧 Failed to parse error response:', e);
+        errorMessage = `Failed to create medical record: ${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
     
-    return response.json();
+    const result = await response.json();
+    console.log('🔧 createMedicalRecord success:', result);
+    return result;
   }
 
   async updateMedicalRecord(recordId: number, recordData: UpdateMedicalRecordData): Promise<MedicalRecord> {

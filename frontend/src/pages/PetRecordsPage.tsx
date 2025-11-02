@@ -66,6 +66,7 @@ const PetRecordsPage: React.FC = () => {
   const [isEditVaccinationRecordModalOpen, setIsEditVaccinationRecordModalOpen] = useState(false);
   const [isDeleteVaccinationRecordModalOpen, setIsDeleteVaccinationRecordModalOpen] = useState(false);
   const [selectedVaccinationRecord, setSelectedVaccinationRecord] = useState<VaccinationRecord | null>(null);
+  const [medicalRecordError, setMedicalRecordError] = useState<string | null>(null);
   
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   const { user, logout } = useAuth();
@@ -119,8 +120,14 @@ const PetRecordsPage: React.FC = () => {
     if (showMedicalHistory && selectedPet) {
       setMedicalRecordsLoading(true);
       medicalRecordService.getMedicalRecordsByPet(selectedPet.id)
-        .then(records => setMedicalRecords(records))
-        .catch(() => setMedicalRecords([]))
+        .then(records => {
+          console.log('useEffect fetched medical records:', records);
+          setMedicalRecords(records);
+        })
+        .catch((error) => {
+          console.error('Error fetching medical records in useEffect:', error);
+          setMedicalRecords([]);
+        })
         .finally(() => setMedicalRecordsLoading(false));
     }
   }, [showMedicalHistory, selectedPet]);
@@ -183,6 +190,7 @@ const PetRecordsPage: React.FC = () => {
   };
 
   const handleAddNewMedicalRecord = () => {
+    setMedicalRecordError(null);
     setIsAddMedicalRecordModalOpen(true);
   };
 
@@ -198,6 +206,7 @@ const PetRecordsPage: React.FC = () => {
 
   const handleAddMedicalRecord = async (recordData: any) => {
     if (!selectedPet) return;
+    setMedicalRecordError(null);
     try {
       setMedicalRecordsLoading(true);
       // Map modal fields to backend API fields
@@ -210,13 +219,24 @@ const PetRecordsPage: React.FC = () => {
         recommendations: recordData.recommendation,
         medications: recordData.vaccineUsedMedication,
       };
-      await medicalRecordService.createMedicalRecord(selectedPet.id, mappedData);
-      // Refetch medical records from backend
+      console.log('Creating medical record with data:', mappedData);
+      console.log('Pet ID:', selectedPet.id);
+      
+      const createdRecord = await medicalRecordService.createMedicalRecord(selectedPet.id, mappedData);
+      console.log('Medical record created successfully:', createdRecord);
+      
+      // Refetch medical records from backend to ensure we have the latest data
       const records = await medicalRecordService.getMedicalRecordsByPet(selectedPet.id);
+      console.log('Refetched medical records:', records);
       setMedicalRecords(records);
       setIsAddMedicalRecordModalOpen(false);
-    } catch (error) {
+      setMedicalRecordError(null);
+    } catch (error: any) {
       console.error('Error adding medical record:', error);
+      const errorMessage = error?.message || 'Failed to add medical record. Please try again.';
+      setMedicalRecordError(errorMessage);
+      // Don't close the modal on error - let user see the error and try again
+      throw error; // Re-throw so the modal can handle it
     } finally {
       setMedicalRecordsLoading(false);
     }
@@ -844,6 +864,12 @@ const PetRecordsPage: React.FC = () => {
 
               {/* Medical History Content */}
               <main className="flex-1 p-6 overflow-y-auto">
+                {/* Error Display */}
+                {medicalRecordError && (
+                  <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    {medicalRecordError}
+                  </div>
+                )}
                 {/* Top Control Panel */}
                 <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-6 mb-6 hover:shadow-md transition-shadow duration-300">
                   <div className="flex justify-between items-center">
@@ -935,7 +961,10 @@ const PetRecordsPage: React.FC = () => {
               {isAddMedicalRecordModalOpen && (
                 <AddMedicalRecordModal
                   isOpen={isAddMedicalRecordModalOpen}
-                  onClose={() => setIsAddMedicalRecordModalOpen(false)}
+                  onClose={() => {
+                    setMedicalRecordError(null);
+                    setIsAddMedicalRecordModalOpen(false);
+                  }}
                   onSubmit={handleAddMedicalRecord}
                 />
               )}
