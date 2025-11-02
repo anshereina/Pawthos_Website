@@ -134,6 +134,60 @@ const PetRecordsPage: React.FC = () => {
     }
   }, [showMedicalHistory, selectedPet]);
 
+  // Add useEffect to fetch vaccination records from backend when showVaccinationCard and selectedPet are set
+  React.useEffect(() => {
+    if (showVaccinationCard && selectedPet) {
+      setVaccinationRecordsLoading(true);
+      vaccinationRecordService.getVaccinationRecordsByPet(selectedPet.id)
+        .then(records => {
+          console.log('useEffect fetched vaccination records:', records);
+          setVaccinationRecords(records);
+        })
+        .catch((error) => {
+          console.error('Error fetching vaccination records in useEffect:', error);
+          setVaccinationRecords([]);
+        })
+        .finally(() => setVaccinationRecordsLoading(false));
+    }
+  }, [showVaccinationCard, selectedPet]);
+
+  // Refetch vaccination records when page becomes visible (user switches back to browser tab/window)
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && showVaccinationCard && selectedPet) {
+        console.log('🔄 Refetching vaccination records (page became visible)');
+        vaccinationRecordService.getVaccinationRecordsByPet(selectedPet.id)
+          .then(records => {
+            setVaccinationRecords(records);
+          })
+          .catch((error) => {
+            console.error('Error refetching vaccination records:', error);
+          });
+      }
+    };
+
+    const handleFocus = () => {
+      if (showVaccinationCard && selectedPet) {
+        console.log('🔄 Refetching vaccination records (window focused)');
+        vaccinationRecordService.getVaccinationRecordsByPet(selectedPet.id)
+          .then(records => {
+            setVaccinationRecords(records);
+          })
+          .catch((error) => {
+            console.error('Error refetching vaccination records:', error);
+          });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [showVaccinationCard, selectedPet]);
+
 
 
   if (user === undefined) {
@@ -162,19 +216,11 @@ const PetRecordsPage: React.FC = () => {
     setShowMedicalHistory(false);
   };
 
-  const handleVaccineCardClick = async () => {
+  const handleVaccineCardClick = () => {
     if (selectedPet) {
       setShowVaccinationCard(true);
       setShowMedicalHistory(false);
-      try {
-        setVaccinationRecordsLoading(true);
-        const records = await vaccinationRecordService.getVaccinationRecordsByPet(selectedPet.id);
-        setVaccinationRecords(records);
-      } catch (error) {
-        console.error('Error fetching vaccination records:', error);
-      } finally {
-        setVaccinationRecordsLoading(false);
-      }
+      // Records will be fetched automatically by the useEffect when showVaccinationCard changes
     }
   };
 
