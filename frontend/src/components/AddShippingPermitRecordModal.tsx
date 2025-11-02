@@ -209,7 +209,7 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
               <input
                 type="number"
                 name="pet_age"
-                value={formData.pet_age}
+                value={formData.pet_age || ''}
                 onChange={handleChange}
                 required
                 min="0"
