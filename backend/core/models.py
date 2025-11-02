@@ -318,5 +318,4 @@ class ReproductiveRecord(Base):
     gender = Column(String(20), nullable=True)
     reproductive_status = Column(String(20), nullable=True)
     date = Column(Date, nullable=True)
-    date_of_birth = Column(String(255), nullable=True)  # Store as string to match Pet model
     created_at = Column(DateTime(timezone=True), server_default=func.now())

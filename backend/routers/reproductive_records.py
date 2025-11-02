@@ -36,22 +36,28 @@ def list_reproductive_records(
         rr = rr_query.order_by(nullslast(ReproductiveRecord.created_at.desc())).all()
         
         if rr:
-            return [
-                {
+            result = []
+            for r in rr:
+                # Look up pet's date_of_birth from Pet table
+                pet = db.query(Pet).filter(
+                    Pet.name == r.pet_name,
+                    Pet.owner_name == r.owner_name
+                ).first()
+                
+                result.append({
                     "id": r.id,
-                    "pet_id": None,
+                    "pet_id": pet.pet_id if pet else None,
                     "name": r.pet_name or "",
                     "owner_name": r.owner_name or "",
                     "species": r.species or "",
                     "date": r.date.isoformat() if r.date and hasattr(r.date, 'isoformat') else (str(r.date) if r.date else None),
-                    "date_of_birth": str(r.date_of_birth) if r.date_of_birth else None,
+                    "date_of_birth": str(pet.date_of_birth) if pet and pet.date_of_birth else None,
                     "color": r.color or "",
                     "breed": r.breed or "",
                     "gender": r.gender or "",
                     "reproductive_status": r.reproductive_status or "",
-                }
-                for r in rr
-            ]
+                })
+            return result
 
         # Fallback to pets if no dedicated records exist yet
         query = db.query(Pet)
@@ -113,13 +119,6 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
             elif isinstance(date_str, (date, datetime)):
                 record_date = date_str if isinstance(date_str, date) else date_str.date()
         
-        # Parse date_of_birth if provided
-        date_of_birth = payload.get("date_of_birth")
-        if date_of_birth and isinstance(date_of_birth, (date, datetime)):
-            date_of_birth = date_of_birth.isoformat() if isinstance(date_of_birth, date) else date_of_birth.strftime('%Y-%m-%d')
-        elif not date_of_birth or not isinstance(date_of_birth, str):
-            date_of_birth = None
-        
         record = ReproductiveRecord(
             pet_name=payload.get("name", ""),
             owner_name=payload.get("owner_name", ""),
@@ -129,7 +128,6 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
             gender=payload.get("gender"),
             reproductive_status=payload.get("reproductive_status"),
             date=record_date,
-            date_of_birth=date_of_birth,
         )
         db.add(record)
         db.commit()
@@ -160,16 +158,6 @@ def update_reproductive_record(record_id: int, payload: dict, db: Session = Depe
                         pass
             elif isinstance(date_str, (date, datetime)):
                 record.date = date_str if isinstance(date_str, date) else date_str.date()
-        
-        # Update date_of_birth
-        if "date_of_birth" in payload:
-            date_of_birth = payload.get("date_of_birth")
-            if date_of_birth and isinstance(date_of_birth, (date, datetime)):
-                record.date_of_birth = date_of_birth.isoformat() if isinstance(date_of_birth, date) else date_of_birth.strftime('%Y-%m-%d')
-            elif date_of_birth and isinstance(date_of_birth, str):
-                record.date_of_birth = date_of_birth
-            else:
-                record.date_of_birth = None
         
         # Update other fields
         if "name" in payload:
