@@ -84,13 +84,52 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   }, [event]);
 
-  // Fetch pets data when modal opens
+  // Fetch pets data and saved vaccination drive data when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && event) {
       fetchPets();
+      fetchSavedVaccinationDriveData();
       setIsEditMode(false); // Reset edit mode when modal opens
     }
-  }, [isOpen]);
+  }, [isOpen, event]);
+
+  const fetchSavedVaccinationDriveData = async () => {
+    if (!event) return;
+    
+    try {
+      // First, try to get the main drive info (vaccine_used and batch_no_lot_no)
+      const driveInfo = await vaccinationDriveService.getVaccinationDriveByEventId(event.id);
+      if (driveInfo) {
+        setFormData(prev => ({
+          ...prev,
+          vaccineUsed: driveInfo.vaccine_used || '',
+          batchNoLotNo: driveInfo.batch_no_lot_no || '',
+        }));
+      }
+
+      // Then fetch the pet records
+      const savedRecords = await vaccinationDriveService.getVaccinationDriveByEvent(event.id);
+      if (savedRecords && savedRecords.length > 0) {
+        // Load pet records
+        const loadedRecords: PetVaccinationRecord[] = savedRecords.map(record => ({
+          id: record.id,
+          ownerName: record.owner_name,
+          petName: record.pet_name,
+          ownerContact: record.owner_contact,
+          species: record.species,
+          breed: record.breed || '',
+          color: record.color || '',
+          age: record.age || '',
+          sex: record.sex || '',
+          otherServices: record.other_services || [],
+        }));
+        setPetRecords(loadedRecords);
+      }
+    } catch (error) {
+      // If no records exist yet, that's fine - it's a new drive
+      console.log('No existing vaccination drive data found:', error);
+    }
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {

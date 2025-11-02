@@ -73,6 +73,27 @@ class VaccinationDriveService {
     return response.json();
   }
 
+  async getVaccinationDriveByEventId(eventId: number): Promise<{ vaccine_used: string; batch_no_lot_no: string } | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/event/${eventId}/drive`, {
+        headers: this.getHeaders(),
+      });
+
+      if (response.status === 404) {
+        return null; // No drive exists yet
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch vaccination drive');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching vaccination drive:', error);
+      return null;
+    }
+  }
+
   async deleteVaccinationDrivesByEvent(eventId: number): Promise<void> {
     const response = await fetch(`${this.baseUrl}/event/${eventId}`, {
       method: 'DELETE',

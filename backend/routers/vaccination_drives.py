@@ -195,6 +195,14 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
         print(f"Error details: {error_details}")
         raise HTTPException(status_code=500, detail=f"Failed to create vaccination drive: {str(e)}")
 
+@router.get("/event/{event_id}/drive", response_model=VaccinationDriveSchema)
+def get_vaccination_drive_by_event_id(event_id: int, db: Session = Depends(get_db)):
+    """Get the vaccination drive for a specific event"""
+    drive = db.query(VaccinationDrive).filter(VaccinationDrive.event_id == event_id).first()
+    if not drive:
+        raise HTTPException(status_code=404, detail="Vaccination drive not found for this event")
+    return drive
+
 @router.get("/event/{event_id}", response_model=List[VaccinationDriveRecordSchema])
 def get_vaccination_drive_by_event(event_id: int, db: Session = Depends(get_db)):
     """Get all vaccination drive records for a specific event"""
