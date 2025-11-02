@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from core.database import get_db
-from core.models import MedicalRecord, Pet, User
+from core.models import MedicalRecord, Pet, User, Admin
 from core.schemas import MedicalRecord as MedicalRecordSchema, MedicalRecordCreate, MedicalRecordUpdate
 from core import auth
 from jose import JWTError, jwt
@@ -77,36 +77,59 @@ def create_medical_record_for_pet(
     db: Session = Depends(get_db),
     current_user = Depends(auth.get_current_active_user)
 ):
-    # Determine user_id to satisfy FK constraint
-    resolved_user_id = None
+    try:
+        # Determine user_id to satisfy FK constraint
+        resolved_user_id = None
 
-    # If the current principal is a regular user, use their id
-    if isinstance(current_user, User):
-        resolved_user_id = current_user.id
-
-    # Otherwise, try to resolve from the pet
-    if resolved_user_id is None:
-        pet = db.query(Pet).filter(Pet.id == pet_id).first()
-        if pet is None:
-            raise HTTPException(status_code=404, detail="Pet not found")
-        if getattr(pet, 'user_id', None):
-            resolved_user_id = pet.user_id
+        # If the current principal is a regular user, use their id
+        if isinstance(current_user, User):
+            resolved_user_id = current_user.id
+            print(f"✅ Resolved user_id from current_user (User): {resolved_user_id}")
+        elif isinstance(current_user, Admin):
+            # For Admin users, we need to resolve user_id from the pet
+            print(f"✅ Current user is Admin, will resolve user_id from pet")
         else:
-            # As a fallback, try to match by owner_name
-            owner_match = db.query(User).filter(User.name == pet.owner_name).first()
-            if owner_match is not None:
-                resolved_user_id = owner_match.id
+            print(f"⚠️ Unknown user type: {type(current_user)}")
 
-    if resolved_user_id is None:
-        raise HTTPException(status_code=400, detail="Unable to resolve user for medical record (no linked user)")
+        # If user_id not resolved from current_user, try to resolve from the pet
+        if resolved_user_id is None:
+            pet = db.query(Pet).filter(Pet.id == pet_id).first()
+            if pet is None:
+                raise HTTPException(status_code=404, detail=f"Pet with id {pet_id} not found")
+            if getattr(pet, 'user_id', None):
+                resolved_user_id = pet.user_id
+                print(f"✅ Resolved user_id from pet.user_id: {resolved_user_id}")
+            else:
+                # As a fallback, try to match by owner_name
+                owner_match = db.query(User).filter(User.name == pet.owner_name).first()
+                if owner_match is not None:
+                    resolved_user_id = owner_match.id
+                    print(f"✅ Resolved user_id from owner_name match: {resolved_user_id}")
 
-    payload = record.dict(exclude_unset=True)
-    payload.pop('notes', None)
-    db_record = MedicalRecord(**payload, pet_id=pet_id, user_id=resolved_user_id)
-    db.add(db_record)
-    db.commit()
-    db.refresh(db_record)
-    return db_record
+        if resolved_user_id is None:
+            raise HTTPException(status_code=400, detail="Unable to resolve user for medical record (no linked user)")
+
+        payload = record.dict(exclude_unset=True)
+        payload.pop('notes', None)
+        print(f"🔧 Creating medical record with payload: {payload}")
+        print(f"🔧 pet_id: {pet_id}, user_id: {resolved_user_id}")
+        
+        db_record = MedicalRecord(**payload, pet_id=pet_id, user_id=resolved_user_id)
+        db.add(db_record)
+        db.commit()
+        db.refresh(db_record)
+        print(f"✅ Medical record created successfully with id: {db_record.id}")
+        return db_record
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error creating medical record: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create medical record: {str(e)}"
+        )
 
 @router.put("/{record_id}", response_model=MedicalRecordSchema)
 def update_medical_record(record_id: int, record_update: MedicalRecordUpdate, db: Session = Depends(get_db)):
