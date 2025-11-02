@@ -34,7 +34,7 @@ def list_reproductive_records(
     db: Session = Depends(get_db),
 ):
     try:
-        # Prefer dedicated reproductive records; fallback to pets if empty
+        # Only return ReproductiveRecord entries, no Pet fallback
         rr_query = db.query(ReproductiveRecord)
         if species and species.lower() in ["feline", "canine"]:
             rr_query = rr_query.filter(ReproductiveRecord.species == species.lower())
@@ -48,67 +48,29 @@ def list_reproductive_records(
         # Order by created_at descending
         rr = rr_query.order_by(nullslast(ReproductiveRecord.created_at.desc())).all()
         
-        if rr:
-            result = []
-            for r in rr:
-                # Look up pet's date_of_birth from Pet table
-                pet = db.query(Pet).filter(
-                    Pet.name == r.pet_name,
-                    Pet.owner_name == r.owner_name
-                ).first()
-                
-                result.append({
-                    "id": r.id,
-                    "pet_id": pet.pet_id if pet else None,
-                    "name": r.pet_name or "",
-                    "owner_name": r.owner_name or "",
-                    "species": r.species or "",
-                    "date": r.date.isoformat() if r.date and hasattr(r.date, 'isoformat') else (str(r.date) if r.date else None),
-                    "date_of_birth": str(pet.date_of_birth) if pet and pet.date_of_birth else None,
-                    "color": r.color or "",
-                    "breed": r.breed or "",
-                    "gender": r.gender or "",
-                    "reproductive_status": r.reproductive_status or "",
-                    "is_reproductive_record": True,  # Flag to indicate this is a ReproductiveRecord entry
-                })
-            return result
-
-        # Fallback to pets if no dedicated records exist yet
-        query = db.query(Pet)
-
-        if species and species.lower() in ["feline", "canine"]:
-            query = query.filter(Pet.species == species.lower())
-
-        if search:
-            like = f"%{search.lower()}%"
-            query = query.filter(
-                (Pet.pet_id.ilike(like))
-                | (Pet.name.ilike(like))
-                | (Pet.owner_name.ilike(like))
-                | (Pet.breed.ilike(like))
-            )
-
-        # Order by created_at descending (nulls last), fallback to id
-        pets = query.order_by(nullslast(Pet.created_at.desc()), Pet.id.desc()).all()
-
-        # Return only needed fields
-        return [
-            {
-                "id": p.id,
-                "pet_id": p.pet_id or "",
-                "name": p.name or "",
-                "owner_name": p.owner_name or "",
-                "species": p.species or "",
-                "date": None,
-                "date_of_birth": str(p.date_of_birth) if p.date_of_birth else None,
-                "color": p.color or "",
-                "breed": p.breed or "",
-                "gender": p.gender or "",
-                "reproductive_status": p.reproductive_status or "",
-                "is_reproductive_record": False,  # Flag to indicate this is a Pet entry (fallback)
-            }
-            for p in pets
-        ]
+        result = []
+        for r in rr:
+            # Look up pet's date_of_birth from Pet table
+            pet = db.query(Pet).filter(
+                Pet.name == r.pet_name,
+                Pet.owner_name == r.owner_name
+            ).first()
+            
+            result.append({
+                "id": r.id,
+                "pet_id": pet.pet_id if pet else None,
+                "name": r.pet_name or "",
+                "owner_name": r.owner_name or "",
+                "species": r.species or "",
+                "date": r.date.isoformat() if r.date and hasattr(r.date, 'isoformat') else (str(r.date) if r.date else None),
+                "date_of_birth": str(pet.date_of_birth) if pet and pet.date_of_birth else None,
+                "color": r.color or "",
+                "breed": r.breed or "",
+                "gender": r.gender or "",
+                "reproductive_status": r.reproductive_status or "",
+                "is_reproductive_record": True,  # Flag to indicate this is a ReproductiveRecord entry
+            })
+        return result
     except Exception as e:
         import traceback
         print(f"Error in list_reproductive_records: {str(e)}")

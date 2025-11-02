@@ -94,12 +94,6 @@ const ReproductiveRecordsPage: React.FC = () => {
   };
 
   const handleUpdatePet = async (id: number, petData: any) => {
-    if (!selectedPet?.is_reproductive_record) {
-      setError('Cannot edit Pet records. Only Reproductive Record entries can be edited.');
-      setIsEditModalOpen(false);
-      setSelectedPet(null);
-      return;
-    }
     try {
       setLoading(true);
       setError(null);
@@ -123,7 +117,6 @@ const ReproductiveRecordsPage: React.FC = () => {
     console.log('Attempting to delete record:', {
       id: selectedPet.id,
       name: selectedPet.name,
-      is_reproductive_record: selectedPet.is_reproductive_record,
       pet_id: selectedPet.pet_id
     });
     
@@ -131,15 +124,8 @@ const ReproductiveRecordsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // If it's a Pet record (fallback), delete from Pet table
-      if (!selectedPet.is_reproductive_record) {
-        // Use pet_id if available, otherwise use id as string
-        const petIdToDelete = selectedPet.pet_id || String(selectedPet.id);
-        await petService.deletePet(petIdToDelete);
-      } else {
-        // If it's a ReproductiveRecord, delete from reproductive records
-        await reproductiveRecordService.delete(selectedPet.id);
-      }
+      // Delete ReproductiveRecord
+      await reproductiveRecordService.delete(selectedPet.id);
       
       const data = await reproductiveRecordService.list(filter !== 'all' ? filter : undefined, search || undefined);
       setRecords(data);
@@ -316,36 +302,20 @@ const ReproductiveRecordsPage: React.FC = () => {
                         <td className="px-4 py-3 capitalize">{pet.gender || '-'}</td>
                         <td className="px-4 py-3 capitalize">{pet.reproductive_status || '-'}</td>
                         <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          {pet.is_reproductive_record ? (
-                            <>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
-                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                                title="Edit record"
-                              >
-                                <Edit size={18} className="text-green-600" />
-                              </button>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
-                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                                title="Delete record"
-                              >
-                                <Trash2 size={18} className="text-red-600" />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              {/* Pet records: view only for edit, but allow delete */}
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
-                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                                title="Delete Pet record"
-                              >
-                                <Trash2 size={18} className="text-red-600" />
-                              </button>
-                              <span className="text-xs text-gray-500 italic ml-2">Pet record (edit via Pet Records)</span>
-                            </>
-                          )}
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                            title="Edit record"
+                          >
+                            <Edit size={18} className="text-green-600" />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                            title="Delete record"
+                          >
+                            <Trash2 size={18} className="text-red-600" />
+                          </button>
                         </td>
                       </tr>
                     ))
