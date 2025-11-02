@@ -116,7 +116,7 @@ class VaccinationRecordService {
   }
 
   async getVaccinationRecordsByPet(petId: number): Promise<VaccinationRecord[]> {
-    const response = await fetch(`${this.baseUrl}/pet/${petId}`, {
+    const response = await fetch(`${this.baseUrl}pet/${petId}`, {
       headers: this.getHeaders(),
     });
     
@@ -128,7 +128,7 @@ class VaccinationRecordService {
   }
 
   async getVaccinationRecord(recordId: number): Promise<VaccinationRecord> {
-    const response = await fetch(`${this.baseUrl}/${recordId}`, {
+    const response = await fetch(`${this.baseUrl}${recordId}`, {
       headers: this.getHeaders(),
     });
     
@@ -141,7 +141,7 @@ class VaccinationRecordService {
 
   async createVaccinationRecord(petId: number, recordData: CreateVaccinationRecordData): Promise<VaccinationRecord> {
     const payload = { ...recordData, pet_id: petId };
-    const response = await fetch(`${this.baseUrl}/`, {
+    const response = await fetch(`${this.baseUrl}`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(payload),
@@ -155,7 +155,7 @@ class VaccinationRecordService {
   }
 
   async updateVaccinationRecord(recordId: number, recordData: UpdateVaccinationRecordData): Promise<VaccinationRecord> {
-    const response = await fetch(`${this.baseUrl}/${recordId}`, {
+    const response = await fetch(`${this.baseUrl}${recordId}`, {
       method: 'PUT',
       headers: this.getHeaders(),
       body: JSON.stringify(recordData),
@@ -169,7 +169,7 @@ class VaccinationRecordService {
   }
 
   async deleteVaccinationRecord(recordId: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/${recordId}`, {
+    const response = await fetch(`${this.baseUrl}${recordId}`, {
       method: 'DELETE',
       headers: this.getHeaders(),
     });
@@ -180,7 +180,7 @@ class VaccinationRecordService {
   }
 
   async getAllVaccinationRecords(): Promise<VaccinationRecord[]> {
-    const response = await fetch(`${this.baseUrl}/`, {
+    const response = await fetch(`${this.baseUrl}`, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {
@@ -191,7 +191,7 @@ class VaccinationRecordService {
 
   // Enhanced method to get vaccination records with pet information
   async getVaccinationRecordsWithPets(): Promise<VaccinationRecordWithPet[]> {
-    const response = await fetch(`${this.baseUrl}/with-pets`, {
+    const response = await fetch(`${this.baseUrl}with-pets`, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {

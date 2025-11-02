@@ -47,7 +47,7 @@ class VaccinationEventService {
   }
 
   async getUpcomingVaccinationEvents(): Promise<VaccinationEvent[]> {
-    const response = await fetch(`${this.baseUrl}/upcoming`, {
+    const response = await fetch(`${this.baseUrl}upcoming`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ class VaccinationEventService {
   }
 
   async getVaccinationEventsByDate(date: string): Promise<VaccinationEvent[]> {
-    const url = new URL(`${this.baseUrl}/by-date`);
+    const url = new URL(`${this.baseUrl}by-date`);
     url.searchParams.append('date', date);
 
     const response = await fetch(url.toString(), {
@@ -82,7 +82,7 @@ class VaccinationEventService {
   }
 
   async getVaccinationEvent(id: number): Promise<VaccinationEvent> {
-    const response = await fetch(`${this.baseUrl}/${id}`, {
+    const response = await fetch(`${this.baseUrl}${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ class VaccinationEventService {
   }
 
   async updateVaccinationEvent(id: number, event: VaccinationEventUpdate): Promise<VaccinationEvent> {
-    const response = await fetch(`${this.baseUrl}/${id}`, {
+    const response = await fetch(`${this.baseUrl}${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ class VaccinationEventService {
   }
 
   async deleteVaccinationEvent(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/${id}`, {
+    const response = await fetch(`${this.baseUrl}${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
