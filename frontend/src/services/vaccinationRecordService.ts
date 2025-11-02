@@ -68,7 +68,7 @@ export interface YearlyVaccinationStatistics {
 }
 
 class VaccinationRecordService {
-  private baseUrl = `${API_BASE_URL}/vaccination-records/`;
+  private baseUrl = `${API_BASE_URL}/vaccination-records`;
 
   private getHeaders(): Record<string, string> {
     const token = localStorage.getItem('access_token');
