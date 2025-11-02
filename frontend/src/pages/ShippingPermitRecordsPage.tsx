@@ -9,6 +9,7 @@ import AddShippingPermitRecordModal from '../components/AddShippingPermitRecordM
 import EditShippingPermitRecordModal from '../components/EditShippingPermitRecordModal';
 import DeleteShippingPermitRecordModal from '../components/DeleteShippingPermitRecordModal';
 import ShippingPermitExportModal from '../components/ShippingPermitExportModal';
+import ViewShippingPermitRecordModal from '../components/ViewShippingPermitRecordModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TABLE_COLUMNS = [
@@ -44,6 +45,7 @@ const VetHealthRecordsPage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -98,6 +100,11 @@ const VetHealthRecordsPage: React.FC = () => {
   const openDeleteModal = (record: any) => {
     setSelectedRecord(record);
     setShowDeleteModal(true);
+  };
+
+  const openViewModal = (record: any) => {
+    setSelectedRecord(record);
+    setShowViewModal(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -229,7 +236,8 @@ const VetHealthRecordsPage: React.FC = () => {
                   currentRows.map((record, index) => (
                     <tr
                       key={record.id}
-                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                      onClick={() => openViewModal(record)}
+                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                     >
                       <td className="px-4 py-3 font-medium">{record.owner_name}</td>
                       <td className="px-4 py-3">{record.contact_number || '-'}</td>
@@ -244,7 +252,7 @@ const VetHealthRecordsPage: React.FC = () => {
                         </span>
                       </td>
                       {/* Action icons */}
-                      <td className="px-4 py-3 flex items-center gap-2">
+                      <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <button 
                           onClick={() => openEditModal(record)}
                           className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
@@ -351,6 +359,15 @@ const VetHealthRecordsPage: React.FC = () => {
         onConfirm={handleDeleteRecord}
         record={selectedRecord}
         loading={deleteLoading}
+      />
+
+      <ViewShippingPermitRecordModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedRecord(null);
+        }}
+        record={selectedRecord}
       />
 
       <ShippingPermitExportModal

@@ -37,19 +37,54 @@ export const reproductiveRecordService = {
     const url = new URL(`${API_BASE_URL}/reproductive-records/`);
     if (species) url.searchParams.set('species', species);
     if (search) url.searchParams.set('search', search);
-    const res = await fetch(url.toString(), { headers: authHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch reproductive records');
-    return res.json();
+    
+    console.log('Fetching reproductive records from:', url.toString());
+    
+    try {
+      const res = await fetch(url.toString(), { headers: authHeaders() });
+      console.log('Reproductive records response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Reproductive records error:', errorText);
+        throw new Error(`Failed to fetch reproductive records: ${res.status} ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      console.log('Reproductive records data:', data);
+      return data;
+    } catch (error) {
+      console.error('Reproductive records fetch error:', error);
+      throw error;
+    }
   },
   async create(data: CreateReproductiveRecord): Promise<number> {
-    const res = await fetch(`${API_BASE_URL}/reproductive-records/`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to create record');
-    const json = await res.json();
-    return json.id;
+    const url = `${API_BASE_URL}/reproductive-records/`;
+    console.log('Creating reproductive record at:', url);
+    console.log('Record data:', data);
+    
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(data),
+      });
+      
+      console.log('Create reproductive record response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Create reproductive record error:', errorText);
+        throw new Error(`Failed to create record: ${res.status} ${res.statusText}`);
+      }
+      
+      const json = await res.json();
+      console.log('Create reproductive record response:', json);
+      return json.id;
+    } catch (error) {
+      console.error('Create reproductive record fetch error:', error);
+      throw error;
+    }
   },
 };
 

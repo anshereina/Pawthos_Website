@@ -153,7 +153,7 @@ const ReproductiveRecordsPage: React.FC = () => {
           isExpanded ? 'ml-64' : 'ml-16'
         }`}
       >
-        <PageHeader title="Pet Sterilizaion Records" />
+        <PageHeader title="Pet Sterilization Records" />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
