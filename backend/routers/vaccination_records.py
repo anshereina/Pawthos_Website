@@ -282,27 +282,60 @@ def get_vaccination_record(record_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=VaccinationRecordSchema, status_code=status.HTTP_201_CREATED)
 def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Depends(get_db)):
-    # Get the pet to find the owner name
-    pet = db.query(Pet).filter(Pet.id == record.pet_id).first()
-    if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
-    
-    # Find the user by owner name
-    user = db.query(User).filter(User.name == pet.owner_name).first()
-    
-    # Create the vaccination record with user_id if found
-    record_data = record.dict()
-    if user:
-        record_data['user_id'] = user.id
-    else:
-        # If no user found, set user_id to None (should be nullable in DB)
-        record_data['user_id'] = None
-    
-    db_record = VaccinationRecord(**record_data)
-    db.add(db_record)
-    db.commit()
-    db.refresh(db_record)
-    return db_record
+    try:
+        # Get the pet to find the owner name
+        pet = db.query(Pet).filter(Pet.id == record.pet_id).first()
+        if not pet:
+            raise HTTPException(status_code=404, detail=f"Pet with id {record.pet_id} not found")
+        
+        # Find the user - try by owner name first, then use pet.user_id if available
+        user = None
+        if hasattr(pet, 'user_id') and pet.user_id:
+            user = db.query(User).filter(User.id == pet.user_id).first()
+        
+        if not user:
+            # Fallback: try to find user by owner name
+            user = db.query(User).filter(User.name == pet.owner_name).first()
+        
+        # Determine user_id
+        resolved_user_id = None
+        if user:
+            resolved_user_id = user.id
+        elif hasattr(pet, 'user_id') and pet.user_id:
+            resolved_user_id = pet.user_id
+        
+        if resolved_user_id is None:
+            raise HTTPException(status_code=400, detail="Unable to resolve user for vaccination record (no linked user)")
+        
+        # Map schema fields to model fields (date_given -> vaccination_date)
+        record_data = record.dict(exclude_unset=True)
+        record_data['user_id'] = resolved_user_id
+        
+        # Map date_given from schema to vaccination_date for model
+        if 'date_given' in record_data and record_data['date_given'] is not None:
+            record_data['vaccination_date'] = record_data.pop('date_given')
+        elif 'vaccination_date' not in record_data:
+            raise HTTPException(status_code=400, detail="vaccination_date (date_given) is required")
+        
+        print(f"🔧 Creating vaccination record with data: {record_data}")
+        print(f"🔧 pet_id: {record.pet_id}, user_id: {resolved_user_id}")
+        
+        db_record = VaccinationRecord(**record_data)
+        db.add(db_record)
+        db.commit()
+        db.refresh(db_record)
+        print(f"✅ Vaccination record created successfully with id: {db_record.id}")
+        return db_record
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error creating vaccination record: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create vaccination record: {str(e)}"
+        )
 
 @router.put("/{record_id}", response_model=VaccinationRecordSchema)
 def update_vaccination_record(record_id: int, record_update: VaccinationRecordUpdate, db: Session = Depends(get_db)):

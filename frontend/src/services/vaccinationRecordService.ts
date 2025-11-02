@@ -21,8 +21,10 @@ export interface VaccinationRecordWithPet extends VaccinationRecord {
 
 export interface CreateVaccinationRecordData {
   vaccine_name: string;
-  vaccination_date: string;
-  expiration_date?: string;
+  date_given?: string; // Schema expects date_given (mapped to vaccination_date in model)
+  vaccination_date?: string; // Also accept vaccination_date for compatibility
+  next_due_date?: string; // Schema expects next_due_date
+  expiration_date?: string; // Also accept expiration_date for compatibility
   veterinarian: string;
   batch_lot_no: string;
 }
@@ -140,18 +142,44 @@ class VaccinationRecordService {
   }
 
   async createVaccinationRecord(petId: number, recordData: CreateVaccinationRecordData): Promise<VaccinationRecord> {
-    const payload = { ...recordData, pet_id: petId };
-    const response = await fetch(`${this.baseUrl}`, {
+    const url = `${this.baseUrl}`;
+    console.log('🔧 createVaccinationRecord URL:', url);
+    console.log('🔧 createVaccinationRecord data:', recordData);
+    
+    // Ensure date_given is set (use vaccination_date if date_given not provided)
+    const payload: any = { ...recordData, pet_id: petId };
+    if (!payload.date_given && payload.vaccination_date) {
+      payload.date_given = payload.vaccination_date;
+      delete payload.vaccination_date;
+    }
+    // Ensure next_due_date is set (use expiration_date if next_due_date not provided)
+    if (!payload.next_due_date && payload.expiration_date) {
+      payload.next_due_date = payload.expiration_date;
+      delete payload.expiration_date;
+    }
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(payload),
     });
     
     if (!response.ok) {
-      throw new Error('Failed to create vaccination record');
+      let errorMessage = 'Failed to create vaccination record';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+        console.error('🔧 API error response:', errorData);
+      } catch (e) {
+        console.error('🔧 Failed to parse error response:', e);
+        errorMessage = `Failed to create vaccination record: ${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
     
-    return response.json();
+    const result = await response.json();
+    console.log('🔧 createVaccinationRecord success:', result);
+    return result;
   }
 
   async updateVaccinationRecord(recordId: number, recordData: UpdateVaccinationRecordData): Promise<VaccinationRecord> {

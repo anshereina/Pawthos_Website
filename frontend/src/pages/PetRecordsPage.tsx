@@ -287,12 +287,12 @@ const PetRecordsPage: React.FC = () => {
     console.log('Selected pet for vaccination record:', selectedPet); // Debug log
     try {
       setVaccinationRecordsLoading(true);
-      // Map modal fields to backend API fields
+      // Map modal fields to backend API fields (schema expects date_given and next_due_date)
       const mappedData = {
-        vaccination_date: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined,
+        date_given: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined, // Schema expects date_given
         vaccine_name: recordData.vaccineUsed,
         batch_lot_no: recordData.batchNumber,
-        expiration_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Map next vaccination date to expiration_date
+        next_due_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Schema expects next_due_date
         veterinarian: recordData.veterinarianLicenseNumber,
       };
       console.log('Sending vaccination record data:', mappedData); // Debug log
@@ -302,8 +302,10 @@ const PetRecordsPage: React.FC = () => {
       console.log('Fetched vaccination records:', records); // Debug log
       setVaccinationRecords(records);
       setIsAddVaccinationRecordModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding vaccination record:', error);
+      const errorMessage = error?.message || 'Failed to add vaccination record. Please try again.';
+      alert(errorMessage); // Show error to user
     } finally {
       setVaccinationRecordsLoading(false);
     }
@@ -323,12 +325,12 @@ const PetRecordsPage: React.FC = () => {
     if (!selectedPet) return;
     try {
       setVaccinationRecordsLoading(true);
-      // Map modal fields to backend API fields
+      // Map modal fields to backend API fields (schema expects date_given and next_due_date)
       const mappedData = {
-        vaccination_date: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined,
+        date_given: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined, // Schema expects date_given
         vaccine_name: recordData.vaccineUsed,
         batch_lot_no: recordData.batchNumber,
-        expiration_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Map next vaccination date to expiration_date
+        next_due_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Schema expects next_due_date
         veterinarian: recordData.veterinarianLicenseNumber,
       };
       await vaccinationRecordService.updateVaccinationRecord(id, mappedData);
