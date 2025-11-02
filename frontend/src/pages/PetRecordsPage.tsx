@@ -19,6 +19,7 @@ import DeleteVaccinationRecordModal from '../components/DeleteVaccinationRecordM
 import AddMedicalRecordModal from '../components/AddMedicalRecordModal';
 import EditMedicalRecordModal from '../components/EditMedicalRecordModal';
 import DeleteMedicalRecordModal from '../components/DeleteMedicalRecordModal';
+import ViewMedicalRecordModal from '../components/ViewMedicalRecordModal';
 
 const FILTERS = [
   { label: 'ALL', value: 'all' },
@@ -62,6 +63,7 @@ const PetRecordsPage: React.FC = () => {
   const [isEditMedicalRecordModalOpen, setIsEditMedicalRecordModalOpen] = useState(false);
   const [isDeleteMedicalRecordModalOpen, setIsDeleteMedicalRecordModalOpen] = useState(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
+  const [isViewMedicalRecordModalOpen, setIsViewMedicalRecordModalOpen] = useState(false);
   const [isAddVaccinationRecordModalOpen, setIsAddVaccinationRecordModalOpen] = useState(false);
   const [isEditVaccinationRecordModalOpen, setIsEditVaccinationRecordModalOpen] = useState(false);
   const [isDeleteVaccinationRecordModalOpen, setIsDeleteVaccinationRecordModalOpen] = useState(false);
@@ -202,6 +204,11 @@ const PetRecordsPage: React.FC = () => {
   const handleDeleteMedicalRecord = (record: any) => {
     setSelectedMedicalRecord(record);
     setIsDeleteMedicalRecordModalOpen(true);
+  };
+
+  const handleViewMedicalRecord = (record: any) => {
+    setSelectedMedicalRecord(record);
+    setIsViewMedicalRecordModalOpen(true);
   };
 
   const handleAddMedicalRecord = async (recordData: any) => {
@@ -925,7 +932,11 @@ const PetRecordsPage: React.FC = () => {
                             record.recommendations?.toLowerCase().includes(medicalHistorySearch.toLowerCase())
                           )
                           .map((record, index) => (
-                            <tr key={record.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}>
+                            <tr 
+                              key={record.id} 
+                              onClick={() => handleViewMedicalRecord(record)}
+                              className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                            >
                               <td className="px-6 py-4">{record.reason_for_visit}</td>
                               <td className="px-6 py-4">{new Date(record.date_visited).toLocaleDateString()}</td>
                               <td className="px-6 py-4">{record.date_of_next_visit ? new Date(record.date_of_next_visit).toLocaleDateString() : '-'}</td>
@@ -933,7 +944,7 @@ const PetRecordsPage: React.FC = () => {
                               <td className="px-6 py-4">{record.findings}</td>
                               <td className="px-6 py-4">{record.recommendations}</td>
                               <td className="px-6 py-4">{record.medications}</td>
-                              <td className="px-6 py-4 flex items-center gap-2">
+                              <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                   className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm" 
                                   title="Edit"
@@ -958,6 +969,17 @@ const PetRecordsPage: React.FC = () => {
               </main>
 
               {/* Medical Record Modals */}
+              {isViewMedicalRecordModalOpen && selectedMedicalRecord && (
+                <ViewMedicalRecordModal
+                  isOpen={isViewMedicalRecordModalOpen}
+                  onClose={() => {
+                    setIsViewMedicalRecordModalOpen(false);
+                    setSelectedMedicalRecord(null);
+                  }}
+                  record={selectedMedicalRecord}
+                />
+              )}
+
               {isAddMedicalRecordModalOpen && (
                 <AddMedicalRecordModal
                   isOpen={isAddMedicalRecordModalOpen}

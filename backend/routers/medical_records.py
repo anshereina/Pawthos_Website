@@ -45,10 +45,22 @@ def get_all_medical_records(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_current_user)
 ):
-    # If user is authenticated, return their medical records
+    # If user is authenticated
     if current_user:
-        records = db.query(MedicalRecord).filter(MedicalRecord.user_id == current_user.id).all()
-        return records
+        # Check if current_user is an Admin by checking if their email exists in Admin table
+        # For Admin users, return all medical records
+        # For regular users, return only their medical records
+        from core.models import Admin
+        admin_user = db.query(Admin).filter(Admin.email == current_user.email).first()
+        
+        if admin_user:
+            # Admin users can see all medical records
+            records = db.query(MedicalRecord).all()
+            return records
+        else:
+            # Regular users see only their medical records
+            records = db.query(MedicalRecord).filter(MedicalRecord.user_id == current_user.id).all()
+            return records
     
     # If not authenticated, return empty array
     return []
