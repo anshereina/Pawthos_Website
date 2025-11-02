@@ -33,6 +33,8 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
 
   const handleOwnerChange = (ownerName: string, ownerData?: OwnerSearchResult) => {
     if (ownerData) {
+      console.log('Auto-filling with owner data:', ownerData);
+      
       // Convert birthdate to YYYY-MM-DD format for HTML date input
       let formattedBirthdate = '';
       if (ownerData.birthdate) {
@@ -57,17 +59,25 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
         }
       }
 
+      // Ensure pet_age is a number
+      const petAgeValue = typeof ownerData.pet_age === 'number' ? ownerData.pet_age : parseInt(String(ownerData.pet_age || 0)) || 0;
+      console.log('Setting pet_age to:', petAgeValue);
+
       // Update form with owner data
-      setFormData(prevFormData => ({
-        ...prevFormData,
-        owner_name: ownerData.owner_name,
-        contact_number: ownerData.contact_number || '',
-        pet_name: ownerData.pet_name || '',
-        birthdate: formattedBirthdate,
-        pet_age: ownerData.pet_age || 0,
-        pet_species: ownerData.pet_species || '',
-        pet_breed: ownerData.pet_breed || '',
-      }));
+      setFormData(prevFormData => {
+        const newFormData = {
+          ...prevFormData,
+          owner_name: ownerData.owner_name,
+          contact_number: ownerData.contact_number || '',
+          pet_name: ownerData.pet_name || '',
+          birthdate: formattedBirthdate,
+          pet_age: petAgeValue,
+          pet_species: ownerData.pet_species || '',
+          pet_breed: ownerData.pet_breed || '',
+        };
+        console.log('Updated form data:', newFormData);
+        return newFormData;
+      });
     } else {
       // Clear owner-related fields when owner is removed
       setFormData(prevFormData => ({
