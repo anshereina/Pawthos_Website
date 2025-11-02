@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response, JSONResponse
 from sqlalchemy.orm import Session
 from core.database import engine, get_db
 from core import models
@@ -124,6 +125,45 @@ app.add_middleware(
     expose_headers=["*"],
     max_age=3600,  # Cache preflight for 1 hour
 )
+
+# Additional CORS middleware to ensure headers are always present (Railway/deployment fallback)
+# This runs AFTER CORSMiddleware to ensure headers are added even if CORSMiddleware fails
+@app.middleware("http")
+async def cors_handler(request: Request, call_next):
+    # Handle OPTIONS preflight requests
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "3600",
+            }
+        )
+    
+    try:
+        # For all other requests, add CORS headers
+        response = await call_next(request)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+    except Exception as e:
+        # Even on exceptions, add CORS headers
+        if isinstance(e, HTTPException):
+            response = Response(
+                status_code=e.status_code,
+                content=str(e.detail),
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                    "Access-Control-Allow-Headers": "*",
+                    "Content-Type": "application/json",
+                }
+            )
+            return response
+        raise
 
 # Include routers
 app.include_router(auth.router)  # Web frontend: /auth/*
@@ -303,6 +343,31 @@ async def upload_pet_photo(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload photo: {str(e)}")
+
+# Global exception handler to ensure CORS headers are always present
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn
