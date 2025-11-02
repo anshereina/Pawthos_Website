@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional, Union
 from datetime import datetime, date
 from core.database import get_db
@@ -12,6 +12,12 @@ from core.config import SECRET_KEY, ALGORITHM
 
 router = APIRouter(prefix="/medical-records", tags=["medical-records"])
 security = HTTPBearer(auto_error=False)
+
+# Simple class to hold pet data for medical records
+class PetData:
+    def __init__(self, name, species):
+        self.name = name
+        self.species = species
 
 def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
@@ -58,12 +64,27 @@ def get_all_medical_records(
         # For regular users, return only their medical records
         if isinstance(current_user, Admin):
             # Admin users can see all medical records
-            records = db.query(MedicalRecord).all()
-            return records
+            # Query medical records and join with pets to get pet data
+            records = db.query(MedicalRecord, Pet.name, Pet.species).join(
+                Pet, MedicalRecord.pet_id == Pet.id
+            ).all()
+            # Attach pet data to each record
+            result = []
+            for medical_record, pet_name, pet_species in records:
+                medical_record.pet = PetData(pet_name, pet_species)
+                result.append(medical_record)
+            return result
         elif isinstance(current_user, User):
             # Regular users see only their medical records
-            records = db.query(MedicalRecord).filter(MedicalRecord.user_id == current_user.id).all()
-            return records
+            records = db.query(MedicalRecord, Pet.name, Pet.species).join(
+                Pet, MedicalRecord.pet_id == Pet.id
+            ).filter(MedicalRecord.user_id == current_user.id).all()
+            # Attach pet data to each record
+            result = []
+            for medical_record, pet_name, pet_species in records:
+                medical_record.pet = PetData(pet_name, pet_species)
+                result.append(medical_record)
+            return result
     
     # If not authenticated, return empty array
     return []
