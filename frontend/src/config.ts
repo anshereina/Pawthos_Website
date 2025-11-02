@@ -55,6 +55,7 @@ export { API_BASE_URL };
 console.log('🔧 API_BASE_URL configured as:', API_BASE_URL);
 console.log('🔧 REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 console.log('🔧 REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
+console.log('✅ Config loaded - timestamp:', new Date().toISOString());
 
 export const config = {
   apiUrl: API_BASE_URL,
