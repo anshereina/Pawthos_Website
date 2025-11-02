@@ -157,7 +157,7 @@ const RecordsPage: React.FC = () => {
       >
         <PageHeader title="Records Management" />
         {/* Main Content */}
-        <main className="flex-1 p-6 pb-8">
+        <main className="flex-1 p-6 pb-4">
           <div className="max-w-7xl mx-auto">
             {/* Page Description */}
             <div className="mb-4 bg-gradient-to-r from-white to-gray-50 rounded-xl p-4 shadow-sm border border-gray-200">
@@ -167,10 +167,10 @@ const RecordsPage: React.FC = () => {
             </div>
 
             {/* Records Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
               {/* Top Row - 3 cards */}
               {recordCards.slice(0, 3).map((card, index) => (
-                <div key={index} className="h-64">
+                <div key={index} className="h-60">
                   <RecordCard
                     title={card.title}
                     description={card.description}
@@ -183,7 +183,7 @@ const RecordsPage: React.FC = () => {
             </div>
 
             {/* Bottom Row - 3 larger cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
               {recordCards.slice(3, 6).map((card, index) => (
                 <div key={index + 3} className="h-80">
                   <RecordCard
