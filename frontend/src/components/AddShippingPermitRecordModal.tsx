@@ -86,14 +86,17 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
   }, []);
 
   const handleOwnerSelect = (owner: OwnerSearchResult) => {
-    console.log('Owner selected:', owner);
+    console.log('=== Owner Selected ===');
+    console.log('Owner data:', owner);
     
     // Convert birthdate to YYYY-MM-DD format for HTML date input
     let formattedBirthdate = '';
     if (owner.birthdate) {
       try {
         // Handle different date formats
-        const dateStr = owner.birthdate;
+        const dateStr = String(owner.birthdate);
+        console.log('Original birthdate:', dateStr);
+        
         // If it's already in YYYY-MM-DD format, use it directly
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
           formattedBirthdate = dateStr;
@@ -102,38 +105,51 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
           const date = new Date(dateStr);
           if (!isNaN(date.getTime())) {
             formattedBirthdate = date.toISOString().split('T')[0];
+          } else {
+            // If date parsing fails, try to extract just the date part
+            const parts = dateStr.split('T')[0];
+            if (parts && /^\d{4}-\d{2}-\d{2}$/.test(parts)) {
+              formattedBirthdate = parts;
+            }
           }
         }
+        console.log('Formatted birthdate:', formattedBirthdate);
       } catch (error) {
         console.error('Error formatting birthdate:', error);
-        formattedBirthdate = owner.birthdate || '';
+        formattedBirthdate = String(owner.birthdate || '');
       }
     }
     
-    const newFormData = {
-      owner_name: owner.owner_name,
-      contact_number: owner.contact_number || '',
-      pet_name: owner.pet_name,
-      birthdate: formattedBirthdate,
-      pet_age: owner.pet_age || 0,
-      pet_species: owner.pet_species || '',
-      pet_breed: owner.pet_breed || '',
-      destination: formData.destination,
-      purpose: formData.purpose,
-      issue_date: formData.issue_date,
-      expiry_date: formData.expiry_date,
-      status: formData.status,
-      remarks: formData.remarks,
-    };
+    // Use functional update to ensure we get the latest state
+    setFormData(prevFormData => {
+      const newFormData = {
+        owner_name: owner.owner_name,
+        contact_number: owner.contact_number || '',
+        pet_name: owner.pet_name || '',
+        birthdate: formattedBirthdate,
+        pet_age: owner.pet_age || 0,
+        pet_species: owner.pet_species || '',
+        pet_breed: owner.pet_breed || '',
+        // Preserve other fields
+        destination: prevFormData.destination,
+        purpose: prevFormData.purpose,
+        issue_date: prevFormData.issue_date,
+        expiry_date: prevFormData.expiry_date,
+        status: prevFormData.status,
+        remarks: prevFormData.remarks,
+      };
+      
+      console.log('Previous form data:', prevFormData);
+      console.log('New form data being set:', newFormData);
+      return newFormData;
+    });
     
-    console.log('Setting form data:', newFormData);
-    setFormData(newFormData);
     setShowSuggestions(false);
     
-    // Force a small delay to ensure state update completes
+    // Log again after a brief delay to verify the update
     setTimeout(() => {
-      console.log('Form data after update:', newFormData);
-    }, 100);
+      console.log('=== Auto-fill complete ===');
+    }, 200);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,18 +231,28 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
                 >
                   {ownerSuggestions.map((owner, index) => (
                     <div
-                      key={`${owner.owner_name}-${index}`}
+                      key={`owner-${owner.owner_name}-${index}`}
                       onMouseDown={(e) => {
                         e.preventDefault(); // Prevent input blur before click
                         e.stopPropagation();
+                        console.log('MouseDown on suggestion:', owner.owner_name);
                       }}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Suggestion clicked:', owner);
+                        console.log('=== Click detected ===');
+                        console.log('Clicked owner:', owner.owner_name);
+                        console.log('Owner full data:', owner);
                         handleOwnerSelect(owner);
                       }}
-                      className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                      onTouchEnd={(e) => {
+                        // Handle touch events for mobile
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Touch on suggestion:', owner.owner_name);
+                        handleOwnerSelect(owner);
+                      }}
+                      className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors active:bg-green-100"
                     >
                       <div className="font-medium text-gray-900">{owner.owner_name}</div>
                       {owner.contact_number && (
