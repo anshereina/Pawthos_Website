@@ -9,6 +9,7 @@ import { useAppointments } from '../hooks/useAppointments';
 import { appointmentService } from '../services/appointmentService';
 import EditMedicalRecordModal from '../components/EditMedicalRecordModal';
 import DeleteMedicalRecordModal from '../components/DeleteMedicalRecordModal';
+import ViewMedicalRecordModal from '../components/ViewMedicalRecordModal';
 
 import DeleteAppointmentModal from '../components/DeleteAppointmentModal';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -27,10 +28,12 @@ const MedicalRecordsPage: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
   const lastRefreshTimeRef = useRef<number>(Date.now());
+  const previousTabRef = useRef<string>(activeTab);
   
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   const router = useRouter();
@@ -84,6 +87,11 @@ const MedicalRecordsPage: React.FC = () => {
   const handleDeleteClick = (record: any) => {
     setSelectedRecord(record);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleViewClick = (record: any) => {
+    setSelectedRecord(record);
+    setIsViewModalOpen(true);
   };
 
   const handleStatusChange = async (appointment: any, newStatus: string) => {
@@ -154,13 +162,16 @@ const MedicalRecordsPage: React.FC = () => {
     setCurrentPage(1);
   }, [activeTab, search]);
 
-  // Refetch medical records when switching to history tab
+  // Refetch medical records when switching to history tab (only when tab actually changes)
   useEffect(() => {
-    if (activeTab === 'history') {
+    // Only refetch if we're switching TO history tab (not if we're already on it)
+    if (activeTab === 'history' && previousTabRef.current !== 'history') {
       console.log('🔄 Refetching medical records (tab switched to history)');
       refetchMedicalRecords();
     }
-  }, [activeTab, refetchMedicalRecords]);
+    previousTabRef.current = activeTab;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]); // Only depend on activeTab, not refetchMedicalRecords
 
   // Refetch medical records when page becomes visible (user switches back to browser tab/window)
   useEffect(() => {
@@ -195,7 +206,8 @@ const MedicalRecordsPage: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [activeTab, refetchMedicalRecords]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]); // Only depend on activeTab, refetchMedicalRecords is stable enough
 
   const list = activeTab === 'upcoming' ? filteredAppointments : filteredMedicalRecords;
   const totalItems = list.length;
@@ -389,7 +401,8 @@ const MedicalRecordsPage: React.FC = () => {
                   {activeTab === 'history' && currentItems.map((record: any, i: number) => (
                     <tr
                       key={record.id}
-                      className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                      onClick={() => handleViewClick(record)}
+                      className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                     >
                       <td className="px-4 py-3">
                         {new Date(record.date_visited).toLocaleDateString()}
@@ -400,7 +413,7 @@ const MedicalRecordsPage: React.FC = () => {
                       <td className="px-4 py-3">
                         {record.date_of_next_visit ? new Date(record.date_of_next_visit).toLocaleDateString() : '-'}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
                           <button 
                             className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm" 
@@ -521,6 +534,15 @@ const MedicalRecordsPage: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <ViewMedicalRecordModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedRecord(null);
+        }}
+        record={selectedRecord}
+      />
+
       <EditMedicalRecordModal
         isOpen={isEditModalOpen}
         onClose={() => {
@@ -540,8 +562,6 @@ const MedicalRecordsPage: React.FC = () => {
         onConfirm={handleDeleteRecord}
         record={selectedRecord}
       />
-
-
 
       <DeleteAppointmentModal
         isOpen={isDeleteAppointmentModalOpen}

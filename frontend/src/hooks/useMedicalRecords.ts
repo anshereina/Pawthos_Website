@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { medicalRecordService, MedicalRecord, CreateMedicalRecordData, UpdateMedicalRecordData } from '../services/medicalRecordService';
 
 export const useMedicalRecords = (petId?: number) => {
@@ -6,7 +6,7 @@ export const useMedicalRecords = (petId?: number) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMedicalRecords = async () => {
+  const fetchMedicalRecords = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -23,7 +23,7 @@ export const useMedicalRecords = (petId?: number) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [petId]);
 
   const createMedicalRecord = async (recordData: CreateMedicalRecordData) => {
     if (!petId) throw new Error('Pet ID is required');
@@ -80,8 +80,7 @@ export const useMedicalRecords = (petId?: number) => {
 
   useEffect(() => {
     fetchMedicalRecords();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [petId]);
+  }, [fetchMedicalRecords]);
 
   return {
     medicalRecords,
