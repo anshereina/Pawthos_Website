@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Upload, Download, Edit, Trash2, ArrowLeft, ChevronDown, RefreshCw } from 'lucide-react';
+import { Search, Upload, Edit, Trash2, ArrowLeft, ChevronDown } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -32,7 +32,6 @@ const MedicalRecordsPage: React.FC = () => {
 
   const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
-  const lastRefreshTimeRef = useRef<number>(Date.now());
   const previousTabRef = useRef<string>(activeTab);
   
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
@@ -175,27 +174,17 @@ const MedicalRecordsPage: React.FC = () => {
 
   // Refetch medical records when page becomes visible (user switches back to browser tab/window)
   useEffect(() => {
-    const MIN_REFRESH_INTERVAL = 5000; // Don't refresh more than once every 5 seconds
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && activeTab === 'history') {
-        const now = Date.now();
-        if (now - lastRefreshTimeRef.current > MIN_REFRESH_INTERVAL) {
-          console.log('🔄 Refetching medical records (page became visible)');
-          lastRefreshTimeRef.current = now;
-          refetchMedicalRecords();
-        }
+        console.log('🔄 Refetching medical records (page became visible)');
+        refetchMedicalRecords();
       }
     };
 
     const handleFocus = () => {
       if (activeTab === 'history') {
-        const now = Date.now();
-        if (now - lastRefreshTimeRef.current > MIN_REFRESH_INTERVAL) {
-          console.log('🔄 Refetching medical records (window focused)');
-          lastRefreshTimeRef.current = now;
-          refetchMedicalRecords();
-        }
+        console.log('🔄 Refetching medical records (window focused)');
+        refetchMedicalRecords();
       }
     };
 
@@ -279,30 +268,10 @@ const MedicalRecordsPage: React.FC = () => {
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
-                {/* Refresh Button - only show on history tab */}
-                {activeTab === 'history' && (
-                  <button 
-                    onClick={() => {
-                      console.log('🔄 Manual refresh triggered');
-                      lastRefreshTimeRef.current = Date.now();
-                      refetchMedicalRecords();
-                    }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors duration-200"
-                    title="Refresh medical records"
-                  >
-                    <RefreshCw size={18} />
-                    <span>Refresh</span>
-                  </button>
-                )}
                 {/* Export Button */}
                 <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg">
                   <Upload size={20} />
                   <span className="font-semibold">Export</span>
-                </button>
-                {/* Import Button */}
-                <button className="flex items-center space-x-2 px-4 py-2 border border-green-800 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors duration-200">
-                  <Download size={20} />
-                  <span>Import</span>
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Upload, X, File } from 'lucide-react';
 
 interface AddMedicalRecordModalProps {
   isOpen: boolean;
@@ -19,9 +20,11 @@ const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({
     findings: '',
     recommendation: '',
     vaccineUsedMedication: '',
+    supportingDocuments: [] as File[],
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +40,11 @@ const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({
         findings: '',
         recommendation: '',
         vaccineUsedMedication: '',
+        supportingDocuments: [],
       });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to add medical record');
     } finally {
@@ -165,6 +172,73 @@ const AddMedicalRecordModal: React.FC<AddMedicalRecordModalProps> = ({
               placeholder="Enter vaccines or medications administered"
               required
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Supporting Documents (optional)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <input
+                type="file"
+                ref={fileInputRef}
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setFormData(prev => ({
+                    ...prev,
+                    supportingDocuments: [...prev.supportingDocuments, ...files]
+                  }));
+                }}
+                className="hidden"
+                id="supporting-documents-input"
+                accept="image/*,.pdf,.doc,.docx"
+              />
+              <label
+                htmlFor="supporting-documents-input"
+                className="flex flex-col items-center justify-center cursor-pointer"
+              >
+                <Upload size={24} className="text-gray-400 mb-2" />
+                <span className="text-sm text-gray-600 mb-1">
+                  Click to upload or drag and drop
+                </span>
+                <span className="text-xs text-gray-500">
+                  PDF, DOC, DOCX, Images (optional)
+                </span>
+              </label>
+            </div>
+            {formData.supportingDocuments.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {formData.supportingDocuments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <File size={16} className="text-gray-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 truncate">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        ({(file.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          supportingDocuments: prev.supportingDocuments.filter((_, i) => i !== index)
+                        }));
+                      }}
+                      className="ml-2 p-1 hover:bg-red-100 rounded transition-colors"
+                      title="Remove file"
+                    >
+                      <X size={16} className="text-red-600" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <button
