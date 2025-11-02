@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { X, Save } from 'lucide-react';
-import { CreateShippingPermitRecord, shippingPermitRecordService, OwnerSearchResult } from '../services/shippingPermitRecordService';
+import { CreateShippingPermitRecord, OwnerSearchResult } from '../services/shippingPermitRecordService';
+import OwnerDropdown from './OwnerDropdown';
 
 interface AddShippingPermitRecordModalProps {
   isOpen: boolean;
@@ -29,131 +30,62 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
     remarks: '',
   });
   const [loading, setLoading] = useState(false);
-  const [ownerSuggestions, setOwnerSuggestions] = useState<OwnerSearchResult[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const ownerInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Search for owners when owner_name changes
-  useEffect(() => {
-    const searchOwners = async () => {
-      if (formData.owner_name && formData.owner_name.length >= 2) {
-        setIsSearching(true);
+  const handleOwnerChange = (ownerName: string, ownerData?: OwnerSearchResult) => {
+    if (ownerData) {
+      // Convert birthdate to YYYY-MM-DD format for HTML date input
+      let formattedBirthdate = '';
+      if (ownerData.birthdate) {
         try {
-          const results = await shippingPermitRecordService.searchOwners(formData.owner_name);
-          setOwnerSuggestions(results);
-          setShowSuggestions(results.length > 0);
-        } catch (error) {
-          console.error('Failed to search owners:', error);
-          setOwnerSuggestions([]);
-          setShowSuggestions(false);
-        } finally {
-          setIsSearching(false);
-        }
-      } else {
-        setOwnerSuggestions([]);
-        setShowSuggestions(false);
-      }
-    };
-
-    const timeoutId = setTimeout(searchOwners, 300); // Debounce search
-    return () => clearTimeout(timeoutId);
-  }, [formData.owner_name]);
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      // Don't close if clicking on suggestions dropdown
-      if (suggestionsRef.current && suggestionsRef.current.contains(target)) {
-        return;
-      }
-      // Close if clicking outside both input and suggestions
-      if (
-        ownerInputRef.current &&
-        !ownerInputRef.current.contains(target)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-
-    // Use click event with capture phase to ensure it fires after onClick
-    document.addEventListener('click', handleClickOutside, true);
-    return () => {
-      document.removeEventListener('click', handleClickOutside, true);
-    };
-  }, []);
-
-  const handleOwnerSelect = (owner: OwnerSearchResult) => {
-    console.log('=== Owner Selected ===');
-    console.log('Owner data:', owner);
-    
-    // Convert birthdate to YYYY-MM-DD format for HTML date input
-    let formattedBirthdate = '';
-    if (owner.birthdate) {
-      try {
-        // Handle different date formats
-        const dateStr = String(owner.birthdate);
-        console.log('Original birthdate:', dateStr);
-        
-        // If it's already in YYYY-MM-DD format, use it directly
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-          formattedBirthdate = dateStr;
-        } else {
-          // Try to parse and format the date
-          const date = new Date(dateStr);
-          if (!isNaN(date.getTime())) {
-            formattedBirthdate = date.toISOString().split('T')[0];
+          const dateStr = String(ownerData.birthdate);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            formattedBirthdate = dateStr;
           } else {
-            // If date parsing fails, try to extract just the date part
-            const parts = dateStr.split('T')[0];
-            if (parts && /^\d{4}-\d{2}-\d{2}$/.test(parts)) {
-              formattedBirthdate = parts;
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+              formattedBirthdate = date.toISOString().split('T')[0];
+            } else {
+              const parts = dateStr.split('T')[0];
+              if (parts && /^\d{4}-\d{2}-\d{2}$/.test(parts)) {
+                formattedBirthdate = parts;
+              }
             }
           }
+        } catch (error) {
+          console.error('Error formatting birthdate:', error);
+          formattedBirthdate = String(ownerData.birthdate || '');
         }
-        console.log('Formatted birthdate:', formattedBirthdate);
-      } catch (error) {
-        console.error('Error formatting birthdate:', error);
-        formattedBirthdate = String(owner.birthdate || '');
       }
-    }
-    
-    // Use functional update to ensure we get the latest state
-    setFormData(prevFormData => {
-      const newFormData = {
-        owner_name: owner.owner_name,
-        contact_number: owner.contact_number || '',
-        pet_name: owner.pet_name || '',
+
+      // Update form with owner data
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        owner_name: ownerData.owner_name,
+        contact_number: ownerData.contact_number || '',
+        pet_name: ownerData.pet_name || '',
         birthdate: formattedBirthdate,
-        pet_age: owner.pet_age || 0,
-        pet_species: owner.pet_species || '',
-        pet_breed: owner.pet_breed || '',
-        // Preserve other fields
-        destination: prevFormData.destination,
-        purpose: prevFormData.purpose,
-        issue_date: prevFormData.issue_date,
-        expiry_date: prevFormData.expiry_date,
-        status: prevFormData.status,
-        remarks: prevFormData.remarks,
-      };
-      
-      console.log('Previous form data:', prevFormData);
-      console.log('New form data being set:', newFormData);
-      return newFormData;
-    });
-    
-    setShowSuggestions(false);
-    
-    // Log again after a brief delay to verify the update
-    setTimeout(() => {
-      console.log('=== Auto-fill complete ===');
-    }, 200);
+        pet_age: ownerData.pet_age || 0,
+        pet_species: ownerData.pet_species || '',
+        pet_breed: ownerData.pet_breed || '',
+      }));
+    } else {
+      // Clear owner-related fields when owner is removed
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        owner_name: '',
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.owner_name || !formData.pet_name || !formData.birthdate || !formData.issue_date || !formData.expiry_date) {
+      alert('Please fill in all required fields (Owner Name, Pet Name, Birthdate, Issue Date, Expiry Date)');
+      return;
+    }
+    
     setLoading(true);
     try {
       await onSubmit(formData);
@@ -206,65 +138,15 @@ const AddShippingPermitRecordModal: React.FC<AddShippingPermitRecordModalProps> 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Owner Information */}
-            <div className="relative">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Owner Name *
               </label>
-              <input
-                ref={ownerInputRef}
-                type="text"
-                name="owner_name"
-                value={formData.owner_name}
-                onChange={handleChange}
-                onFocus={() => {
-                  if (ownerSuggestions.length > 0) {
-                    setShowSuggestions(true);
-                  }
-                }}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              <OwnerDropdown
+                selectedOwner={formData.owner_name}
+                onOwnerChange={handleOwnerChange}
+                placeholder="Search owner name..."
               />
-              {showSuggestions && ownerSuggestions.length > 0 && (
-                <div
-                  ref={suggestionsRef}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                >
-                  {ownerSuggestions.map((owner, index) => (
-                    <div
-                      key={`owner-${owner.owner_name}-${index}`}
-                      onMouseDown={(e) => {
-                        e.preventDefault(); // Prevent input blur before click
-                        e.stopPropagation();
-                        console.log('MouseDown on suggestion:', owner.owner_name);
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('=== Click detected ===');
-                        console.log('Clicked owner:', owner.owner_name);
-                        console.log('Owner full data:', owner);
-                        handleOwnerSelect(owner);
-                      }}
-                      onTouchEnd={(e) => {
-                        // Handle touch events for mobile
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('Touch on suggestion:', owner.owner_name);
-                        handleOwnerSelect(owner);
-                      }}
-                      className="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors active:bg-green-100"
-                    >
-                      <div className="font-medium text-gray-900">{owner.owner_name}</div>
-                      {owner.contact_number && (
-                        <div className="text-sm text-gray-600">{owner.contact_number}</div>
-                      )}
-                      <div className="text-xs text-gray-500 mt-1">
-                        Pet: {owner.pet_name} • {owner.pet_species || 'Unknown'} • {owner.pet_breed || 'Unknown breed'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div>
