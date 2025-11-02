@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional
 from datetime import datetime, date, time
 
@@ -324,6 +324,19 @@ class VaccinationRecordBase(BaseModel):
     batch_lot_no: str
     clinic: Optional[str] = None
     notes: Optional[str] = None
+    
+    @model_validator(mode='before')
+    @classmethod
+    def map_vaccination_date(cls, data):
+        """Map vaccination_date from model to date_given in schema"""
+        if isinstance(data, dict):
+            if 'vaccination_date' in data and 'date_given' not in data:
+                data['date_given'] = data.get('vaccination_date')
+        elif hasattr(data, 'vaccination_date'):
+            # Handle SQLAlchemy model instance
+            if not hasattr(data, 'date_given') or getattr(data, 'date_given') is None:
+                setattr(data, 'date_given', getattr(data, 'vaccination_date', None))
+        return data
 
 class VaccinationRecordCreate(VaccinationRecordBase):
     pass
@@ -343,7 +356,8 @@ class VaccinationRecord(VaccinationRecordBase):
     updated_at: Optional[datetime]
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
+        populate_by_name = True  # Allow both date_given and vaccination_date 
 
 class VaccinationEventBase(BaseModel):
     event_date: date
