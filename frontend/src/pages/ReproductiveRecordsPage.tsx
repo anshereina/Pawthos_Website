@@ -8,7 +8,7 @@ import { useAuth } from '../features/auth/AuthContext';
 import { petService, Pet } from '../services/petService';
 import { reproductiveRecordService, CreateReproductiveRecord } from '../services/reproductiveRecordService';
 import AddReproductiveRecordModal from '../components/AddReproductiveRecordModal';
-import EditPetModal from '../components/EditPetModal';
+import EditReproductiveRecordModal from '../components/EditReproductiveRecordModal';
 import DeletePetModal from '../components/DeletePetModal';
 import ViewReproductiveRecordModal from '../components/ViewReproductiveRecordModal';
 
@@ -93,15 +93,41 @@ const ReproductiveRecordsPage: React.FC = () => {
     }
   };
 
-  const handleUpdatePet = async (_petId: string, _petData: any) => {
-    setIsEditModalOpen(false);
-    setSelectedPet(null);
+  const handleUpdatePet = async (id: number, petData: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await reproductiveRecordService.update(id, petData);
+      const data = await reproductiveRecordService.list(filter !== 'all' ? filter : undefined, search || undefined);
+      setRecords(data);
+      setIsEditModalOpen(false);
+      setSelectedPet(null);
+      setSuccessMessage('Record updated successfully');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (e: any) {
+      setError(e.message || 'Failed to update record');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeletePet = async () => {
     if (!selectedPet) return;
-    setIsDeleteModalOpen(false);
-    setSelectedPet(null);
+    try {
+      setLoading(true);
+      setError(null);
+      await reproductiveRecordService.delete(selectedPet.id);
+      const data = await reproductiveRecordService.list(filter !== 'all' ? filter : undefined, search || undefined);
+      setRecords(data);
+      setIsDeleteModalOpen(false);
+      setSelectedPet(null);
+      setSuccessMessage('Record deleted successfully');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (e: any) {
+      setError(e.message || 'Failed to delete record');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (dateString?: string) => {
@@ -264,14 +290,14 @@ const ReproductiveRecordsPage: React.FC = () => {
                         <td className="px-4 py-3 capitalize">{pet.reproductive_status || '-'}</td>
                         <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <button 
-                            onClick={() => { setSelectedPet(pet); setIsEditModalOpen(true); }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
                             className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
                             title="Edit record"
                           >
                             <Edit size={18} className="text-green-600" />
                           </button>
                           <button 
-                            onClick={() => { setSelectedPet(pet); setIsDeleteModalOpen(true); }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
                             className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                             title="Delete record"
                           >
@@ -373,11 +399,14 @@ const ReproductiveRecordsPage: React.FC = () => {
         loading={loading}
       />
 
-      <EditPetModal
+      <EditReproductiveRecordModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedPet(null);
+        }}
         onSubmit={handleUpdatePet}
-        pet={selectedPet}
+        record={selectedPet}
         loading={loading}
       />
 

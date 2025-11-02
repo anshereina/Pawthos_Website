@@ -44,7 +44,7 @@ def list_reproductive_records(
                     "owner_name": r.owner_name or "",
                     "species": r.species or "",
                     "date": r.date.isoformat() if r.date and hasattr(r.date, 'isoformat') else (str(r.date) if r.date else None),
-                    "date_of_birth": None,
+                    "date_of_birth": str(r.date_of_birth) if r.date_of_birth else None,
                     "color": r.color or "",
                     "breed": r.breed or "",
                     "gender": r.gender or "",
@@ -113,6 +113,13 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
             elif isinstance(date_str, (date, datetime)):
                 record_date = date_str if isinstance(date_str, date) else date_str.date()
         
+        # Parse date_of_birth if provided
+        date_of_birth = payload.get("date_of_birth")
+        if date_of_birth and isinstance(date_of_birth, (date, datetime)):
+            date_of_birth = date_of_birth.isoformat() if isinstance(date_of_birth, date) else date_of_birth.strftime('%Y-%m-%d')
+        elif not date_of_birth or not isinstance(date_of_birth, str):
+            date_of_birth = None
+        
         record = ReproductiveRecord(
             pet_name=payload.get("name", ""),
             owner_name=payload.get("owner_name", ""),
@@ -122,6 +129,7 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
             gender=payload.get("gender"),
             reproductive_status=payload.get("reproductive_status"),
             date=record_date,
+            date_of_birth=date_of_birth,
         )
         db.add(record)
         db.commit()
@@ -131,5 +139,78 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
+
+@router.put("/{record_id}", response_model=dict)
+def update_reproductive_record(record_id: int, payload: dict, db: Session = Depends(get_db)):
+    try:
+        record = db.query(ReproductiveRecord).filter(ReproductiveRecord.id == record_id).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="Record not found")
+        
+        # Parse date if provided as string
+        if payload.get("date"):
+            date_str = payload.get("date")
+            if isinstance(date_str, str):
+                try:
+                    record.date = datetime.fromisoformat(date_str.replace('Z', '+00:00')).date()
+                except:
+                    try:
+                        record.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    except:
+                        pass
+            elif isinstance(date_str, (date, datetime)):
+                record.date = date_str if isinstance(date_str, date) else date_str.date()
+        
+        # Update date_of_birth
+        if "date_of_birth" in payload:
+            date_of_birth = payload.get("date_of_birth")
+            if date_of_birth and isinstance(date_of_birth, (date, datetime)):
+                record.date_of_birth = date_of_birth.isoformat() if isinstance(date_of_birth, date) else date_of_birth.strftime('%Y-%m-%d')
+            elif date_of_birth and isinstance(date_of_birth, str):
+                record.date_of_birth = date_of_birth
+            else:
+                record.date_of_birth = None
+        
+        # Update other fields
+        if "name" in payload:
+            record.pet_name = payload.get("name", "")
+        if "owner_name" in payload:
+            record.owner_name = payload.get("owner_name", "")
+        if "species" in payload:
+            record.species = payload.get("species", "")
+        if "color" in payload:
+            record.color = payload.get("color")
+        if "breed" in payload:
+            record.breed = payload.get("breed")
+        if "gender" in payload:
+            record.gender = payload.get("gender")
+        if "reproductive_status" in payload:
+            record.reproductive_status = payload.get("reproductive_status")
+        
+        db.commit()
+        db.refresh(record)
+        return {"id": record.id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{record_id}", response_model=dict)
+def delete_reproductive_record(record_id: int, db: Session = Depends(get_db)):
+    try:
+        record = db.query(ReproductiveRecord).filter(ReproductiveRecord.id == record_id).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="Record not found")
+        
+        db.delete(record)
+        db.commit()
+        return {"message": "Record deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
 
 

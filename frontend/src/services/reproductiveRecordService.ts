@@ -86,6 +86,56 @@ export const reproductiveRecordService = {
       throw error;
     }
   },
+  async update(id: number, data: CreateReproductiveRecord): Promise<number> {
+    const url = `${API_BASE_URL}/reproductive-records/${id}`;
+    console.log('Updating reproductive record at:', url);
+    console.log('Record data:', data);
+    
+    try {
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(data),
+      });
+      
+      console.log('Update reproductive record response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Update reproductive record error:', errorText);
+        throw new Error(`Failed to update record: ${res.status} ${res.statusText}`);
+      }
+      
+      const json = await res.json();
+      console.log('Update reproductive record response:', json);
+      return json.id;
+    } catch (error) {
+      console.error('Update reproductive record fetch error:', error);
+      throw error;
+    }
+  },
+  async delete(id: number): Promise<void> {
+    const url = `${API_BASE_URL}/reproductive-records/${id}`;
+    console.log('Deleting reproductive record at:', url);
+    
+    try {
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      
+      console.log('Delete reproductive record response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Delete reproductive record error:', errorText);
+        throw new Error(`Failed to delete record: ${res.status} ${res.statusText}`);
+      }
+    } catch (error) {
+      console.error('Delete reproductive record fetch error:', error);
+      throw error;
+    }
+  },
 };
 
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronDown } from 'lucide-react';
-import { CreatePetData, Pet, petService } from '../services/petService';
+import { CreateReproductiveRecord } from '../services/reproductiveRecordService';
 import { API_BASE_URL } from '../config';
 
 interface User {
@@ -9,15 +9,22 @@ interface User {
   email: string;
 }
 
-interface AddReproductiveRecordModalProps {
+interface EditReproductiveRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreatePetData) => Promise<void>;
+  onSubmit: (id: number, data: CreateReproductiveRecord) => Promise<void>;
+  record: any | null;
   loading: boolean;
 }
 
-const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({ isOpen, onClose, onSubmit, loading }) => {
-  const [formData, setFormData] = useState<CreatePetData>({
+const EditReproductiveRecordModal: React.FC<EditReproductiveRecordModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  record,
+  loading 
+}) => {
+  const [formData, setFormData] = useState<CreateReproductiveRecord & { date?: string }>({
     name: '',
     owner_name: '',
     species: '',
@@ -26,30 +33,36 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
     breed: '',
     gender: '',
     reproductive_status: '',
+    date: '',
   });
 
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [userSearch, setUserSearch] = useState('');
-  const [date, setDate] = useState('');
-
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
-  const [isPetDropdownOpen, setIsPetDropdownOpen] = useState(false);
-  const [petSearch, setPetSearch] = useState('');
 
   const ownerInputRef = React.useRef<HTMLInputElement>(null);
-  const ownerDropdownRef = React.useRef<HTMLDivElement>(null);
-  const petInputRef = React.useRef<HTMLInputElement>(null);
-  const petDropdownRef = React.useRef<HTMLDivElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       fetchUsers();
-      fetchPets();
+      if (record) {
+        setFormData({
+          name: record.name || '',
+          owner_name: record.owner_name || '',
+          species: record.species || '',
+          date_of_birth: record.date_of_birth || '',
+          color: record.color || '',
+          breed: record.breed || '',
+          gender: record.gender || '',
+          reproductive_status: record.reproductive_status || '',
+          date: record.date || '',
+        });
+        setUserSearch(record.owner_name || '');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, record]);
 
   useEffect(() => {
     if (userSearch) {
@@ -62,18 +75,6 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
       setFilteredUsers(users);
     }
   }, [userSearch, users]);
-
-  useEffect(() => {
-    if (petSearch) {
-      const filtered = pets.filter(p =>
-        p.name.toLowerCase().includes(petSearch.toLowerCase()) ||
-        (p.owner_name || '').toLowerCase().includes(petSearch.toLowerCase())
-      );
-      setFilteredPets(filtered);
-    } else {
-      setFilteredPets(pets);
-    }
-  }, [petSearch, pets]);
 
   const fetchUsers = async () => {
     try {
@@ -89,14 +90,6 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
     } catch {}
   };
 
-  const fetchPets = async () => {
-    try {
-      const data = await petService.getPets();
-      setPets(data);
-      setFilteredPets(data);
-    } catch {}
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -104,20 +97,13 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: CreatePetData & { date?: string } = {
+    if (!record) return;
+    const payload: CreateReproductiveRecord & { date?: string } = {
       ...formData,
-      date: date || undefined,
+      date: formData.date || undefined,
     };
-    await onSubmit(payload);
+    await onSubmit(record.id, payload);
     if (!loading) {
-      setFormData({
-        name: '', owner_name: '', species: '', date_of_birth: '', color: '', breed: '', gender: '', reproductive_status: ''
-      });
-      setDate('');
-      setPetSearch('');
-      setUserSearch('');
-      setIsPetDropdownOpen(false);
-      setIsUserDropdownOpen(false);
       onClose();
     }
   };
@@ -128,43 +114,24 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
     setIsUserDropdownOpen(false);
   };
 
-  const selectPet = (pet: Pet) => {
-    setFormData(prev => ({
-      ...prev,
-      name: pet.name,
-      owner_name: pet.owner_name,
-      species: pet.species,
-      date_of_birth: pet.date_of_birth || '',
-      color: pet.color || '',
-      breed: pet.breed || '',
-      gender: pet.gender || '',
-      // reproductive_status is NOT auto-filled as per requirement
-    }));
-    setPetSearch(pet.name);
-    setIsPetDropdownOpen(false);
-  };
-
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (isUserDropdownOpen && !ownerInputRef.current?.contains(t) && !ownerDropdownRef.current?.contains(t)) {
+      if (isUserDropdownOpen && !ownerInputRef.current?.contains(t) && !dropdownRef.current?.contains(t)) {
         setIsUserDropdownOpen(false);
       }
-      if (isPetDropdownOpen && !petInputRef.current?.contains(t) && !petDropdownRef.current?.contains(t)) {
-        setIsPetDropdownOpen(false);
-      }
     };
-    if (isUserDropdownOpen || isPetDropdownOpen) document.addEventListener('mousedown', handler);
+    if (isUserDropdownOpen) document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [isUserDropdownOpen, isPetDropdownOpen]);
+  }, [isUserDropdownOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !record) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Add New Record</h2>
+          <h2 className="text-xl font-bold text-gray-800">Edit Record</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={loading}>
             <X size={24} />
           </button>
@@ -176,55 +143,15 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
               <input
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={formData.date}
+                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 disabled={loading}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pet Name *</label>
-              <div className="relative">
-                <input 
-                  ref={petInputRef}
-                  type="text" 
-                  name="name" 
-                  value={formData.name} 
-                  onChange={(e) => { 
-                    setFormData(prev => ({ ...prev, name: e.target.value })); 
-                    setPetSearch(e.target.value); 
-                    setIsPetDropdownOpen(true); 
-                  }} 
-                  onFocus={() => setIsPetDropdownOpen(true)}
-                  placeholder="Search for pet..."
-                  required 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" 
-                  disabled={loading} 
-                />
-                <button type="button" onClick={() => setIsPetDropdownOpen(!isPetDropdownOpen)} className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <ChevronDown size={20} className="text-gray-400" />
-                </button>
-                {isPetDropdownOpen && filteredPets.length > 0 && (
-                  <div ref={petDropdownRef} className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredPets.map(pet => (
-                      <button 
-                        key={pet.id} 
-                        type="button" 
-                        onClick={() => selectPet(pet)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onTouchEnd={(e) => {
-                          e.preventDefault();
-                          selectPet(pet);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="font-medium">{pet.name}</div>
-                        <div className="text-sm text-gray-500">{pet.owner_name} - {pet.species}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" disabled={loading} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name *</label>
@@ -234,7 +161,7 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
                   <ChevronDown size={20} className="text-gray-400" />
                 </button>
                 {isUserDropdownOpen && (
-                  <div ref={ownerDropdownRef} className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div ref={dropdownRef} className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {filteredUsers.length > 0 ? (
                       filteredUsers.map(user => (
                         <button key={user.id} type="button" onClick={() => selectUser(user)} className="w-full text-left px-3 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0">
@@ -288,7 +215,7 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
             </div>
             <div className="flex justify-end space-x-3 pt-6 border-t">
               <button type="button" onClick={onClose} disabled={loading} className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Cancel</button>
-              <button type="submit" disabled={loading} className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">{loading ? 'Saving...' : 'Add Record'}</button>
+              <button type="submit" disabled={loading} className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">{loading ? 'Updating...' : 'Update Record'}</button>
             </div>
           </form>
         </div>
@@ -297,5 +224,5 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
   );
 };
 
-export default AddReproductiveRecordModal;
+export default EditReproductiveRecordModal;
 
