@@ -83,6 +83,7 @@ def find_or_create_pet(owner_name: str, pet_name: str, species: str, breed: str,
     db.flush()  # Get the pet ID
     return pet
 
+@router.post("", status_code=status.HTTP_201_CREATED)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
     """
