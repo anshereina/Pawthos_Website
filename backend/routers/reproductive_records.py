@@ -14,6 +14,19 @@ def test_reproductive_records_router():
     """Test endpoint to verify router is registered"""
     return {"message": "Reproductive records router is working", "status": "ok"}
 
+@router.get("/{record_id}/exists")
+def check_record_exists(record_id: int, db: Session = Depends(get_db)):
+    """Check if a ReproductiveRecord exists with the given ID"""
+    record = db.query(ReproductiveRecord).filter(ReproductiveRecord.id == record_id).first()
+    if record:
+        return {
+            "exists": True,
+            "id": record.id,
+            "pet_name": record.pet_name,
+            "owner_name": record.owner_name
+        }
+    return {"exists": False, "id": record_id}
+
 @router.get("/", response_model=List[dict])
 def list_reproductive_records(
     species: Optional[str] = Query(None, description="Filter by species: feline/canine"),
@@ -190,17 +203,29 @@ def update_reproductive_record(record_id: int, payload: dict, db: Session = Depe
 @router.delete("/{record_id}", response_model=dict)
 def delete_reproductive_record(record_id: int, db: Session = Depends(get_db)):
     try:
+        print(f"Attempting to delete ReproductiveRecord with id: {record_id}")
         record = db.query(ReproductiveRecord).filter(ReproductiveRecord.id == record_id).first()
-        if not record:
-            raise HTTPException(status_code=404, detail="Record not found")
         
+        if not record:
+            # Check if it exists in Pet table (shouldn't be deleted from here)
+            pet = db.query(Pet).filter(Pet.id == record_id).first()
+            if pet:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Cannot delete Pet record from reproductive records endpoint. This is a Pet table entry."
+                )
+            raise HTTPException(status_code=404, detail=f"ReproductiveRecord with id {record_id} not found")
+        
+        print(f"Found record: {record.id}, pet_name: {record.pet_name}, owner_name: {record.owner_name}")
         db.delete(record)
         db.commit()
+        print(f"Successfully deleted ReproductiveRecord {record_id}")
         return {"message": "Record deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
+        print(f"Error deleting record {record_id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 

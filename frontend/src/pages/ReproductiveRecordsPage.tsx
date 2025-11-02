@@ -119,12 +119,22 @@ const ReproductiveRecordsPage: React.FC = () => {
 
   const handleDeletePet = async () => {
     if (!selectedPet) return;
+    
+    // Double-check the flag
     if (!selectedPet.is_reproductive_record) {
       setError('Cannot delete Pet records. Only Reproductive Record entries can be deleted.');
       setIsDeleteModalOpen(false);
       setSelectedPet(null);
       return;
     }
+    
+    console.log('Attempting to delete record:', {
+      id: selectedPet.id,
+      name: selectedPet.name,
+      is_reproductive_record: selectedPet.is_reproductive_record,
+      pet_id: selectedPet.pet_id
+    });
+    
     try {
       setLoading(true);
       setError(null);
@@ -136,7 +146,10 @@ const ReproductiveRecordsPage: React.FC = () => {
       setSuccessMessage('Record deleted successfully');
       setTimeout(() => setSuccessMessage(null), 2000);
     } catch (e: any) {
-      setError(e.message || 'Failed to delete record');
+      console.error('Delete error:', e);
+      const errorMessage = e.message || 'Failed to delete record';
+      setError(errorMessage);
+      // Keep modal open if there's an error so user can see the message
     } finally {
       setLoading(false);
     }
