@@ -120,14 +120,6 @@ const ReproductiveRecordsPage: React.FC = () => {
   const handleDeletePet = async () => {
     if (!selectedPet) return;
     
-    // Double-check the flag
-    if (!selectedPet.is_reproductive_record) {
-      setError('Cannot delete Pet records. Only Reproductive Record entries can be deleted.');
-      setIsDeleteModalOpen(false);
-      setSelectedPet(null);
-      return;
-    }
-    
     console.log('Attempting to delete record:', {
       id: selectedPet.id,
       name: selectedPet.name,
@@ -138,7 +130,17 @@ const ReproductiveRecordsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      await reproductiveRecordService.delete(selectedPet.id);
+      
+      // If it's a Pet record (fallback), delete from Pet table
+      if (!selectedPet.is_reproductive_record) {
+        // Use pet_id if available, otherwise use id as string
+        const petIdToDelete = selectedPet.pet_id || String(selectedPet.id);
+        await petService.deletePet(petIdToDelete);
+      } else {
+        // If it's a ReproductiveRecord, delete from reproductive records
+        await reproductiveRecordService.delete(selectedPet.id);
+      }
+      
       const data = await reproductiveRecordService.list(filter !== 'all' ? filter : undefined, search || undefined);
       setRecords(data);
       setIsDeleteModalOpen(false);
@@ -332,7 +334,17 @@ const ReproductiveRecordsPage: React.FC = () => {
                               </button>
                             </>
                           ) : (
-                            <span className="text-xs text-gray-500 italic">Pet record (view only)</span>
+                            <>
+                              {/* Pet records: view only for edit, but allow delete */}
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                                title="Delete Pet record"
+                              >
+                                <Trash2 size={18} className="text-red-600" />
+                              </button>
+                              <span className="text-xs text-gray-500 italic ml-2">Pet record (edit via Pet Records)</span>
+                            </>
                           )}
                         </td>
                       </tr>
