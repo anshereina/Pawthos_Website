@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime, date
 from core.database import get_db
 from core.models import MedicalRecord, Pet, User, Admin
 from core.schemas import MedicalRecord as MedicalRecordSchema, MedicalRecordCreate, MedicalRecordUpdate
@@ -111,6 +112,26 @@ def create_medical_record_for_pet(
 
         payload = record.dict(exclude_unset=True)
         payload.pop('notes', None)
+        
+        # Set 'date' field from 'date_visited' if not already set (database requires 'date' to be NOT NULL)
+        # Convert date_visited (Date) to datetime for the 'date' field (DateTime with timezone)
+        if 'date_visited' in payload and payload.get('date_visited') is not None:
+            if 'date' not in payload or payload.get('date') is None:
+                # Convert date to datetime at midnight UTC
+                date_visited = payload['date_visited']
+                # date_visited should be a date object from Pydantic, convert to datetime
+                if isinstance(date_visited, date):
+                    payload['date'] = datetime.combine(date_visited, datetime.min.time())
+                    print(f"🔧 Converted date_visited ({date_visited}) to date ({payload['date']})")
+                elif isinstance(date_visited, datetime):
+                    payload['date'] = date_visited
+                    print(f"🔧 date_visited is already datetime: {payload['date']}")
+                elif isinstance(date_visited, str):
+                    # Fallback: parse string date
+                    parsed_date = date.fromisoformat(date_visited)
+                    payload['date'] = datetime.combine(parsed_date, datetime.min.time())
+                    print(f"🔧 Parsed date_visited string ({date_visited}) to date ({payload['date']})")
+        
         print(f"🔧 Creating medical record with payload: {payload}")
         print(f"🔧 pet_id: {pet_id}, user_id: {resolved_user_id}")
         
