@@ -91,10 +91,14 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
 
   const fetchPets = async () => {
     try {
+      console.log('Fetching pets...');
       const data = await petService.getPets();
+      console.log('Pets fetched:', data.length, 'pets');
       setPets(data);
       setFilteredPets(data);
-    } catch {}
+    } catch (error) {
+      console.error('Error fetching pets:', error);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -129,8 +133,8 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
   };
 
   const selectPet = (pet: Pet) => {
-    setFormData(prev => ({
-      ...prev,
+    console.log('selectPet called with:', pet);
+    const updatedFormData = {
       name: pet.name,
       owner_name: pet.owner_name,
       species: pet.species,
@@ -138,10 +142,16 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
       color: pet.color || '',
       breed: pet.breed || '',
       gender: pet.gender || '',
-      // reproductive_status is NOT auto-filled as per requirement
+      reproductive_status: '', // NOT auto-filled as per requirement
+    };
+    console.log('Updating formData to:', updatedFormData);
+    setFormData(prev => ({
+      ...prev,
+      ...updatedFormData,
     }));
     setPetSearch(pet.name);
     setIsPetDropdownOpen(false);
+    console.log('Form data updated, dropdown closed');
   };
 
   useEffect(() => {
@@ -191,9 +201,11 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
                   name="name" 
                   value={formData.name} 
                   onChange={(e) => { 
-                    setFormData(prev => ({ ...prev, name: e.target.value })); 
-                    setPetSearch(e.target.value); 
-                    setIsPetDropdownOpen(true); 
+                    const value = e.target.value;
+                    console.log('Pet name input changed:', value);
+                    setFormData(prev => ({ ...prev, name: value })); 
+                    setPetSearch(value); 
+                    setIsPetDropdownOpen(true);
                   }} 
                   onFocus={() => setIsPetDropdownOpen(true)}
                   placeholder="Search for pet..."
@@ -210,10 +222,20 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
                       <button 
                         key={pet.id} 
                         type="button" 
-                        onClick={() => selectPet(pet)}
-                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Pet selected:', pet);
+                          selectPet(pet);
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                         onTouchEnd={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Pet selected (touch):', pet);
                           selectPet(pet);
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
@@ -222,6 +244,11 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
                         <div className="text-sm text-gray-500">{pet.owner_name} - {pet.species}</div>
                       </button>
                     ))}
+                  </div>
+                )}
+                {isPetDropdownOpen && filteredPets.length === 0 && petSearch && (
+                  <div ref={petDropdownRef} className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-sm text-gray-500">
+                    No pets found matching "{petSearch}"
                   </div>
                 )}
               </div>
