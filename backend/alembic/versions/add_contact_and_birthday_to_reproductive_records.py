@@ -1,6 +1,6 @@
 """add contact_number and owner_birthday to reproductive_records
 
-Revision ID: add_contact_birthday_reproductive
+Revision ID: acbb1234abcd
 Revises: a43da4c138ef
 Create Date: 2025-01-XX
 """
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'add_contact_birthday_reproductive'
+revision = 'acbb1234abcd'
 down_revision = 'a43da4c138ef'
 branch_labels = None
 depends_on = None
