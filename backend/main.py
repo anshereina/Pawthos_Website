@@ -88,6 +88,7 @@ except Exception as e:
 from routers import auth, users, pets, reports, alerts, animal_control_records, meat_inspection_records, shipping_permit_records
 from routers import vaccination_records
 from routers import reproductive_records
+from routers import post_abattoir_records
 from routers import medical_records
 from routers import vaccination_events
 from routers import vaccination_drives
@@ -182,6 +183,7 @@ app.include_router(appointments.router)
 app.include_router(pain_assessments.router)
 app.include_router(file_uploads.router)
 app.include_router(reproductive_records.router)
+app.include_router(post_abattoir_records.router)
 
 # AI predictions (only if available)
 if AI_ENABLED:
@@ -201,6 +203,7 @@ if AI_ENABLED:
     app.include_router(ai_predictions.router, prefix="/api")  # Mobile: /api/predict, /api/predict-eld
 app.include_router(file_uploads.router, prefix="/api")  # Mobile: /api/uploads
 app.include_router(alerts.router, prefix="/api")  # Mobile: /api/alerts
+app.include_router(post_abattoir_records.router, prefix="/api")
 
 # Mount static files for serving uploaded images (AFTER routers to avoid conflicts)
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"

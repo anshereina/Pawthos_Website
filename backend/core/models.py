@@ -136,6 +136,30 @@ class MeatInspectionRecord(Base):
     # Relationship
     admin = relationship("Admin") 
 
+class PostAbattoirRecord(Base):
+    __tablename__ = "post_abattoir_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False)
+    time = Column(String(10), nullable=False)
+    barangay = Column(String(255), nullable=False)
+    establishment = Column(String(255), nullable=False)
+    # Documents checklist
+    doc_mic = Column(Boolean, nullable=False, default=False)
+    doc_vhc = Column(Boolean, nullable=False, default=False)
+    doc_sp = Column(Boolean, nullable=False, default=False)
+    # Meat appearance checks
+    color_ok = Column(Boolean, nullable=False, default=False)
+    texture_ok = Column(Boolean, nullable=False, default=False)
+    odor_ok = Column(Boolean, nullable=False, default=False)
+    condem = Column(Boolean, nullable=False, default=False)
+    owner = Column(String(255), nullable=False)
+    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    admin = relationship("Admin")
+
 class ShippingPermitRecord(Base):
     __tablename__ = "shipping_permit_records"
 

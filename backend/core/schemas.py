@@ -257,6 +257,49 @@ class MeatInspectionRecord(MeatInspectionRecordBase):
     class Config:
         from_attributes = True 
 
+# Post Abattoir Record Schemas
+class PostAbattoirRecordBase(BaseModel):
+    date: date
+    time: str
+    barangay: str
+    establishment: str
+    doc_mic: bool = False
+    doc_vhc: bool = False
+    doc_sp: bool = False
+    color_ok: bool = False
+    texture_ok: bool = False
+    odor_ok: bool = False
+    condem: bool = False
+    owner: str
+    admin_id: Optional[int] = None
+
+class PostAbattoirRecordCreate(PostAbattoirRecordBase):
+    pass
+
+class PostAbattoirRecordUpdate(BaseModel):
+    date: Optional[date] = None
+    time: Optional[str] = None
+    barangay: Optional[str] = None
+    establishment: Optional[str] = None
+    doc_mic: Optional[bool] = None
+    doc_vhc: Optional[bool] = None
+    doc_sp: Optional[bool] = None
+    color_ok: Optional[bool] = None
+    texture_ok: Optional[bool] = None
+    odor_ok: Optional[bool] = None
+    condem: Optional[bool] = None
+    owner: Optional[str] = None
+    admin_id: Optional[int] = None
+
+class PostAbattoirRecord(PostAbattoirRecordBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    admin: Optional[Admin] = None
+
+    class Config:
+        from_attributes = True
+
 # Shipping Permit Record Schemas
 class ShippingPermitRecordBase(BaseModel):
     owner_name: str

@@ -5,6 +5,10 @@ import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import { useMeatInspectionRecords } from '../hooks/useMeatInspectionRecords';
+import { usePostAbattoirRecords } from '../hooks/usePostAbattoirRecords';
+import AddPostAbattoirRecordModal from '../components/AddPostAbattoirRecordModal';
+import EditPostAbattoirRecordModal from '../components/EditPostAbattoirRecordModal';
+import DeletePostAbattoirRecordModal from '../components/DeletePostAbattoirRecordModal';
 import AddMeatInspectionRecordModal from '../components/AddMeatInspectionRecordModal';
 import EditMeatInspectionRecordModal from '../components/EditMeatInspectionRecordModal';
 import DeleteMeatInspectionRecordModal from '../components/DeleteMeatInspectionRecordModal';
@@ -23,17 +27,25 @@ const TABLE_COLUMNS = [
 ];
 
 const MeatInspectionRecordsPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'MIC' | 'POST_ABATTOIR'>('MIC');
   const [search, setSearch] = useState('');
+  const [searchPA, setSearchPA] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<{ id: number; dealerName: string } | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<any>(null);
+  const [showAddPAModal, setShowAddPAModal] = useState(false);
+  const [showEditPAModal, setShowEditPAModal] = useState(false);
+  const [showDeletePAModal, setShowDeletePAModal] = useState(false);
+  const [paRecordToEdit, setPaRecordToEdit] = useState<any>(null);
+  const [paSelected, setPaSelected] = useState<{ id: number; establishment: string } | null>(null);
   
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   const router = useRouter();
   const { records, loading, error, createRecord, updateRecord, deleteRecord } = useMeatInspectionRecords();
+  const { records: paRecords, loading: paLoading, error: paError, createRecord: createPA, updateRecord: updatePA, deleteRecord: deletePA } = usePostAbattoirRecords();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
@@ -83,6 +95,13 @@ const MeatInspectionRecordsPage: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  // Post Abattoir handlers
+  const handleAddPARecord = async (data: any) => { await createPA(data); };
+  const handleUpdatePARecord = async (id: number, data: any) => { await updatePA(id, data); };
+  const handleDeletePARecord = async () => { if (paSelected) { await deletePA(paSelected.id); } };
+  const openEditPAModal = (record: any) => { setPaRecordToEdit(record); setShowEditPAModal(true); };
+  const openDeletePAModal = (record: any) => { setPaSelected({ id: record.id, establishment: record.establishment }); setShowDeletePAModal(true); };
+
   // Filter records based on search
   const filteredRecords = records.filter(record => {
     return search === '' || 
@@ -95,6 +114,11 @@ const MeatInspectionRecordsPage: React.FC = () => {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [search]);
+
+  // Filter Post Abattoir by search
+  const filteredPA = paRecords.filter(r => {
+    return searchPA === '' || r.establishment.toLowerCase().includes(searchPA.toLowerCase()) || r.barangay.toLowerCase().includes(searchPA.toLowerCase());
+  });
 
   // Pagination
   const totalItems = filteredRecords.length;
@@ -127,7 +151,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if ((activeTab === 'MIC' && loading) || (activeTab === 'POST_ABATTOIR' && paLoading)) {
     return (
       <div className="flex min-h-screen bg-gray-100 font-inter w-full">
         <Sidebar
@@ -164,11 +188,19 @@ const MeatInspectionRecordsPage: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
+          {/* Tabs */}
+          <div className="mb-4">
+            <div className="inline-flex rounded-xl overflow-hidden border border-gray-200 bg-white">
+              <button onClick={() => setActiveTab('MIC')} className={`px-4 py-2 text-sm font-medium ${activeTab==='MIC' ? 'bg-green-600 text-white' : 'hover:bg-gray-50'}`}>Meat Inspection Certificate</button>
+              <button onClick={() => setActiveTab('POST_ABATTOIR')} className={`px-4 py-2 text-sm font-medium border-l ${activeTab==='POST_ABATTOIR' ? 'bg-green-600 text-white' : 'hover:bg-gray-50'}`}>Post Abattoir Inspection</button>
+            </div>
+          </div>
+
           {/* Error Display */}
-          {error && (
+          {(activeTab==='MIC' ? error : paError) && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-center">
               <AlertCircle className="text-red-500 mr-2" size={20} />
-              <span className="text-red-700">{error}</span>
+              <span className="text-red-700">{activeTab==='MIC' ? error : paError}</span>
             </div>
           )}
 
@@ -177,7 +209,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
             <div className="flex justify-between items-center">
               {/* Left side - can be used for future features */}
               <div className="flex space-x-2">
-                {/* Future tabs or filters can go here */}
+                {/* Tabs are above */}
               </div>
               {/* Search and Actions */}
               <div className="flex items-center space-x-4">
@@ -187,32 +219,34 @@ const MeatInspectionRecordsPage: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Search here"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
+                    value={activeTab==='MIC' ? search : searchPA}
+                    onChange={e => activeTab==='MIC' ? setSearch(e.target.value) : setSearchPA(e.target.value)}
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
                 {/* Add New Record Button */}
                 <button 
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => activeTab==='MIC' ? setShowAddModal(true) : setShowAddPAModal(true)}
                   className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
                 >
                   <PlusSquare size={20} />
                   <span className="font-semibold">Add New Record</span>
                 </button>
-                {/* Export Button */}
-                <button 
-                  onClick={() => setShowExportModal(true)}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  <Upload size={20} />
-                  <span className="font-semibold">Export</span>
-                </button>
+                {activeTab==='MIC' && (
+                  <button 
+                    onClick={() => setShowExportModal(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Upload size={20} />
+                    <span className="font-semibold">Export</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Meat Inspection Records Table */}
+          {activeTab==='MIC' ? (
+          /* Meat Inspection Records Table */
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
@@ -331,6 +365,44 @@ const MeatInspectionRecordsPage: React.FC = () => {
               </div>
             )}
           </div>
+          ) : (
+          /* Post Abattoir Table */
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                <tr>
+                  {['Date','Time','Barangay','Establishment','Action'].map(col => (
+                    <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPA.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">No post abattoir records found</td>
+                  </tr>
+                ) : (
+                  filteredPA.map((r, index) => (
+                    <tr key={r.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}>
+                      <td className="px-4 py-3">{new Date(r.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-3">{r.time}</td>
+                      <td className="px-4 py-3">{r.barangay}</td>
+                      <td className="px-4 py-3 font-medium">{r.establishment}</td>
+                      <td className="px-4 py-3 flex items-center gap-2">
+                        <button onClick={() => openEditPAModal(r)} className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm" title="Edit record">
+                          <Edit size={18} className="text-green-800" />
+                        </button>
+                        <button onClick={() => openDeletePAModal(r)} className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm" title="Delete record">
+                          <Trash2 size={18} className="text-red-600" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          )}
         </main>
       </div>
 
@@ -364,6 +436,25 @@ const MeatInspectionRecordsPage: React.FC = () => {
         onClose={() => setShowExportModal(false)}
         records={records}
         search={search}
+      />
+
+      {/* Post Abattoir Modals */}
+      <AddPostAbattoirRecordModal
+        isOpen={showAddPAModal}
+        onClose={() => setShowAddPAModal(false)}
+        onSubmit={handleAddPARecord}
+      />
+      <EditPostAbattoirRecordModal
+        isOpen={showEditPAModal}
+        onClose={() => { setShowEditPAModal(false); setPaRecordToEdit(null); }}
+        onSubmit={handleUpdatePARecord}
+        record={paRecordToEdit}
+      />
+      <DeletePostAbattoirRecordModal
+        isOpen={showDeletePAModal}
+        onClose={() => setShowDeletePAModal(false)}
+        onConfirm={handleDeletePARecord}
+        establishment={paSelected?.establishment || ''}
       />
     </div>
   );
