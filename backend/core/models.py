@@ -105,6 +105,7 @@ class AnimalControlRecord(Base):
     record_type = Column(String(20), nullable=False)  # 'catch' or 'surrendered'
     detail = Column(Text, nullable=True)  # For surrendered: purpose/detail
     species = Column(String(50), nullable=True)  # feline, canine, etc.
+    breed = Column(String(100), nullable=True)
     gender = Column(String(20), nullable=True)  # male, female
     date = Column(Date, nullable=False)
     image_url = Column(String(500), nullable=True)  # URL to animal photo

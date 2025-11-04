@@ -88,7 +88,8 @@ const AnimalControlRecordsPage: React.FC = () => {
     const matchesSearch = search === '' || 
       record.owner_name.toLowerCase().includes(search.toLowerCase()) ||
       (record.contact_number && record.contact_number.toLowerCase().includes(search.toLowerCase())) ||
-      (record.address && record.address.toLowerCase().includes(search.toLowerCase()));
+      (record.address && record.address.toLowerCase().includes(search.toLowerCase())) ||
+      (record.breed && record.breed.toLowerCase().includes(search.toLowerCase()));
     
     return matchesTab && matchesSearch;
   });
@@ -96,9 +97,9 @@ const AnimalControlRecordsPage: React.FC = () => {
   // Table columns based on tab
   const getColumns = () => {
     if (activeTab === 'catch') {
-      return ['Photo', 'Owner Name', 'Contact Number', 'Address', 'Date', 'Action'];
+      return ['Photo', 'Owner Name', 'Contact Number', 'Address', 'Breed', 'Date', 'Action'];
     } else {
-      return ['Photo', 'Owner Name', 'Contact Number', 'Address', 'Detail/Purpose', 'Date', 'Action'];
+      return ['Photo', 'Owner Name', 'Contact Number', 'Address', 'Breed', 'Detail/Purpose', 'Date', 'Action'];
     }
   };
 
@@ -270,6 +271,7 @@ const AnimalControlRecordsPage: React.FC = () => {
                       <td className="px-4 py-3 font-medium">{record.owner_name}</td>
                       <td className="px-4 py-3">{record.contact_number || '-'}</td>
                       <td className="px-4 py-3">{record.address || '-'}</td>
+                      <td className="px-4 py-3">{record.breed || '-'}</td>
                       {activeTab === 'surrendered' && (
                         <td className="px-4 py-3">{record.detail || '-'}</td>
                       )}

@@ -23,6 +23,7 @@ const EditAnimalControlRecordModal: React.FC<EditAnimalControlRecordModalProps> 
     record_type: 'catch',
     detail: '',
     species: '',
+    breed: '',
     gender: '',
     date: '',
     image_url: '',
@@ -40,6 +41,7 @@ const EditAnimalControlRecordModal: React.FC<EditAnimalControlRecordModalProps> 
         record_type: record.record_type,
         detail: record.detail || '',
         species: record.species || '',
+        breed: record.breed || '',
         gender: record.gender || '',
         date: record.date,
         image_url: record.image_url || '',
@@ -208,6 +210,21 @@ const EditAnimalControlRecordModal: React.FC<EditAnimalControlRecordModalProps> 
                 onChange={handleChange}
                 placeholder="Enter pet's name"
                 required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Breed
+              </label>
+              <input
+                type="text"
+                name="breed"
+                value={formData.breed}
+                onChange={handleChange}
+                placeholder="Enter breed (optional)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 disabled={loading}
               />

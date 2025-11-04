@@ -8,6 +8,7 @@ export interface AnimalControlRecord {
   record_type: 'catch' | 'surrendered';
   detail?: string;
   species?: string;  // feline, canine, etc.
+  breed?: string;
   gender?: string;   // male, female
   date: string;
   image_url?: string;  // URL to animal photo
@@ -22,6 +23,7 @@ export interface AnimalControlRecordCreate {
   record_type: 'catch' | 'surrendered';
   detail?: string;
   species?: string;
+  breed?: string;
   gender?: string;
   date: string;
   image_url?: string;  // URL to animal photo
@@ -34,6 +36,7 @@ export interface AnimalControlRecordUpdate {
   record_type?: 'catch' | 'surrendered';
   detail?: string;
   species?: string;
+  breed?: string;
   gender?: string;
   date?: string;
   image_url?: string;  // URL to animal photo

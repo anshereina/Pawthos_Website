@@ -30,7 +30,7 @@ export const pdfExportService = {
     
     // Add headers based on record type
     if (options.recordType === 'surrendered') {
-      content += `Owner Name | Contact Number | Address | Detail/Purpose | Date | Created\n`;
+      content += `Owner Name | Contact Number | Address | Breed | Detail/Purpose | Date | Created\n`;
       content += `-`.repeat(120) + `\n`;
       
       // Add data rows for surrendered records
@@ -38,12 +38,13 @@ export const pdfExportService = {
         content += `${record.owner_name} | `;
         content += `${record.contact_number || '-'} | `;
         content += `${record.address || '-'} | `;
+        content += `${record.breed || '-'} | `;
         content += `${record.detail || '-'} | `;
         content += `${new Date(record.date).toLocaleDateString()} | `;
         content += `${new Date(record.created_at).toLocaleDateString()}\n`;
       });
     } else {
-      content += `Owner Name | Contact Number | Address | Date | Created\n`;
+      content += `Owner Name | Contact Number | Address | Breed | Date | Created\n`;
       content += `-`.repeat(100) + `\n`;
       
       // Add data rows for catch records
@@ -51,6 +52,7 @@ export const pdfExportService = {
         content += `${record.owner_name} | `;
         content += `${record.contact_number || '-'} | `;
         content += `${record.address || '-'} | `;
+        content += `${record.breed || '-'} | `;
         content += `${new Date(record.date).toLocaleDateString()} | `;
         content += `${new Date(record.created_at).toLocaleDateString()}\n`;
       });
@@ -109,6 +111,7 @@ export const pdfExportService = {
         record.owner_name,
         record.contact_number || '-',
         record.address || '-',
+        record.breed || '-',
         record.record_type === 'surrendered' ? (record.detail || '-') : '-',
         new Date(record.date).toLocaleDateString(),
         new Date(record.created_at).toLocaleDateString()
@@ -116,8 +119,8 @@ export const pdfExportService = {
 
       // Define table headers based on record type
       const headers = options.recordType === 'surrendered' 
-        ? ['Owner Name', 'Contact Number', 'Address', 'Detail/Purpose', 'Date', 'Created']
-        : ['Owner Name', 'Contact Number', 'Address', 'Date', 'Created'];
+        ? ['Owner Name', 'Contact Number', 'Address', 'Breed', 'Detail/Purpose', 'Date', 'Created']
+        : ['Owner Name', 'Contact Number', 'Address', 'Breed', 'Date', 'Created'];
 
       // Add table to PDF
       autoTable(doc, {
@@ -141,18 +144,20 @@ export const pdfExportService = {
         },
         margin: { top: 50, left: 10, right: 10 },
         columnStyles: options.recordType === 'surrendered' ? {
-          0: { cellWidth: 50 }, // Owner Name
+          0: { cellWidth: 45 }, // Owner Name
           1: { cellWidth: 35 }, // Contact Number
-          2: { cellWidth: 60 }, // Address
-          3: { cellWidth: 50 }, // Detail/Purpose
-          4: { cellWidth: 30 }, // Date
-          5: { cellWidth: 30 }, // Created
+          2: { cellWidth: 55 }, // Address
+          3: { cellWidth: 35 }, // Breed
+          4: { cellWidth: 50 }, // Detail/Purpose
+          5: { cellWidth: 25 }, // Date
+          6: { cellWidth: 25 }, // Created
         } : {
           0: { cellWidth: 50 }, // Owner Name
           1: { cellWidth: 35 }, // Contact Number
-          2: { cellWidth: 70 }, // Address
-          3: { cellWidth: 30 }, // Date
-          4: { cellWidth: 30 }, // Created
+          2: { cellWidth: 60 }, // Address
+          3: { cellWidth: 35 }, // Breed
+          4: { cellWidth: 25 }, // Date
+          5: { cellWidth: 25 }, // Created
         },
         didDrawPage: function (data) {
           // Add page numbers

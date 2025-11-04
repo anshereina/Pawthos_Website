@@ -185,6 +185,7 @@ class AnimalControlRecordBase(BaseModel):
     record_type: str  # 'catch' or 'surrendered'
     detail: Optional[str] = None
     species: Optional[str] = None  # feline, canine, etc.
+    breed: Optional[str] = None
     gender: Optional[str] = None  # male, female
     date: date
     image_url: Optional[str] = None  # URL to animal photo
@@ -200,6 +201,7 @@ class AnimalControlRecordUpdate(BaseModel):
     record_type: Optional[str] = None
     detail: Optional[str] = None
     species: Optional[str] = None
+    breed: Optional[str] = None
     gender: Optional[str] = None
     date: Optional[str] = None  # Changed from Optional[date] to Optional[str] to handle string dates
     image_url: Optional[str] = None  # URL to animal photo
