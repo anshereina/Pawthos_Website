@@ -5,12 +5,14 @@ export interface MeatInspectionRecord {
   date_of_inspection: string;
   time: string;
   dealer_name: string;
+  barangay?: string;
   kilos: number;
   date_of_slaughter: string;
   certificate_issued: boolean;
   status: 'Pending' | 'Approved' | 'Rejected';
   remarks?: string;
   inspector_name?: string;
+  picture_url?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -19,24 +21,28 @@ export interface MeatInspectionRecordCreate {
   date_of_inspection: string;
   time: string;
   dealer_name: string;
+  barangay?: string;
   kilos: number;
   date_of_slaughter: string;
   certificate_issued: boolean;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status?: 'Pending' | 'Approved' | 'Rejected';
   remarks?: string;
   inspector_name?: string;
+  picture_url?: string;
 }
 
 export interface MeatInspectionRecordUpdate {
   date_of_inspection?: string;
   time?: string;
   dealer_name?: string;
+  barangay?: string;
   kilos?: number;
   date_of_slaughter?: string;
   certificate_issued?: boolean;
   status?: 'Pending' | 'Approved' | 'Rejected';
   remarks?: string;
   inspector_name?: string;
+  picture_url?: string;
 }
 
 const API_BASE_URL = config.apiUrl;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { MeatInspectionRecordCreate } from '../services/meatInspectionRecordService';
+import { API_BASE_URL } from '../config';
 
 interface AddMeatInspectionRecordModalProps {
   isOpen: boolean;
@@ -17,14 +18,16 @@ const AddMeatInspectionRecordModal: React.FC<AddMeatInspectionRecordModalProps> 
     date_of_inspection: new Date().toISOString().split('T')[0],
     time: '',
     dealer_name: '',
+    barangay: '',
     kilos: 0,
     date_of_slaughter: new Date().toISOString().split('T')[0],
     certificate_issued: false,
-    status: 'Pending',
     remarks: '',
     inspector_name: '',
+    picture_url: '',
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +39,13 @@ const AddMeatInspectionRecordModal: React.FC<AddMeatInspectionRecordModalProps> 
         date_of_inspection: new Date().toISOString().split('T')[0],
         time: '',
         dealer_name: '',
+        barangay: '',
         kilos: 0,
         date_of_slaughter: new Date().toISOString().split('T')[0],
         certificate_issued: false,
-        status: 'Pending',
         remarks: '',
         inspector_name: '',
+        picture_url: '',
       });
     } catch (error) {
       console.error('Error creating record:', error);
@@ -64,6 +68,24 @@ const AddMeatInspectionRecordModal: React.FC<AddMeatInspectionRecordModalProps> 
       ...prev,
       [name]: parsedValue,
     }));
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append('file', file);
+    setUploading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/uploads/pain-assessment-image/`, { method: 'POST', body: form });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      setFormData(prev => ({ ...prev, picture_url: data.url }));
+    } catch (err) {
+      console.error('Upload error', err);
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -155,20 +177,14 @@ const AddMeatInspectionRecordModal: React.FC<AddMeatInspectionRecordModalProps> 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status *
-            </label>
-            <select
-              name="status"
-              value={formData.status}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Barangay</label>
+            <input
+              type="text"
+              name="barangay"
+              value={formData.barangay || ''}
               onChange={handleChange}
-              required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
+            />
           </div>
 
           <div className="flex items-center space-x-2">
@@ -195,6 +211,15 @@ const AddMeatInspectionRecordModal: React.FC<AddMeatInspectionRecordModalProps> 
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Picture (optional)</label>
+            <input type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
+            {uploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
+            {formData.picture_url && (
+              <a href={`${API_BASE_URL}${formData.picture_url}`} target="_blank" rel="noreferrer" className="text-xs text-blue-700 underline mt-1 inline-block">View uploaded image</a>
+            )}
           </div>
 
           <div>

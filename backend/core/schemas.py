@@ -225,12 +225,14 @@ class MeatInspectionRecordBase(BaseModel):
     date_of_inspection: date
     time: str  # Format: "HH:MM"
     dealer_name: str
+    barangay: Optional[str] = None
     kilos: float
     date_of_slaughter: date
     certificate_issued: bool = False
     status: str = "Pending"  # Pending, Approved, Rejected
     remarks: Optional[str] = None
     inspector_name: Optional[str] = None
+    picture_url: Optional[str] = None
     admin_id: Optional[int] = None
 
 class MeatInspectionRecordCreate(MeatInspectionRecordBase):
@@ -240,12 +242,14 @@ class MeatInspectionRecordUpdate(BaseModel):
     date_of_inspection: Optional[date] = None
     time: Optional[str] = None
     dealer_name: Optional[str] = None
+    barangay: Optional[str] = None
     kilos: Optional[float] = None
     date_of_slaughter: Optional[date] = None
     certificate_issued: Optional[bool] = None
     status: Optional[str] = None
     remarks: Optional[str] = None
     inspector_name: Optional[str] = None
+    picture_url: Optional[str] = None
     admin_id: Optional[int] = None
 
 class MeatInspectionRecord(MeatInspectionRecordBase):

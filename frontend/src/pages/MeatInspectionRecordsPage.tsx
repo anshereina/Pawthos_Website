@@ -14,6 +14,8 @@ import EditMeatInspectionRecordModal from '../components/EditMeatInspectionRecor
 import DeleteMeatInspectionRecordModal from '../components/DeleteMeatInspectionRecordModal';
 import MeatInspectionExportModal from '../components/MeatInspectionExportModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PostAbattoirExportModal from '../components/PostAbattoirExportModal';
+import RecordDetailModal from '../components/RecordDetailModal';
 
 const TABLE_COLUMNS = [
   'Date of Inspection',
@@ -36,9 +38,11 @@ const MeatInspectionRecordsPage: React.FC = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<{ id: number; dealerName: string } | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<any>(null);
+  const [detailRecord, setDetailRecord] = useState<any>(null);
   const [showAddPAModal, setShowAddPAModal] = useState(false);
   const [showEditPAModal, setShowEditPAModal] = useState(false);
   const [showDeletePAModal, setShowDeletePAModal] = useState(false);
+  const [showPAExportModal, setShowPAExportModal] = useState(false);
   const [paRecordToEdit, setPaRecordToEdit] = useState<any>(null);
   const [paSelected, setPaSelected] = useState<{ id: number; establishment: string } | null>(null);
   
@@ -190,9 +194,27 @@ const MeatInspectionRecordsPage: React.FC = () => {
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Tabs */}
           <div className="mb-4">
-            <div className="inline-flex rounded-xl overflow-hidden border border-gray-200 bg-white">
-              <button onClick={() => setActiveTab('MIC')} className={`px-4 py-2 text-sm font-medium ${activeTab==='MIC' ? 'bg-green-600 text-white' : 'hover:bg-gray-50'}`}>Meat Inspection Certificate</button>
-              <button onClick={() => setActiveTab('POST_ABATTOIR')} className={`px-4 py-2 text-sm font-medium border-l ${activeTab==='POST_ABATTOIR' ? 'bg-green-600 text-white' : 'hover:bg-gray-50'}`}>Post Abattoir Inspection</button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setActiveTab('MIC')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  activeTab==='MIC'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                    : 'bg-white text-green-700 border border-green-300 hover:bg-green-50 hover:border-green-400'
+                }`}
+              >
+                Meat Inspection Certificate
+              </button>
+              <button
+                onClick={() => setActiveTab('POST_ABATTOIR')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  activeTab==='POST_ABATTOIR'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                    : 'bg-white text-green-700 border border-green-300 hover:bg-green-50 hover:border-green-400'
+                }`}
+              >
+                Post Abattoir Inspection
+              </button>
             </div>
           </div>
 
@@ -241,6 +263,15 @@ const MeatInspectionRecordsPage: React.FC = () => {
                     <span className="font-semibold">Export</span>
                   </button>
                 )}
+                {activeTab==='POST_ABATTOIR' && (
+                  <button 
+                    onClick={() => setShowPAExportModal(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Upload size={20} />
+                    <span className="font-semibold">Export</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -268,6 +299,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
                     <tr
                       key={record.id}
                       className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                      onClick={() => setDetailRecord({ type: 'MIC', data: record })}
                     >
                       <td className="px-4 py-3">{formatDate(record.date_of_inspection)}</td>
                       <td className="px-4 py-3">{formatTime(record.time)}</td>
@@ -383,7 +415,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
                   </tr>
                 ) : (
                   filteredPA.map((r, index) => (
-                    <tr key={r.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}>
+                    <tr key={r.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`} onClick={() => setDetailRecord({ type: 'PA', data: r })}>
                       <td className="px-4 py-3">{new Date(r.date).toLocaleDateString()}</td>
                       <td className="px-4 py-3">{r.time}</td>
                       <td className="px-4 py-3">{r.barangay}</td>
@@ -455,6 +487,19 @@ const MeatInspectionRecordsPage: React.FC = () => {
         onClose={() => setShowDeletePAModal(false)}
         onConfirm={handleDeletePARecord}
         establishment={paSelected?.establishment || ''}
+      />
+      <PostAbattoirExportModal
+        isOpen={showPAExportModal}
+        onClose={() => setShowPAExportModal(false)}
+        records={paRecords}
+        search={searchPA}
+      />
+
+      <RecordDetailModal
+        isOpen={!!detailRecord}
+        onClose={() => setDetailRecord(null)}
+        type={detailRecord?.type}
+        data={detailRecord?.data}
       />
     </div>
   );

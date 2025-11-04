@@ -123,12 +123,14 @@ class MeatInspectionRecord(Base):
     date_of_inspection = Column(Date, nullable=False)
     time = Column(String(10), nullable=False)  # Format: "HH:MM"
     dealer_name = Column(String(255), nullable=False)
+    barangay = Column(String(255), nullable=True)
     kilos = Column(Float, nullable=False)
     date_of_slaughter = Column(Date, nullable=False)
     certificate_issued = Column(Boolean, nullable=False, default=False)
     status = Column(String(20), nullable=False, default="Pending")  # Pending, Approved, Rejected
     remarks = Column(Text, nullable=True)
     inspector_name = Column(String(255), nullable=True)
+    picture_url = Column(String(500), nullable=True)
     admin_id = Column(Integer, ForeignKey("admins.id"), nullable=True)  # Admin who handles the record
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
