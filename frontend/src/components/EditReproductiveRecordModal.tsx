@@ -34,6 +34,8 @@ const EditReproductiveRecordModal: React.FC<EditReproductiveRecordModalProps> = 
     gender: '',
     reproductive_status: '',
     date: '',
+    contact_number: '',
+    owner_birthday: '',
   });
 
   const [users, setUsers] = useState<User[]>([]);
@@ -58,6 +60,8 @@ const EditReproductiveRecordModal: React.FC<EditReproductiveRecordModalProps> = 
           gender: record.gender || '',
           reproductive_status: record.reproductive_status || '',
           date: record.date || '',
+          contact_number: record.contact_number || '',
+          owner_birthday: record.owner_birthday || '',
         });
         setUserSearch(record.owner_name || '');
       }
@@ -175,6 +179,14 @@ const EditReproductiveRecordModal: React.FC<EditReproductiveRecordModalProps> = 
                   </div>
                 )}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+              <input type="text" name="contact_number" value={formData.contact_number} onChange={handleChange} placeholder="Enter contact number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" disabled={loading} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Pet Owner's Birthday</label>
+              <input type="date" name="owner_birthday" value={formData.owner_birthday} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" disabled={loading} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Species *</label>

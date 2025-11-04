@@ -68,6 +68,8 @@ def list_reproductive_records(
                 "breed": r.breed or "",
                 "gender": r.gender or "",
                 "reproductive_status": r.reproductive_status or "",
+                "contact_number": r.contact_number or "",
+                "owner_birthday": r.owner_birthday.isoformat() if r.owner_birthday and hasattr(r.owner_birthday, 'isoformat') else (str(r.owner_birthday) if r.owner_birthday else None),
                 "is_reproductive_record": True,  # Flag to indicate this is a ReproductiveRecord entry
             })
         return result
@@ -96,6 +98,21 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
             elif isinstance(date_str, (date, datetime)):
                 record_date = date_str if isinstance(date_str, date) else date_str.date()
         
+        # Parse owner_birthday if provided
+        owner_birthday_date = None
+        if payload.get("owner_birthday"):
+            birthday_str = payload.get("owner_birthday")
+            if isinstance(birthday_str, str):
+                try:
+                    owner_birthday_date = datetime.fromisoformat(birthday_str.replace('Z', '+00:00')).date()
+                except:
+                    try:
+                        owner_birthday_date = datetime.strptime(birthday_str, '%Y-%m-%d').date()
+                    except:
+                        owner_birthday_date = None
+            elif isinstance(birthday_str, (date, datetime)):
+                owner_birthday_date = birthday_str if isinstance(birthday_str, date) else birthday_str.date()
+        
         record = ReproductiveRecord(
             pet_name=payload.get("name", ""),
             owner_name=payload.get("owner_name", ""),
@@ -105,6 +122,8 @@ def create_reproductive_record(payload: dict, db: Session = Depends(get_db)):
             gender=payload.get("gender"),
             reproductive_status=payload.get("reproductive_status"),
             date=record_date,
+            contact_number=payload.get("contact_number"),
+            owner_birthday=owner_birthday_date,
         )
         db.add(record)
         db.commit()
@@ -136,6 +155,22 @@ def update_reproductive_record(record_id: int, payload: dict, db: Session = Depe
             elif isinstance(date_str, (date, datetime)):
                 record.date = date_str if isinstance(date_str, date) else date_str.date()
         
+        # Parse owner_birthday if provided
+        if payload.get("owner_birthday"):
+            birthday_str = payload.get("owner_birthday")
+            if isinstance(birthday_str, str):
+                try:
+                    record.owner_birthday = datetime.fromisoformat(birthday_str.replace('Z', '+00:00')).date()
+                except:
+                    try:
+                        record.owner_birthday = datetime.strptime(birthday_str, '%Y-%m-%d').date()
+                    except:
+                        pass
+            elif isinstance(birthday_str, (date, datetime)):
+                record.owner_birthday = birthday_str if isinstance(birthday_str, date) else birthday_str.date()
+        elif "owner_birthday" in payload and payload.get("owner_birthday") is None:
+            record.owner_birthday = None
+        
         # Update other fields
         if "name" in payload:
             record.pet_name = payload.get("name", "")
@@ -151,6 +186,8 @@ def update_reproductive_record(record_id: int, payload: dict, db: Session = Depe
             record.gender = payload.get("gender")
         if "reproductive_status" in payload:
             record.reproductive_status = payload.get("reproductive_status")
+        if "contact_number" in payload:
+            record.contact_number = payload.get("contact_number")
         
         db.commit()
         db.refresh(record)

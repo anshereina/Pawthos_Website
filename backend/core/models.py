@@ -345,4 +345,6 @@ class ReproductiveRecord(Base):
     gender = Column(String(20), nullable=True)
     reproductive_status = Column(String(20), nullable=True)
     date = Column(Date, nullable=True)
+    contact_number = Column(String(50), nullable=True)
+    owner_birthday = Column(Date, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

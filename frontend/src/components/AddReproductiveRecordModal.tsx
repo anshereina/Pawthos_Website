@@ -17,7 +17,7 @@ interface AddReproductiveRecordModalProps {
 }
 
 const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({ isOpen, onClose, onSubmit, loading }) => {
-  const [formData, setFormData] = useState<CreatePetData>({
+  const [formData, setFormData] = useState<CreatePetData & { contact_number?: string; owner_birthday?: string }>({
     name: '',
     owner_name: '',
     species: '',
@@ -26,6 +26,8 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
     breed: '',
     gender: '',
     reproductive_status: '',
+    contact_number: '',
+    owner_birthday: '',
   });
 
   const [users, setUsers] = useState<User[]>([]);
@@ -108,14 +110,16 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: CreatePetData & { date?: string } = {
+    const payload: CreatePetData & { date?: string; contact_number?: string; owner_birthday?: string } = {
       ...formData,
       date: date || undefined,
+      contact_number: formData.contact_number || undefined,
+      owner_birthday: formData.owner_birthday || undefined,
     };
     await onSubmit(payload);
     if (!loading) {
       setFormData({
-        name: '', owner_name: '', species: '', date_of_birth: '', color: '', breed: '', gender: '', reproductive_status: ''
+        name: '', owner_name: '', species: '', date_of_birth: '', color: '', breed: '', gender: '', reproductive_status: '', contact_number: '', owner_birthday: ''
       });
       setDate('');
       setPetSearch('');
@@ -275,6 +279,14 @@ const AddReproductiveRecordModal: React.FC<AddReproductiveRecordModalProps> = ({
                   </div>
                 )}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+              <input type="text" name="contact_number" value={formData.contact_number} onChange={handleChange} placeholder="Enter contact number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" disabled={loading} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Pet Owner's Birthday</label>
+              <input type="date" name="owner_birthday" value={formData.owner_birthday} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" disabled={loading} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Species *</label>

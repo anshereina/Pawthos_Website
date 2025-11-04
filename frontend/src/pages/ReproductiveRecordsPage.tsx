@@ -21,6 +21,8 @@ const FILTERS = [
 const TABLE_COLUMNS = [
   'Name',
   "Owner's Name",
+  'Contact Number',
+  "Owner's Birthday",
   'Species',
   'Date',
   'Date of Birth',
@@ -200,7 +202,7 @@ const ReproductiveRecordsPage: React.FC = () => {
           isExpanded ? 'ml-64' : 'ml-16'
         }`}
       >
-        <PageHeader title="Pet Sterilization Records" />
+        <PageHeader title="Spay/Neuter Records" />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
@@ -299,6 +301,8 @@ const ReproductiveRecordsPage: React.FC = () => {
                       >
                         <td className="px-4 py-3 font-medium text-gray-800">{pet.name}</td>
                         <td className="px-4 py-3">{pet.owner_name || '-'}</td>
+                        <td className="px-4 py-3">{pet.contact_number || '-'}</td>
+                        <td className="px-4 py-3">{formatDate(pet.owner_birthday)}</td>
                         <td className="px-4 py-3 capitalize">{pet.species}</td>
                         <td className="px-4 py-3">{formatDate(pet.date)}</td>
                         <td className="px-4 py-3">{formatDate(pet.date_of_birth)}</td>

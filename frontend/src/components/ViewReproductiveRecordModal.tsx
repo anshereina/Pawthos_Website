@@ -55,6 +55,14 @@ const ViewReproductiveRecordModal: React.FC<ViewReproductiveRecordModalProps> = 
                 <p className="text-gray-900">{record.owner_name}</p>
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <p className="text-gray-900">{record.contact_number || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Owner's Birthday</label>
+                <p className="text-gray-900">{formatDate(record.owner_birthday)}</p>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Species</label>
                 <p className="text-gray-900 capitalize">{record.species || '-'}</p>
               </div>

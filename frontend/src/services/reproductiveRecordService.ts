@@ -11,6 +11,8 @@ export interface ReproductiveRecord {
   breed?: string;
   gender?: string;
   reproductive_status?: string;
+  contact_number?: string;
+  owner_birthday?: string;
   is_reproductive_record?: boolean;  // True for ReproductiveRecord entries, false for Pet fallback entries
   pet_id?: string | null;  // Pet ID if record is linked to a Pet
 }
@@ -25,6 +27,8 @@ export interface CreateReproductiveRecord {
   breed?: string;
   gender?: string;
   reproductive_status?: string;
+  contact_number?: string;
+  owner_birthday?: string;
 }
 
 const authHeaders = () => {
