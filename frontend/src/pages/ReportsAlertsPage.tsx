@@ -278,6 +278,11 @@ const ReportsAlertsPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Instructional Note */}
+          <div className="mb-4 text-green-700 text-sm font-medium">
+            Note: You can view the details by clicking the row.
+          </div>
+
           {/* Error Display */}
           {(reportsError || alertsError) && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
