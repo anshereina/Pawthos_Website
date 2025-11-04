@@ -123,10 +123,11 @@ const AddMeatInspectionRecordModal: React.FC<AddMeatInspectionRecordModalProps> 
               Time *
             </label>
             <input
-              type="time"
+              type="text"
               name="time"
               value={formData.time}
               onChange={handleChange}
+              placeholder="HH:MM"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
