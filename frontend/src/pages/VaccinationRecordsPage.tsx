@@ -419,6 +419,10 @@ const VaccinationRecordsPage: React.FC = () => {
               </div>
             </div>
           </div>
+          {/* Instructional Note */}
+          <div className="mb-4 text-green-700 text-sm font-medium">
+            Note: You can view the details by clicking the row.
+          </div>
 
           {/* Tab Content */}
           {activeTab === 'vaccine-records' ? (

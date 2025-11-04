@@ -276,6 +276,11 @@ const MeatInspectionRecordsPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Instructional Note */}
+          <div className="mb-4 text-green-700 text-sm font-medium">
+            Note: You can view the details by clicking the row.
+          </div>
+
           {activeTab==='MIC' ? (
           /* Meat Inspection Records Table */
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
@@ -298,7 +303,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
                   currentRows.map((record, index) => (
                     <tr
                       key={record.id}
-                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                       onClick={() => setDetailRecord({ type: 'MIC', data: record })}
                     >
                       <td className="px-4 py-3">{formatDate(record.date_of_inspection)}</td>
@@ -320,16 +325,16 @@ const MeatInspectionRecordsPage: React.FC = () => {
                           {record.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 flex items-center gap-2">
+                      <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <button 
-                          onClick={() => openEditModal(record)}
+                          onClick={(e) => { e.stopPropagation(); openEditModal(record); }}
                           className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
                           title="Edit record"
                         >
                           <Edit size={18} className="text-green-800" />
                         </button>
                         <button 
-                          onClick={() => openDeleteModal(record)}
+                          onClick={(e) => { e.stopPropagation(); openDeleteModal(record); }}
                           className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                           title="Delete record"
                         >
@@ -415,16 +420,16 @@ const MeatInspectionRecordsPage: React.FC = () => {
                   </tr>
                 ) : (
                   filteredPA.map((r, index) => (
-                    <tr key={r.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`} onClick={() => setDetailRecord({ type: 'PA', data: r })}>
+                    <tr key={r.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`} onClick={() => setDetailRecord({ type: 'PA', data: r })}>
                       <td className="px-4 py-3">{new Date(r.date).toLocaleDateString()}</td>
                       <td className="px-4 py-3">{r.time}</td>
                       <td className="px-4 py-3">{r.barangay}</td>
                       <td className="px-4 py-3 font-medium">{r.establishment}</td>
-                      <td className="px-4 py-3 flex items-center gap-2">
-                        <button onClick={() => openEditPAModal(r)} className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm" title="Edit record">
+                      <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={(e) => { e.stopPropagation(); openEditPAModal(r); }} className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm" title="Edit record">
                           <Edit size={18} className="text-green-800" />
                         </button>
-                        <button onClick={() => openDeletePAModal(r)} className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm" title="Delete record">
+                        <button onClick={(e) => { e.stopPropagation(); openDeletePAModal(r); }} className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm" title="Delete record">
                           <Trash2 size={18} className="text-red-600" />
                         </button>
                       </td>

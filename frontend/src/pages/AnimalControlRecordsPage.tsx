@@ -228,6 +228,11 @@ const AnimalControlRecordsPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Instructional Note */}
+          <div className="mb-4 text-green-700 text-sm font-medium">
+            Note: You can view the details by clicking the row.
+          </div>
+
           {/* Animal Control Records Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <table className="w-full">
