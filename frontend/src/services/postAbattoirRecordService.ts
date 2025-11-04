@@ -19,7 +19,7 @@ export interface PostAbattoirRecord {
 export type PostAbattoirRecordCreate = Omit<PostAbattoirRecord, 'id'>;
 export type PostAbattoirRecordUpdate = Partial<PostAbattoirRecordCreate>;
 
-const API_BASE_URL = config.API_BASE_URL;
+const API_BASE_URL = config.apiUrl;
 
 export const postAbattoirRecordService = {
   async getAll(): Promise<PostAbattoirRecord[]> {
