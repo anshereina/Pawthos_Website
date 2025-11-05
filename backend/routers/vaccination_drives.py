@@ -9,37 +9,23 @@ from core.schemas import VaccinationDrive as VaccinationDriveSchema, Vaccination
 router = APIRouter(prefix="/vaccination-drives", tags=["vaccination-drives"])
 
 def find_or_create_user(owner_name: str, owner_contact: str, db: Session) -> User:
-    """Find existing user by name or create a new one"""
-    # First try to find by name
+    """Find existing user by name or create a new one with null email/password."""
+    # Try to find by name first (name used as owner identifier during drives)
     user = db.query(User).filter(User.name == owner_name).first()
     if user:
         return user
-    
-    # If not found, create a new user
-    # Generate a temporary email if not provided
-    temp_email = f"{owner_name.lower().replace(' ', '.')}@temp.local"
-    
-    # Check if email already exists, if so, add a number
-    counter = 1
-    original_email = temp_email
-    while db.query(User).filter(User.email == temp_email).first():
-        temp_email = f"{original_email.split('@')[0]}{counter}@temp.local"
-        counter += 1
-    
-    # Generate a temporary password hash
-    from core.auth import get_password_hash
-    temp_password_hash = get_password_hash("temp_password_123")
-    
+
+    # Create placeholder user record without email/password
     user = User(
         name=owner_name,
-        email=temp_email,
-        password_hash=temp_password_hash,
+        email=None,
+        password_hash=None,
         phone_number=owner_contact,
-        address="",  # Empty address for now
-        is_confirmed=1  # Auto-confirm for vaccination drive users
+        address="",
+        is_confirmed=0
     )
     db.add(user)
-    db.flush()  # Get the user ID
+    db.flush()
     return user
 
 def find_or_create_pet(owner_name: str, pet_name: str, species: str, breed: str, color: str, age: str, sex: str, db: Session) -> Pet:
