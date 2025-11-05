@@ -94,6 +94,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('access_token');
+    // Ensure redirect to login from any page
+    window.location.href = '/login';
   };
 
   return (

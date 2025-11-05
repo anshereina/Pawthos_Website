@@ -47,8 +47,8 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
-    # Loosen email validation for responses to tolerate legacy data
-    email: str
+    # Loosen email validation for responses to tolerate legacy data and NULLs
+    email: Optional[str] = None
     created_at: Optional[datetime]
     is_confirmed: Optional[int] = None
 

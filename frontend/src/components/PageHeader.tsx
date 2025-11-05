@@ -37,7 +37,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
   }, []);
 
   return (
-    <header className="bg-gradient-to-r from-white via-gray-50 to-white border-b border-gray-200 px-6 py-5 flex justify-between items-center backdrop-blur-sm">
+    <header className="bg-gradient-to-r from-white via-gray-50 to-white border-b border-gray-200 px-6 py-5 flex justify-between items-center backdrop-blur-sm relative z-40 overflow-visible">
       <div className="flex items-center space-x-6">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{title}</h1>
         {showDatePicker && (
@@ -67,7 +67,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
           <ChevronDown size={18} className="text-gray-400" />
         </div>
         {isDropdownOpen && (
-          <div className="user-dropdown-menu absolute right-0 mt-3 w-52 bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-20 top-full backdrop-blur-sm">
+          <div className="user-dropdown-menu absolute right-0 mt-3 w-52 bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-60 top-full backdrop-blur-sm">
             <div className="px-4 py-2 border-b border-gray-100">
               <p className="text-sm font-semibold text-gray-800">{user?.name || ''}</p>
               <p className="text-xs text-green-600">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</p>

@@ -31,6 +31,10 @@ const UserManagementPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
+  // View details modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewedUser, setViewedUser] = useState<any | null>(null);
+
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -217,6 +221,7 @@ const UserManagementPage: React.FC = () => {
           className={`${
             index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
           } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+          onClick={() => { setViewedUser(user); setIsViewModalOpen(true); }}
         >
           <td className="px-4 py-3 text-gray-900">{user.id}</td>
           <td className="px-4 py-3 text-gray-900 font-medium">{user.name}</td>
@@ -224,14 +229,14 @@ const UserManagementPage: React.FC = () => {
           <td className="px-4 py-3">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => handleEditUser(user.id, user.name)}
+                onClick={(e) => { e.stopPropagation(); handleEditUser(user.id, user.name); }}
                 className="p-2.5 text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 rounded-xl transition-all duration-300 hover:shadow-sm"
                 title="Edit user"
               >
                 <Edit size={18} />
               </button>
               <button
-                onClick={() => handleDeleteUser(user.id, user.name)}
+                onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id, user.name); }}
                 className="p-2.5 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:shadow-sm"
                 title="Delete user"
               >
@@ -248,6 +253,7 @@ const UserManagementPage: React.FC = () => {
           className={`${
             index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
           } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+          onClick={() => { setViewedUser(user); setIsViewModalOpen(true); }}
         >
           <td className="px-4 py-3 text-gray-900">{user.id}</td>
           <td className="px-4 py-3 text-gray-900 font-medium">{user.name}</td>
@@ -257,14 +263,14 @@ const UserManagementPage: React.FC = () => {
           <td className="px-4 py-3">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => handleEditUser(user.id, user.name)}
+                onClick={(e) => { e.stopPropagation(); handleEditUser(user.id, user.name); }}
                 className="p-2.5 text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 rounded-xl transition-all duration-300 hover:shadow-sm"
                 title="Edit user"
               >
                 <Edit size={18} />
               </button>
               <button
-                onClick={() => handleDeleteUser(user.id, user.name)}
+                onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id, user.name); }}
                 className="p-2.5 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:shadow-sm"
                 title="Delete user"
               >
@@ -351,6 +357,11 @@ const UserManagementPage: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Instructional Note */}
+          <div className="mb-4 text-green-700 text-sm font-medium">
+            Note: You can view the details by clicking the row.
           </div>
 
           {/* User Data Table */}
@@ -470,6 +481,52 @@ const UserManagementPage: React.FC = () => {
       </div>
 
       {/* Modals */}
+      {isViewModalOpen && viewedUser && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsViewModalOpen(false);
+              setViewedUser(null);
+            }
+          }}
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">User Details</h3>
+              <button
+                onClick={() => { setIsViewModalOpen(false); setViewedUser(null); }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="flex justify-between text-sm"><span className="text-gray-500">ID</span><span className="text-gray-900 font-medium">{viewedUser.id}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Name</span><span className="text-gray-900 font-medium">{viewedUser.name}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">E-mail</span><span className="text-gray-900 font-medium">{viewedUser.email}</span></div>
+              {viewedUser.role && (
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Role</span><span className="text-gray-900 font-medium capitalize">{viewedUser.role}</span></div>
+              )}
+              {viewedUser.address !== undefined && (
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Address</span><span className="text-gray-900 font-medium text-right max-w-[60%] truncate" title={viewedUser.address || '-'}>{viewedUser.address || '-'}</span></div>
+              )}
+              {viewedUser.phone_number !== undefined && (
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Phone Number</span><span className="text-gray-900 font-medium">{viewedUser.phone_number || '-'}</span></div>
+              )}
+            </div>
+            <div className="p-5 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => { setIsViewModalOpen(false); setViewedUser(null); }}
+                className="px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors duration-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <AddUserModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
