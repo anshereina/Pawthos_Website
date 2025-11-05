@@ -47,8 +47,8 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
-    created_at: datetime
-    is_confirmed: int
+    created_at: Optional[datetime]
+    is_confirmed: Optional[int] = None
 
     class Config:
         from_attributes = True
