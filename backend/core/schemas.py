@@ -29,7 +29,7 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 class UserBase(BaseModel):
-    name: str
+    name: Optional[str] = None
     email: EmailStr
     address: Optional[str] = None
     phone_number: Optional[str] = None
@@ -47,6 +47,8 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
+    # Loosen email validation for responses to tolerate legacy data
+    email: str
     created_at: Optional[datetime]
     is_confirmed: Optional[int] = None
 
