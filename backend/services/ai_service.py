@@ -360,5 +360,14 @@ class AIService:
             logging.error(f"Predict error: {e}")
             raise ValueError("Failed to process image")
 
-# Global instance
-ai_service = AIService()
+# Global instance - wrap in try-except to prevent import failures
+# Allow import to succeed even if initialization fails, so router can handle it gracefully
+try:
+    ai_service = AIService()
+    logging.info("✅ AI Service initialized successfully")
+except Exception as e:
+    logging.error(f"❌ Failed to initialize AI Service: {e}")
+    import traceback
+    logging.error(f"Traceback: {traceback.format_exc()}")
+    # Set to None so router can detect and return proper error
+    ai_service = None

@@ -7,9 +7,21 @@ import logging
 # Optional AI service import
 try:
     from services.ai_service import ai_service
+    # Check if service was actually initialized (not None)
+    if ai_service is None:
+        raise ImportError("AI service instance is None")
     AI_SERVICE_AVAILABLE = True
+    logging.info("✅ AI service loaded and available")
 except ImportError as e:
-    print(f"⚠️ AI service not available: {e}")
+    logging.error(f"⚠️ AI service not available: {e}")
+    import traceback
+    logging.error(f"Import traceback: {traceback.format_exc()}")
+    AI_SERVICE_AVAILABLE = False
+    ai_service = None
+except Exception as e:
+    logging.error(f"⚠️ Unexpected error loading AI service: {e}")
+    import traceback
+    logging.error(f"Error traceback: {traceback.format_exc()}")
     AI_SERVICE_AVAILABLE = False
     ai_service = None
 
@@ -21,10 +33,16 @@ async def predict_pain_basic(file: UploadFile = File(...)):
     """
     Basic pain prediction endpoint using Haar cascades and heuristics
     """
-    if not AI_SERVICE_AVAILABLE:
+    if not AI_SERVICE_AVAILABLE or ai_service is None:
+        logging.error("AI service unavailable - returning 503 error")
         raise HTTPException(
             status_code=503, 
-            detail="AI service not available. Please contact administrator."
+            detail={
+                "error": True,
+                "error_type": "SERVICE_UNAVAILABLE",
+                "error_message": "AI service is currently unavailable",
+                "error_guidance": "The AI pain assessment service is temporarily unavailable. Please try again later or contact support."
+            }
         )
     try:
         if not file.content_type or not file.content_type.startswith("image/"):
@@ -80,10 +98,16 @@ async def predict_pain_eld(
     """
     Enhanced pain prediction using Ensemble Landmark Detector (ELD) with 48 landmarks
     """
-    if not AI_SERVICE_AVAILABLE:
+    if not AI_SERVICE_AVAILABLE or ai_service is None:
+        logging.error("AI service unavailable - returning 503 error")
         raise HTTPException(
             status_code=503, 
-            detail="AI service not available. Please contact administrator."
+            detail={
+                "error": True,
+                "error_type": "SERVICE_UNAVAILABLE",
+                "error_message": "AI service is currently unavailable",
+                "error_guidance": "The AI pain assessment service is temporarily unavailable. Please try again later or contact support."
+            }
         )
     try:
         if not file.content_type or not file.content_type.startswith("image/"):
