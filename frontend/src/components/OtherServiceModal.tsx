@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Syringe, Calendar, DollarSign } from 'lucide-react';
+import { X, Syringe, Calendar } from 'lucide-react';
 
 interface OtherServiceModalProps {
   isOpen: boolean;
@@ -10,7 +10,6 @@ interface OtherServiceModalProps {
 interface OtherServiceData {
   vaccineUsed: string;
   dateExpiration: string;
-  payment: string;
 }
 
 const OtherServiceModal: React.FC<OtherServiceModalProps> = ({
@@ -21,7 +20,6 @@ const OtherServiceModal: React.FC<OtherServiceModalProps> = ({
   const [formData, setFormData] = useState<OtherServiceData>({
     vaccineUsed: '',
     dateExpiration: '',
-    payment: '',
   });
   const [errors, setErrors] = useState<Partial<OtherServiceData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,10 +42,6 @@ const OtherServiceModal: React.FC<OtherServiceModalProps> = ({
 
     if (!formData.dateExpiration.trim()) {
       newErrors.dateExpiration = 'Date Expiration of Vaccine is required';
-    }
-
-    if (!formData.payment.trim()) {
-      newErrors.payment = 'Payment is required';
     }
 
     setErrors(newErrors);
@@ -76,7 +70,6 @@ const OtherServiceModal: React.FC<OtherServiceModalProps> = ({
     setFormData({
       vaccineUsed: '',
       dateExpiration: '',
-      payment: '',
     });
     setErrors({});
     setIsSubmitting(false);
@@ -149,26 +142,6 @@ const OtherServiceModal: React.FC<OtherServiceModalProps> = ({
             />
             {errors.dateExpiration && (
               <p className="mt-1 text-sm text-red-600">{errors.dateExpiration}</p>
-            )}
-          </div>
-
-          {/* Payment Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <DollarSign size={16} className="inline mr-2" />
-              Payment *
-            </label>
-            <input
-              type="text"
-              value={formData.payment}
-              onChange={(e) => handleInputChange('payment', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                errors.payment ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Enter payment amount"
-            />
-            {errors.payment && (
-              <p className="mt-1 text-sm text-red-600">{errors.payment}</p>
             )}
           </div>
 

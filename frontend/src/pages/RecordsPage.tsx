@@ -133,7 +133,7 @@ const RecordsPage: React.FC = () => {
       type: "shipping-permit"
     },
     {
-      title: "Pet Sterilization Records",
+      title: "Spay/Neuter Records",
       description: "Manages breeding histories, estrus cycles, pregnancies, and whelping/kidding/farrowing details for animals.",
       backgroundImage: "/images/pictures/kapon.png",
       icon: <Clipboard size={24} className="text-white" />,

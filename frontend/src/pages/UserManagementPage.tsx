@@ -6,7 +6,13 @@ import {
   Search, 
   Plus, 
   Edit, 
-  Trash2 
+  Trash2,
+  X,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Shield
 } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -176,6 +182,20 @@ const UserManagementPage: React.FC = () => {
 
   const handleModalSuccess = () => {
     fetchUsers();
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewedUser(null);
+  };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) return 'N/A';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+    return parsed.toLocaleString();
   };
 
   // Show loading state while restoring session
@@ -483,43 +503,120 @@ const UserManagementPage: React.FC = () => {
       {/* Modals */}
       {isViewModalOpen && viewedUser && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setIsViewModalOpen(false);
-              setViewedUser(null);
+              handleCloseViewModal();
             }
           }}
         >
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4">
-            <div className="flex items-center justify-between p-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">User Details</h3>
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-100 rounded-xl text-green-700">
+                  <User size={22} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">User Details</h3>
+                  <p className="text-sm text-gray-500">View account information</p>
+                </div>
+              </div>
               <button
-                onClick={() => { setIsViewModalOpen(false); setViewedUser(null); }}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                onClick={handleCloseViewModal}
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
                 aria-label="Close"
               >
-                ×
+                <X size={20} />
               </button>
             </div>
-            <div className="p-5 space-y-3">
-              <div className="flex justify-between text-sm"><span className="text-gray-500">ID</span><span className="text-gray-900 font-medium">{viewedUser.id}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Name</span><span className="text-gray-900 font-medium">{viewedUser.name}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-500">E-mail</span><span className="text-gray-900 font-medium">{viewedUser.email}</span></div>
-              {viewedUser.role && (
-                <div className="flex justify-between text-sm"><span className="text-gray-500">Role</span><span className="text-gray-900 font-medium capitalize">{viewedUser.role}</span></div>
-              )}
+
+            <div className="px-6 py-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="border border-green-100 bg-green-50 rounded-xl p-4">
+                  <span className="text-sm font-semibold text-green-800 flex items-center gap-2">
+                    <Shield size={16} />
+                    Account Role
+                  </span>
+                  <p className="mt-2 text-gray-900 font-medium capitalize">
+                    {viewedUser.role || 'N/A'}
+                  </p>
+                </div>
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <span className="text-sm font-semibold text-gray-700">User ID</span>
+                  <p className="mt-2 text-gray-900 font-medium">{viewedUser.id ?? 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="border-b border-gray-200 pb-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <User size={16} className="text-green-700" />
+                  Full Name
+                </label>
+                <p className="text-gray-900 text-base font-medium">
+                  {viewedUser.name || 'N/A'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-gray-200 pb-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <Mail size={16} className="text-green-700" />
+                    Email Address
+                  </label>
+                  <p className="text-gray-900 break-all">
+                    {viewedUser.email || 'N/A'}
+                  </p>
+                </div>
+                {viewedUser.phone_number !== undefined && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Phone size={16} className="text-green-700" />
+                      Phone Number
+                    </label>
+                    <p className="text-gray-900">
+                      {viewedUser.phone_number || 'N/A'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {viewedUser.address !== undefined && (
-                <div className="flex justify-between text-sm"><span className="text-gray-500">Address</span><span className="text-gray-900 font-medium text-right max-w-[60%] truncate" title={viewedUser.address || '-'}>{viewedUser.address || '-'}</span></div>
+                <div className="border-b border-gray-200 pb-5">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <MapPin size={16} className="text-green-700" />
+                    Address
+                  </label>
+                  <p className="text-gray-900 whitespace-pre-wrap">
+                    {viewedUser.address || 'N/A'}
+                  </p>
+                </div>
               )}
-              {viewedUser.phone_number !== undefined && (
-                <div className="flex justify-between text-sm"><span className="text-gray-500">Phone Number</span><span className="text-gray-900 font-medium">{viewedUser.phone_number || '-'}</span></div>
+
+              {(viewedUser.created_at || viewedUser.updated_at) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-500">
+                  {viewedUser.created_at && (
+                    <div>
+                      <span className="font-medium">Created:</span>{' '}
+                      <span>{formatDateTime(viewedUser.created_at)}</span>
+                    </div>
+                  )}
+                  {viewedUser.updated_at && (
+                    <div>
+                      <span className="font-medium">Last Updated:</span>{' '}
+                      <span>{formatDateTime(viewedUser.updated_at)}</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-            <div className="p-5 border-t border-gray-200 flex justify-end">
+
+            <div className="flex justify-end px-6 py-5 border-t border-gray-200">
               <button
-                onClick={() => { setIsViewModalOpen(false); setViewedUser(null); }}
-                className="px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors duration-200"
+                onClick={handleCloseViewModal}
+                className="px-6 py-2 bg-green-700 text-white rounded-lg font-medium hover:bg-green-800 transition-colors"
               >
                 Close
               </button>

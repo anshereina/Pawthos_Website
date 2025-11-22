@@ -277,8 +277,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
   const handleOtherServiceSubmit = (serviceData: any) => {
     if (currentRecordId) {
-      // Create a formatted service string with vaccine, expiry, and payment information
-      const serviceString = `Vaccine: ${serviceData.vaccineUsed}, Expiry: ${serviceData.dateExpiration}, Payment: ${serviceData.payment}`;
+      // Create a formatted service string with vaccine and expiry information
+      const serviceString = `Vaccine: ${serviceData.vaccineUsed}, Expiry: ${serviceData.dateExpiration}`;
       addOtherService(currentRecordId, serviceString);
     }
     setCurrentRecordId(null);
