@@ -28,4 +28,6 @@ test_*.py
 .vercelignore
 vercel.json
 api/
-
+build.sh
+nixpacks.toml
+requirements-minimal.txt
