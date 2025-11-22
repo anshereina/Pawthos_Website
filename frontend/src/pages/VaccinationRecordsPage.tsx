@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserCircle, ChevronDown, CalendarClock, Upload, Search, Edit, Trash2, ArrowLeft, Plus, Filter } from 'lucide-react';
+import { UserCircle, ChevronDown, CalendarClock, Search, Edit, Trash2, ArrowLeft, Plus, Filter } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -26,7 +26,7 @@ const TABS = [
 
 const VACCINATION_EVENTS_COLUMNS = [
   'Event Date',
-  'Barangay',
+  'Subdivision/Barangay',
   'Service Coordinator',
   'Status',
   'Event Title',
@@ -413,11 +413,6 @@ const VaccinationRecordsPage: React.FC = () => {
                     <span>Add Record</span>
                   </button>
                 )}
-                {/* Export Button */}
-                <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow">
-                  <Upload size={16} />
-                  <span className="font-semibold">Export</span>
-                </button>
               </div>
             </div>
           </div>

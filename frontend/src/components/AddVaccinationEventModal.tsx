@@ -107,7 +107,7 @@ const AddVaccinationEventModal: React.FC<AddVaccinationEventModalProps> = ({
           {/* Barangay */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Barangay
+              Subdivision/Barangay
             </label>
             <div className="relative">
               <MapPin size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />

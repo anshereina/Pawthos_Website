@@ -663,61 +663,41 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
 
         {/* Individual Pet Vaccination Records Table */}
+        {isEditable && (
         <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800">Individual Pet Vaccination Records</h2>
-              {isEditable && (
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700">Add rows:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      defaultValue="5"
-                      className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
-                      id="rowCount"
-                    />
-                    <button
-                      onClick={() => {
-                        const count = parseInt((document.getElementById('rowCount') as HTMLInputElement)?.value || '5');
-                        addMultiplePetRecords(count);
-                      }}
-                      className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg text-sm"
-                    >
-                      <Plus size={16} />
-                      <span>Add Multiple</span>
-                    </button>
-                  </div>
-                  <button
-                    onClick={addPetRecord}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <Plus size={20} />
-                    <span>Add Single</span>
-                  </button>
-                </div>
-              )}
-              {!isEditable && (
+              <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
-                    📖 View Only Mode - Click Edit to Modify
-                  </span>
+                  <label className="text-sm font-medium text-gray-700">Add rows:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    defaultValue="5"
+                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                    id="rowCount"
+                  />
                   <button
-                    onClick={handleExportPDF}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                    onClick={() => {
+                      const count = parseInt((document.getElementById('rowCount') as HTMLInputElement)?.value || '5');
+                      addMultiplePetRecords(count);
+                    }}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg text-sm"
                   >
-                    <Download size={16} />
-                    <span>Export PDF</span>
+                    <Plus size={16} />
+                    <span>Add Multiple</span>
                   </button>
                 </div>
-              )}
-            </div>
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Total Records: <span className="font-semibold text-gray-800">{petRecords.length}</span></span>
-              <span>Completed: <span className="font-semibold text-green-600">{petRecords.filter(r => r.ownerName && r.petName && r.ownerContact).length}</span></span>
-              <span>Incomplete: <span className="font-semibold text-yellow-600">{petRecords.filter(r => !r.ownerName || !r.petName || !r.ownerContact).length}</span></span>
+                <button
+                  onClick={addPetRecord}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  <Plus size={20} />
+                  <span>Add Single</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1029,6 +1009,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
             </>
           )}
         </div>
+        )}
 
         {/* Summary and Save Section */}
         <div className="mt-6 bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-300">
