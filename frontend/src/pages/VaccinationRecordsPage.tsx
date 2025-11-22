@@ -312,8 +312,10 @@ const VaccinationRecordsPage: React.FC = () => {
         return false;
       }
     } else if (activeTab === 'all') {
-      // Show ALL events in the "Vaccination Events List" tab regardless of status
-      // No status filtering needed - show everything
+      // Only show 'Completed' and 'Cancelled' events in Vaccination Events List tab
+      if (event.status !== 'Completed' && event.status !== 'Cancelled') {
+        return false;
+      }
     }
     
     // Apply search filter
