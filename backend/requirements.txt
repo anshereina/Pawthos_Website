@@ -20,7 +20,7 @@ uvicorn==0.24.0
 # Lightweight AI/ML Dependencies for Railway
 # Temporarily commented out to test Railway deployment
 # numpy==1.26.4
-# Pillow==10.4.0
+Pillow==10.4.0
 # scikit-learn==1.4.2
 # joblib==1.4.2
 
@@ -29,4 +29,6 @@ uvicorn==0.24.0
 # torchvision>=0.16.0
 # efficientnet-pytorch>=0.7.1
 # opencv-python-headless>=4.8.1.78
-# google-generativeai>=0.3.2
+
+# AI Service Dependencies (Required for pain assessment)
+google-generativeai>=0.3.2
