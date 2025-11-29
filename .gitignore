@@ -25,7 +25,9 @@ models/*.pkl
 eld/*.pkl
 
 # Uploads and media
-uploads/
+# Uploads directory - ignore uploaded files but keep directory structure
+backend/uploads/*
+!backend/uploads/.gitkeep
 *.jpg
 *.jpeg
 *.png
@@ -57,3 +59,37 @@ instance/
 
 # Ignore local settings
 local_settings.py
+
+# Node.js / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo / React Native
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# React Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Temporary files
+*.tmp
+*.temp
