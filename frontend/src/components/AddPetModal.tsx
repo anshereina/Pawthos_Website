@@ -20,6 +20,7 @@ const AddPetModal: React.FC<AddPetModalProps> = ({ isOpen, onClose, onSubmit, lo
   const [formData, setFormData] = useState<CreatePetData>({
     name: '',
     owner_name: '',
+    owner_birthday: '',
     species: '',
     date_of_birth: '',
     color: '',
@@ -83,10 +84,16 @@ const AddPetModal: React.FC<AddPetModalProps> = ({ isOpen, onClose, onSubmit, lo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await onSubmit(formData);
+      const payload: CreatePetData = {
+        ...formData,
+        owner_birthday: formData.owner_birthday || undefined,
+        date_of_birth: formData.date_of_birth || undefined,
+      };
+      await onSubmit(payload);
       setFormData({
         name: '',
         owner_name: '',
+        owner_birthday: '',
         species: '',
         date_of_birth: '',
         color: '',
@@ -244,7 +251,21 @@ const AddPetModal: React.FC<AddPetModalProps> = ({ isOpen, onClose, onSubmit, lo
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Birth
+                Owner's Birthday
+              </label>
+              <input
+                type="date"
+                name="owner_birthday"
+                value={formData.owner_birthday}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pet's Date of Birth
               </label>
               <input
                 type="date"

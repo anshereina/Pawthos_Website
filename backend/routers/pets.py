@@ -67,19 +67,25 @@ def create_pet(
             detail="Species must be either 'feline' or 'canine' (or common names like 'cat', 'dog')"
         )
     
+    # Only attach user_id when the authenticated principal is a User.
+    # Admin accounts do not exist in the users table, so forcing their ID
+    # causes a foreign key violation when they create pets.
+    user_id = current_user.id if isinstance(current_user, models.User) else None
+    
     pet_id = generate_pet_id(db)
     
     db_pet = Pet(
         pet_id=pet_id,
         name=pet.name,
         owner_name=pet.owner_name,
+        owner_birthday=pet.owner_birthday,
         species=species,
         date_of_birth=pet.date_of_birth,
         color=pet.color,
         breed=pet.breed,
         gender=pet.gender,
         reproductive_status=pet.reproductive_status,
-        user_id=current_user.id  # Set the user_id to the authenticated user
+        user_id=user_id  # Set to authenticated user when applicable
     )
     
     db.add(db_pet)
@@ -180,6 +186,17 @@ def update_pet(pet_id: str, pet_update: PetUpdate, db: Session = Depends(get_db)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid date format for date_of_birth. Use YYYY-MM-DD format."
+            )
+    
+    # Handle date conversion if owner_birthday is provided as string
+    if 'owner_birthday' in update_data and isinstance(update_data['owner_birthday'], str):
+        try:
+            from datetime import datetime
+            update_data['owner_birthday'] = datetime.strptime(update_data['owner_birthday'], '%Y-%m-%d').date()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date format for owner_birthday. Use YYYY-MM-DD format."
             )
     
     for field, value in update_data.items():

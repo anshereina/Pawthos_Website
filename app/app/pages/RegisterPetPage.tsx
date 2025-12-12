@@ -312,6 +312,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
     const [showSpeciesDropdown, setShowSpeciesDropdown] = useState(false);
     const [breed, setBreed] = useState('');
     const [color, setColor] = useState('');
+    const [ownerBirthday, setOwnerBirthday] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [age, setAge] = useState('');
     const [gender, setGender] = useState('Please Select');
@@ -487,6 +488,11 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         setDateOfBirth(formatted);
         const calculatedAge = calculateAge(formatted);
         setAge(calculatedAge);
+    };
+
+    const handleOwnerBirthdayChange = (text: string) => {
+        const formatted = formatDateInput(text);
+        setOwnerBirthday(formatted);
     };
 
     const requestPermissions = async () => {
@@ -684,10 +690,20 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                 }
             }
 
+            let formattedOwnerBirthday = undefined;
+            if (ownerBirthday && ownerBirthday.length === 10) {
+                const normalized = ownerBirthday.replace(/-/g, '/');
+                const parts = normalized.split('/');
+                if (parts.length === 3) {
+                    formattedOwnerBirthday = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+
             const petData = {
                 pet_id: finalPetId,
                 name: petName.trim(),
                 owner_name: ownerName,
+                owner_birthday: formattedOwnerBirthday,
                 species: species,
                 date_of_birth: formattedDateOfBirth,
                 color: color.trim() || undefined,
@@ -881,9 +897,22 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                         </View>
                     </View>
 
+                    <View style={styles.formSection}>
+                        <Text style={styles.sectionTitle}>Owner's Birthday</Text>
+                        <TextInput
+                            style={styles.inputField}
+                            placeholder="DD/MM/YYYY"
+                            placeholderTextColor="#999"
+                            value={ownerBirthday}
+                            onChangeText={handleOwnerBirthdayChange}
+                            keyboardType="numeric"
+                            maxLength={10}
+                        />
+                    </View>
+
                     {/* Date of Birth and Age */}
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Date of Birth and Age</Text>
+                        <Text style={styles.sectionTitle}>Pet's Date of Birth and Age</Text>
                         <View style={styles.rowContainer}>
                             <TextInput
                                 style={[styles.inputField, styles.halfWidthField]}

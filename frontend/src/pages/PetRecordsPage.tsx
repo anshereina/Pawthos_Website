@@ -31,8 +31,9 @@ const TABLE_COLUMNS = [
   'Pet ID',
   "Name",
   "Owner's Name",
+  "Owner's Birthday",
   "Species",
-  "Date of Birth",
+  "Pet's Date of Birth",
   "Age",
   "Color",
   "Breed",
@@ -679,7 +680,7 @@ const PetRecordsPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-white mb-1">Date of Birth:</label>
+                      <label className="block text-white mb-1">Pet's Date of Birth:</label>
                       <div className="relative">
                         <input 
                           type="text" 
@@ -1199,6 +1200,7 @@ const PetRecordsPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3">{pet.name}</td>
                       <td className="px-4 py-3">{pet.owner_name}</td>
+                      <td className="px-4 py-3">{formatDate(pet.owner_birthday)}</td>
                       <td className="px-4 py-3 capitalize">{pet.species}</td>
                       <td className="px-4 py-3">{formatDate(pet.date_of_birth)}</td>
                       <td className="px-4 py-3">{calculateAge(pet.date_of_birth)}</td>

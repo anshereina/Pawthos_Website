@@ -5,6 +5,7 @@ export interface Pet {
   pet_id: string;
   name: string;
   owner_name: string;
+  owner_birthday?: string;
   species: string;
   date_of_birth?: string;
   color?: string;
@@ -19,6 +20,7 @@ export interface Pet {
 export interface CreatePetData {
   name: string;
   owner_name: string;
+  owner_birthday?: string;
   species: string;
   date_of_birth?: string;
   color?: string;
@@ -31,6 +33,7 @@ export interface CreatePetData {
 export interface UpdatePetData {
   name?: string;
   owner_name?: string;
+  owner_birthday?: string;
   species?: string;
   date_of_birth?: string;
   color?: string;

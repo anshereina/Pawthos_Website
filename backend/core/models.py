@@ -44,6 +44,7 @@ class Pet(Base):
     pet_id = Column(String(20), nullable=False)  # Character varying field - not unique to match mobile backend
     name = Column(String(255), nullable=False)
     owner_name = Column(String(255), nullable=False)  # Keep for backward compatibility
+    owner_birthday = Column(String(255), nullable=True)  # Owner's birthday
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)  # New foreign key
     species = Column(String(50), nullable=False)  # feline, canine, etc.
     date_of_birth = Column(String(255), nullable=True)  # Changed to String to match mobile backend

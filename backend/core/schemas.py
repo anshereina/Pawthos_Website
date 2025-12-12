@@ -140,6 +140,7 @@ class Alert(AlertBase):
 class PetBase(BaseModel):
     name: str
     owner_name: str
+    owner_birthday: Optional[date] = None
     species: str
     date_of_birth: Optional[date] = None
     color: Optional[str] = None
@@ -154,6 +155,7 @@ class PetCreate(PetBase):
 class PetUpdate(BaseModel):
     name: Optional[str] = None
     owner_name: Optional[str] = None
+    owner_birthday: Optional[date] = None
     species: Optional[str] = None
     date_of_birth: Optional[date] = None
     color: Optional[str] = None
@@ -167,6 +169,7 @@ class Pet(BaseModel):
     pet_id: str
     name: str
     owner_name: str
+    owner_birthday: Optional[date] = None
     species: str
     date_of_birth: Optional[date] = None
     color: Optional[str] = None
