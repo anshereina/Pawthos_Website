@@ -40,16 +40,8 @@ if db_url:
 else:
     print("❌ DATABASE_URL not found in environment variables")
 
-# Run database migrations
-print("🔧 Running database migrations...")
-try:
-    from alembic.config import Config
-    from alembic import command
-    alembic_cfg = Config("alembic.ini")
-    command.upgrade(alembic_cfg, "head")
-    print("✅ Database migrations completed successfully")
-except Exception as e:
-    print(f"⚠️ Database migrations failed or skipped: {e}")
+# Note: Database migrations are handled by Railway startup command (alembic upgrade head)
+# This ensures migrations run before the server starts
 
 # Create database tables (fallback for development)
 print("🔧 Creating database tables...")

@@ -5,18 +5,18 @@
 
 echo "🚀 Starting Pawthos Backend on Railway..."
 
-# Run database migrations
-echo "📊 Running database migrations..."
-alembic upgrade head
+# Wait for database to be ready
+echo "⏳ Waiting for database connection..."
+sleep 3
 
-# Check if migrations succeeded
-if [ $? -eq 0 ]; then
+# Run database migrations (non-blocking - server will start even if migrations fail)
+echo "📊 Running database migrations..."
+if alembic upgrade head 2>&1; then
     echo "✅ Migrations completed successfully"
 else
-    echo "⚠️  Migrations failed or skipped"
+    echo "⚠️  Migrations failed or skipped - server will continue"
 fi
 
 # Start the application
 echo "🌐 Starting FastAPI application..."
 exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
-
