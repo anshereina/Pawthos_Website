@@ -40,7 +40,18 @@ if db_url:
 else:
     print("❌ DATABASE_URL not found in environment variables")
 
-# Create database tables
+# Run database migrations
+print("🔧 Running database migrations...")
+try:
+    from alembic.config import Config
+    from alembic import command
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
+    print("✅ Database migrations completed successfully")
+except Exception as e:
+    print(f"⚠️ Database migrations failed or skipped: {e}")
+
+# Create database tables (fallback for development)
 print("🔧 Creating database tables...")
 try:
     from core.database import Base
