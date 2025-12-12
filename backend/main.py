@@ -40,9 +40,6 @@ if db_url:
 else:
     print("❌ DATABASE_URL not found in environment variables")
 
-# Note: Database migrations are handled by Railway startup command (alembic upgrade head)
-# This ensures migrations run before the server starts
-
 # Create database tables (fallback for development)
 print("🔧 Creating database tables...")
 try:
