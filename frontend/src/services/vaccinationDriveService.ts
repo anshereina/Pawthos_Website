@@ -4,12 +4,14 @@ export interface PetVaccinationRecord {
   id: number;
   owner_name: string;
   pet_name: string;
-  owner_contact: string;
+  owner_birthday?: string;  // Owner's birthday
+  owner_contact?: string;  // Made optional
   species: string;
   breed: string;
   color: string;
   age: string;
   sex: string;
+  reproductive_status?: string;  // intact, castrated, spayed
   other_services: string[];
   vaccine_used: string;
   batch_no_lot_no: string;

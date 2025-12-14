@@ -458,12 +458,14 @@ class VaccinationDriveRecordBase(BaseModel):
     drive_id: int
     owner_name: str
     pet_name: str
-    owner_contact: str
+    owner_birthday: Optional[str] = None  # Owner's birthday
+    owner_contact: Optional[str] = None  # Made optional
     species: str
     breed: Optional[str] = None
     color: Optional[str] = None
     age: Optional[str] = None
     sex: Optional[str] = None
+    reproductive_status: Optional[str] = None  # intact, castrated, spayed
     other_services: Optional[str] = None
     vaccine_used: str
     batch_no_lot_no: str

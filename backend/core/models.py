@@ -235,12 +235,14 @@ class VaccinationDriveRecord(Base):
     drive_id = Column(Integer, ForeignKey("vaccination_drives.id"), nullable=False)
     owner_name = Column(String(255), nullable=False)
     pet_name = Column(String(255), nullable=False)
-    owner_contact = Column(String(50), nullable=False)
+    owner_birthday = Column(String(255), nullable=True)  # Owner's birthday
+    owner_contact = Column(String(50), nullable=True)  # Made optional
     species = Column(String(50), nullable=False)
     breed = Column(String(100), nullable=True)
     color = Column(String(100), nullable=True)
     age = Column(String(20), nullable=True)
     sex = Column(String(20), nullable=True)
+    reproductive_status = Column(String(20), nullable=True)  # intact, castrated, spayed
     other_services = Column(Text, nullable=True)  # JSON string
     vaccine_used = Column(String(255), nullable=False)
     batch_no_lot_no = Column(String(100), nullable=False)

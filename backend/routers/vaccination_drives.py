@@ -114,12 +114,14 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
                 drive_id=drive.id,
                 owner_name=pet_record_data["owner_name"],
                 pet_name=pet_record_data["pet_name"],
-                owner_contact=pet_record_data["owner_contact"],
+                owner_birthday=pet_record_data.get("owner_birthday"),
+                owner_contact=pet_record_data.get("owner_contact"),  # Made optional
                 species=pet_record_data["species"],
                 breed=pet_record_data.get("breed"),
                 color=pet_record_data.get("color"),
                 age=pet_record_data.get("age"),
                 sex=pet_record_data.get("sex"),
+                reproductive_status=pet_record_data.get("reproductive_status"),
                 other_services=json.dumps(pet_record_data.get("other_services", [])),
                 vaccine_used=pet_record_data["vaccine_used"],
                 batch_no_lot_no=pet_record_data["batch_no_lot_no"],
@@ -130,7 +132,7 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
             # Find or create user and pet for vaccination record
             user = find_or_create_user(
                 pet_record_data["owner_name"], 
-                pet_record_data["owner_contact"], 
+                pet_record_data.get("owner_contact") or "", 
                 db
             )
             

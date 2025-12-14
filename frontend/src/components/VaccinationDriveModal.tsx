@@ -21,12 +21,14 @@ interface PetVaccinationRecord {
   id: number;
   ownerName: string;
   petName: string;
+  ownerBirthday: string;
   ownerContact: string;
   species: string;
   breed: string;
   color: string;
   age: string;
   sex: string;
+  reproductiveStatus: string;
   otherServices: string[];
 }
 
@@ -106,12 +108,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           id: record.id,
           ownerName: record.owner_name,
           petName: record.pet_name,
-          ownerContact: record.owner_contact,
+          ownerBirthday: record.owner_birthday || '',
+          ownerContact: record.owner_contact || '',
           species: record.species,
           breed: record.breed || '',
           color: record.color || '',
           age: record.age || '',
           sex: record.sex || '',
+          reproductiveStatus: record.reproductive_status || '',
           otherServices: record.other_services || [],
         }));
         setPetRecords(loadedRecords);
@@ -186,6 +190,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
   const speciesOptions = ['Dog', 'Cat', 'Other'];
   const sexOptions = ['Male', 'Female'];
+  const reproductiveStatusOptions = ['Intact', 'Castrated', 'Spayed'];
 
   // Helper function to calculate age from date of birth
   const calculateAge = (dateOfBirth: string): string => {
@@ -217,12 +222,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       id: Date.now(),
       ownerName: '',
       petName: '',
+      ownerBirthday: '',
       ownerContact: '',
       species: '',
       breed: '',
       color: '',
       age: '',
       sex: '',
+      reproductiveStatus: '',
       otherServices: [],
     };
     setPetRecords(prev => [...prev, newRecord]);
@@ -233,12 +240,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       id: Date.now() + index,
       ownerName: '',
       petName: '',
+      ownerBirthday: '',
       ownerContact: '',
       species: '',
       breed: '',
       color: '',
       age: '',
       sex: '',
+      reproductiveStatus: '',
       otherServices: [],
     }));
     setPetRecords(prev => [...prev, ...newRecords]);
@@ -284,8 +293,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       return;
     }
 
-    // Validate pet records
-    const incompleteRecords = petRecords.filter(r => !r.ownerName || !r.petName || !r.ownerContact);
+    // Validate pet records (owner_contact is now optional)
+    const incompleteRecords = petRecords.filter(r => !r.ownerName || !r.petName);
     if (incompleteRecords.length > 0) {
       alert(`Please complete ${incompleteRecords.length} record(s) before saving.`);
       return;
@@ -300,12 +309,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         pet_records: petRecords.map(record => ({
           owner_name: record.ownerName,
           pet_name: record.petName,
-          owner_contact: record.ownerContact,
+          owner_birthday: record.ownerBirthday || undefined,
+          owner_contact: record.ownerContact || undefined,
           species: record.species,
           breed: record.breed,
           color: record.color,
           age: record.age,
           sex: record.sex,
+          reproductive_status: record.reproductiveStatus || undefined,
           other_services: record.otherServices,
           vaccine_used: formData.vaccineUsed,
           batch_no_lot_no: formData.batchNoLotNo,
@@ -326,15 +337,23 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
   const handleOwnerChange = (recordId: number, ownerName: string, ownerData?: OwnerSearchResult) => {
     if (ownerData) {
-      // Auto-fill owner name and contact when owner is selected
+      // Auto-fill owner name, contact, and birthday when owner is selected
       updatePetRecord(recordId, 'ownerName', ownerData.owner_name);
       updatePetRecord(recordId, 'ownerContact', ownerData.contact_number || '');
+      // Use birthdate if available (format: YYYY-MM-DD)
+      if (ownerData.birthdate) {
+        const birthdate = typeof ownerData.birthdate === 'string' 
+          ? ownerData.birthdate.split('T')[0] 
+          : ownerData.birthdate;
+        updatePetRecord(recordId, 'ownerBirthday', birthdate);
+      }
       // Clear pet-related fields when owner changes
       updatePetRecord(recordId, 'petName', '');
       updatePetRecord(recordId, 'species', '');
       updatePetRecord(recordId, 'breed', '');
       updatePetRecord(recordId, 'color', '');
       updatePetRecord(recordId, 'sex', '');
+      updatePetRecord(recordId, 'reproductiveStatus', '');
     } else {
       // Just update the owner name if manually typing
       updatePetRecord(recordId, 'ownerName', ownerName);
@@ -429,7 +448,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     
     // Summary statistics
     const totalRecords = petRecords.length;
-    const completedRecords = petRecords.filter(r => r.ownerName && r.petName && r.ownerContact).length;
+    const completedRecords = petRecords.filter(r => r.ownerName && r.petName).length;
     const incompleteRecords = totalRecords - completedRecords;
     
     doc.setFontSize(10);
@@ -444,18 +463,20 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       index + 1,
       record.ownerName || '',
       record.petName || '',
+      record.ownerBirthday || '',
       record.ownerContact || '',
       record.species || '',
       record.breed || '',
       record.color || '',
       record.age || '',
       record.sex || '',
+      record.reproductiveStatus || '',
       record.otherServices.join(', ') || ''
     ]);
     
     // Create table
     autoTable(doc, {
-      head: [['#', 'Owner Name', 'Pet Name', 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Other Services']],
+      head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status', 'Other Services']],
       body: tableData,
       startY: yPosition,
       styles: {
@@ -698,12 +719,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                       <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Name</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Pet's Name</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Birthday</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Contact No.</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Species</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Breed</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Color</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Age</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Sex</th>
+                      <th className="px-4 py-3 text-left font-semibold text-sm">Reproductive Status</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Other Service</th>
                       <th className="px-4 py-3 text-left font-semibold text-sm">Action</th>
                     </tr>
@@ -774,12 +797,22 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                     updatePetRecord(record.id, 'sex', pet.gender ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1) : '');
                                     // Calculate age from date of birth
                                     updatePetRecord(record.id, 'age', pet.date_of_birth ? calculateAge(pet.date_of_birth) : '');
+                                    // Map reproductive status - capitalize first letter
+                                    const reproductiveStatus = pet.reproductive_status 
+                                      ? pet.reproductive_status.charAt(0).toUpperCase() + pet.reproductive_status.slice(1)
+                                      : '';
+                                    updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
                                     setActivePetDropdown(null);
                                   }}
                                 >
                                   <div className="font-medium">{pet.name}</div>
-                                  <div className="text-gray-500">
-                                    {pet.species} • {pet.breed || 'Unknown breed'}
+                                  <div className="text-gray-500 text-xs">
+                                    <div>Species: {pet.species || 'N/A'}</div>
+                                    <div>Breed: {pet.breed || 'Unknown'}</div>
+                                    <div>Color: {pet.color || 'N/A'}</div>
+                                    <div>Age: {pet.date_of_birth ? calculateAge(pet.date_of_birth) : 'N/A'}</div>
+                                    <div>Sex: {pet.gender ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1) : 'N/A'}</div>
+                                    <div>Reproductive Status: {pet.reproductive_status ? pet.reproductive_status.charAt(0).toUpperCase() + pet.reproductive_status.slice(1) : 'N/A'}</div>
                                   </div>
                                 </div>
                               ))}
@@ -789,12 +822,22 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                           </td>
                           <td className="px-4 py-3 text-gray-900">
                             <input
+                              type="date"
+                              value={record.ownerBirthday}
+                              onChange={(e) => updatePetRecord(record.id, 'ownerBirthday', e.target.value)}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              placeholder="Owner's Birthday"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <input
                               type="tel"
                               value={record.ownerContact}
                               onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
                               disabled={!isEditable}
                               className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                              placeholder="Contact"
+                              placeholder="Contact (optional)"
                             />
                           </td>
                           <td className="px-4 py-3 text-gray-900">
@@ -849,6 +892,19 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                             >
                               <option value="">-</option>
                               {sexOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">
+                            <select
+                              value={record.reproductiveStatus}
+                              onChange={(e) => updatePetRecord(record.id, 'reproductiveStatus', e.target.value)}
+                              disabled={!isEditable}
+                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                            >
+                              <option value="">-</option>
+                              {reproductiveStatusOptions.map(option => (
                                 <option key={option} value={option}>{option}</option>
                               ))}
                             </select>
@@ -998,8 +1054,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6 text-sm text-gray-600">
               <span>Total Records: <span className="font-semibold text-gray-800">{petRecords.length}</span></span>
-              <span>Completed: <span className="font-semibold text-green-600">{petRecords.filter(r => r.ownerName && r.petName && r.ownerContact).length}</span></span>
-              <span>Incomplete: <span className="font-semibold text-yellow-600">{petRecords.filter(r => !r.ownerName || !r.petName || !r.ownerContact).length}</span></span>
+              <span>Completed: <span className="font-semibold text-green-600">{petRecords.filter(r => r.ownerName && r.petName).length}</span></span>
+              <span>Incomplete: <span className="font-semibold text-yellow-600">{petRecords.filter(r => !r.ownerName || !r.petName).length}</span></span>
             </div>
             <div className="flex items-center space-x-3">
               {isEditable ? (
