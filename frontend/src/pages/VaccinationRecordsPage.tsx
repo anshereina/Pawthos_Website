@@ -222,10 +222,13 @@ const VaccinationRecordsPage: React.FC = () => {
       
       await vaccinationRecordService.createVaccinationRecord(parseInt(recordData.petId), mappedData);
       setIsAddRecordModalOpen(false);
-      // Refetch records
-      fetchRecords();
+      // Refetch records with a small delay to ensure backend has processed the request
+      setTimeout(() => {
+        fetchRecords();
+      }, 500);
     } catch (error) {
       console.error('Error adding vaccination record:', error);
+      alert(error instanceof Error ? error.message : 'Failed to add vaccination record. Please try again.');
     }
   };
 

@@ -4,6 +4,7 @@ import { vaccinationDriveService, VaccinationDriveData } from '../services/vacci
 import { petService, Pet } from '../services/petService';
 import OtherServiceModal from './OtherServiceModal';
 import OwnerDropdown from './OwnerDropdown';
+import PetDropdown from './PetDropdown';
 import { OwnerSearchResult } from '../services/shippingPermitRecordService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -60,8 +61,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const [pets, setPets] = useState<Pet[]>([]);
   const [loadingPets, setLoadingPets] = useState(false);
   
-  // Dropdown visibility states - track which record is showing dropdown
-  const [activePetDropdown, setActivePetDropdown] = useState<number | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -135,20 +134,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   }, [isOpen, event, fetchSavedVaccinationDriveData]);
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('.dropdown-container')) {
-        setActivePetDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const fetchPets = async () => {
     setLoadingPets(true);
@@ -162,21 +147,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   };
 
-  const getFilteredPets = (searchTerm: string, ownerName?: string) => {
-    let filteredPets = pets;
-    
-    // If owner is selected, filter pets by that owner
-    if (ownerName) {
-      filteredPets = pets.filter(pet => pet.owner_name === ownerName);
-    }
-    
-    // Then filter by search term
-    return filteredPets.filter(pet => 
-      pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pet.species.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pet.breed?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
 
 
   const vaccineOptions = [
@@ -744,7 +714,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                           <td className="px-4 py-3 text-gray-900 font-medium">
                             {globalIndex + 1}
                           </td>
-                          <td className="px-4 py-3 text-gray-900 relative">
+                          <td className="px-4 py-3 text-gray-900 relative min-w-[200px]">
                             {isEditable ? (
                               <OwnerDropdown
                                 selectedOwner={record.ownerName}
@@ -753,99 +723,80 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                 required
                               />
                             ) : (
-                              <div className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed`}>
+                              <div className={`w-full min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed`}>
                                 {record.ownerName || '-'}
                               </div>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-gray-900 relative">
-                            <div className="dropdown-container">
-                              <input
-                                type="text"
-                                value={record.petName}
-                                onChange={(e) => updatePetRecord(record.id, 'petName', e.target.value)}
-                                onFocus={() => {
-                                  if (isEditable) setActivePetDropdown(record.id);
-                                }}
-                                disabled={!isEditable}
-                                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                                placeholder="Pet name"
-                              />
-                          {isEditable && activePetDropdown === record.id && (
-                            <div className="absolute z-50 w-80 mt-1 bg-white border-2 border-green-500 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                              {getFilteredPets(record.petName, record.ownerName).map((pet) => (
-                                <div
-                                  key={pet.id}
-                                  className="px-3 py-2 hover:bg-green-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
-                                  onClick={() => {
-                                    updatePetRecord(record.id, 'petName', pet.name);
+                          <td className="px-4 py-3 text-gray-900 relative min-w-[200px]">
+                            {isEditable ? (
+                              <PetDropdown
+                                selectedPet={record.petName}
+                                onPetChange={(petName, petData) => {
+                                  updatePetRecord(record.id, 'petName', petName);
+                                  if (petData) {
                                     // Map species to match dropdown options
                                     let mappedSpecies = '';
-                                    if (pet.species) {
-                                      if (pet.species.toLowerCase() === 'canine') {
+                                    if (petData.species) {
+                                      if (petData.species.toLowerCase() === 'canine') {
                                         mappedSpecies = 'Dog';
-                                      } else if (pet.species.toLowerCase() === 'feline') {
+                                      } else if (petData.species.toLowerCase() === 'feline') {
                                         mappedSpecies = 'Cat';
                                       } else {
                                         mappedSpecies = 'Other';
                                       }
                                     }
                                     updatePetRecord(record.id, 'species', mappedSpecies);
-                                    updatePetRecord(record.id, 'breed', pet.breed || '');
-                                    updatePetRecord(record.id, 'color', pet.color || '');
+                                    updatePetRecord(record.id, 'breed', petData.breed || '');
+                                    updatePetRecord(record.id, 'color', petData.color || '');
                                     // Capitalize gender to match dropdown options
-                                    updatePetRecord(record.id, 'sex', pet.gender ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1) : '');
+                                    updatePetRecord(record.id, 'sex', petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1) : '');
                                     // Calculate age from date of birth
-                                    updatePetRecord(record.id, 'age', pet.date_of_birth ? calculateAge(pet.date_of_birth) : '');
+                                    updatePetRecord(record.id, 'age', petData.date_of_birth ? calculateAge(petData.date_of_birth) : '');
                                     // Map reproductive status - capitalize first letter
-                                    const reproductiveStatus = pet.reproductive_status 
-                                      ? pet.reproductive_status.charAt(0).toUpperCase() + pet.reproductive_status.slice(1)
+                                    const reproductiveStatus = petData.reproductive_status 
+                                      ? petData.reproductive_status.charAt(0).toUpperCase() + petData.reproductive_status.slice(1)
                                       : '';
                                     updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
-                                    setActivePetDropdown(null);
-                                  }}
-                                >
-                                  <div className="font-medium">{pet.name}</div>
-                                  <div className="text-gray-500 text-xs">
-                                    <div>Species: {pet.species || 'N/A'}</div>
-                                    <div>Breed: {pet.breed || 'Unknown'}</div>
-                                    <div>Color: {pet.color || 'N/A'}</div>
-                                    <div>Age: {pet.date_of_birth ? calculateAge(pet.date_of_birth) : 'N/A'}</div>
-                                    <div>Sex: {pet.gender ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1) : 'N/A'}</div>
-                                    <div>Reproductive Status: {pet.reproductive_status ? pet.reproductive_status.charAt(0).toUpperCase() + pet.reproductive_status.slice(1) : 'N/A'}</div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                                  }
+                                }}
+                                ownerName={record.ownerName}
+                                placeholder="Type or search pet name..."
+                                required
+                                pets={pets}
+                              />
+                            ) : (
+                              <div className={`w-full min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed`}>
+                                {record.petName || '-'}
+                              </div>
                             )}
-                            </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
                             <input
                               type="date"
                               value={record.ownerBirthday}
                               onChange={(e) => updatePetRecord(record.id, 'ownerBirthday', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Owner's Birthday"
                             />
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
                             <input
                               type="tel"
                               value={record.ownerContact}
                               onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Contact (optional)"
                             />
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[120px]">
                             <select
                               value={record.species}
                               onChange={(e) => updatePetRecord(record.id, 'species', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[120px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                             >
                               <option value="">-</option>
                               {speciesOptions.map(option => (
@@ -853,42 +804,42 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               ))}
                             </select>
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
                             <input
                               type="text"
                               value={record.breed}
                               onChange={(e) => updatePetRecord(record.id, 'breed', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Breed"
                             />
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[120px]">
                             <input
                               type="text"
                               value={record.color}
                               onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[120px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Color"
                             />
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[100px]">
                             <input
                               type="text"
                               value={record.age}
                               onChange={(e) => updatePetRecord(record.id, 'age', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[100px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                               placeholder="Age"
                             />
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[100px]">
                             <select
                               value={record.sex}
                               onChange={(e) => updatePetRecord(record.id, 'sex', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[100px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                             >
                               <option value="">-</option>
                               {sexOptions.map(option => (
@@ -896,12 +847,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               ))}
                             </select>
                           </td>
-                          <td className="px-4 py-3 text-gray-900">
+                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
                             <select
                               value={record.reproductiveStatus}
                               onChange={(e) => updatePetRecord(record.id, 'reproductiveStatus', e.target.value)}
                               disabled={!isEditable}
-                              className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
+                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
                             >
                               <option value="">-</option>
                               {reproductiveStatusOptions.map(option => (
