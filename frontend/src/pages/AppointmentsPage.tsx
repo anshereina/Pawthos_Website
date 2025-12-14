@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Upload, Trash2, ChevronDown } from 'lucide-react';
+import { Search, Filter, Upload, Trash2, ChevronDown, Plus } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
@@ -261,11 +261,12 @@ const AppointmentsPage: React.FC = () => {
               </div>
               {/* Search and Actions */}
               <div className="flex items-center space-x-4">
-                {/* Add New Record Button */}
+                {/* Add New Record Button - Always visible in all tabs */}
                 <button 
                   onClick={() => setAddModalOpen(true)}
                   className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
                 >
+                  <Plus size={20} />
                   <span className="font-semibold">Add New Record</span>
                 </button>
                 {/* Search Bar */}
