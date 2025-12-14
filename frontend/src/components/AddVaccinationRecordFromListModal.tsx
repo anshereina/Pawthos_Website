@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { Pet } from '../services/petService';
 
 interface AddVaccinationRecordFromListModalProps {
@@ -21,16 +22,72 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
     expirationDate: '', // This will store the Next Vaccination Date
     veterinarian: 'Dr. Ma. Fe V. Templado PRC # 4585',
     batchLotNo: '',
+    reproductiveStatus: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPetInfo, setSelectedPetInfo] = useState<Pet | null>(null);
+  
+  // Searchable pet dropdown state
+  const [petSearch, setPetSearch] = useState('');
+  const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
+  const [isPetDropdownOpen, setIsPetDropdownOpen] = useState(false);
+  const petInputRef = useRef<HTMLInputElement>(null);
+  const petDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter pets based on search
+  useEffect(() => {
+    if (petSearch) {
+      const filtered = pets.filter(p =>
+        p.name.toLowerCase().includes(petSearch.toLowerCase()) ||
+        (p.owner_name || '').toLowerCase().includes(petSearch.toLowerCase()) ||
+        (p.species || '').toLowerCase().includes(petSearch.toLowerCase())
+      );
+      setFilteredPets(filtered);
+    } else {
+      setFilteredPets(pets);
+    }
+  }, [petSearch, pets]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        petDropdownRef.current &&
+        !petDropdownRef.current.contains(event.target as Node) &&
+        petInputRef.current &&
+        !petInputRef.current.contains(event.target as Node)
+      ) {
+        setIsPetDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Select pet from dropdown
+  const selectPet = (pet: Pet) => {
+    setFormData(prev => ({ ...prev, petId: pet.id.toString() }));
+    setSelectedPetInfo(pet);
+    setPetSearch(pet.name);
+    setIsPetDropdownOpen(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    
+    // Validate that a pet is selected
+    if (!formData.petId || !selectedPetInfo) {
+      setError('Please select a pet from the dropdown');
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       await onSubmit(formData);
@@ -44,8 +101,10 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
         expirationDate: '', // This will store the Next Vaccination Date
         veterinarian: 'Dr. Ma. Fe V. Templado PRC # 4585',
         batchLotNo: '',
+        reproductiveStatus: '',
       });
       setSelectedPetInfo(null);
+      setPetSearch('');
       // Auto-close modal after 2 seconds
       setTimeout(() => {
         setIsSuccess(false);
@@ -103,26 +162,62 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Select Pet *
               </label>
-              <select
-                value={formData.petId}
-                onChange={(e) => {
-                  const selectedPet = pets.find(pet => pet.id.toString() === e.target.value);
-                  setSelectedPetInfo(selectedPet || null);
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    petId: e.target.value 
-                  }));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              >
-                <option value="">Select a pet</option>
-                {pets.map((pet) => (
-                  <option key={pet.id} value={pet.id}>
-                    {pet.name} ({pet.species}) - Owner: {pet.owner_name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  ref={petInputRef}
+                  type="text"
+                  value={petSearch}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPetSearch(value);
+                    setIsPetDropdownOpen(true);
+                    // Clear selection if search doesn't match selected pet
+                    if (selectedPetInfo && !value.toLowerCase().includes(selectedPetInfo.name.toLowerCase())) {
+                      setSelectedPetInfo(null);
+                      setFormData(prev => ({ ...prev, petId: '' }));
+                    }
+                  }}
+                  onFocus={() => setIsPetDropdownOpen(true)}
+                  placeholder="Search for pet by name, owner, or species..."
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsPetDropdownOpen(!isPetDropdownOpen)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  <ChevronDown size={20} className="text-gray-400" />
+                </button>
+                {isPetDropdownOpen && filteredPets.length > 0 && (
+                  <div
+                    ref={petDropdownRef}
+                    className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                  >
+                    {filteredPets.map((pet) => (
+                      <button
+                        key={pet.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          selectPet(pet);
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-green-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{pet.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {pet.species} - Owner: {pet.owner_name}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Selected Pet Information */}
@@ -231,6 +326,78 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
                  required
                />
              </div>
+            
+            {/* Reproductive Status */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Reproductive Status
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.reproductiveStatus === 'intact'}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          reproductiveStatus: 'intact'
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          reproductiveStatus: ''
+                        }));
+                      }
+                    }}
+                    className="mr-2 text-green-600 focus:ring-green-500 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Intact</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.reproductiveStatus === 'castrated'}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          reproductiveStatus: 'castrated'
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          reproductiveStatus: ''
+                        }));
+                      }
+                    }}
+                    className="mr-2 text-green-600 focus:ring-green-500 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Castrated</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.reproductiveStatus === 'spayed'}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          reproductiveStatus: 'spayed'
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          reproductiveStatus: ''
+                        }));
+                      }
+                    }}
+                    className="mr-2 text-green-600 focus:ring-green-500 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Spayed</span>
+                </label>
+              </div>
+            </div>
             
           </div>
           <div className="flex justify-end gap-3 pt-4">
