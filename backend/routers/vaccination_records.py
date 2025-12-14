@@ -281,16 +281,30 @@ def get_vaccination_record(record_id: int, db: Session = Depends(get_db)):
     return record
 
 def find_or_create_user_for_pet(owner_name: str, db: Session) -> User:
-    """Find existing user by name or create a new one with null email/password."""
+    """Find existing user by name or create a new one with placeholder email/password."""
     # Try to find by name first
     user = db.query(User).filter(User.name == owner_name).first()
     if user:
         return user
 
-    # Create placeholder user record without email/password
+    # Generate a unique placeholder email
+    # Use owner name (sanitized) + timestamp to ensure uniqueness
+    import re
+    from datetime import datetime
+    sanitized_name = re.sub(r'[^a-zA-Z0-9]', '', owner_name.lower())[:50]  # Remove special chars, limit length
+    timestamp = int(datetime.now().timestamp())
+    placeholder_email = f"{sanitized_name}_{timestamp}@placeholder.local"
+    
+    # Ensure email is unique (in case of collision)
+    counter = 1
+    while db.query(User).filter(User.email == placeholder_email).first():
+        placeholder_email = f"{sanitized_name}_{timestamp}_{counter}@placeholder.local"
+        counter += 1
+
+    # Create placeholder user record with placeholder email
     user = User(
         name=owner_name,
-        email=None,
+        email=placeholder_email,
         password_hash=None,
         phone_number=None,
         address="",
