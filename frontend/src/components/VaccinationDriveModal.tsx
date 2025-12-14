@@ -31,6 +31,7 @@ interface PetVaccinationRecord {
   sex: string;
   reproductiveStatus: string;
   otherServices: string[];
+  nextVaccinationDate?: string; // Hidden field - auto-calculated as 1 year from vaccination date
 }
 
 interface VaccinationDriveModalProps {
@@ -228,6 +229,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       sex: '',
       reproductiveStatus: '',
       otherServices: [],
+      nextVaccinationDate: '', // Hidden field - will be auto-calculated on save
     };
     setPetRecords(prev => [...prev, newRecord]);
   };
@@ -246,6 +248,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       sex: '',
       reproductiveStatus: '',
       otherServices: [],
+      nextVaccinationDate: '', // Hidden field - will be auto-calculated on save
     }));
     setPetRecords(prev => [...prev, ...newRecords]);
   };
@@ -299,6 +302,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
     setSaving(true);
     try {
+      // Calculate next vaccination date (1 year from event date)
+      const vaccinationDate = new Date(event.event_date);
+      const nextVaccinationDate = new Date(vaccinationDate);
+      nextVaccinationDate.setFullYear(nextVaccinationDate.getFullYear() + 1);
+      const nextVaccinationDateStr = nextVaccinationDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      
       const driveData: VaccinationDriveData = {
         event_id: event.id,
         vaccine_used: formData.vaccineUsed,
@@ -318,6 +327,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           vaccine_used: formData.vaccineUsed,
           batch_no_lot_no: formData.batchNoLotNo,
           vaccination_date: event.event_date,
+          next_vaccination_date: nextVaccinationDateStr, // Auto-calculated: 1 year from vaccination date
         })),
       };
 
@@ -794,7 +804,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                       updatePetRecord(record.id, 'age', calculatedAge);
                                     } else {
                                       console.log('No date_of_birth found'); // Debug log
-                                      updatePetRecord(record.id, 'age', '');
+                                      // Try to use age field if date_of_birth is not available
+                                      if (petData.age) {
+                                        updatePetRecord(record.id, 'age', petData.age);
+                                      } else {
+                                        updatePetRecord(record.id, 'age', '');
+                                      }
                                     }
                                     // Auto-fill reproductive status from pet data
                                     // Map reproductive status - capitalize first letter, rest lowercase

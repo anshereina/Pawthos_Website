@@ -16,6 +16,7 @@ export interface PetVaccinationRecord {
   vaccine_used: string;
   batch_no_lot_no: string;
   vaccination_date: string;
+  next_vaccination_date?: string;  // Auto-calculated: 1 year from vaccination_date
   event_id: number;
 }
 

@@ -301,13 +301,15 @@ def find_or_create_user_for_pet(owner_name: str, db: Session) -> User:
         placeholder_email = f"{sanitized_name}_{timestamp}_{counter}@placeholder.local"
         counter += 1
 
-    # Create placeholder user record with placeholder email
+    # Create placeholder user record with placeholder values for all required fields
+    # These values won't conflict when the pet owner creates an actual account later
     user = User(
         name=owner_name,
         email=placeholder_email,
-        password_hash=None,
-        phone_number=None,
-        address="",
+        password_hash="PLACEHOLDER_NO_PASSWORD",  # Placeholder value for NOT NULL constraint
+        phone_number="Not Available",  # Placeholder value
+        address="Not Available",  # Placeholder value
+        photo_url="",  # Empty string for optional field
         is_confirmed=0
     )
     db.add(user)

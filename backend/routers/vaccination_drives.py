@@ -29,13 +29,16 @@ def find_or_create_user(owner_name: str, owner_contact: str, db: Session) -> Use
         placeholder_email = f"{sanitized_name}_{timestamp}_{counter}@placeholder.local"
         counter += 1
 
-    # Create placeholder user record with placeholder email
+    # Create placeholder user record with placeholder values for all required fields
+    # These values won't conflict when the pet owner creates an actual account later
+    # Use owner_contact if provided, otherwise use placeholder
     user = User(
         name=owner_name,
         email=placeholder_email,
-        password_hash=None,
-        phone_number=owner_contact,
-        address="",
+        password_hash="PLACEHOLDER_NO_PASSWORD",  # Placeholder value for NOT NULL constraint
+        phone_number=owner_contact if owner_contact and owner_contact.strip() else "Not Available",  # Use provided contact or placeholder
+        address="Not Available",  # Placeholder value
+        photo_url="",  # Empty string for optional field
         is_confirmed=0
     )
     db.add(user)
@@ -176,11 +179,29 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
                 # Fallback to current date if parsing fails
                 vaccination_date = datetime.now()
             
+            # Calculate next vaccination date (1 year from vaccination date)
+            from datetime import timedelta
+            next_vaccination_date = None
+            if "next_vaccination_date" in pet_record_data and pet_record_data["next_vaccination_date"]:
+                try:
+                    next_vaccination_date_str = pet_record_data["next_vaccination_date"]
+                    if 'T' in next_vaccination_date_str:
+                        next_vaccination_date = datetime.fromisoformat(next_vaccination_date_str.replace('Z', '+00:00'))
+                    else:
+                        next_vaccination_date = datetime.strptime(next_vaccination_date_str, '%Y-%m-%d')
+                except (ValueError, TypeError):
+                    # If parsing fails, calculate 1 year from vaccination_date
+                    next_vaccination_date = vaccination_date + timedelta(days=365)
+            else:
+                # Auto-calculate as 1 year from vaccination_date if not provided
+                next_vaccination_date = vaccination_date + timedelta(days=365)
+            
             vaccination_record = VaccinationRecord(
                 pet_id=pet.id,
                 user_id=user.id,
                 vaccine_name=pet_record_data["vaccine_used"],
                 vaccination_date=vaccination_date,
+                next_due_date=next_vaccination_date,  # Set next vaccination date
                 veterinarian="Vaccination Drive",  # Default veterinarian for drive records
                 batch_lot_no=pet_record_data["batch_no_lot_no"]
             )
