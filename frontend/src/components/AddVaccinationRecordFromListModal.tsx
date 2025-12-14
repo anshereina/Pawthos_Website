@@ -71,7 +71,25 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
 
   // Select pet from dropdown
   const selectPet = (pet: Pet) => {
-    setFormData(prev => ({ ...prev, petId: pet.id.toString() }));
+    // Map reproductive_status from pet to form format (lowercase)
+    let reproductiveStatus = '';
+    if (pet.reproductive_status) {
+      const statusLower = pet.reproductive_status.toLowerCase().trim();
+      // Map to form values: intact, castrated, spayed
+      if (statusLower === 'intact') {
+        reproductiveStatus = 'intact';
+      } else if (statusLower === 'castrated') {
+        reproductiveStatus = 'castrated';
+      } else if (statusLower === 'spayed') {
+        reproductiveStatus = 'spayed';
+      }
+    }
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      petId: pet.id.toString(),
+      reproductiveStatus: reproductiveStatus
+    }));
     setSelectedPetInfo(pet);
     setPetSearch(pet.name);
     setIsPetDropdownOpen(false);
@@ -177,7 +195,7 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
                     // Clear selection if search doesn't match selected pet
                     if (selectedPetInfo && !value.toLowerCase().includes(selectedPetInfo.name.toLowerCase())) {
                       setSelectedPetInfo(null);
-                      setFormData(prev => ({ ...prev, petId: '' }));
+                      setFormData(prev => ({ ...prev, petId: '', reproductiveStatus: '' }));
                     }
                   }}
                   onFocus={() => setIsPetDropdownOpen(true)}
