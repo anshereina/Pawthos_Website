@@ -17,6 +17,7 @@ export interface PetVaccinationRecord {
   batch_no_lot_no: string;
   vaccination_date: string;
   next_vaccination_date?: string;  // Auto-calculated: 1 year from vaccination_date
+  veterinarian?: string;  // Auto-filled with 'Dr. Fe Templado'
   event_id: number;
 }
 

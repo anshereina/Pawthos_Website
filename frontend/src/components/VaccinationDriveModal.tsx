@@ -32,6 +32,7 @@ interface PetVaccinationRecord {
   reproductiveStatus: string;
   otherServices: string[];
   nextVaccinationDate?: string; // Hidden field - auto-calculated as 1 year from vaccination date
+  veterinarian?: string; // Hidden field - auto-filled with 'Dr. Fe Templado'
 }
 
 interface VaccinationDriveModalProps {
@@ -117,6 +118,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           sex: record.sex || '',
           reproductiveStatus: record.reproductive_status || '',
           otherServices: record.other_services || [],
+          veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
         }));
         setPetRecords(loadedRecords);
       }
@@ -230,6 +232,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       reproductiveStatus: '',
       otherServices: [],
       nextVaccinationDate: '', // Hidden field - will be auto-calculated on save
+      veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
     };
     setPetRecords(prev => [...prev, newRecord]);
   };
@@ -249,6 +252,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       reproductiveStatus: '',
       otherServices: [],
       nextVaccinationDate: '', // Hidden field - will be auto-calculated on save
+      veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
     }));
     setPetRecords(prev => [...prev, ...newRecords]);
   };
@@ -328,6 +332,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           batch_no_lot_no: formData.batchNoLotNo,
           vaccination_date: event.event_date,
           next_vaccination_date: nextVaccinationDateStr, // Auto-calculated: 1 year from vaccination date
+          veterinarian: record.veterinarian || 'Dr. Fe Templado', // Auto-filled with default value
         })),
       };
 
@@ -712,39 +717,40 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
             </div>
           </div>
 
-          {petRecords.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <PawPrint size={48} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-lg">No pet records found</p>
-              {isEditable ? (
-                <p className="text-sm">Click "Add Single" or "Add Multiple" to start logging vaccinations</p>
-              ) : (
-                <p className="text-sm">No vaccination records have been saved for this event</p>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Name</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Pet's Name</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Birthday</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Contact No.</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Species</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Breed</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Color</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Age</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Sex</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Reproductive Status</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Other Service</th>
-                      <th className="px-4 py-3 text-left font-semibold text-sm">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentPetRecords.map((record, index) => {
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Name</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Pet's Name</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Birthday</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Contact No.</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Species</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Breed</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Color</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Age</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Sex</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Reproductive Status</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Other Service</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {petRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={13} className="px-4 py-12 text-center text-gray-500">
+                      <PawPrint size={48} className="mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg">No pet records found</p>
+                      {isEditable ? (
+                        <p className="text-sm">Click "Add Single" or "Add Multiple" to start logging vaccinations</p>
+                      ) : (
+                        <p className="text-sm">No vaccination records have been saved for this event</p>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  currentPetRecords.map((record, index) => {
                       const globalIndex = startIndex + index;
                       return (
                         <tr 
@@ -981,13 +987,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    })
+                )}
+              </tbody>
+            </table>
+          </div>
 
-              {/* Pagination Controls */}
-              {petRecords.length > 0 && totalPages > 1 && (
+          {/* Pagination Controls */}
+          {petRecords.length > 0 && totalPages > 1 && (
                 <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
                   <div className="flex items-center text-sm text-gray-700">
                     <span>
@@ -1065,8 +1072,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                   </div>
                 </div>
               )}
-            </>
-          )}
         </div>
 
         {/* Summary and Save Section */}

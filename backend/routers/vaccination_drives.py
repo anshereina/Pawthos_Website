@@ -196,13 +196,16 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
                 # Auto-calculate as 1 year from vaccination_date if not provided
                 next_vaccination_date = vaccination_date + timedelta(days=365)
             
+            # Get veterinarian from pet_record_data, default to 'Dr. Fe Templado' if not provided
+            veterinarian = pet_record_data.get("veterinarian", "Dr. Fe Templado")
+            
             vaccination_record = VaccinationRecord(
                 pet_id=pet.id,
                 user_id=user.id,
                 vaccine_name=pet_record_data["vaccine_used"],
                 vaccination_date=vaccination_date,
                 next_due_date=next_vaccination_date,  # Set next vaccination date
-                veterinarian="Vaccination Drive",  # Default veterinarian for drive records
+                veterinarian=veterinarian,  # Use provided veterinarian or default to 'Dr. Fe Templado'
                 batch_lot_no=pet_record_data["batch_no_lot_no"]
             )
             db.add(vaccination_record)
