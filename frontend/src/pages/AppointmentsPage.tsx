@@ -183,6 +183,8 @@ const AppointmentsPage: React.FC = () => {
     try {
       await createAppointment(data);
       setAddModalOpen(false);
+      // Switch to History tab since new records are saved as Completed
+      setActiveTab('history');
       // Refresh appointments list
       await fetchAppointments({ search });
     } catch (error: any) {

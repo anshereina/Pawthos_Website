@@ -30,9 +30,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
     gender: '',
     medicineUsed: '',
     date: '',
-    time: '',
     species: '',
-    petId: '',
     reproductiveStatus: '',
   });
   const [selectedOwnerData, setSelectedOwnerData] = useState<OwnerSearchResult | null>(null);
@@ -62,9 +60,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
         gender: '',
         medicineUsed: '',
         date: '',
-        time: '',
         species: '',
-        petId: '',
         reproductiveStatus: '',
       });
       setSelectedOwnerData(null);
@@ -93,7 +89,6 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
         age: '',
         gender: '',
         species: '',
-        petId: '',
         reproductiveStatus: '',
       }));
       setSelectedPetData(null);
@@ -152,7 +147,6 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
         age: calculatedAge || prev.age,
         gender: formattedGender || prev.gender,
         species: petData.species || prev.species,
-        petId: petData.pet_id || prev.petId,
         reproductiveStatus: formattedReproductiveStatus || prev.reproductiveStatus,
       }));
       setSelectedPetData(petData);
@@ -170,8 +164,8 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
     setError(null);
     
     // Validation
-    if (!formData.ownerName || !formData.appointmentFor || !formData.petName || !formData.date || !formData.time) {
-      setError('Please fill in all required fields (Owner Name, Appointment For, Pet Name, Date, and Time)');
+    if (!formData.ownerName || !formData.appointmentFor || !formData.petName || !formData.date) {
+      setError('Please fill in all required fields (Owner Name, Appointment For, Pet Name, and Date)');
       return;
     }
 
@@ -194,9 +188,10 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
       const appointmentData = {
         type: formData.appointmentFor,
         date: formData.date,
-        time: formData.time,
+        time: '00:00', // Default time since field is removed
         pet_id: selectedPetData?.id,
         notes: notes,
+        status: 'Completed', // Set status to Completed so it appears in History tab
         owner_name: formData.ownerName,
         pet_name: formData.petName,
         pet_species: formData.species || undefined,
@@ -220,9 +215,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
         gender: '',
         medicineUsed: '',
         date: '',
-        time: '',
         species: '',
-        petId: '',
         reproductiveStatus: '',
       });
       setSelectedOwnerData(null);
@@ -266,29 +259,8 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                 value={formData.date}
                 onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                min={new Date().toISOString().split('T')[0]}
                 required
               />
-            </div>
-
-            {/* Time */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Time *
-              </label>
-              <select
-                value={formData.time}
-                onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              >
-                <option value="">Select time</option>
-                <option value="01:00 PM">01:00 PM</option>
-                <option value="01:30 PM">01:30 PM</option>
-                <option value="02:00 PM">02:00 PM</option>
-                <option value="02:30 PM">02:30 PM</option>
-                <option value="03:00 PM">03:00 PM</option>
-              </select>
             </div>
 
             {/* Owner's Name */}
@@ -376,22 +348,6 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                 <option value="Canine">Canine</option>
                 <option value="Feline">Feline</option>
               </select>
-            </div>
-
-            {/* Pet ID */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pet ID
-              </label>
-              <input
-                type="text"
-                value={formData.petId}
-                onChange={(e) => setFormData(prev => ({ ...prev, petId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50"
-                placeholder="Auto-filled from pet"
-                disabled={!!selectedPetData}
-                readOnly
-              />
             </div>
 
             {/* Pet's Birthday */}
