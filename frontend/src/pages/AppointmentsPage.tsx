@@ -9,6 +9,7 @@ import { useAppointments, useServiceRequests } from '../hooks/useAppointments';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
 import AppointmentStatusModal from '../components/AppointmentStatusModal';
+import AddAppointmentModal from '../components/AddAppointmentModal';
 import { Appointment, ServiceRequest } from '../services/appointmentService';
 
 const TABS = [
@@ -32,6 +33,7 @@ const AppointmentsPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<'Pending' | 'Approved' | 'Completed' | 'Rescheduled' | 'Rejected'>('Pending');
   const [selectedItemForStatus, setSelectedItemForStatus] = useState<{id: number, type: 'appointment' | 'request'} | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   
   // Use real data hooks
   const { 
@@ -40,7 +42,8 @@ const AppointmentsPage: React.FC = () => {
     error: appointmentsError,
     updateAppointment,
     deleteAppointment,
-    fetchAppointments
+    fetchAppointments,
+    createAppointment
   } = useAppointments();
   
   const { 
@@ -176,6 +179,17 @@ const AppointmentsPage: React.FC = () => {
     }
   };
 
+  const handleAddAppointment = async (data: any) => {
+    try {
+      await createAppointment(data);
+      setAddModalOpen(false);
+      // Refresh appointments list
+      await fetchAppointments({ search });
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to create appointment');
+    }
+  };
+
   // Get current data based on active tab
   const getCurrentData = () => {
     switch (activeTab) {
@@ -247,6 +261,13 @@ const AppointmentsPage: React.FC = () => {
               </div>
               {/* Search and Actions */}
               <div className="flex items-center space-x-4">
+                {/* Add New Record Button */}
+                <button 
+                  onClick={() => setAddModalOpen(true)}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  <span className="font-semibold">Add New Record</span>
+                </button>
                 {/* Search Bar */}
                 <div className="relative">
                   <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
@@ -498,6 +519,13 @@ const AppointmentsPage: React.FC = () => {
         appointmentId={selectedItemForStatus?.id || 0}
         onStatusUpdate={handleStatusUpdate}
         loading={statusUpdateLoading}
+      />
+
+      {/* Add Appointment Modal */}
+      <AddAppointmentModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSubmit={handleAddAppointment}
       />
     </div>
   );

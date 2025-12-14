@@ -38,6 +38,14 @@ export interface AppointmentCreate {
   veterinarian?: string;
   notes?: string;
   status?: string;
+  // Pet details (stored directly in appointment)
+  pet_name?: string;
+  pet_species?: string;
+  pet_breed?: string;
+  pet_age?: string;
+  pet_gender?: string;
+  pet_weight?: string;
+  owner_name?: string;
 }
 
 export interface AppointmentUpdate {
