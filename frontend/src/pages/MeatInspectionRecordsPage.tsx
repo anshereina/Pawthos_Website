@@ -464,7 +464,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
               </tbody>
             </table>
             {/* Post Abattoir Pagination Controls */}
-            {totalPAPages > 1 && (
+            {totalPAItems > 0 && (
               <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
                 <div className="flex items-center text-sm text-gray-700">
                   <span>
@@ -483,38 +483,42 @@ const MeatInspectionRecordsPage: React.FC = () => {
                   >
                     Previous
                   </button>
-                  <div className="flex space-x-1">
-                    {Array.from({ length: totalPAPages }, (_, i) => i + 1).map((page) => {
-                      const shouldShow = page === 1 || page === totalPAPages || (page >= currentPAPage - 1 && page <= currentPAPage + 1);
-                      if (!shouldShow) {
-                        if (page === 2 && currentPAPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
-                        if (page === totalPAPages - 1 && currentPAPage < totalPAPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
-                        return null;
-                      }
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => handlePAPageChange(page)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            currentPAPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    onClick={handlePANextPage}
-                    disabled={currentPAPage === totalPAPages}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      currentPAPage === totalPAPages
-                        ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                        : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                    }`}
-                  >
-                    Next
-                  </button>
+                  {totalPAPages > 1 && (
+                    <>
+                      <div className="flex space-x-1">
+                        {Array.from({ length: totalPAPages }, (_, i) => i + 1).map((page) => {
+                          const shouldShow = page === 1 || page === totalPAPages || (page >= currentPAPage - 1 && page <= currentPAPage + 1);
+                          if (!shouldShow) {
+                            if (page === 2 && currentPAPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
+                            if (page === totalPAPages - 1 && currentPAPage < totalPAPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                            return null;
+                          }
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePAPageChange(page)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentPAPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={handlePANextPage}
+                        disabled={currentPAPage === totalPAPages}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPAPage === totalPAPages
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}

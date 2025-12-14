@@ -47,7 +47,23 @@ const EditPostAbattoirRecordModal: React.FC<EditPostAbattoirRecordModalProps> = 
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(record.id, formData);
+      // Send all form fields - backend will only update provided fields
+      const updatePayload: PostAbattoirRecordUpdate = {
+        date: formData.date,
+        time: formData.time,
+        barangay: formData.barangay,
+        establishment: formData.establishment,
+        owner: formData.owner,
+        doc_mic: formData.doc_mic,
+        doc_vhc: formData.doc_vhc,
+        doc_sp: formData.doc_sp,
+        color_ok: formData.color_ok,
+        texture_ok: formData.texture_ok,
+        odor_ok: formData.odor_ok,
+        condem: formData.condem,
+      };
+      
+      await onSubmit(record.id, updatePayload);
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Failed to update record. Please try again.');
