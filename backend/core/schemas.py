@@ -286,7 +286,7 @@ class PostAbattoirRecordCreate(PostAbattoirRecordBase):
     pass
 
 class PostAbattoirRecordUpdate(BaseModel):
-    date: Optional[date] = None
+    date: Optional[str] = None  # Changed from Optional[date] to Optional[str] to handle string dates
     time: Optional[str] = None
     barangay: Optional[str] = None
     establishment: Optional[str] = None

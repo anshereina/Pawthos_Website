@@ -42,7 +42,11 @@ export const postAbattoirRecordService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to update post abattoir record');
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Update record error:', res.status, errorText);
+      throw new Error(`Failed to update post abattoir record: ${errorText || res.status}`);
+    }
     return res.json();
   },
   async remove(id: number): Promise<void> {
