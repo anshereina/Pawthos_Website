@@ -138,11 +138,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   // Fetch pets data and saved vaccination drive data when modal opens
   useEffect(() => {
     if (isOpen && event) {
+      console.log('🔄 Modal opened with event:', event.id, event.event_title);
       // Reset state first, then fetch data
       setPetRecords([]);
       setFormData({
-        date: '',
-        barangay: '',
+        date: event.event_date || '',
+        barangay: event.barangay || '',
         vaccineUsed: '',
         batchNoLotNo: '',
       });
@@ -150,8 +151,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       // Then fetch data
       fetchPets();
       fetchSavedVaccinationDriveData();
+    } else if (isOpen && !event) {
+      console.warn('⚠️ Modal opened but event is null/undefined');
     }
-  }, [isOpen, event, fetchSavedVaccinationDriveData]);
+  }, [isOpen, event, fetchSavedVaccinationDriveData, fetchPets]);
 
   // Debug: Log petRecords changes
   useEffect(() => {
@@ -554,7 +557,18 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     doc.save(fileName);
   };
 
-  if (!isOpen || !event) return null;
+  if (!isOpen) return null;
+  
+  // Show loading state if event is not yet loaded
+  if (!event) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-6">
+          <p className="text-gray-600">Loading event data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
@@ -704,7 +718,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
 
         {/* Individual Pet Vaccination Records Table */}
-        <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
+        <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300" style={{ display: 'block' }}>
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800">Individual Pet Vaccination Records</h2>
@@ -743,8 +757,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto" style={{ display: 'block' }}>
+            <table className="w-full" style={{ display: 'table' }}>
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
