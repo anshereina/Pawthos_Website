@@ -166,16 +166,43 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const calculateAge = (dateOfBirth: string): string => {
     if (!dateOfBirth) return '';
     
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    const ageInMs = today.getTime() - birthDate.getTime();
-    const ageInYears = Math.floor(ageInMs / (365.25 * 24 * 60 * 60 * 1000));
-    
-    if (ageInYears < 1) {
-      const ageInMonths = Math.floor(ageInMs / (30.44 * 24 * 60 * 60 * 1000));
-      return `${ageInMonths} months`;
-    } else {
-      return `${ageInYears} years`;
+    try {
+      // Handle different date formats
+      let birthDate: Date;
+      if (typeof dateOfBirth === 'string') {
+        // Try parsing as ISO string first
+        birthDate = new Date(dateOfBirth);
+        // If invalid, try other formats
+        if (isNaN(birthDate.getTime())) {
+          // Try YYYY-MM-DD format
+          const parts = dateOfBirth.split('-');
+          if (parts.length === 3) {
+            birthDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          } else {
+            return '';
+          }
+        }
+      } else {
+        birthDate = new Date(dateOfBirth);
+      }
+      
+      if (isNaN(birthDate.getTime())) {
+        return '';
+      }
+      
+      const today = new Date();
+      const ageInMs = today.getTime() - birthDate.getTime();
+      const ageInYears = Math.floor(ageInMs / (365.25 * 24 * 60 * 60 * 1000));
+      
+      if (ageInYears < 1) {
+        const ageInMonths = Math.floor(ageInMs / (30.44 * 24 * 60 * 60 * 1000));
+        return `${ageInMonths} months`;
+      } else {
+        return `${ageInYears} years`;
+      }
+    } catch (error) {
+      console.error('Error calculating age:', error, dateOfBirth);
+      return '';
     }
   };
 
@@ -733,31 +760,58 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               <PetDropdown
                                 selectedPet={record.petName}
                                 onPetChange={(petName, petData) => {
+                                  console.log('Pet selected:', petName, petData); // Debug log
                                   updatePetRecord(record.id, 'petName', petName);
                                   if (petData) {
-                                    // Map species to match dropdown options
+                                    // Map species to match dropdown options (handle both lowercase and capitalized)
                                     let mappedSpecies = '';
                                     if (petData.species) {
-                                      if (petData.species.toLowerCase() === 'canine') {
+                                      const speciesLower = petData.species.toLowerCase().trim();
+                                      if (speciesLower === 'canine' || speciesLower === 'dog') {
                                         mappedSpecies = 'Dog';
-                                      } else if (petData.species.toLowerCase() === 'feline') {
+                                      } else if (speciesLower === 'feline' || speciesLower === 'cat') {
                                         mappedSpecies = 'Cat';
                                       } else {
                                         mappedSpecies = 'Other';
                                       }
                                     }
+                                    console.log('Mapped species:', mappedSpecies, 'from:', petData.species); // Debug log
                                     updatePetRecord(record.id, 'species', mappedSpecies);
                                     updatePetRecord(record.id, 'breed', petData.breed || '');
                                     updatePetRecord(record.id, 'color', petData.color || '');
                                     // Capitalize gender to match dropdown options
-                                    updatePetRecord(record.id, 'sex', petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1) : '');
+                                    const gender = petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1).toLowerCase() : '';
+                                    updatePetRecord(record.id, 'sex', gender);
                                     // Calculate age from date of birth
-                                    updatePetRecord(record.id, 'age', petData.date_of_birth ? calculateAge(petData.date_of_birth) : '');
-                                    // Map reproductive status - capitalize first letter
-                                    const reproductiveStatus = petData.reproductive_status 
-                                      ? petData.reproductive_status.charAt(0).toUpperCase() + petData.reproductive_status.slice(1)
-                                      : '';
+                                    if (petData.date_of_birth) {
+                                      const calculatedAge = calculateAge(petData.date_of_birth);
+                                      console.log('Calculated age:', calculatedAge, 'from date_of_birth:', petData.date_of_birth); // Debug log
+                                      updatePetRecord(record.id, 'age', calculatedAge);
+                                    } else {
+                                      console.log('No date_of_birth found'); // Debug log
+                                      updatePetRecord(record.id, 'age', '');
+                                    }
+                                    // Auto-fill reproductive status from pet data
+                                    // Map reproductive status - capitalize first letter, rest lowercase
+                                    let reproductiveStatus = '';
+                                    if (petData.reproductive_status) {
+                                      const statusLower = petData.reproductive_status.toLowerCase().trim();
+                                      if (statusLower === 'intact') {
+                                        reproductiveStatus = 'Intact';
+                                      } else if (statusLower === 'castrated') {
+                                        reproductiveStatus = 'Castrated';
+                                      } else if (statusLower === 'spayed') {
+                                        reproductiveStatus = 'Spayed';
+                                      } else if (statusLower) {
+                                        // Handle any other value by capitalizing first letter
+                                        reproductiveStatus = petData.reproductive_status.charAt(0).toUpperCase() + petData.reproductive_status.slice(1).toLowerCase();
+                                      }
+                                    }
+                                    console.log('Auto-filled reproductive status:', reproductiveStatus, 'from pet data:', petData.reproductive_status); // Debug log
+                                    // Always update reproductive status, even if empty (to clear previous value if pet has none)
                                     updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
+                                  } else {
+                                    console.log('No petData provided'); // Debug log
                                   }
                                 }}
                                 ownerName={record.ownerName}

@@ -280,6 +280,26 @@ def get_vaccination_record(record_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Vaccination record not found")
     return record
 
+def find_or_create_user_for_pet(owner_name: str, db: Session) -> User:
+    """Find existing user by name or create a new one with null email/password."""
+    # Try to find by name first
+    user = db.query(User).filter(User.name == owner_name).first()
+    if user:
+        return user
+
+    # Create placeholder user record without email/password
+    user = User(
+        name=owner_name,
+        email=None,
+        password_hash=None,
+        phone_number=None,
+        address="",
+        is_confirmed=0
+    )
+    db.add(user)
+    db.flush()
+    return user
+
 @router.post("", response_model=VaccinationRecordSchema, status_code=status.HTTP_201_CREATED)
 def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Depends(get_db)):
     try:
@@ -288,7 +308,7 @@ def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Dep
         if not pet:
             raise HTTPException(status_code=404, detail=f"Pet with id {record.pet_id} not found")
         
-        # Find the user - try by owner name first, then use pet.user_id if available
+        # Find or create the user - try by user_id first, then by owner name
         user = None
         if hasattr(pet, 'user_id') and pet.user_id:
             user = db.query(User).filter(User.id == pet.user_id).first()
@@ -297,15 +317,12 @@ def create_vaccination_record(record: VaccinationRecordCreate, db: Session = Dep
             # Fallback: try to find user by owner name
             user = db.query(User).filter(User.name == pet.owner_name).first()
         
-        # Determine user_id
-        resolved_user_id = None
-        if user:
-            resolved_user_id = user.id
-        elif hasattr(pet, 'user_id') and pet.user_id:
-            resolved_user_id = pet.user_id
+        # If still no user found, create a placeholder user
+        if not user:
+            user = find_or_create_user_for_pet(pet.owner_name, db)
         
-        if resolved_user_id is None:
-            raise HTTPException(status_code=400, detail="Unable to resolve user for vaccination record (no linked user)")
+        # Determine user_id
+        resolved_user_id = user.id
         
         # Map schema fields to model fields (date_given -> vaccination_date)
         record_data = record.dict(exclude_unset=True)

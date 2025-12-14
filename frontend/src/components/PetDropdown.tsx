@@ -47,7 +47,7 @@ const PetDropdown: React.FC<PetDropdownProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter pets based on search and owner
+    // Filter pets based on search and owner
   useEffect(() => {
     const filterPets = () => {
       let filtered = pets;
@@ -57,7 +57,7 @@ const PetDropdown: React.FC<PetDropdownProps> = ({
         filtered = filtered.filter(pet => pet.owner_name === ownerName);
       }
       
-      // Filter by search term
+      // Filter by search term if provided
       if (inputValue && inputValue.length >= 1) {
         const searchLower = inputValue.toLowerCase();
         filtered = filtered.filter(pet => 
@@ -68,7 +68,10 @@ const PetDropdown: React.FC<PetDropdownProps> = ({
       }
       
       setFilteredPets(filtered);
-      setIsOpen(filtered.length > 0 && inputValue.length >= 1);
+      // Keep dropdown open if there are filtered pets or if input is empty (to show all pets)
+      if (filtered.length > 0) {
+        setIsOpen(true);
+      }
     };
 
     if (inputValue && inputValue.length >= 1) {
@@ -81,8 +84,13 @@ const PetDropdown: React.FC<PetDropdownProps> = ({
         filterPets();
       }, 300);
     } else {
-      setFilteredPets([]);
-      setIsOpen(false);
+      // If no search term, show all pets (filtered by owner if provided)
+      let filtered = pets;
+      if (ownerName) {
+        filtered = filtered.filter(pet => pet.owner_name === ownerName);
+      }
+      setFilteredPets(filtered);
+      // Don't auto-open when empty, let focus handler manage it
     }
 
     return () => {
@@ -105,7 +113,16 @@ const PetDropdown: React.FC<PetDropdownProps> = ({
   };
 
   const handleInputFocus = () => {
-    if (inputValue && inputValue.length >= 1 && filteredPets.length > 0) {
+    // Show dropdown when focused if there are pets to show
+    if (filteredPets.length > 0 || (!inputValue && pets.length > 0)) {
+      // If no search term, show all pets (filtered by owner if provided)
+      if (!inputValue) {
+        let filtered = pets;
+        if (ownerName) {
+          filtered = filtered.filter(pet => pet.owner_name === ownerName);
+        }
+        setFilteredPets(filtered);
+      }
       setIsOpen(true);
     }
   };

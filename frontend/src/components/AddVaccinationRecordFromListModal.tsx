@@ -91,7 +91,7 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
     
     try {
       await onSubmit(formData);
-      // Show success message
+      // Only show success if no error was thrown
       setIsSuccess(true);
       // Reset form on success
       setFormData({
@@ -111,7 +111,10 @@ const AddVaccinationRecordFromListModal: React.FC<AddVaccinationRecordFromListMo
         onClose();
       }, 2000);
     } catch (err) {
+      console.error('Error in AddVaccinationRecordFromListModal:', err);
       setError(err instanceof Error ? err.message : 'Failed to save vaccination record');
+      setIsSuccess(false); // Ensure success message is not shown on error
+      // Don't close modal on error so user can see the error message
     } finally {
       setIsSubmitting(false);
     }
