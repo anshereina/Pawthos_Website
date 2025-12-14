@@ -33,15 +33,36 @@ def get_post_abattoir_record(record_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{record_id}", response_model=schemas.PostAbattoirRecord)
 def update_post_abattoir_record(record_id: int, record_update: schemas.PostAbattoirRecordUpdate, db: Session = Depends(get_db)):
+    from datetime import datetime, date
+    
     db_record = db.query(models.PostAbattoirRecord).filter(models.PostAbattoirRecord.id == record_id).first()
     if db_record is None:
         raise HTTPException(status_code=404, detail="Post Abattoir Record not found")
+    
     update_data = record_update.dict(exclude_unset=True)
+    
+    # Handle date conversion if provided as string
+    if 'date' in update_data and update_data['date']:
+        date_value = update_data['date']
+        if isinstance(date_value, str):
+            try:
+                update_data['date'] = datetime.strptime(date_value, '%Y-%m-%d').date()
+            except ValueError:
+                raise HTTPException(status_code=422, detail=f"Invalid date format: {date_value}. Expected YYYY-MM-DD")
+        elif isinstance(date_value, datetime):
+            update_data['date'] = date_value.date()
+        # If it's already a date object, keep it as is
+    
     for field, value in update_data.items():
         setattr(db_record, field, value)
-    db.commit()
-    db.refresh(db_record)
-    return db_record
+    
+    try:
+        db.commit()
+        db.refresh(db_record)
+        return db_record
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=f"Error updating record: {str(e)}")
 
 @router.delete("/{record_id}")
 def delete_post_abattoir_record(record_id: int, db: Session = Depends(get_db)):

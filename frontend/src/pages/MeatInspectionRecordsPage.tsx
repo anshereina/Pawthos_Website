@@ -429,7 +429,8 @@ const MeatInspectionRecordsPage: React.FC = () => {
           </div>
           ) : (
           /* Post Abattoir Table */
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible hover:shadow-md transition-shadow duration-300 mb-4">
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
@@ -463,6 +464,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
                 )}
               </tbody>
             </table>
+            </div>
             {/* Post Abattoir Pagination Controls */}
             {totalPAItems > 0 && (
               <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
