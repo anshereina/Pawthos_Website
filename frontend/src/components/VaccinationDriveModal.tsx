@@ -135,6 +135,18 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   }, [event]);
 
+  const fetchPets = useCallback(async () => {
+    setLoadingPets(true);
+    try {
+      const petsData = await petService.getPets();
+      setPets(petsData);
+    } catch (error) {
+      console.error('Failed to fetch pets:', error);
+    } finally {
+      setLoadingPets(false);
+    }
+  }, []);
+
   // Fetch pets data and saved vaccination drive data when modal opens
   useEffect(() => {
     if (isOpen && event) {
@@ -160,19 +172,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   useEffect(() => {
     console.log('🔍 petRecords state changed:', petRecords.length, 'records');
   }, [petRecords]);
-
-
-  const fetchPets = async () => {
-    setLoadingPets(true);
-    try {
-      const petsData = await petService.getPets();
-      setPets(petsData);
-    } catch (error) {
-      console.error('Error fetching pets:', error);
-    } finally {
-      setLoadingPets(false);
-    }
-  };
 
 
 
