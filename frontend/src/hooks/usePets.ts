@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { petService, Pet, CreatePetData, UpdatePetData } from '../services/petService';
 
 export const usePets = () => {

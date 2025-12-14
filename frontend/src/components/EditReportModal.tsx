@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Eye } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { Report, UpdateReportData, reportService } from '../services/reportService';
 import { API_BASE_URL } from '../config';
 

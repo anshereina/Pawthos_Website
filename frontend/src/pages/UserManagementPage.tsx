@@ -162,7 +162,7 @@ const UserManagementPage: React.FC = () => {
 
 
   // Remove mockUsers and use fetched users
-  const filteredUsers = users;
+  // const filteredUsers = users;
 
   const handleEditUser = (userId: number, userName: string) => {
     setSelectedUserId(userId);

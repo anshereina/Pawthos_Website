@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Upload, Edit, Trash2, ArrowLeft, PlusSquare, AlertCircle } from 'lucide-react';
+import { Search, Upload, Edit, Trash2, PlusSquare, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -37,9 +37,6 @@ const AnimalControlRecordsPage: React.FC = () => {
     router.navigate({ to: path });
   };
 
-  const handleBack = () => {
-    router.navigate({ to: '/records' });
-  };
 
   const handleAddRecord = async (recordData: any) => {
     try {
@@ -261,7 +258,7 @@ const AnimalControlRecordsPage: React.FC = () => {
                         {record.image_url ? (
                           <img
                             src={resolveImageUrl(record.image_url)}
-                            alt="Animal photo"
+                            alt="Animal"
                             className="w-12 h-12 object-cover rounded-lg border border-gray-200"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';

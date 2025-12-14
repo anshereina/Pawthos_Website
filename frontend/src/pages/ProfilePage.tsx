@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserCircle, ChevronDown, User, Settings, LogOut, Edit, Save, X, Mail, Phone, MapPin, Calendar, User as UserIcon, Briefcase, Building, IdCard, Clock, Users, Heart } from 'lucide-react';
+import { UserCircle, ChevronDown, User, Settings, LogOut, Edit, Save, X, Heart } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';

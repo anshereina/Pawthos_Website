@@ -67,45 +67,13 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
         newErrors.confirmPassword = 'Passwords do not match';
       }
 
-      if (formData.phone_number && !/^\+?[\d\s\-\(\)]+$/.test(formData.phone_number)) {
+      if (formData.phone_number && !/^\+?[\d\s\-()]+$/.test(formData.phone_number)) {
         newErrors.phone_number = 'Phone number is invalid';
       }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const sendOTP = async () => {
-    if (!formData.email) {
-      setSubmitError('Please enter an email address first');
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setSubmitError('Please enter a valid email address');
-      return false;
-    }
-
-    setIsSendingOtp(true);
-    setSubmitError(null);
-
-    try {
-      await axios.post(`${API_BASE_URL}/users/admins/send-otp`, 
-        { email: formData.email },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setOtpSent(true);
-      return true;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 
-                          (typeof err.response?.data === 'string' ? err.response.data : 'Failed to send OTP');
-      setSubmitError(errorMessage);
-      return false;
-    } finally {
-      setIsSendingOtp(false);
-    }
   };
 
   const createAdminWithOTP = async () => {

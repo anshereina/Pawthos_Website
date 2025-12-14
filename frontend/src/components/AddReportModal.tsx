@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { CreateReportData, reportService } from '../services/reportService';
 import RecipientsDropdown from './RecipientsDropdown';
 

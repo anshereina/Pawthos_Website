@@ -150,11 +150,11 @@ const ReproductiveRecordsPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatAge = (dateOfBirth?: string) => {
-    const age = petService.calculateAge(dateOfBirth);
-    if (age === null) return '-';
-    return age === 1 ? '1 year' : `${age} years`;
-  };
+  // const formatAge = (dateOfBirth?: string) => {
+  //   const age = petService.calculateAge(dateOfBirth);
+  //   if (age === null) return '-';
+  //   return age === 1 ? '1 year' : `${age} years';
+  // };
 
   // Derived filtering and pagination
   const filteredPets = records

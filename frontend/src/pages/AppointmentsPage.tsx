@@ -20,7 +20,7 @@ const STATUS_OPTIONS: string[] = ['Pending', 'Approved', 'Completed', 'Reschedul
 
 const AppointmentsPage: React.FC = () => {
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('appointments');
   const [search, setSearch] = useState('');
@@ -97,18 +97,18 @@ const AppointmentsPage: React.FC = () => {
   };
 
 
-  const handleStatusChange = async (id: number, newStatus: string, type: 'appointment' | 'request') => {
-    try {
-      if (type === 'appointment') {
-        await updateAppointment(id, { status: newStatus });
-      } else {
-        await updateServiceRequest(id, { status: newStatus });
-      }
-    } catch (error) {
-      console.error('Failed to update status:', error);
-    }
-    setStatusDropdownOpen(null);
-  };
+  // const handleStatusChange = async (id: number, newStatus: string, type: 'appointment' | 'request') => {
+  //   try {
+  //     if (type === 'appointment') {
+  //       await updateAppointment(id, { status: newStatus });
+  //     } else {
+  //       await updateServiceRequest(id, { status: newStatus });
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to update status:', error);
+  //   }
+  //   setStatusDropdownOpen(null);
+  // };
 
   const handleDelete = async (id: number, type: 'appointment' | 'request') => {
     if (window.confirm('Are you sure you want to delete this item?')) {

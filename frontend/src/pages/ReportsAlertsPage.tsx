@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, FileText, Bell, ChevronDown, ArrowLeft, Edit, Trash2, Image as ImageIcon, Eye } from 'lucide-react';
+import { Search, FileText, Bell, ChevronDown, Edit, Trash2, Eye } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -13,7 +13,6 @@ import EditReportModal from '../components/EditReportModal';
 import DeleteReportModal from '../components/DeleteReportModal';
 import EditAlertModal from '../components/EditAlertModal';
 import DeleteAlertModal from '../components/DeleteAlertModal';
-import LoadingSpinner from '../components/LoadingSpinner';
 import RecipientsPreview from '../components/RecipientsPreview';
 import { API_BASE_URL } from '../config';
 
@@ -28,12 +27,11 @@ const ReportsAlertsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('reports');
   const [search, setSearch] = useState('');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
-  const [debugClick, setDebugClick] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   
   // Modal states
   const [isAddReportModalOpen, setIsAddReportModalOpen] = useState(false);

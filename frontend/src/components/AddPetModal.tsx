@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, Search } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { CreatePetData } from '../services/petService';
 import { API_BASE_URL } from '../config';
 

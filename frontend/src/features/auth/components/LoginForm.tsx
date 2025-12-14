@@ -37,17 +37,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   //   }
   // };
 
-  const saveCredentials = (email: string, password: string) => {
-    rememberMeService.saveCredentials(email, password);
-  };
+  // const saveCredentials = (email: string, password: string) => {
+  //   rememberMeService.saveCredentials(email, password);
+  // };
 
-  const clearCredentials = () => {
-    rememberMeService.clearCredentials();
-    setSavedCredentials(null);
-    setRememberMe(false);
-    setEmail('');
-    setPassword('');
-  };
+  // const clearCredentials = () => {
+  //   rememberMeService.clearCredentials();
+  //   setSavedCredentials(null);
+  //   setRememberMe(false);
+  //   setEmail('');
+  //   setPassword('');
+  // };
 
   // Clear old credentials on component mount to ensure clean start
   useEffect(() => {

@@ -6,7 +6,7 @@ import { useAuth } from '../features/auth/AuthContext';
 import PageHeader from '../components/PageHeader';
 import { useRouter } from '@tanstack/react-router';
 import { usePets } from '../hooks/usePets';
-import { petService, Pet } from '../services/petService';
+import { Pet } from '../services/petService';
 import { medicalRecordService, MedicalRecord } from '../services/medicalRecordService';
 import { vaccinationRecordService, VaccinationRecord } from '../services/vaccinationRecordService';
 import { API_BASE_URL } from '../config';
@@ -59,7 +59,6 @@ const PetRecordsPage: React.FC = () => {
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [vaccinationRecords, setVaccinationRecords] = useState<VaccinationRecord[]>([]);
   const [medicalRecordsLoading, setMedicalRecordsLoading] = useState(false);
-  const [vaccinationRecordsLoading, setVaccinationRecordsLoading] = useState(false);
   const [isAddMedicalRecordModalOpen, setIsAddMedicalRecordModalOpen] = useState(false);
   const [isEditMedicalRecordModalOpen, setIsEditMedicalRecordModalOpen] = useState(false);
   const [isDeleteMedicalRecordModalOpen, setIsDeleteMedicalRecordModalOpen] = useState(false);
@@ -72,7 +71,7 @@ const PetRecordsPage: React.FC = () => {
   const [medicalRecordError, setMedicalRecordError] = useState<string | null>(null);
   
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   
   const { pets, loading, error, successMessage, fetchPets, createPet, updatePet, deletePet } = usePets();
@@ -480,21 +479,21 @@ const PetRecordsPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const calculateAgeForProfile = (dateOfBirth?: string) => {
-    if (!dateOfBirth) return '-';
-    try {
-      const birthDate = new Date(dateOfBirth);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return `${age} years`;
-    } catch {
-      return '-';
-    }
-  };
+  // const calculateAgeForProfile = (dateOfBirth?: string) => {
+  //   if (!dateOfBirth) return '-';
+  //   try {
+  //     const birthDate = new Date(dateOfBirth);
+  //     const today = new Date();
+  //     let age = today.getFullYear() - birthDate.getFullYear();
+  //     const monthDiff = today.getMonth() - birthDate.getMonth();
+  //     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  //       age--;
+  //     }
+  //     return `${age} years`;
+  //   } catch {
+  //     return '-';
+  //   }
+  // };
 
   const formatDateForProfile = (dateString?: string) => {
     if (!dateString) return '-';
@@ -570,7 +569,7 @@ const PetRecordsPage: React.FC = () => {
                 {selectedPet.photo_url ? (
                   <img 
                     src={getPhotoUrlForDisplay(selectedPet.photo_url)} 
-                    alt={`${selectedPet.name}'s photo`}
+                    alt={`${selectedPet.name}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       console.error('Failed to load pet image:', selectedPet.photo_url);

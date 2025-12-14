@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, User, Mail, MapPin, Phone } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -46,14 +46,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
   const token = localStorage.getItem('access_token');
 
-  // Fetch user data when modal opens
-  useEffect(() => {
-    if (isOpen && userId) {
-      fetchUserData();
-    }
-  }, [isOpen, userId]);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!userId) return;
 
     setIsLoading(true);
@@ -80,7 +73,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, userType, token]);
+
+  // Fetch user data when modal opens
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchUserData();
+    }
+  }, [isOpen, userId, fetchUserData]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -96,7 +96,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     }
 
     if (userType === 'user') {
-      if (formData.phone_number && !/^\+?[\d\s\-\(\)]+$/.test(formData.phone_number)) {
+      if (formData.phone_number && !/^\+?[\d\s\-()]+$/.test(formData.phone_number)) {
         newErrors.phone_number = 'Phone number is invalid';
       }
     }

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Syringe, Hash, User, Phone, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Search, ChevronDown, Download } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Calendar, MapPin, Syringe, Hash, User, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Download } from 'lucide-react';
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
 import { petService, Pet } from '../services/petService';
 import OtherServiceModal from './OtherServiceModal';
@@ -51,12 +51,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   });
 
   const [petRecords, setPetRecords] = useState<PetVaccinationRecord[]>([]);
-  const [editingRecord, setEditingRecord] = useState<PetVaccinationRecord | null>(null);
   const [saving, setSaving] = useState(false);
   
   // Data for dropdowns
   const [pets, setPets] = useState<Pet[]>([]);
-  const [loadingPets, setLoadingPets] = useState(false);
   
   // Dropdown visibility states - track which record is showing dropdown
   const [activePetDropdown, setActivePetDropdown] = useState<number | null>(null);
@@ -84,16 +82,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     }
   }, [event]);
 
-  // Fetch pets data and saved vaccination drive data when modal opens
-  useEffect(() => {
-    if (isOpen && event) {
-      fetchPets();
-      fetchSavedVaccinationDriveData();
-      setIsEditMode(false); // Reset edit mode when modal opens
-    }
-  }, [isOpen, event]);
-
-  const fetchSavedVaccinationDriveData = async () => {
+  const fetchSavedVaccinationDriveData = useCallback(async () => {
     if (!event) return;
     
     try {
@@ -129,7 +118,16 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       // If no records exist yet, that's fine - it's a new drive
       console.log('No existing vaccination drive data found:', error);
     }
-  };
+  }, [event]);
+
+  // Fetch pets data and saved vaccination drive data when modal opens
+  useEffect(() => {
+    if (isOpen && event) {
+      fetchPets();
+      fetchSavedVaccinationDriveData();
+      setIsEditMode(false); // Reset edit mode when modal opens
+    }
+  }, [isOpen, event, fetchSavedVaccinationDriveData]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -174,16 +172,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     );
   };
 
-  const barangayOptions = [
-    'Barangay San Antonio',
-    'Barangay San Pedro',
-    'Barangay San Jose',
-    'Barangay San Miguel',
-    'Barangay San Isidro',
-    'Barangay San Nicolas',
-    'Barangay San Vicente',
-    'Barangay San Lorenzo',
-  ];
 
   const vaccineOptions = [
     'Nobivac Rabies',
@@ -284,13 +272,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     setCurrentRecordId(null);
   };
 
-  const removeOtherService = (recordId: number, serviceIndex: number) => {
-    const record = petRecords.find(r => r.id === recordId);
-    if (record) {
-      const updatedServices = record.otherServices.filter((_, index) => index !== serviceIndex);
-      updatePetRecord(recordId, 'otherServices', updatedServices);
-    }
-  };
 
   const handleSave = async () => {
     if (!event) return;
@@ -397,7 +378,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     
     // Set up colors
     const primaryColor = [34, 139, 34]; // Green
-    const secondaryColor = [240, 248, 255]; // Light blue
     
     // Header
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);

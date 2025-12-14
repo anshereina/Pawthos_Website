@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Upload, Edit, Trash2, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Search, Upload, Edit, Trash2, ChevronDown } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -45,9 +45,6 @@ const MedicalRecordsPage: React.FC = () => {
     router.navigate({ to: path });
   };
 
-  const handleBack = () => {
-    router.navigate({ to: '/records' });
-  };
 
   const handleEditRecord = async (data: any) => {
     try {

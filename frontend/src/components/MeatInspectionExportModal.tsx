@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, Calendar, FileText, Filter } from 'lucide-react';
+import { X, Download, Calendar, FileText } from 'lucide-react';
 import { MeatInspectionRecord } from '../services/meatInspectionRecordService';
 import { meatInspectionExportService } from '../services/meatInspectionExportService';
 

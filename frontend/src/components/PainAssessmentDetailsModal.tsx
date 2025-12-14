@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, User, PawPrint, Activity, FileText } from 'lucide-react';
+import { X, PawPrint, Activity, FileText } from 'lucide-react';
 import { PainAssessment } from '../services/painAssessmentService';
 import { API_BASE_URL } from '../config';
 
@@ -15,31 +15,6 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
   assessment
 }) => {
   if (!isOpen || !assessment) return null;
-
-  const formatDate = (dateString: string) => {
-    try {
-      // Handle date strings that might be in local time without timezone info
-      let date: Date;
-      
-      if (dateString.includes(' ')) {
-        // Parse as local time
-        const [datePart, timePart] = dateString.split(' ');
-        const [year, month, day] = datePart.split('-').map(Number);
-        const [hours, minutes, seconds] = timePart.split(':').map(Number);
-        date = new Date(year, month - 1, day, hours, minutes, seconds || 0);
-      } else {
-        date = new Date(dateString);
-      }
-      
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch {
-      return dateString;
-    }
-  };
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -169,7 +144,7 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
               <div className="bg-white border border-gray-200 rounded-lg p-3">
                 <img
                   src={assessment.image_url.startsWith('http') ? assessment.image_url : `${API_BASE_URL}${assessment.image_url}`}
-                  alt="Assessment Photo"
+                  alt="Pain assessment"
                   className="w-full max-w-md mx-auto rounded-lg shadow-sm"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;

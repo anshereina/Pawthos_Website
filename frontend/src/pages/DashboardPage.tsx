@@ -8,7 +8,7 @@ import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useVaccinationStatistics, useYearlyVaccinationStatistics } from '../hooks/useVaccinationStatistics';
-import { vaccinationEventService, VaccinationEvent } from '../services/vaccinationEventService';
+import { vaccinationEventService } from '../services/vaccinationEventService';
 import { useAnimalControlStatistics } from '../hooks/useAnimalControlStatistics';
 import { useNotifications, Notification } from '../hooks/useNotifications';
 
@@ -271,7 +271,7 @@ const TotalCatchCard: React.FC<TotalCatchCardProps> = ({ statistics, selectedDat
 const YearlyVaccinationReportCard = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = React.useState(currentYear);
-  const { statistics: yearlyStats, loading, error, refreshStatistics } = useYearlyVaccinationStatistics(selectedYear);
+  const { statistics: yearlyStats, loading, error } = useYearlyVaccinationStatistics(selectedYear);
 
   // Generate year options (current year and 4 years back)
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -333,8 +333,6 @@ const YearlyVaccinationReportCard = () => {
 
   const maxValue = Math.max(...monthlyData.flatMap(d => [d.canineMale, d.canineFemale, d.felineMale, d.felineFemale]));
   const padding = 40;
-  const availableWidth = 100 - (padding * 2 / 100);
-  const availableHeight = 100 - (padding * 2 / 100);
 
   const getY = (value: number) => {
     if (maxValue === 0) return 80; // If no data, place at bottom
@@ -730,7 +728,7 @@ const DashboardDetailRow: React.FC<DashboardDetailRowProps> = ({
 
 // --- Main Dashboard Page ---
 const DashboardPage: React.FC = () => {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
   

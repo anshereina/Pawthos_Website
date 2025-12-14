@@ -50,19 +50,19 @@ const formatAssessmentDate = (dateString: string): string => {
 
 
 
-const TABLE_COLUMNS = [
-  'Assessment ID',
-  'Pet Name',
-  'Pet Type',
-  'Assessment Date',
-  'Pain Level',
-  'Status',
-  'Action',
-];
+// const TABLE_COLUMNS = [
+//   'Assessment ID',
+//   'Pet Name',
+//   'Pet Type',
+//   'Assessment Date',
+//   'Pain Level',
+//   'Status',
+//   'Action',
+// ];
 
 const PainAssessmentPage: React.FC = () => {
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   const [search, setSearch] = useState('');

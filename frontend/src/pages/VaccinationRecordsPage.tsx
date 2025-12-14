@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserCircle, ChevronDown, CalendarClock, Search, Edit, Trash2, ArrowLeft, Plus, Filter } from 'lucide-react';
+import { UserCircle, ChevronDown, CalendarClock, Search, Edit, Trash2, Plus } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -134,9 +134,6 @@ const VaccinationRecordsPage: React.FC = () => {
     return eventsError;
   };
 
-  const handleBack = () => {
-    router.navigate({ to: '/records' });
-  };
 
   const handleItemClick = (item: string) => {
     router.navigate({ to: `/${item.toLowerCase().replace(' ', '-')}` });
@@ -287,7 +284,6 @@ const VaccinationRecordsPage: React.FC = () => {
     setCurrentPage(1);
   }, [activeTab, search, filter]);
 
-  const currentData = getCurrentData();
   const isLoading = getCurrentLoading();
   const currentError = getCurrentError();
 

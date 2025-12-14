@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, PlusSquare, Upload, Edit, Trash2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Search, PlusSquare, Upload, Edit, Trash2, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
@@ -58,9 +58,6 @@ const MeatInspectionRecordsPage: React.FC = () => {
     router.navigate({ to: path });
   };
 
-  const handleBack = () => {
-    router.navigate({ to: '/records' });
-  };
 
   const handleAddRecord = async (recordData: any) => {
     try {
