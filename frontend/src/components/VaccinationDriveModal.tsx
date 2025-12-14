@@ -103,6 +103,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
       // Then fetch the pet records
       const savedRecords = await vaccinationDriveService.getVaccinationDriveByEvent(event.id);
+      console.log('📋 Fetched saved records:', savedRecords);
       if (savedRecords && savedRecords.length > 0) {
         // Load pet records
         const loadedRecords: PetVaccinationRecord[] = savedRecords.map(record => ({
@@ -119,8 +120,14 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           reproductiveStatus: record.reproductive_status || '',
           otherServices: record.other_services || [],
           veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
+          nextVaccinationDate: '', // Hidden field - will be recalculated on save
         }));
+        console.log('✅ Setting pet records:', loadedRecords.length, 'records');
         setPetRecords(loadedRecords);
+      } else {
+        // Explicitly set empty array if no records found
+        console.log('📭 No saved records found, setting empty array');
+        setPetRecords([]);
       }
     } catch (error) {
       // If no records exist yet, that's fine - it's a new drive
@@ -131,11 +138,25 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   // Fetch pets data and saved vaccination drive data when modal opens
   useEffect(() => {
     if (isOpen && event) {
+      // Reset state first, then fetch data
+      setPetRecords([]);
+      setFormData({
+        date: '',
+        barangay: '',
+        vaccineUsed: '',
+        batchNoLotNo: '',
+      });
+      setIsEditMode(false); // Reset edit mode when modal opens
+      // Then fetch data
       fetchPets();
       fetchSavedVaccinationDriveData();
-      setIsEditMode(false); // Reset edit mode when modal opens
     }
   }, [isOpen, event, fetchSavedVaccinationDriveData]);
+
+  // Debug: Log petRecords changes
+  useEffect(() => {
+    console.log('🔍 petRecords state changed:', petRecords.length, 'records');
+  }, [petRecords]);
 
 
   const fetchPets = async () => {
@@ -234,7 +255,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       nextVaccinationDate: '', // Hidden field - will be auto-calculated on save
       veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
     };
-    setPetRecords(prev => [...prev, newRecord]);
+    console.log('➕ Adding new pet record. Current records count:', petRecords.length);
+    setPetRecords(prev => {
+      const updated = [...prev, newRecord];
+      console.log('✅ Updated records count:', updated.length);
+      return updated;
+    });
   };
 
   const addMultiplePetRecords = (count: number) => {
