@@ -161,7 +161,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     'Rabies Vaccine (Generic)',
   ];
 
-  const speciesOptions = ['Dog', 'Cat', 'Other'];
+  const speciesOptions = ['Canine', 'Feline', 'Other'];
   const sexOptions = ['Male', 'Female'];
   const reproductiveStatusOptions = ['Intact', 'Castrated', 'Spayed'];
 
@@ -789,9 +789,9 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                     if (petData.species) {
                                       const speciesLower = petData.species.toLowerCase().trim();
                                       if (speciesLower === 'canine' || speciesLower === 'dog') {
-                                        mappedSpecies = 'Dog';
+                                        mappedSpecies = 'Canine';
                                       } else if (speciesLower === 'feline' || speciesLower === 'cat') {
-                                        mappedSpecies = 'Cat';
+                                        mappedSpecies = 'Feline';
                                       } else {
                                         mappedSpecies = 'Other';
                                       }
