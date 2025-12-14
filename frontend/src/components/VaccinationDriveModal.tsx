@@ -804,12 +804,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                       updatePetRecord(record.id, 'age', calculatedAge);
                                     } else {
                                       console.log('No date_of_birth found'); // Debug log
-                                      // Try to use age field if date_of_birth is not available
-                                      if (petData.age) {
-                                        updatePetRecord(record.id, 'age', petData.age);
-                                      } else {
-                                        updatePetRecord(record.id, 'age', '');
-                                      }
+                                      // Set age to empty string if date_of_birth is not available
+                                      updatePetRecord(record.id, 'age', '');
                                     }
                                     // Auto-fill reproductive status from pet data
                                     // Map reproductive status - capitalize first letter, rest lowercase
