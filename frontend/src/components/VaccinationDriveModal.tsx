@@ -55,6 +55,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   
   // Data for dropdowns
   const [pets, setPets] = useState<Pet[]>([]);
+  const [loadingPets, setLoadingPets] = useState(false);
   
   // Dropdown visibility states - track which record is showing dropdown
   const [activePetDropdown, setActivePetDropdown] = useState<number | null>(null);
