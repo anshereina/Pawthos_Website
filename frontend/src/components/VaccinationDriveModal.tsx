@@ -51,6 +51,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   });
 
   const [petRecords, setPetRecords] = useState<PetVaccinationRecord[]>([]);
+  const [editingRecord, setEditingRecord] = useState<PetVaccinationRecord | null>(null);
   const [saving, setSaving] = useState(false);
   
   // Data for dropdowns
