@@ -66,174 +66,188 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
             {type === 'appointment' ? (
-              // Appointment Details
+              // Appointment Details - Matching Add New Appointment Record fields
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Appointment ID
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {data.id}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <div className="px-3 py-2">
-                      <span className={`px-2 py-1 rounded-full text-sm font-medium ${getStatusColor(data.status || '')}`}>
-                        {data.status || 'Pending'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Service Type
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {(data as Appointment).type || '-'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {formatDate((data as Appointment).date)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {formatTime((data as Appointment).time)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Veterinarian
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                      {(data as Appointment).veterinarian || '-'}
-                    </div>
-                  </div>
-
-                  {(data as Appointment).pet_id && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Pet ID
-                      </label>
-                      <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                        {(data as Appointment).pet_id}
-                      </div>
-                    </div>
-                  )}
-
-                  {(data as Appointment).user_id && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        User ID
-                      </label>
-                      <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                        {(data as Appointment).user_id}
-                      </div>
-                    </div>
-                  )}
-
-                  {(data as Appointment).updated_at && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Last Updated
-                      </label>
-                      <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                        {formatDate((data as Appointment).updated_at)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Client/Owner Information */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Client/Owner Information
-                  </label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                    {(() => {
-                      const appointment = data as Appointment;
-                      const clientName = appointment.client_name || appointment.owner_name || appointment.user?.name || appointment.pet?.owner_name;
-                      const clientEmail = appointment.user?.email;
-                      const clientPhone = appointment.user?.phone_number;
-                      const clientAddress = appointment.user?.address;
-
-                      if (!clientName && !clientEmail && !clientPhone && !clientAddress) {
-                        return 'No client information available';
+                {(() => {
+                  const appointment = data as Appointment;
+                  // Parse notes to extract Medicine Used, Contact Number, and Owner Birthday
+                  let medicineUsed = '';
+                  let contactNumber = '';
+                  let ownerBirthday = '';
+                  
+                  if (appointment.notes) {
+                    const notesParts = appointment.notes.split(' | ');
+                    notesParts.forEach(part => {
+                      if (part.startsWith('Medicine Used: ')) {
+                        medicineUsed = part.replace('Medicine Used: ', '');
+                      } else if (part.startsWith('Contact: ')) {
+                        contactNumber = part.replace('Contact: ', '');
+                      } else if (part.startsWith('Owner Birthday: ')) {
+                        ownerBirthday = part.replace('Owner Birthday: ', '');
                       }
+                    });
+                  }
 
-                      return (
-                        <div className="space-y-1">
-                          {clientName && <div><strong>Name:</strong> {clientName}</div>}
-                          {clientEmail && <div><strong>Email:</strong> {clientEmail}</div>}
-                          {clientPhone && <div><strong>Phone:</strong> {clientPhone}</div>}
-                          {clientAddress && <div><strong>Address:</strong> {clientAddress}</div>}
+                  // Get owner name
+                  const ownerName = appointment.owner_name || appointment.client_name || appointment.user?.name || appointment.pet?.owner_name || '-';
+                  
+                  // Get pet information
+                  const petName = appointment.pet_name || appointment.pet?.name || '-';
+                  const petSpecies = appointment.pet_species || appointment.pet?.species || '-';
+                  const petBreed = appointment.pet_breed || appointment.pet?.breed || '-';
+                  const petAge = appointment.pet_age || '-';
+                  const petGender = appointment.pet_gender || appointment.pet?.gender || '-';
+                  const petBirthday = appointment.pet?.date_of_birth || '-';
+                  const reproductiveStatus = appointment.pet?.reproductive_status || '-';
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Date
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {appointment.date ? formatDate(appointment.date) : '-'}
+                          </div>
                         </div>
-                      );
-                    })()}
-                  </div>
-                </div>
 
-                {/* Pet Information */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pet Information
-                  </label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                    {(() => {
-                      const appointment = data as Appointment;
-                      // Check for pet info from nested pet object or direct fields
-                      const petName = appointment.pet_name || appointment.pet?.name;
-                      const petSpecies = appointment.pet_species || appointment.pet?.species;
-                      const petBreed = appointment.pet_breed || appointment.pet?.breed;
-                      const petAge = appointment.pet_age;
-                      const petGender = appointment.pet_gender || appointment.pet?.gender;
-                      const petWeight = appointment.pet_weight;
-                      const petColor = appointment.pet?.color;
-                      const petDOB = appointment.pet?.date_of_birth;
-
-                      if (!petName && !petSpecies && !petBreed && !petAge && !petGender && !petWeight && !petColor && !petDOB) {
-                        return 'No pet information available';
-                      }
-
-                      return (
-                        <div className="space-y-1">
-                          {petName && <div><strong>Name:</strong> {petName}</div>}
-                          {petSpecies && <div><strong>Species:</strong> {petSpecies}</div>}
-                          {petBreed && <div><strong>Breed:</strong> {petBreed}</div>}
-                          {petAge && <div><strong>Age:</strong> {petAge}</div>}
-                          {petGender && <div><strong>Gender:</strong> {petGender}</div>}
-                          {petWeight && <div><strong>Weight:</strong> {petWeight}</div>}
-                          {petColor && <div><strong>Color:</strong> {petColor}</div>}
-                          {petDOB && <div><strong>Date of Birth:</strong> {formatDate(petDOB.toString())}</div>}
+                        {/* Owner's Name */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Owner's Name
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {ownerName}
+                          </div>
                         </div>
-                      );
-                    })()}
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes
-                  </label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 min-h-[60px]">
-                    {(data as Appointment).notes || 'No notes available'}
-                  </div>
-                </div>
+                        {/* Appointment For */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Appointment For
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {appointment.type || '-'}
+                          </div>
+                        </div>
+
+                        {/* Contact Number */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Contact Number
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {contactNumber || appointment.user?.phone_number || '-'}
+                          </div>
+                        </div>
+
+                        {/* Owner's Birthday */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Owner's Birthday
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {ownerBirthday ? formatDate(ownerBirthday) : (appointment.user?.created_at ? formatDate(appointment.user.created_at) : '-')}
+                          </div>
+                        </div>
+
+                        {/* Pet's Name */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Pet's Name
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {petName}
+                          </div>
+                        </div>
+
+                        {/* Type of Species */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Type of Species
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {petSpecies}
+                          </div>
+                        </div>
+
+                        {/* Pet's Birthday */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Pet's Birthday
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {petBirthday !== '-' ? formatDate(petBirthday.toString()) : '-'}
+                          </div>
+                        </div>
+
+                        {/* Age */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Age
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {petAge}
+                          </div>
+                        </div>
+
+                        {/* Breed */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Breed
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {petBreed}
+                          </div>
+                        </div>
+
+                        {/* Gender */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Gender
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {petGender}
+                          </div>
+                        </div>
+
+                        {/* Reproductive Status */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Reproductive Status
+                          </label>
+                          <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {reproductiveStatus !== '-' ? reproductiveStatus : '-'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Medicine Used */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Medicine Used
+                        </label>
+                        <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                          {medicineUsed || '-'}
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Status
+                        </label>
+                        <div className="px-3 py-2">
+                          <span className={`px-2 py-1 rounded-full text-sm font-medium ${getStatusColor(data.status || '')}`}>
+                            {data.status || 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             ) : (
               // Service Request Details
