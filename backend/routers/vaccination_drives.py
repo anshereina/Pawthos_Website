@@ -283,25 +283,62 @@ def get_vaccination_drive_by_event_id(event_id: int, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Vaccination drive not found for this event")
     return drive
 
-@router.get("/event/{event_id}", response_model=List[VaccinationDriveRecordSchema])
+@router.get("/event/{event_id}")
 def get_vaccination_drive_by_event(event_id: int, db: Session = Depends(get_db)):
     """Get all vaccination drive records for a specific event"""
-    drives = db.query(VaccinationDrive).filter(VaccinationDrive.event_id == event_id).all()
-    if not drives:
-        return []
-    
-    drive_ids = [drive.id for drive in drives]
-    records = db.query(VaccinationDriveRecord).filter(VaccinationDriveRecord.drive_id.in_(drive_ids)).all()
-    
-    # Convert other_services back to list
-    for record in records:
-        if record.other_services:
-            try:
-                record.other_services = json.loads(record.other_services)
-            except:
-                record.other_services = []
-    
-    return records
+    try:
+        drives = db.query(VaccinationDrive).filter(VaccinationDrive.event_id == event_id).all()
+        if not drives:
+            return []
+        
+        drive_ids = [drive.id for drive in drives]
+        records = db.query(VaccinationDriveRecord).filter(VaccinationDriveRecord.drive_id.in_(drive_ids)).all()
+        
+        # Convert records to dict and parse other_services from JSON string to list
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "drive_id": record.drive_id,
+                "owner_name": record.owner_name,
+                "pet_name": record.pet_name,
+                "owner_birthday": record.owner_birthday,
+                "owner_contact": record.owner_contact,
+                "species": record.species,
+                "breed": record.breed,
+                "color": record.color,
+                "age": record.age,
+                "sex": record.sex,
+                "reproductive_status": record.reproductive_status,
+                "vaccine_used": record.vaccine_used,
+                "batch_no_lot_no": record.batch_no_lot_no,
+                "vaccination_date": record.vaccination_date.isoformat() if record.vaccination_date else None,
+                "created_at": record.created_at.isoformat() if record.created_at else None,
+                "updated_at": record.updated_at.isoformat() if record.updated_at else None,
+            }
+            
+            # Parse other_services from JSON string to list
+            if record.other_services:
+                try:
+                    if isinstance(record.other_services, str):
+                        record_dict["other_services"] = json.loads(record.other_services)
+                    elif isinstance(record.other_services, list):
+                        record_dict["other_services"] = record.other_services
+                    else:
+                        record_dict["other_services"] = []
+                except:
+                    record_dict["other_services"] = []
+            else:
+                record_dict["other_services"] = []
+            
+            result.append(record_dict)
+        
+        return result
+    except Exception as e:
+        import traceback
+        print(f"Error in get_vaccination_drive_by_event: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to fetch vaccination drive records: {str(e)}")
 
 @router.get("/{drive_id}", response_model=VaccinationDriveSchema)
 def get_vaccination_drive(drive_id: int, db: Session = Depends(get_db)):
