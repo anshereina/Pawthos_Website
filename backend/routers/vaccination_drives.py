@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 import json
 from core.database import get_db
@@ -115,14 +116,67 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
     }
     """
     try:
-        # Create the vaccination drive
-        drive = VaccinationDrive(
-            event_id=drive_data["event_id"],
-            vaccine_used=drive_data["vaccine_used"],
-            batch_no_lot_no=drive_data["batch_no_lot_no"]
-        )
-        db.add(drive)
-        db.flush()  # Get the drive ID
+        # Check if a drive already exists for this event
+        existing_drive = db.query(VaccinationDrive).filter(
+            VaccinationDrive.event_id == drive_data["event_id"]
+        ).first()
+        
+        if existing_drive:
+            # Delete old vaccination records associated with this drive
+            # We identify them by matching event date, pets, and veterinarian
+            from datetime import datetime
+            try:
+                # Parse event date from first pet record
+                first_record_date = drive_data["pet_records"][0]["vaccination_date"]
+                if 'T' in first_record_date:
+                    event_date = datetime.fromisoformat(first_record_date.replace('Z', '+00:00')).date()
+                else:
+                    event_date = datetime.strptime(first_record_date, '%Y-%m-%d').date()
+            except:
+                event_date = None
+            
+            # Get all pets that will be in the new drive (create a set of (owner_name, pet_name) tuples)
+            pet_identifiers = {(pr["owner_name"], pr["pet_name"]) for pr in drive_data["pet_records"]}
+            owner_names = [owner for owner, _ in pet_identifiers]
+            pet_names = [pet for _, pet in pet_identifiers]
+            
+            # Find pets matching the owner and pet names
+            matching_pets = db.query(Pet).filter(
+                Pet.owner_name.in_(owner_names),
+                Pet.name.in_(pet_names)
+            ).all()
+            
+            if matching_pets and event_date:
+                pet_ids = [pet.id for pet in matching_pets]
+                # Delete vaccination records for these pets on this event date with the drive veterinarian
+                # This ensures we only delete records that were created from this drive
+                deleted_count = db.query(VaccinationRecord).filter(
+                    VaccinationRecord.pet_id.in_(pet_ids),
+                    func.date(VaccinationRecord.vaccination_date) == event_date,
+                    VaccinationRecord.veterinarian.in_(["Dr. Fe Templado", "Vaccination Drive"])
+                ).delete(synchronize_session=False)
+                print(f"🗑️  Deleted {deleted_count} old vaccination record(s) for this drive")
+            
+            # Delete old drive records
+            deleted_drive_records = db.query(VaccinationDriveRecord).filter(
+                VaccinationDriveRecord.drive_id == existing_drive.id
+            ).delete()
+            print(f"🗑️  Deleted {deleted_drive_records} old drive record(s)")
+            
+            # Update existing drive
+            existing_drive.vaccine_used = drive_data["vaccine_used"]
+            existing_drive.batch_no_lot_no = drive_data["batch_no_lot_no"]
+            drive = existing_drive
+            db.flush()
+        else:
+            # Create new vaccination drive
+            drive = VaccinationDrive(
+                event_id=drive_data["event_id"],
+                vaccine_used=drive_data["vaccine_used"],
+                batch_no_lot_no=drive_data["batch_no_lot_no"]
+            )
+            db.add(drive)
+            db.flush()  # Get the drive ID
         
         # Create pet records and vaccination records
         for pet_record_data in drive_data["pet_records"]:
