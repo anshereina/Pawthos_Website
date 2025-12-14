@@ -47,7 +47,7 @@ const EditPostAbattoirRecordModal: React.FC<EditPostAbattoirRecordModalProps> = 
     setSubmitting(true);
     setError(null);
     try {
-      // Send all form fields - backend will only update provided fields
+      // Send all form fields - form validation ensures required fields have values
       const updatePayload: PostAbattoirRecordUpdate = {
         date: formData.date,
         time: formData.time,
@@ -63,6 +63,7 @@ const EditPostAbattoirRecordModal: React.FC<EditPostAbattoirRecordModalProps> = 
         condem: formData.condem,
       };
       
+      console.log('Update payload being sent:', JSON.stringify(updatePayload, null, 2));
       await onSubmit(record.id, updatePayload);
       onClose();
     } catch (err: any) {
