@@ -12,23 +12,27 @@ interface EditPostAbattoirRecordModalProps {
 const EditPostAbattoirRecordModal: React.FC<EditPostAbattoirRecordModalProps> = ({ isOpen, onClose, onSubmit, record }) => {
   const [formData, setFormData] = useState<PostAbattoirRecordUpdate>({});
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (record) {
+      // Format date to YYYY-MM-DD for date input
+      const dateValue = record.date ? new Date(record.date).toISOString().split('T')[0] : '';
       setFormData({
-        date: record.date,
-        time: record.time,
-        barangay: record.barangay,
-        establishment: record.establishment,
-        doc_mic: record.doc_mic,
-        doc_vhc: record.doc_vhc,
-        doc_sp: record.doc_sp,
-        color_ok: record.color_ok,
-        texture_ok: record.texture_ok,
-        odor_ok: record.odor_ok,
-        condem: record.condem,
-        owner: record.owner,
+        date: dateValue,
+        time: record.time || '',
+        barangay: record.barangay || '',
+        establishment: record.establishment || '',
+        doc_mic: record.doc_mic || false,
+        doc_vhc: record.doc_vhc || false,
+        doc_sp: record.doc_sp || false,
+        color_ok: record.color_ok || false,
+        texture_ok: record.texture_ok || false,
+        odor_ok: record.odor_ok || false,
+        condem: record.condem || false,
+        owner: record.owner || '',
       });
+      setError(null);
     }
   }, [record]);
 
@@ -41,9 +45,13 @@ const EditPostAbattoirRecordModal: React.FC<EditPostAbattoirRecordModalProps> = 
     e.preventDefault();
     if (!record) return;
     setSubmitting(true);
+    setError(null);
     try {
       await onSubmit(record.id, formData);
       onClose();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update record. Please try again.');
+      console.error('Error updating record:', err);
     } finally {
       setSubmitting(false);
     }
@@ -61,6 +69,11 @@ const EditPostAbattoirRecordModal: React.FC<EditPostAbattoirRecordModalProps> = 
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {error && (
+            <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-sm text-gray-700 mb-1">Date</label>
             <input type="date" name="date" value={formData.date || ''} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2" required />

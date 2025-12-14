@@ -51,6 +51,7 @@ const MeatInspectionRecordsPage: React.FC = () => {
   const { records, loading, error, createRecord, updateRecord, deleteRecord } = useMeatInspectionRecords();
   const { records: paRecords, loading: paLoading, error: paError, createRecord: createPA, updateRecord: updatePA, deleteRecord: deletePA } = usePostAbattoirRecords();
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentPAPage, setCurrentPAPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
   const handleItemClick = (path: string) => {
@@ -119,10 +120,34 @@ const MeatInspectionRecordsPage: React.FC = () => {
     setCurrentPage(1);
   }, [search]);
 
+  // Reset Post Abattoir page when search changes
+  React.useEffect(() => {
+    setCurrentPAPage(1);
+  }, [searchPA]);
+
+  // Reset pagination when switching tabs
+  React.useEffect(() => {
+    if (activeTab === 'MIC') {
+      setCurrentPage(1);
+    } else {
+      setCurrentPAPage(1);
+    }
+  }, [activeTab]);
+
   // Filter Post Abattoir by search
   const filteredPA = paRecords.filter(r => {
     return searchPA === '' || r.establishment.toLowerCase().includes(searchPA.toLowerCase()) || r.barangay.toLowerCase().includes(searchPA.toLowerCase());
   });
+
+  // Post Abattoir Pagination
+  const totalPAItems = filteredPA.length;
+  const totalPAPages = Math.ceil(totalPAItems / itemsPerPage) || 1;
+  const startPAIndex = (currentPAPage - 1) * itemsPerPage;
+  const endPAIndex = startPAIndex + itemsPerPage;
+  const currentPARows = filteredPA.slice(startPAIndex, endPAIndex);
+  const handlePAPageChange = (page: number) => setCurrentPAPage(page);
+  const handlePAPreviousPage = () => currentPAPage > 1 && setCurrentPAPage(currentPAPage - 1);
+  const handlePANextPage = () => currentPAPage < totalPAPages && setCurrentPAPage(currentPAPage + 1);
 
   // Pagination
   const totalItems = filteredRecords.length;
@@ -414,12 +439,12 @@ const MeatInspectionRecordsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredPA.length === 0 ? (
+                {currentPARows.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-gray-500">No post abattoir records found</td>
                   </tr>
                 ) : (
-                  filteredPA.map((r, index) => (
+                  currentPARows.map((r, index) => (
                     <tr key={r.id} className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`} onClick={() => setDetailRecord({ type: 'PA', data: r })}>
                       <td className="px-4 py-3">{new Date(r.date).toLocaleDateString()}</td>
                       <td className="px-4 py-3">{r.time}</td>
@@ -438,6 +463,61 @@ const MeatInspectionRecordsPage: React.FC = () => {
                 )}
               </tbody>
             </table>
+            {/* Post Abattoir Pagination Controls */}
+            {totalPAPages > 1 && (
+              <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-700">
+                  <span>
+                    Showing {startPAIndex + 1} to {Math.min(endPAIndex, totalPAItems)} of {totalPAItems} results
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handlePAPreviousPage}
+                    disabled={currentPAPage === 1}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPAPage === 1
+                        ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                        : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <div className="flex space-x-1">
+                    {Array.from({ length: totalPAPages }, (_, i) => i + 1).map((page) => {
+                      const shouldShow = page === 1 || page === totalPAPages || (page >= currentPAPage - 1 && page <= currentPAPage + 1);
+                      if (!shouldShow) {
+                        if (page === 2 && currentPAPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
+                        if (page === totalPAPages - 1 && currentPAPage < totalPAPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                        return null;
+                      }
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePAPageChange(page)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            currentPAPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={handlePANextPage}
+                    disabled={currentPAPage === totalPAPages}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPAPage === totalPAPages
+                        ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                        : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           )}
         </main>
