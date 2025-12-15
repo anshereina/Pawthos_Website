@@ -871,6 +871,31 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                     console.log('Auto-filled reproductive status:', reproductiveStatus, 'from pet data:', petData.reproductive_status); // Debug log
                                     // Always update reproductive status, even if empty (to clear previous value if pet has none)
                                     updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
+                                    // Auto-fill owner's birthday from pet data
+                                    if (petData.owner_birthday) {
+                                      // Format the date to YYYY-MM-DD if needed
+                                      let formattedBirthday = '';
+                                      if (typeof petData.owner_birthday === 'string') {
+                                        // If it's already in YYYY-MM-DD format, use it directly
+                                        if (petData.owner_birthday.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                          formattedBirthday = petData.owner_birthday;
+                                        } else {
+                                          // Try to parse and format the date
+                                          try {
+                                            const date = new Date(petData.owner_birthday);
+                                            if (!isNaN(date.getTime())) {
+                                              formattedBirthday = date.toISOString().split('T')[0];
+                                            }
+                                          } catch (e) {
+                                            console.error('Error parsing owner_birthday:', e);
+                                          }
+                                        }
+                                      }
+                                      if (formattedBirthday) {
+                                        console.log('Auto-filled owner birthday:', formattedBirthday, 'from pet data:', petData.owner_birthday); // Debug log
+                                        updatePetRecord(record.id, 'ownerBirthday', formattedBirthday);
+                                      }
+                                    }
                                   } else {
                                     console.log('No petData provided'); // Debug log
                                   }

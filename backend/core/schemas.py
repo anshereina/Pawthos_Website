@@ -234,6 +234,7 @@ class MeatInspectionRecordBase(BaseModel):
     kilos: float
     date_of_slaughter: date
     certificate_issued: bool = False
+    condem: bool = False  # CONDEM field
     status: str = "Pending"  # Pending, Approved, Rejected
     remarks: Optional[str] = None
     inspector_name: Optional[str] = None
@@ -251,6 +252,7 @@ class MeatInspectionRecordUpdate(BaseModel):
     kilos: Optional[float] = None
     date_of_slaughter: Optional[date] = None
     certificate_issued: Optional[bool] = None
+    condem: Optional[bool] = None  # CONDEM field
     status: Optional[str] = None
     remarks: Optional[str] = None
     inspector_name: Optional[str] = None

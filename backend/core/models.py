@@ -128,6 +128,7 @@ class MeatInspectionRecord(Base):
     kilos = Column(Float, nullable=False)
     date_of_slaughter = Column(Date, nullable=False)
     certificate_issued = Column(Boolean, nullable=False, default=False)
+    condem = Column(Boolean, nullable=False, default=False)  # CONDEM field
     status = Column(String(20), nullable=False, default="Pending")  # Pending, Approved, Rejected
     remarks = Column(Text, nullable=True)
     inspector_name = Column(String(255), nullable=True)

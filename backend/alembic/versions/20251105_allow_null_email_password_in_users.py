@@ -1,6 +1,6 @@
 """allow null email and password on users
 
-Revision ID: 20251105_allow_null_email_password
+Revision ID: allow_null_email_pass
 Revises: 
 Create Date: 2025-11-05
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '20251105_allow_null_email_password'
+revision = 'allow_null_email_pass'
 down_revision = None
 branch_labels = None
 depends_on = None

@@ -9,6 +9,7 @@ export interface MeatInspectionRecord {
   kilos: number;
   date_of_slaughter: string;
   certificate_issued: boolean;
+  condem: boolean;  // CONDEM field
   status: 'Pending' | 'Approved' | 'Rejected';
   remarks?: string;
   inspector_name?: string;
@@ -25,6 +26,7 @@ export interface MeatInspectionRecordCreate {
   kilos: number;
   date_of_slaughter: string;
   certificate_issued: boolean;
+  condem: boolean;  // CONDEM field
   status?: 'Pending' | 'Approved' | 'Rejected';
   remarks?: string;
   inspector_name?: string;
@@ -39,6 +41,7 @@ export interface MeatInspectionRecordUpdate {
   kilos?: number;
   date_of_slaughter?: string;
   certificate_issued?: boolean;
+  condem?: boolean;  // CONDEM field
   status?: 'Pending' | 'Approved' | 'Rejected';
   remarks?: string;
   inspector_name?: string;
