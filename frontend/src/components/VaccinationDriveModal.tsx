@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Calendar, MapPin, Syringe, Hash, User, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Download } from 'lucide-react';
+import { X, Calendar, MapPin, Syringe, Hash, User, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
 import { petService, Pet } from '../services/petService';
 import OtherServiceModal from './OtherServiceModal';
@@ -74,6 +74,9 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Expanded rows state
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   // Update form data when event changes
   useEffect(() => {
@@ -294,6 +297,18 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       addOtherService(currentRecordId, serviceString);
     }
     setCurrentRecordId(null);
+  };
+
+  const toggleRowExpansion = (recordId: number) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recordId)) {
+        newSet.delete(recordId);
+      } else {
+        newSet.add(recordId);
+      }
+      return newSet;
+    });
   };
 
 
@@ -741,25 +756,23 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
             <table className="w-full" style={{ display: 'table' }}>
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
+                  <th className="px-4 py-3 text-center font-semibold text-sm w-12">
+                    {isEditable && <span>Expand</span>}
+                  </th>
                   <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Pet's Name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Owner's Birthday</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Contact No.</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm min-w-[200px]">Owner's Name</th>
+                  <th className="px-4 py-3 text-left font-semibold text-sm min-w-[200px]">Pet's Name</th>
                   <th className="px-4 py-3 text-left font-semibold text-sm">Species</th>
                   <th className="px-4 py-3 text-left font-semibold text-sm">Breed</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Color</th>
                   <th className="px-4 py-3 text-left font-semibold text-sm">Age</th>
                   <th className="px-4 py-3 text-left font-semibold text-sm">Sex</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Reproductive Status</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Other Service</th>
-                  <th className="px-4 py-3 text-left font-semibold text-sm">Action</th>
+                  <th className="px-4 py-3 text-center font-semibold text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {petRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                       <PawPrint size={48} className="mx-auto mb-4 text-gray-300" />
                       <p className="text-lg">No pet records found</p>
                       {isEditable ? (
@@ -772,240 +785,339 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                 ) : (
                   currentPetRecords.map((record, index) => {
                       const globalIndex = startIndex + index;
+                      const isExpanded = expandedRows.has(record.id);
                       return (
-                        <tr 
-                          key={record.id}
-                          className={`${
-                            globalIndex % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
-                          } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
-                        >
-                          <td className="px-4 py-3 text-gray-900 font-medium">
-                            {globalIndex + 1}
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 relative min-w-[200px]">
-                            {isEditable ? (
-                              <OwnerDropdown
-                                selectedOwner={record.ownerName}
-                                onOwnerChange={(ownerName, ownerData) => handleOwnerChange(record.id, ownerName, ownerData)}
-                                placeholder="Type or search owner name..."
-                                required
-                              />
-                            ) : (
-                              <div className={`w-full min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed`}>
-                                {record.ownerName || '-'}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 relative min-w-[200px]">
-                            {isEditable ? (
-                              <PetDropdown
-                                selectedPet={record.petName}
-                                onPetChange={(petName, petData) => {
-                                  updatePetRecord(record.id, 'petName', petName);
-                                  if (petData) {
-                                    // Map species to match dropdown options (handle both lowercase and capitalized)
-                                    let mappedSpecies = '';
-                                    if (petData.species) {
-                                      const speciesLower = petData.species.toLowerCase().trim();
-                                      if (speciesLower === 'canine' || speciesLower === 'dog') {
-                                        mappedSpecies = 'Canine';
-                                      } else if (speciesLower === 'feline' || speciesLower === 'cat') {
-                                        mappedSpecies = 'Feline';
-                                      } else {
-                                        mappedSpecies = 'Other';
-                                      }
-                                    }
-                                    updatePetRecord(record.id, 'species', mappedSpecies);
-                                    updatePetRecord(record.id, 'breed', petData.breed || '');
-                                    updatePetRecord(record.id, 'color', petData.color || '');
-                                    // Capitalize gender to match dropdown options
-                                    const gender = petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1).toLowerCase() : '';
-                                    updatePetRecord(record.id, 'sex', gender);
-                                    // Calculate age from date of birth
-                                    if (petData.date_of_birth) {
-                                      const calculatedAge = calculateAge(petData.date_of_birth);
-                                      updatePetRecord(record.id, 'age', calculatedAge);
-                                    } else {
-                                      // Set age to empty string if date_of_birth is not available
-                                      updatePetRecord(record.id, 'age', '');
-                                    }
-                                    // Auto-fill reproductive status from pet data
-                                    // Map reproductive status - capitalize first letter, rest lowercase
-                                    let reproductiveStatus = '';
-                                    if (petData.reproductive_status) {
-                                      const statusLower = petData.reproductive_status.toLowerCase().trim();
-                                      if (statusLower === 'intact') {
-                                        reproductiveStatus = 'Intact';
-                                      } else if (statusLower === 'castrated') {
-                                        reproductiveStatus = 'Castrated';
-                                      } else if (statusLower === 'spayed') {
-                                        reproductiveStatus = 'Spayed';
-                                      } else if (statusLower) {
-                                        // Handle any other value by capitalizing first letter
-                                        reproductiveStatus = petData.reproductive_status.charAt(0).toUpperCase() + petData.reproductive_status.slice(1).toLowerCase();
-                                      }
-                                    }
-                                    // Always update reproductive status, even if empty (to clear previous value if pet has none)
-                                    updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
-                                    // Auto-fill owner's birthday from pet data
-                                    if (petData.owner_birthday) {
-                                      const formattedBirthday = typeof petData.owner_birthday === 'string' 
-                                        ? petData.owner_birthday.split('T')[0] 
-                                        : petData.owner_birthday;
-                                      updatePetRecord(record.id, 'ownerBirthday', formattedBirthday);
-                                    }
-                                  }
-                                }}
-                                ownerName={record.ownerName}
-                                placeholder="Type or search pet name..."
-                                required
-                                pets={pets}
-                              />
-                            ) : (
-                              <div className={`w-full min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed`}>
-                                {record.petName || '-'}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
-                            <input
-                              type="date"
-                              value={record.ownerBirthday}
-                              onChange={(e) => updatePetRecord(record.id, 'ownerBirthday', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                              placeholder="Owner's Birthday"
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
-                            <input
-                              type="tel"
-                              value={record.ownerContact}
-                              onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                              placeholder="Contact (optional)"
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[120px]">
-                            <select
-                              value={record.species}
-                              onChange={(e) => updatePetRecord(record.id, 'species', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[120px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                            >
-                              <option value="">-</option>
-                              {speciesOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
-                            <input
-                              type="text"
-                              value={record.breed}
-                              onChange={(e) => updatePetRecord(record.id, 'breed', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                              placeholder="Breed"
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[120px]">
-                            <input
-                              type="text"
-                              value={record.color}
-                              onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[120px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                              placeholder="Color"
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[100px]">
-                            <input
-                              type="text"
-                              value={record.age}
-                              onChange={(e) => updatePetRecord(record.id, 'age', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[100px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                              placeholder="Age"
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[100px]">
-                            <select
-                              value={record.sex}
-                              onChange={(e) => updatePetRecord(record.id, 'sex', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[100px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                            >
-                              <option value="">-</option>
-                              {sexOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-4 py-3 text-gray-900 min-w-[150px]">
-                            <select
-                              value={record.reproductiveStatus}
-                              onChange={(e) => updatePetRecord(record.id, 'reproductiveStatus', e.target.value)}
-                              disabled={!isEditable}
-                              className={`w-full min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-transparent ${!isEditable ? 'cursor-not-allowed bg-gray-50' : ''}`}
-                            >
-                              <option value="">-</option>
-                              {reproductiveStatusOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-4 py-3 text-gray-900">
-                            <div className="flex flex-wrap gap-1">
-                              {record.otherServices.map((service, serviceIndex) => (
-                                <span key={serviceIndex} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                  {service}
-                                </span>
-                              ))}
-                              {isEditable && (
-                                <button
-                                  onClick={() => handleAddOtherService(record.id)}
-                                  className="text-xs text-green-600 hover:text-green-800 px-2 py-1 rounded-full border border-green-300 hover:bg-green-50 transition-colors"
-                                  title="Add service"
-                                >
-                                  +
-                                </button>
+                        <React.Fragment key={record.id}>
+                          {/* Main Row - Simplified View */}
+                          <tr 
+                            className={`${
+                              globalIndex % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
+                            } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-200 border-b border-gray-100`}
+                          >
+                            {/* Expand/Collapse Button */}
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => toggleRowExpansion(record.id)}
+                                className="p-1.5 rounded-lg hover:bg-green-200 transition-colors"
+                                title={isExpanded ? "Collapse details" : "Expand details"}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp size={18} className="text-green-700" />
+                                ) : (
+                                  <ChevronDown size={18} className="text-green-700" />
+                                )}
+                              </button>
+                            </td>
+
+                            {/* Row Number */}
+                            <td className="px-4 py-3 text-gray-900 font-medium">
+                              {globalIndex + 1}
+                            </td>
+
+                            {/* Owner's Name */}
+                            <td className="px-4 py-3 text-gray-900 relative">
+                              {isEditable ? (
+                                <OwnerDropdown
+                                  selectedOwner={record.ownerName}
+                                  onOwnerChange={(ownerName, ownerData) => handleOwnerChange(record.id, ownerName, ownerData)}
+                                  placeholder="Type or search owner name..."
+                                  required
+                                />
+                              ) : (
+                                <div className="px-3 py-2 text-sm">
+                                  {record.ownerName || '-'}
+                                </div>
                               )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-2">
-                              {isEditable && (
-                                <>
-                                  <button 
-                                    onClick={() => setEditingRecord(record)}
-                                    className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                                    title="Edit row"
-                                  >
-                                    <Edit size={18} className="text-green-600" />
-                                  </button>
+                            </td>
+
+                            {/* Pet's Name */}
+                            <td className="px-4 py-3 text-gray-900 relative">
+                              {isEditable ? (
+                                <PetDropdown
+                                  selectedPet={record.petName}
+                                  onPetChange={(petName, petData) => {
+                                    updatePetRecord(record.id, 'petName', petName);
+                                    if (petData) {
+                                      // Map species to match dropdown options
+                                      let mappedSpecies = '';
+                                      if (petData.species) {
+                                        const speciesLower = petData.species.toLowerCase().trim();
+                                        if (speciesLower === 'canine' || speciesLower === 'dog') {
+                                          mappedSpecies = 'Canine';
+                                        } else if (speciesLower === 'feline' || speciesLower === 'cat') {
+                                          mappedSpecies = 'Feline';
+                                        } else {
+                                          mappedSpecies = 'Other';
+                                        }
+                                      }
+                                      updatePetRecord(record.id, 'species', mappedSpecies);
+                                      updatePetRecord(record.id, 'breed', petData.breed || '');
+                                      updatePetRecord(record.id, 'color', petData.color || '');
+                                      const gender = petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1).toLowerCase() : '';
+                                      updatePetRecord(record.id, 'sex', gender);
+                                      if (petData.date_of_birth) {
+                                        const calculatedAge = calculateAge(petData.date_of_birth);
+                                        updatePetRecord(record.id, 'age', calculatedAge);
+                                      } else {
+                                        updatePetRecord(record.id, 'age', '');
+                                      }
+                                      let reproductiveStatus = '';
+                                      if (petData.reproductive_status) {
+                                        const statusLower = petData.reproductive_status.toLowerCase().trim();
+                                        if (statusLower === 'intact') {
+                                          reproductiveStatus = 'Intact';
+                                        } else if (statusLower === 'castrated') {
+                                          reproductiveStatus = 'Castrated';
+                                        } else if (statusLower === 'spayed') {
+                                          reproductiveStatus = 'Spayed';
+                                        } else if (statusLower) {
+                                          reproductiveStatus = petData.reproductive_status.charAt(0).toUpperCase() + petData.reproductive_status.slice(1).toLowerCase();
+                                        }
+                                      }
+                                      updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
+                                      if (petData.owner_birthday) {
+                                        const formattedBirthday = typeof petData.owner_birthday === 'string' 
+                                          ? petData.owner_birthday.split('T')[0] 
+                                          : petData.owner_birthday;
+                                        updatePetRecord(record.id, 'ownerBirthday', formattedBirthday);
+                                      }
+                                    }
+                                  }}
+                                  ownerName={record.ownerName}
+                                  placeholder="Type or search pet name..."
+                                  required
+                                  pets={pets}
+                                />
+                              ) : (
+                                <div className="px-3 py-2 text-sm">
+                                  {record.petName || '-'}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Species */}
+                            <td className="px-4 py-3 text-gray-900">
+                              {isEditable ? (
+                                <select
+                                  value={record.species}
+                                  onChange={(e) => updatePetRecord(record.id, 'species', e.target.value)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                >
+                                  <option value="">-</option>
+                                  {speciesOptions.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <div className="px-3 py-2 text-sm">
+                                  {record.species || '-'}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Breed */}
+                            <td className="px-4 py-3 text-gray-900">
+                              {isEditable ? (
+                                <input
+                                  type="text"
+                                  value={record.breed}
+                                  onChange={(e) => updatePetRecord(record.id, 'breed', e.target.value)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                  placeholder="Breed"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 text-sm">
+                                  {record.breed || '-'}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Age */}
+                            <td className="px-4 py-3 text-gray-900">
+                              {isEditable ? (
+                                <input
+                                  type="text"
+                                  value={record.age}
+                                  onChange={(e) => updatePetRecord(record.id, 'age', e.target.value)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                  placeholder="Age"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 text-sm">
+                                  {record.age || '-'}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Sex */}
+                            <td className="px-4 py-3 text-gray-900">
+                              {isEditable ? (
+                                <select
+                                  value={record.sex}
+                                  onChange={(e) => updatePetRecord(record.id, 'sex', e.target.value)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                >
+                                  <option value="">-</option>
+                                  {sexOptions.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <div className="px-3 py-2 text-sm">
+                                  {record.sex || '-'}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-center gap-2">
+                                {isEditable ? (
                                   <button 
                                     onClick={() => deletePetRecord(record.id)}
-                                    className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                                    title="Delete row"
+                                    className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                    title="Delete record"
                                   >
                                     <Trash2 size={18} className="text-red-600" />
                                   </button>
-                                </>
-                              )}
-                              {!isEditable && (
-                                <button 
-                                  onClick={() => setIsEditMode(true)}
-                                  className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                                  title="Edit mode"
-                                >
-                                  <Edit size={18} className="text-green-600" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+                                ) : (
+                                  <button 
+                                    onClick={() => setIsEditMode(true)}
+                                    className="p-2 rounded-lg hover:bg-green-50 transition-colors"
+                                    title="Edit mode"
+                                  >
+                                    <Edit size={18} className="text-green-600" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Expandable Details Row */}
+                          {isExpanded && (
+                            <tr className={`${globalIndex % 2 === 0 ? 'bg-green-50' : 'bg-gray-50'} border-b border-gray-200`}>
+                              <td colSpan={9} className="px-4 py-4">
+                                <div className="bg-white rounded-lg p-4 shadow-sm">
+                                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <PawPrint size={16} className="mr-2 text-green-600" />
+                                    Additional Details
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {/* Owner's Birthday */}
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Owner's Birthday
+                                      </label>
+                                      {isEditable ? (
+                                        <input
+                                          type="date"
+                                          value={record.ownerBirthday}
+                                          onChange={(e) => updatePetRecord(record.id, 'ownerBirthday', e.target.value)}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                        />
+                                      ) : (
+                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                          {record.ownerBirthday || '-'}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Contact Number */}
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Contact Number
+                                      </label>
+                                      {isEditable ? (
+                                        <input
+                                          type="tel"
+                                          value={record.ownerContact}
+                                          onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                          placeholder="Contact (optional)"
+                                        />
+                                      ) : (
+                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                          {record.ownerContact || '-'}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Color */}
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Color
+                                      </label>
+                                      {isEditable ? (
+                                        <input
+                                          type="text"
+                                          value={record.color}
+                                          onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                          placeholder="Color"
+                                        />
+                                      ) : (
+                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                          {record.color || '-'}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Reproductive Status */}
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Reproductive Status
+                                      </label>
+                                      {isEditable ? (
+                                        <select
+                                          value={record.reproductiveStatus}
+                                          onChange={(e) => updatePetRecord(record.id, 'reproductiveStatus', e.target.value)}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                        >
+                                          <option value="">-</option>
+                                          {reproductiveStatusOptions.map(option => (
+                                            <option key={option} value={option}>{option}</option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                          {record.reproductiveStatus || '-'}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Other Services */}
+                                    <div className="md:col-span-2">
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Other Services
+                                      </label>
+                                      <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200 min-h-[42px]">
+                                        {record.otherServices.length > 0 ? (
+                                          record.otherServices.map((service, serviceIndex) => (
+                                            <span key={serviceIndex} className="inline-flex items-center text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                                              {service}
+                                            </span>
+                                          ))
+                                        ) : (
+                                          <span className="text-xs text-gray-400 py-1">No other services</span>
+                                        )}
+                                        {isEditable && (
+                                          <button
+                                            onClick={() => handleAddOtherService(record.id)}
+                                            className="inline-flex items-center text-xs text-green-600 hover:text-green-800 px-3 py-1 rounded-full border border-green-300 hover:bg-green-50 transition-colors"
+                                            title="Add service"
+                                          >
+                                            <Plus size={12} className="mr-1" />
+                                            Add Service
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })
                 )}
