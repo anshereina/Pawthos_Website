@@ -103,7 +103,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
       // Then fetch the pet records
       const savedRecords = await vaccinationDriveService.getVaccinationDriveByEvent(event.id);
-      console.log('📋 Fetched saved records:', savedRecords);
       if (savedRecords && savedRecords.length > 0) {
         // Load pet records
         const loadedRecords: PetVaccinationRecord[] = savedRecords.map(record => ({
@@ -122,16 +121,13 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
           nextVaccinationDate: '', // Hidden field - will be recalculated on save
         }));
-        console.log('✅ Setting pet records:', loadedRecords.length, 'records');
         setPetRecords(loadedRecords);
       } else {
         // Explicitly set empty array if no records found
-        console.log('📭 No saved records found, setting empty array');
         setPetRecords([]);
       }
     } catch (error) {
       // If no records exist yet, that's fine - it's a new drive
-      console.log('No existing vaccination drive data found:', error);
     }
   }, [event]);
 
@@ -150,7 +146,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   // Fetch pets data and saved vaccination drive data when modal opens
   useEffect(() => {
     if (isOpen && event) {
-      console.log('🔄 Modal opened with event:', event.id, event.event_title);
       // Reset state first, then fetch data
       setPetRecords([]);
       setFormData({
@@ -163,17 +158,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       // Then fetch data
       fetchPets();
       fetchSavedVaccinationDriveData();
-    } else if (isOpen && !event) {
-      console.warn('⚠️ Modal opened but event is null/undefined');
     }
   }, [isOpen, event, fetchSavedVaccinationDriveData, fetchPets]);
-
-  // Debug: Log petRecords changes
-  useEffect(() => {
-    console.log('🔍 petRecords state changed:', petRecords.length, 'records');
-  }, [petRecords]);
-
-
 
   const vaccineOptions = [
     'Nobivac Rabies',
@@ -257,12 +243,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       nextVaccinationDate: '', // Hidden field - will be auto-calculated on save
       veterinarian: 'Dr. Fe Templado', // Hidden field - auto-filled with default value
     };
-    console.log('➕ Adding new pet record. Current records count:', petRecords.length);
-    setPetRecords(prev => {
-      const updated = [...prev, newRecord];
-      console.log('✅ Updated records count:', updated.length);
-      return updated;
-    });
+    setPetRecords(prev => [...prev, newRecord]);
   };
 
   const addMultiplePetRecords = (count: number) => {
@@ -820,7 +801,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                               <PetDropdown
                                 selectedPet={record.petName}
                                 onPetChange={(petName, petData) => {
-                                  console.log('Pet selected:', petName, petData); // Debug log
                                   updatePetRecord(record.id, 'petName', petName);
                                   if (petData) {
                                     // Map species to match dropdown options (handle both lowercase and capitalized)
@@ -835,7 +815,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                         mappedSpecies = 'Other';
                                       }
                                     }
-                                    console.log('Mapped species:', mappedSpecies, 'from:', petData.species); // Debug log
                                     updatePetRecord(record.id, 'species', mappedSpecies);
                                     updatePetRecord(record.id, 'breed', petData.breed || '');
                                     updatePetRecord(record.id, 'color', petData.color || '');
@@ -845,10 +824,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                     // Calculate age from date of birth
                                     if (petData.date_of_birth) {
                                       const calculatedAge = calculateAge(petData.date_of_birth);
-                                      console.log('Calculated age:', calculatedAge, 'from date_of_birth:', petData.date_of_birth); // Debug log
                                       updatePetRecord(record.id, 'age', calculatedAge);
                                     } else {
-                                      console.log('No date_of_birth found'); // Debug log
                                       // Set age to empty string if date_of_birth is not available
                                       updatePetRecord(record.id, 'age', '');
                                     }
@@ -868,36 +845,15 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                         reproductiveStatus = petData.reproductive_status.charAt(0).toUpperCase() + petData.reproductive_status.slice(1).toLowerCase();
                                       }
                                     }
-                                    console.log('Auto-filled reproductive status:', reproductiveStatus, 'from pet data:', petData.reproductive_status); // Debug log
                                     // Always update reproductive status, even if empty (to clear previous value if pet has none)
                                     updatePetRecord(record.id, 'reproductiveStatus', reproductiveStatus);
                                     // Auto-fill owner's birthday from pet data
                                     if (petData.owner_birthday) {
-                                      // Format the date to YYYY-MM-DD if needed
-                                      let formattedBirthday = '';
-                                      if (typeof petData.owner_birthday === 'string') {
-                                        // If it's already in YYYY-MM-DD format, use it directly
-                                        if (petData.owner_birthday.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                          formattedBirthday = petData.owner_birthday;
-                                        } else {
-                                          // Try to parse and format the date
-                                          try {
-                                            const date = new Date(petData.owner_birthday);
-                                            if (!isNaN(date.getTime())) {
-                                              formattedBirthday = date.toISOString().split('T')[0];
-                                            }
-                                          } catch (e) {
-                                            console.error('Error parsing owner_birthday:', e);
-                                          }
-                                        }
-                                      }
-                                      if (formattedBirthday) {
-                                        console.log('Auto-filled owner birthday:', formattedBirthday, 'from pet data:', petData.owner_birthday); // Debug log
-                                        updatePetRecord(record.id, 'ownerBirthday', formattedBirthday);
-                                      }
+                                      const formattedBirthday = typeof petData.owner_birthday === 'string' 
+                                        ? petData.owner_birthday.split('T')[0] 
+                                        : petData.owner_birthday;
+                                      updatePetRecord(record.id, 'ownerBirthday', formattedBirthday);
                                     }
-                                  } else {
-                                    console.log('No petData provided'); // Debug log
                                   }
                                 }}
                                 ownerName={record.ownerName}
