@@ -57,7 +57,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setRememberMe(false);
     setEmail('');
     setPassword('');
-    console.log('🧹 Cleared all authentication data for fresh start');
   }, []);
 
   // Remove the aggressive clearing that was preventing typing

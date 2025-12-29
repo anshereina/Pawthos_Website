@@ -68,14 +68,12 @@ export const animalControlRecordService = {
   },
 
   async getAnimalControlStatistics(date?: string): Promise<AnimalControlStatistics> {
-    console.log('Fetching animal control statistics...');
     const url = new URL(`${API_BASE_URL}/animal-control-records/statistics/dashboard`);
     if (date) {
       url.searchParams.append('date', date);
     }
     
     const response = await fetch(url.toString());
-    console.log('Response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -84,7 +82,6 @@ export const animalControlRecordService = {
     }
     
     const data = await response.json();
-    console.log('Animal control statistics received:', data);
     return data;
   },
 

@@ -20,15 +20,12 @@ export const forgotPasswordService = {
   // Request password reset
   async requestPasswordReset(email: string): Promise<AuthResult> {
     try {
-      console.log('🔄 Requesting password reset for:', email);
-      
       const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
         email: email.trim().toLowerCase()
       }, {
         timeout: 10000
       });
 
-      console.log('✅ Password reset request sent successfully');
       return {
         success: true,
         message: response.data.message || "Password reset email sent successfully. Please check your inbox and spam folder."
@@ -68,8 +65,6 @@ export const forgotPasswordService = {
         };
       }
 
-      console.log('🔄 Resetting password with token...');
-      
       const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
         token,
         new_password: newPassword
@@ -77,7 +72,6 @@ export const forgotPasswordService = {
         timeout: 10000
       });
 
-      console.log('✅ Password reset successfully');
       return {
         success: true,
         message: response.data.message || "Password reset successfully. You can now log in with your new password."
@@ -109,8 +103,6 @@ export const forgotPasswordService = {
   // Validate reset token
   async validateResetToken(token: string): Promise<AuthResult> {
     try {
-      console.log('🔍 Validating password reset token...');
-      
       // Note: This endpoint might not exist in the backend yet
       // We'll implement a simple validation by trying to reset with a dummy password
       // and checking if we get a "token expired" vs "invalid token" error
@@ -120,7 +112,6 @@ export const forgotPasswordService = {
         timeout: 8000
       });
 
-      console.log('✅ Password reset token is valid');
       return {
         success: true,
         message: response.data.message || "Token is valid"
@@ -161,9 +152,8 @@ export const rememberMeService = {
         timestamp: Date.now()
       };
       localStorage.setItem('rememberMe', JSON.stringify(credentials));
-      console.log('✅ Remember Me credentials saved successfully');
     } catch (error) {
-      console.error('❌ Error saving remember me credentials:', error);
+      console.error('Error saving remember me credentials:', error);
     }
   },
 
@@ -178,15 +168,13 @@ export const rememberMeService = {
       // Check if credentials are older than 30 days (optional security measure)
       const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
       if (parsedCredentials.timestamp && parsedCredentials.timestamp < thirtyDaysAgo) {
-        console.log('🕒 Remember Me credentials expired, clearing...');
         this.clearCredentials();
         return null;
       }
       
-      console.log('✅ Remember Me credentials retrieved successfully');
       return parsedCredentials;
     } catch (error) {
-      console.error('❌ Error getting remember me credentials:', error);
+      console.error('Error getting remember me credentials:', error);
       return null;
     }
   },
@@ -195,9 +183,8 @@ export const rememberMeService = {
   clearCredentials(): void {
     try {
       localStorage.removeItem('rememberMe');
-      console.log('✅ Remember Me credentials cleared successfully');
     } catch (error) {
-      console.error('❌ Error clearing remember me credentials:', error);
+      console.error('Error clearing remember me credentials:', error);
     }
   },
 
@@ -211,9 +198,8 @@ export const rememberMeService = {
     try {
       localStorage.removeItem('rememberMe');
       localStorage.removeItem('access_token');
-      console.log('✅ All authentication data cleared successfully');
     } catch (error) {
-      console.error('❌ Error clearing all auth data:', error);
+      console.error('Error clearing all auth data:', error);
     }
   }
 };

@@ -32,10 +32,6 @@ export interface UpdateAlertData {
 class AlertService {
   private baseUrl = `${API_BASE_URL}/alerts/`;
 
-  constructor() {
-    console.log('🔧 AlertService baseUrl:', this.baseUrl);
-  }
-
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('access_token');
     return {
@@ -55,7 +51,6 @@ class AlertService {
       }
 
       const alerts = await response.json();
-      console.log('Fetched alerts:', alerts);
       return alerts;
     } catch (error) {
       console.error('Error fetching alerts:', error);

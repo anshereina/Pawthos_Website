@@ -64,11 +64,6 @@ export interface UpdateMedicalRecordData {
 class MedicalRecordService {
   private baseUrl = `${API_BASE_URL}/medical-records`;
 
-  constructor() {
-    console.log('🔧 MedicalRecordService baseUrl:', this.baseUrl);
-    console.log('🔧 MedicalRecordService API_BASE_URL:', API_BASE_URL);
-  }
-
   private getHeaders(): Record<string, string> {
     const token = localStorage.getItem('access_token');
     const headers: Record<string, string> = {
@@ -96,7 +91,6 @@ class MedicalRecordService {
 
   async getAllMedicalRecords(): Promise<MedicalRecord[]> {
     const url = `${this.baseUrl}`;
-    console.log('🔧 getAllMedicalRecords fetching from:', url);
     const response = await fetch(url, {
       headers: this.getHeaders(),
     });
@@ -122,8 +116,6 @@ class MedicalRecordService {
 
   async createMedicalRecord(petId: number, recordData: CreateMedicalRecordData): Promise<MedicalRecord> {
     const url = `${this.baseUrl}/pet/${petId}`;
-    console.log('🔧 createMedicalRecord URL:', url);
-    console.log('🔧 createMedicalRecord data:', recordData);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -136,16 +128,13 @@ class MedicalRecordService {
       try {
         const errorData = await response.json();
         errorMessage = errorData.detail || errorData.message || errorMessage;
-        console.error('🔧 API error response:', errorData);
       } catch (e) {
-        console.error('🔧 Failed to parse error response:', e);
         errorMessage = `Failed to create medical record: ${response.status} ${response.statusText}`;
       }
       throw new Error(errorMessage);
     }
     
     const result = await response.json();
-    console.log('🔧 createMedicalRecord success:', result);
     return result;
   }
 
