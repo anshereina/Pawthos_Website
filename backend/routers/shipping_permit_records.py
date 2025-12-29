@@ -128,14 +128,33 @@ def search_owners(
                 except Exception:
                     pass
             
-            # Look for owner's actual birthdate from shipping permit records
+            # Get owner's actual birthdate from pet record or shipping permit records
             owner_birthdate = None
-            shipping_record = db.query(ShippingPermitRecordModel).filter(
-                ShippingPermitRecordModel.owner_name == owner_name
-            ).order_by(ShippingPermitRecordModel.created_at.desc()).first()
             
-            if shipping_record and shipping_record.birthdate:
-                owner_birthdate = shipping_record.birthdate
+            # First try to get from the pet's owner_birthday field
+            if pet.owner_birthday:
+                try:
+                    if isinstance(pet.owner_birthday, date):
+                        owner_birthdate = pet.owner_birthday
+                    elif isinstance(pet.owner_birthday, str):
+                        # Try different date formats
+                        for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']:
+                            try:
+                                owner_birthdate = datetime.strptime(pet.owner_birthday.split()[0], fmt).date()
+                                break
+                            except (ValueError, IndexError):
+                                continue
+                except Exception as e:
+                    print(f"Error parsing owner_birthday from pet: {e}")
+            
+            # If not found in pet record, try shipping permit records
+            if not owner_birthdate:
+                shipping_record = db.query(ShippingPermitRecordModel).filter(
+                    ShippingPermitRecordModel.owner_name == owner_name
+                ).order_by(ShippingPermitRecordModel.created_at.desc()).first()
+                
+                if shipping_record and shipping_record.birthdate:
+                    owner_birthdate = shipping_record.birthdate
             
             owner_map[owner_name] = {
                 'owner_name': owner_name,
