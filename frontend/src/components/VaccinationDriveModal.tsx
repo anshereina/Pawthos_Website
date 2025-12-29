@@ -757,7 +757,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   <th className="px-4 py-3 text-center font-semibold text-sm w-12">
-                    {isEditable && <span>Expand</span>}
+                    <span className="text-xs">Show more</span>
                   </th>
                   <th className="px-4 py-3 text-left font-semibold text-sm">#</th>
                   <th className="px-4 py-3 text-left font-semibold text-sm min-w-[200px]">Owner's Name</th>
@@ -997,8 +997,8 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                           {isExpanded && (
                             <tr className={`${globalIndex % 2 === 0 ? 'bg-green-50' : 'bg-gray-50'} border-b border-gray-200`}>
                               <td colSpan={9} className="px-4 py-4">
-                                <div className="bg-white rounded-lg p-4 shadow-sm">
-                                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 shadow-sm border border-green-200">
+                                  <h4 className="text-sm font-semibold text-green-800 mb-3 flex items-center">
                                     <PawPrint size={16} className="mr-2 text-green-600" />
                                     Additional Details
                                   </h4>
@@ -1013,10 +1013,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                           type="date"
                                           value={record.ownerBirthday}
                                           onChange={(e) => updatePetRecord(record.id, 'ownerBirthday', e.target.value)}
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                          className="w-full px-3 py-2 text-sm bg-white border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                                         />
                                       ) : (
-                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="px-3 py-2 text-sm bg-white rounded-lg border border-green-200">
                                           {record.ownerBirthday || '-'}
                                         </div>
                                       )}
@@ -1032,11 +1032,11 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                           type="tel"
                                           value={record.ownerContact}
                                           onChange={(e) => updatePetRecord(record.id, 'ownerContact', e.target.value)}
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                          className="w-full px-3 py-2 text-sm bg-white border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                                           placeholder="Contact (optional)"
                                         />
                                       ) : (
-                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="px-3 py-2 text-sm bg-white rounded-lg border border-green-200">
                                           {record.ownerContact || '-'}
                                         </div>
                                       )}
@@ -1052,11 +1052,11 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                           type="text"
                                           value={record.color}
                                           onChange={(e) => updatePetRecord(record.id, 'color', e.target.value)}
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                          className="w-full px-3 py-2 text-sm bg-white border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                                           placeholder="Color"
                                         />
                                       ) : (
-                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="px-3 py-2 text-sm bg-white rounded-lg border border-green-200">
                                           {record.color || '-'}
                                         </div>
                                       )}
@@ -1071,7 +1071,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                         <select
                                           value={record.reproductiveStatus}
                                           onChange={(e) => updatePetRecord(record.id, 'reproductiveStatus', e.target.value)}
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                          className="w-full px-3 py-2 text-sm bg-white border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                                         >
                                           <option value="">-</option>
                                           {reproductiveStatusOptions.map(option => (
@@ -1079,7 +1079,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                           ))}
                                         </select>
                                       ) : (
-                                        <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="px-3 py-2 text-sm bg-white rounded-lg border border-green-200">
                                           {record.reproductiveStatus || '-'}
                                         </div>
                                       )}
@@ -1090,7 +1090,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                       <label className="block text-xs font-medium text-gray-600 mb-1">
                                         Other Services
                                       </label>
-                                      <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200 min-h-[42px]">
+                                      <div className="flex flex-wrap gap-2 p-2 bg-white rounded-lg border border-green-200 min-h-[42px]">
                                         {record.otherServices.length > 0 ? (
                                           record.otherServices.map((service, serviceIndex) => (
                                             <span key={serviceIndex} className="inline-flex items-center text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full">
