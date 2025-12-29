@@ -106,9 +106,9 @@ def search_owners(
             # Use the most recent pet's information
             pet = user_pets[0]
             
-            # Calculate age from date_of_birth if available
+            # Calculate pet age from date_of_birth if available
             pet_age = 0
-            birthdate_obj = None
+            pet_birthdate_obj = None
             
             if pet.date_of_birth:
                 try:
@@ -116,34 +116,51 @@ def search_owners(
                     # Try different date formats
                     for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']:
                         try:
-                            birthdate_obj = datetime.strptime(birthdate_str.split()[0], fmt).date()
+                            pet_birthdate_obj = datetime.strptime(birthdate_str.split()[0], fmt).date()
                             break
                         except (ValueError, IndexError):
                             continue
                     
-                    if birthdate_obj:
+                    if pet_birthdate_obj:
                         # Calculate age
                         today = date.today()
-                        pet_age = today.year - birthdate_obj.year - ((today.month, today.day) < (birthdate_obj.month, birthdate_obj.day))
+                        pet_age = today.year - pet_birthdate_obj.year - ((today.month, today.day) < (pet_birthdate_obj.month, pet_birthdate_obj.day))
                 except Exception:
                     pass
+            
+            # Look for owner's actual birthdate from shipping permit records
+            owner_birthdate = None
+            shipping_record = db.query(ShippingPermitRecordModel).filter(
+                ShippingPermitRecordModel.owner_name == owner_name
+            ).order_by(ShippingPermitRecordModel.created_at.desc()).first()
+            
+            if shipping_record and shipping_record.birthdate:
+                owner_birthdate = shipping_record.birthdate
             
             owner_map[owner_name] = {
                 'owner_name': owner_name,
                 'contact_number': user.phone_number,
                 'pet_name': pet.name,
-                'birthdate': birthdate_obj or date.today(),
+                'birthdate': owner_birthdate,
                 'pet_age': pet_age,
                 'pet_species': pet.species,
                 'pet_breed': pet.breed
             }
         else:
-            # User has no pets yet, but still show them as an option
+            # User has no pets yet - look for owner's birthdate from shipping permit records
+            owner_birthdate = None
+            shipping_record = db.query(ShippingPermitRecordModel).filter(
+                ShippingPermitRecordModel.owner_name == owner_name
+            ).order_by(ShippingPermitRecordModel.created_at.desc()).first()
+            
+            if shipping_record and shipping_record.birthdate:
+                owner_birthdate = shipping_record.birthdate
+            
             owner_map[owner_name] = {
                 'owner_name': owner_name,
                 'contact_number': user.phone_number,
                 'pet_name': '',
-                'birthdate': date.today(),
+                'birthdate': owner_birthdate,
                 'pet_age': 0,
                 'pet_species': '',
                 'pet_breed': ''

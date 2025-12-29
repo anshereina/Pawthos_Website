@@ -362,7 +362,7 @@ class OwnerSearchResult(BaseModel):
     owner_name: str
     contact_number: Optional[str] = None
     pet_name: str
-    birthdate: date
+    birthdate: Optional[date] = None
     pet_age: int
     pet_species: Optional[str] = None
     pet_breed: Optional[str] = None

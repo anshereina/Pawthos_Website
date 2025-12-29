@@ -58,7 +58,7 @@ export interface OwnerSearchResult {
   owner_name: string;
   contact_number?: string;
   pet_name: string;
-  birthdate: string;
+  birthdate?: string;
   pet_age: number;
   pet_species?: string;
   pet_breed?: string;
