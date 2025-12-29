@@ -22,7 +22,6 @@ const EditMeatInspectionRecordModal: React.FC<EditMeatInspectionRecordModalProps
     kilos: 0,
     date_of_slaughter: '',
     certificate_issued: false,
-    condem: false,
     status: 'Pending',
     remarks: '',
     inspector_name: '',
@@ -39,7 +38,6 @@ const EditMeatInspectionRecordModal: React.FC<EditMeatInspectionRecordModalProps
         kilos: record.kilos,
         date_of_slaughter: record.date_of_slaughter,
         certificate_issued: record.certificate_issued,
-        condem: record.condem || false,
         status: record.status,
         remarks: record.remarks || '',
         inspector_name: record.inspector_name || '',
@@ -193,19 +191,6 @@ const EditMeatInspectionRecordModal: React.FC<EditMeatInspectionRecordModalProps
             />
             <label className="text-sm font-medium text-gray-700">
               Certificate Issued
-            </label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="condem"
-              checked={!!formData.condem}
-              onChange={handleChange}
-              className="text-green-600 focus:ring-green-500"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              CONDEM
             </label>
           </div>
 

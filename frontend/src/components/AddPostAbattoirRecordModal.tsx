@@ -81,7 +81,7 @@ const AddPostAbattoirRecordModal: React.FC<AddPostAbattoirRecordModalProps> = ({
 
           <div className="md:col-span-2 border-t pt-2">
             <p className="text-sm font-semibold text-gray-700 mb-2">Meat Appearance</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <label className="flex items-center justify-between text-sm border rounded-lg px-3 py-2">
                 <span>COLOR OK</span>
                 <input type="checkbox" name="color_ok" checked={formData.color_ok} onChange={handleChange} />
@@ -94,9 +94,31 @@ const AddPostAbattoirRecordModal: React.FC<AddPostAbattoirRecordModalProps> = ({
                 <span>ODOR OK</span>
                 <input type="checkbox" name="odor_ok" checked={formData.odor_ok} onChange={handleChange} />
               </label>
-              <label className="flex items-center justify-between text-sm border rounded-lg px-3 py-2">
-                <span>CONDEM</span>
-                <input type="checkbox" name="condem" checked={formData.condem} onChange={handleChange} />
+            </div>
+          </div>
+
+          <div className="md:col-span-2 border-t pt-2">
+            <p className="text-sm font-semibold text-gray-700 mb-2">CONDEM?</p>
+            <div className="flex gap-4">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input 
+                  type="radio" 
+                  name="condem" 
+                  checked={formData.condem === true} 
+                  onChange={() => setFormData(prev => ({ ...prev, condem: true }))}
+                  className="text-green-600 focus:ring-green-500"
+                />
+                <span>Yes</span>
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input 
+                  type="radio" 
+                  name="condem" 
+                  checked={formData.condem === false} 
+                  onChange={() => setFormData(prev => ({ ...prev, condem: false }))}
+                  className="text-green-600 focus:ring-green-500"
+                />
+                <span>No</span>
               </label>
             </div>
           </div>
