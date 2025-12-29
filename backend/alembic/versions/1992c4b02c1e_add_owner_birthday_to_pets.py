@@ -1,7 +1,7 @@
 """add_owner_birthday_to_pets
 
 Revision ID: 1992c4b02c1e
-Revises: 20251105_allow_null_email_password
+Revises: allow_null_email_pass
 Create Date: 2025-12-12 19:20:11.829227
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '1992c4b02c1e'
-down_revision = '20251105_allow_null_email_password'
+down_revision = 'allow_null_email_pass'
 branch_labels = None
 depends_on = None
 
