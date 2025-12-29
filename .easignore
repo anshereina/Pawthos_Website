@@ -1,0 +1,19 @@
+# Exclude everything except the app directory
+backend/
+frontend/
+pawthos-github/
+*.md
+!.gitignore
+
+
+
+
+
+
+
+
+
+
+
+
+
