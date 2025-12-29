@@ -11,6 +11,16 @@ import { useVaccinationStatistics, useYearlyVaccinationStatistics } from '../hoo
 import { vaccinationEventService } from '../services/vaccinationEventService';
 import { useAnimalControlStatistics } from '../hooks/useAnimalControlStatistics';
 import { useNotifications, Notification } from '../hooks/useNotifications';
+import { 
+  LineChart as RechartsLineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 
 // --- Card Components ---
 interface DonutChartProps {
@@ -276,6 +286,26 @@ const YearlyVaccinationReportCard = () => {
   // Generate year options (current year and 4 years back)
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }} className="text-sm">
+              {entry.name}: {entry.value}
+            </p>
+          ))}
+          <p className="text-sm font-semibold text-gray-800 mt-2 pt-2 border-t border-gray-200">
+            Total: {payload.reduce((sum: number, entry: any) => sum + entry.value, 0)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="border border-gray-200 rounded-xl p-6 w-full h-full flex flex-col bg-gradient-to-br from-white to-green-50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-200">
@@ -331,29 +361,6 @@ const YearlyVaccinationReportCard = () => {
     felineFemale: 0
   }));
 
-  const maxValue = Math.max(...monthlyData.flatMap(d => [d.canineMale, d.canineFemale, d.felineMale, d.felineFemale]));
-  const padding = 40;
-
-  const getY = (value: number) => {
-    if (maxValue === 0) return 80; // If no data, place at bottom
-    const percentage = (value / maxValue) * 60; // Use 60% of available height
-    return 20 + (60 - percentage); // Start at 20%, max at 80%
-  };
-
-  const getX = (index: number) => {
-    const percentage = (index / (monthlyData.length - 1)) * 70; // Use 70% of available width
-    return 15 + percentage; // Start at 15%, max at 85%
-  };
-
-  const createPath = (dataKey: keyof typeof monthlyData[0]) => {
-    const points = monthlyData.map((data, index) => {
-      const x = getX(index);
-      const y = getY(data[dataKey] as number);
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-    });
-    return points.join(' ');
-  };
-
   const totalVaccinations = monthlyData.reduce((sum, data) => 
     sum + data.canineMale + data.canineFemale + data.felineMale + data.felineFemale, 0
   );
@@ -366,130 +373,108 @@ const YearlyVaccinationReportCard = () => {
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="ml-auto text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+          className="ml-auto text-sm border border-gray-300 rounded px-2 py-1 bg-white hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
         >
           {yearOptions.map(year => (
             <option key={year} value={year}>{year}</option>
           ))}
         </select>
       </div>
-      
-      {/* Legend */}
-      <div className="grid grid-cols-2 gap-1 mb-3 text-xs">
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ background: '#388e3c' }}></span>
-          <span>Canine - Male</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ background: '#7ed957' }}></span>
-          <span>Canine - Female</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ background: '#4fd1c5' }}></span>
-          <span>Feline - Male</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ background: '#b2f5ea' }}></span>
-          <span>Feline - Female</span>
-        </div>
-      </div>
 
-      {/* Chart Container - Full Card */}
-      <div className="flex-1 w-full h-full">
-        <svg width="100%" height="100%" className="w-full h-full">
-          {/* Y-axis labels */}
-          {maxValue > 0 && (
-            <>
-              <text x="5%" y="20%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.8)}</text>
-              <text x="5%" y="35%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.6)}</text>
-              <text x="5%" y="50%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.4)}</text>
-              <text x="5%" y="65%" className="text-xs fill-gray-600">{Math.ceil(maxValue * 0.2)}</text>
-              <text x="5%" y="80%" className="text-xs fill-gray-600">0</text>
-            </>
-          )}
-
-          {/* Y-axis line */}
-          <line x1="15%" y1="20%" x2="15%" y2="80%" stroke="#e5e7eb" strokeWidth="1" />
-
-          {/* X-axis labels */}
-          {monthlyData.map((data, index) => (
-            <text 
-              key={data.month}
-              x={`${getX(index)}%`} 
-              y="95%" 
-              className="text-xs fill-gray-600"
-              textAnchor="middle"
-            >
-              {data.month}
-            </text>
-          ))}
-
-          {/* X-axis line */}
-          <line x1="15%" y1="80%" x2="85%" y2="80%" stroke="#e5e7eb" strokeWidth="1" />
-
-          {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => (
-            <line 
-              key={index}
-              x1="15%" 
-              y1={`${20 + (60 * ratio)}%`} 
-              x2="85%" 
-              y2={`${20 + (60 * ratio)}%`} 
-              stroke="#f3f4f6" 
-              strokeWidth="1"
+      {/* Chart Container */}
+      <div className="flex-1 w-full" style={{ minHeight: '250px' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsLineChart
+            data={monthlyData}
+            margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="month" 
+              tick={{ fill: '#6b7280', fontSize: 12 }}
+              stroke="#9ca3af"
             />
-          ))}
-
-          {/* Data lines */}
-          <path 
-            d={createPath('canineMale')} 
-            stroke="#388e3c" 
-            strokeWidth="2" 
-            fill="none"
-          />
-          <path 
-            d={createPath('canineFemale')} 
-            stroke="#7ed957" 
-            strokeWidth="2" 
-            fill="none"
-          />
-          <path 
-            d={createPath('felineMale')} 
-            stroke="#4fd1c5" 
-            strokeWidth="2" 
-            fill="none"
-          />
-          <path 
-            d={createPath('felineFemale')} 
-            stroke="#b2f5ea" 
-            strokeWidth="2" 
-            fill="none"
-          />
-
-          {/* Data points */}
-          {monthlyData.map((data, index) => (
-            <g key={index}>
-              <circle cx={`${getX(index)}%`} cy={`${getY(data.canineMale)}%`} r="3" fill="#388e3c" />
-              <circle cx={`${getX(index)}%`} cy={`${getY(data.canineFemale)}%`} r="3" fill="#7ed957" />
-              <circle cx={`${getX(index)}%`} cy={`${getY(data.felineMale)}%`} r="3" fill="#4fd1c5" />
-              <circle cx={`${getX(index)}%`} cy={`${getY(data.felineFemale)}%`} r="3" fill="#b2f5ea" />
-            </g>
-          ))}
-        </svg>
+            <YAxis 
+              tick={{ fill: '#6b7280', fontSize: 12 }}
+              stroke="#9ca3af"
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              wrapperStyle={{ fontSize: '12px' }}
+              iconType="circle"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="canineMale" 
+              stroke="#1e7e34" 
+              strokeWidth={2.5}
+              name="Canine Male"
+              dot={{ fill: '#1e7e34', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="canineFemale" 
+              stroke="#7ed957" 
+              strokeWidth={2.5}
+              name="Canine Female"
+              dot={{ fill: '#7ed957', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="felineMale" 
+              stroke="#0891b2" 
+              strokeWidth={2.5}
+              name="Feline Male"
+              dot={{ fill: '#0891b2', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="felineFemale" 
+              stroke="#67e8f9" 
+              strokeWidth={2.5}
+              name="Feline Female"
+              dot={{ fill: '#67e8f9', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </RechartsLineChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-3 text-xs text-gray-600">
-        <div className="flex justify-between">
-          <span>Peak Month: {yearlyStats?.summary?.peak_month || 'N/A'}</span>
-          <span>Total: {totalVaccinations}</span>
-        </div>
-        {yearlyStats?.summary && (
-          <div className="flex justify-between mt-1">
-            <span>Canine: {yearlyStats.summary.total_canine}</span>
-            <span>Feline: {yearlyStats.summary.total_feline}</span>
+      <div className="mt-3 pt-3 border-t border-green-200">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-white bg-opacity-50 rounded-lg p-2">
+            <span className="text-gray-600">Peak Month:</span>
+            <span className="ml-1 font-semibold text-green-700">
+              {yearlyStats?.summary?.peak_month || 'N/A'}
+            </span>
           </div>
-        )}
+          <div className="bg-white bg-opacity-50 rounded-lg p-2">
+            <span className="text-gray-600">Total:</span>
+            <span className="ml-1 font-semibold text-green-700">
+              {totalVaccinations.toLocaleString()}
+            </span>
+          </div>
+          {yearlyStats?.summary && (
+            <>
+              <div className="bg-white bg-opacity-50 rounded-lg p-2">
+                <span className="text-gray-600">Canine:</span>
+                <span className="ml-1 font-semibold text-blue-700">
+                  {yearlyStats.summary.total_canine.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-white bg-opacity-50 rounded-lg p-2">
+                <span className="text-gray-600">Feline:</span>
+                <span className="ml-1 font-semibold text-cyan-700">
+                  {yearlyStats.summary.total_feline.toLocaleString()}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -795,11 +780,10 @@ const DashboardPage: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refreshVaccinationStats, refreshCatchStats, fetchNotifications]);
-
   
 
-  // Show loading state while restoring session or loading statistics
-  if (isLoading || vaccinationLoading || catchLoading || notificationsLoading) {
+  // Show loading spinner for authentication only (redirect will happen via useEffect)
+  if (isLoading) {
     return <LoadingSpinner />;
   }
 
@@ -854,28 +838,36 @@ const DashboardPage: React.FC = () => {
         />
         {/* Dashboard Content */}
         <main className="flex-1 p-6 overflow-y-auto">
-          {(vaccinationError || catchError || notificationsError) && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              {vaccinationError && <div>Error loading vaccination statistics: {vaccinationError}</div>}
-              {catchError && <div>Error loading catch statistics: {catchError}</div>}
-              {notificationsError && <div>Error loading notifications: {notificationsError}</div>}
+          {(vaccinationLoading || catchLoading) ? (
+            <div className="flex items-center justify-center h-full">
+              <LoadingSpinner />
             </div>
+          ) : (
+            <>
+              {(vaccinationError || catchError || notificationsError) && (
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {vaccinationError && <div>Error loading vaccination statistics: {vaccinationError}</div>}
+                  {catchError && <div>Error loading catch statistics: {catchError}</div>}
+                  {notificationsError && <div>Error loading notifications: {notificationsError}</div>}
+                </div>
+              )}
+              <DashboardSummaryRow 
+                vaccinationStats={currentVaccinationStats} 
+                catchStats={currentCatchStats} 
+                selectedDate={selectedDate}
+                barangayLabel={barangayLabel}
+              />
+              <DashboardDetailRow 
+                notifications={notifications}
+                notificationsLoading={notificationsLoading}
+                notificationsError={notificationsError}
+                markAllAsRead={markAllAsRead}
+                clearNotifications={clearNotifications}
+                markAsRead={markAsRead}
+                resetClearedNotifications={resetClearedNotifications}
+              />
+            </>
           )}
-          <DashboardSummaryRow 
-            vaccinationStats={currentVaccinationStats} 
-            catchStats={currentCatchStats} 
-            selectedDate={selectedDate}
-            barangayLabel={barangayLabel}
-          />
-          <DashboardDetailRow 
-            notifications={notifications}
-            notificationsLoading={notificationsLoading}
-            notificationsError={notificationsError}
-            markAllAsRead={markAllAsRead}
-            clearNotifications={clearNotifications}
-            markAsRead={markAsRead}
-            resetClearedNotifications={resetClearedNotifications}
-          />
         </main>
       </div>
     </div>

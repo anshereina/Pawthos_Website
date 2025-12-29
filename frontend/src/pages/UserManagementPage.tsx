@@ -198,8 +198,8 @@ const UserManagementPage: React.FC = () => {
     return parsed.toLocaleString();
   };
 
-  // Show loading state while restoring session
-  if (isLoading || loadingUsers) {
+  // Show loading spinner for authentication only (redirect will happen via useEffect)
+  if (isLoading) {
     return <LoadingSpinner />;
   }
 
@@ -322,6 +322,12 @@ const UserManagementPage: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
+          {loadingUsers ? (
+            <div className="flex items-center justify-center h-full">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <>
           {/* Top Control Panel */}
           <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 mb-4 hover:shadow-md transition-shadow duration-300">
             <div className="flex justify-between items-center">
@@ -497,6 +503,8 @@ const UserManagementPage: React.FC = () => {
               </div>
             )}
           </div>
+            </>
+          )}
         </main>
       </div>
 
