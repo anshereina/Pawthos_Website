@@ -10,10 +10,12 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
 import AppointmentStatusModal from '../components/AppointmentStatusModal';
 import AddAppointmentModal from '../components/AddAppointmentModal';
+import AddWalkInModal from '../components/AddWalkInModal';
 import { Appointment, ServiceRequest } from '../services/appointmentService';
 
 const TABS = [
   { label: 'Appointments', value: 'appointments' },
+  { label: 'Walk-In', value: 'walkin' },
   { label: 'History', value: 'history' },
 ];
 
@@ -34,6 +36,8 @@ const AppointmentsPage: React.FC = () => {
   const [selectedItemForStatus, setSelectedItemForStatus] = useState<{id: number, type: 'appointment' | 'request'} | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addWalkInModalOpen, setAddWalkInModalOpen] = useState(false);
+  const [walkInRecords, setWalkInRecords] = useState<any[]>([]);
   
   // Use real data hooks
   const { 
@@ -192,6 +196,24 @@ const AppointmentsPage: React.FC = () => {
     }
   };
 
+  const handleAddWalkIn = async (data: any) => {
+    try {
+      // For now, we'll store walk-in records in local state
+      // You can later integrate with a backend service
+      const newWalkIn = {
+        id: Date.now(),
+        ...data,
+        status: 'Completed',
+        created_at: new Date().toISOString(),
+      };
+      setWalkInRecords(prev => [...prev, newWalkIn]);
+      setAddWalkInModalOpen(false);
+      alert('Walk-in record created successfully!');
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to create walk-in record');
+    }
+  };
+
   // Get current data based on active tab
   const getCurrentData = () => {
     switch (activeTab) {
@@ -201,6 +223,9 @@ const AppointmentsPage: React.FC = () => {
       case 'request':
         // Show only non-completed service requests in Requests tab
         return serviceRequests.filter(req => req.status !== 'Completed');
+      case 'walkin':
+        // Show walk-in records
+        return walkInRecords;
       case 'history':
         // Filter completed appointments and requests
         const completedAppointments = appointments.filter(apt => apt.status === 'Completed');
@@ -220,6 +245,8 @@ const AppointmentsPage: React.FC = () => {
     columns = ['Appointment ID', 'Client Name', 'Pet Name', 'Service Type', 'Date & Time', 'Status', 'Action'];
   } else if (activeTab === 'request') {
     columns = ['Request ID', 'Client Name', 'Request Service/s', 'Request Details', 'Date & Time', 'Status', 'Action'];
+  } else if (activeTab === 'walkin') {
+    columns = ['ID', 'Date', 'Client Name', 'Pet Name', 'Breed', 'Age', 'Gender', 'Service Type', 'Medicine Used', 'Action'];
   } else if (activeTab === 'history') {
     columns = ['ID', 'Client Name', 'Service Rendered', 'Date Completed', 'Handled by', 'Remarks', 'Status', 'Action'];
   }
@@ -263,14 +290,25 @@ const AppointmentsPage: React.FC = () => {
               </div>
               {/* Search and Actions */}
               <div className="flex items-center space-x-4">
-                {/* Add New Record Button - Always visible in all tabs */}
-                <button 
-                  onClick={() => setAddModalOpen(true)}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  <Plus size={20} />
-                  <span className="font-semibold">Add New Record</span>
-                </button>
+                {/* Add New Record Button - Show for Walk-In and History tabs only */}
+                {activeTab === 'walkin' && (
+                  <button 
+                    onClick={() => setAddWalkInModalOpen(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Plus size={20} />
+                    <span className="font-semibold">Add New Walk-In Record</span>
+                  </button>
+                )}
+                {activeTab === 'history' && (
+                  <button 
+                    onClick={() => setAddModalOpen(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <Plus size={20} />
+                    <span className="font-semibold">Add New Record</span>
+                  </button>
+                )}
                 {/* Search Bar */}
                 <div className="relative">
                   <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
@@ -406,6 +444,32 @@ const AppointmentsPage: React.FC = () => {
                             </td>
                           </>
                         )}
+                        {/* Walk-In Tab */}
+                        {activeTab === 'walkin' && (
+                          <>
+                            <td className="px-6 py-4">{item.id}</td>
+                            <td className="px-6 py-4">{item.date || '-'}</td>
+                            <td className="px-6 py-4">{item.client_name || '-'}</td>
+                            <td className="px-6 py-4">{item.pet_name || '-'}</td>
+                            <td className="px-6 py-4">{item.breed || '-'}</td>
+                            <td className="px-6 py-4">{item.age || '-'}</td>
+                            <td className="px-6 py-4">{item.gender || '-'}</td>
+                            <td className="px-6 py-4">{item.service_type || '-'}</td>
+                            <td className="px-6 py-4">{item.medicine_used || '-'}</td>
+                            <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <button 
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                                onClick={() => {
+                                  if (window.confirm('Are you sure you want to delete this walk-in record?')) {
+                                    setWalkInRecords(prev => prev.filter(r => r.id !== item.id));
+                                  }
+                                }}
+                              >
+                                <Trash2 size={18} className="text-red-600" />
+                              </button>
+                            </td>
+                          </>
+                        )}
                         {/* History Tab */}
                         {activeTab === 'history' && (
                           <>
@@ -529,6 +593,13 @@ const AppointmentsPage: React.FC = () => {
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSubmit={handleAddAppointment}
+      />
+
+      {/* Add Walk-In Modal */}
+      <AddWalkInModal
+        isOpen={addWalkInModalOpen}
+        onClose={() => setAddWalkInModalOpen(false)}
+        onSubmit={handleAddWalkIn}
       />
     </div>
   );
