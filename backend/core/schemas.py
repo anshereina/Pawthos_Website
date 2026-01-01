@@ -579,6 +579,47 @@ class Appointment(AppointmentBase):
             obj.time = obj.time.strftime("%H:%M")
         return super().from_orm(obj)
 
+# Walk-In Record Schemas
+class WalkInRecordBase(BaseModel):
+    date: Optional[str] = None
+    client_name: str
+    contact_no: Optional[str] = None
+    pet_name: str
+    pet_birthday: Optional[str] = None
+    breed: Optional[str] = None
+    age: Optional[str] = None
+    gender: Optional[str] = None
+    service_type: Optional[str] = None
+    medicine_used: Optional[str] = None
+    pet_id: Optional[int] = None
+    handled_by: Optional[str] = "Dr. Fe Templado"
+
+class WalkInRecordCreate(WalkInRecordBase):
+    pass
+
+class WalkInRecordUpdate(BaseModel):
+    date: Optional[str] = None
+    client_name: Optional[str] = None
+    contact_no: Optional[str] = None
+    pet_name: Optional[str] = None
+    pet_birthday: Optional[str] = None
+    breed: Optional[str] = None
+    age: Optional[str] = None
+    gender: Optional[str] = None
+    service_type: Optional[str] = None
+    medicine_used: Optional[str] = None
+    handled_by: Optional[str] = None
+    status: Optional[str] = None
+
+class WalkInRecord(WalkInRecordBase):
+    id: int
+    status: Optional[str] = "Completed"
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 # Service Request Schemas
 class ServiceRequestBase(BaseModel):
     client_name: str

@@ -180,6 +180,7 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
         service_type: formData.serviceType || undefined,
         medicine_used: formData.medicineUsed || undefined,
         pet_id: selectedPetData?.id,
+        handled_by: 'Dr. Fe Templado', // Auto-filled with default value
       };
 
       await onSubmit(walkInData);

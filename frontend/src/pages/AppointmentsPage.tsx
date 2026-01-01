@@ -6,17 +6,19 @@ import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import { useAppointments, useServiceRequests } from '../hooks/useAppointments';
+import { useWalkInRecords } from '../hooks/useWalkInRecords';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
 import AppointmentStatusModal from '../components/AppointmentStatusModal';
 import AddAppointmentModal from '../components/AddAppointmentModal';
 import AddWalkInModal from '../components/AddWalkInModal';
+import WalkInDetailsModal from '../components/WalkInDetailsModal';
 import { Appointment, ServiceRequest } from '../services/appointmentService';
 
 const TABS = [
   { label: 'Appointments', value: 'appointments' },
+  { label: 'Appointments History', value: 'history' },
   { label: 'Walk-In', value: 'walkin' },
-  { label: 'History', value: 'history' },
 ];
 
 const STATUS_OPTIONS: string[] = ['Pending', 'Approved', 'Completed', 'Rescheduled', 'Rejected'];
@@ -37,7 +39,8 @@ const AppointmentsPage: React.FC = () => {
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addWalkInModalOpen, setAddWalkInModalOpen] = useState(false);
-  const [walkInRecords, setWalkInRecords] = useState<any[]>([]);
+  const [walkInDetailsModalOpen, setWalkInDetailsModalOpen] = useState(false);
+  const [selectedWalkInRecord, setSelectedWalkInRecord] = useState<any | null>(null);
   
   // Use real data hooks
   const { 
@@ -58,6 +61,15 @@ const AppointmentsPage: React.FC = () => {
     deleteServiceRequest,
     fetchServiceRequests
   } = useServiceRequests();
+
+  const {
+    walkInRecords,
+    loading: walkInLoading,
+    error: walkInError,
+    fetchWalkInRecords,
+    createWalkInRecord,
+    deleteWalkInRecord
+  } = useWalkInRecords();
 
   React.useEffect(() => {
     if (user === null) {
@@ -86,11 +98,13 @@ const AppointmentsPage: React.FC = () => {
         fetchAppointments({ search });
       } else if (activeTab === 'request') {
         fetchServiceRequests({ search });
+      } else if (activeTab === 'walkin') {
+        fetchWalkInRecords({ search });
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search, activeTab, fetchAppointments, fetchServiceRequests]);
+  }, [search, activeTab, fetchAppointments, fetchServiceRequests, fetchWalkInRecords]);
 
   if (user === undefined) {
     return <div>Loading...</div>;
@@ -117,13 +131,15 @@ const AppointmentsPage: React.FC = () => {
   //   setStatusDropdownOpen(null);
   // };
 
-  const handleDelete = async (id: number, type: 'appointment' | 'request') => {
+  const handleDelete = async (id: number, type: 'appointment' | 'request' | 'walkin') => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         if (type === 'appointment') {
           await deleteAppointment(id);
-        } else {
+        } else if (type === 'request') {
           await deleteServiceRequest(id);
+        } else if (type === 'walkin') {
+          await deleteWalkInRecord(id);
         }
       } catch (error) {
         console.error('Failed to delete:', error);
@@ -131,15 +147,25 @@ const AppointmentsPage: React.FC = () => {
     }
   };
 
-  const handleRowClick = (item: Appointment | ServiceRequest, type: 'appointment' | 'request') => {
-    setSelectedItem(item);
-    setSelectedItemType(type);
-    setDetailsModalOpen(true);
+  const handleRowClick = (item: Appointment | ServiceRequest, type: 'appointment' | 'request' | 'walkin') => {
+    if (type === 'walkin') {
+      setSelectedWalkInRecord(item);
+      setWalkInDetailsModalOpen(true);
+    } else {
+      setSelectedItem(item);
+      setSelectedItemType(type);
+      setDetailsModalOpen(true);
+    }
   };
 
   const closeDetailsModal = () => {
     setDetailsModalOpen(false);
     setSelectedItem(null);
+  };
+
+  const closeWalkInDetailsModal = () => {
+    setWalkInDetailsModalOpen(false);
+    setSelectedWalkInRecord(null);
   };
 
   const openStatusModal = (status: 'Pending' | 'Approved' | 'Completed' | 'Rescheduled' | 'Rejected', itemId: number, type: 'appointment' | 'request') => {
@@ -198,17 +224,10 @@ const AppointmentsPage: React.FC = () => {
 
   const handleAddWalkIn = async (data: any) => {
     try {
-      // For now, we'll store walk-in records in local state
-      // You can later integrate with a backend service
-      const newWalkIn = {
-        id: Date.now(),
-        ...data,
-        status: 'Completed',
-        created_at: new Date().toISOString(),
-      };
-      setWalkInRecords(prev => [...prev, newWalkIn]);
+      await createWalkInRecord(data);
       setAddWalkInModalOpen(false);
-      alert('Walk-in record created successfully!');
+      // Refresh walk-in records
+      await fetchWalkInRecords({ search });
     } catch (error: any) {
       throw new Error(error?.message || 'Failed to create walk-in record');
     }
@@ -237,7 +256,7 @@ const AppointmentsPage: React.FC = () => {
   };
 
   const currentData = getCurrentData();
-  const isLoading = appointmentsLoading || requestsLoading;
+  const isLoading = appointmentsLoading || requestsLoading || walkInLoading;
 
   // Table columns based on tab
   let columns: string[] = [];
@@ -335,9 +354,9 @@ const AppointmentsPage: React.FC = () => {
           </div>
 
           {/* Error Messages */}
-          {(appointmentsError || requestsError) && (
+          {(appointmentsError || requestsError || walkInError) && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-600">{appointmentsError || requestsError}</p>
+              <p className="text-red-600">{appointmentsError || requestsError || walkInError}</p>
             </div>
           )}
 
@@ -372,7 +391,7 @@ const AppointmentsPage: React.FC = () => {
                       <tr
                         key={item.id}
                         className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} cursor-pointer hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
-                        onClick={() => handleRowClick(item, activeTab === 'appointments' ? 'appointment' : 'request')}
+                        onClick={() => handleRowClick(item, activeTab === 'appointments' ? 'appointment' : activeTab === 'walkin' ? 'walkin' : 'request')}
                       >
                         {/* Appointments Tab */}
                         {activeTab === 'appointments' && (
@@ -459,11 +478,7 @@ const AppointmentsPage: React.FC = () => {
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <button 
                                 className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                                onClick={() => {
-                                  if (window.confirm('Are you sure you want to delete this walk-in record?')) {
-                                    setWalkInRecords(prev => prev.filter(r => r.id !== item.id));
-                                  }
-                                }}
+                                onClick={() => handleDelete(item.id, 'walkin')}
                               >
                                 <Trash2 size={18} className="text-red-600" />
                               </button>
@@ -600,6 +615,13 @@ const AppointmentsPage: React.FC = () => {
         isOpen={addWalkInModalOpen}
         onClose={() => setAddWalkInModalOpen(false)}
         onSubmit={handleAddWalkIn}
+      />
+
+      {/* Walk-In Details Modal */}
+      <WalkInDetailsModal
+        isOpen={walkInDetailsModalOpen}
+        onClose={closeWalkInDetailsModal}
+        data={selectedWalkInRecord}
       />
     </div>
   );

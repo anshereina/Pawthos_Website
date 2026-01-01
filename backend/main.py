@@ -93,6 +93,7 @@ from routers import medical_records
 from routers import vaccination_events
 from routers import vaccination_drives
 from routers import appointments
+from routers import walk_ins
 from routers import pain_assessments
 from routers import file_uploads
 # AI features (optional - may not be available in Railway)
@@ -180,6 +181,7 @@ app.include_router(medical_records.router)
 app.include_router(vaccination_events.router)
 app.include_router(vaccination_drives.router)
 app.include_router(appointments.router)
+app.include_router(walk_ins.router)
 app.include_router(pain_assessments.router)
 app.include_router(file_uploads.router)
 app.include_router(reproductive_records.router)

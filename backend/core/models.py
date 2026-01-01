@@ -300,6 +300,26 @@ class Appointment(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
 
+class WalkInRecord(Base):
+    __tablename__ = "walk_in_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pet_id = Column(Integer, nullable=True)
+    date = Column(String(255), nullable=True)
+    client_name = Column(String(255), nullable=False)
+    contact_no = Column(String(255), nullable=True)
+    pet_name = Column(String(255), nullable=False)
+    pet_birthday = Column(String(255), nullable=True)
+    breed = Column(String(255), nullable=True)
+    age = Column(String(50), nullable=True)
+    gender = Column(String(50), nullable=True)
+    service_type = Column(String(255), nullable=True)
+    medicine_used = Column(String(255), nullable=True)
+    handled_by = Column(String(255), nullable=True, default="Dr. Fe Templado")
+    status = Column(String(255), nullable=True, default="Completed")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+
 class ServiceRequest(Base):
     __tablename__ = "service_requests"
 
