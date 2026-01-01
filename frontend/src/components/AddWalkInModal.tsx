@@ -180,7 +180,6 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
         service_type: formData.serviceType || undefined,
         medicine_used: formData.medicineUsed || undefined,
         pet_id: selectedPetData?.id,
-        owner_id: selectedOwnerData?.owner_id,
       };
 
       await onSubmit(walkInData);
