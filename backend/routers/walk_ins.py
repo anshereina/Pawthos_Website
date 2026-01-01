@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..core import models, schemas
-from ..core.database import get_db
-from ..core.auth import get_current_admin
+from core import models, schemas
+from core.database import get_db
+from core.auth import get_current_admin
 
 router = APIRouter(prefix="/walk-ins", tags=["walk-ins"])
 
