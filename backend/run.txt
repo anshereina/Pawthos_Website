@@ -5,8 +5,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 cd ..\app
 npx --yes expo@54.0.21 start --clear
-cd ..\frontend
-npm run start
+
 
 railway
 SECRET_KEY=sYIjB_9LQSAWKqs-70Dxhk2ASS3Rq1rf3L4wdMbpGRw

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from "react-native";
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-// Navigation will be passed as props
+import { useRouter } from "expo-router";
 import * as auth from '../utils/auth.utils';
 
 const styles = StyleSheet.create({
@@ -153,7 +153,8 @@ const styles = StyleSheet.create({
     }
 });
 
-export default function LoginPage({ navigation }) {
+export default function LoginPage() {
+    const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -216,7 +217,7 @@ export default function LoginPage({ navigation }) {
                 // Clear any previous errors on successful login
                 setError(null);
                 console.log('✅ Login successful');
-                navigation.navigate('Main');
+                router.replace('/main');
             }
         } catch (error) {
             console.error('❌ Login error:', error);
@@ -227,7 +228,7 @@ export default function LoginPage({ navigation }) {
     };
 
     const handleForgotPassword = () => {
-        navigation.navigate('ForgotPassword');
+        router.push('/forgotPassword');
     };
 
 
@@ -236,7 +237,7 @@ export default function LoginPage({ navigation }) {
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.headerContainer}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Welcome')}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <MaterialIcons name="arrow-back" size={28} color="#D37F52" />
                     </TouchableOpacity>
                 </View>
@@ -308,7 +309,7 @@ export default function LoginPage({ navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                <Pressable onPress={() => navigation.navigate('Signup')}>
+                <Pressable onPress={() => router.push('/signup')}>
                     <Text style={styles.bottomLink}>Don't have an account? Sign Up</Text>
                 </Pressable>
 

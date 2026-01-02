@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Upload, Trash2, ChevronDown, Plus } from 'lucide-react';
+import { Search, Filter, Upload, Trash2, ChevronDown, Plus, Edit } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
@@ -12,6 +12,7 @@ import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
 import AppointmentStatusModal from '../components/AppointmentStatusModal';
 import AddAppointmentModal from '../components/AddAppointmentModal';
 import AddWalkInModal from '../components/AddWalkInModal';
+import EditWalkInModal from '../components/EditWalkInModal';
 import WalkInDetailsModal from '../components/WalkInDetailsModal';
 import { Appointment, ServiceRequest } from '../services/appointmentService';
 
@@ -39,8 +40,10 @@ const AppointmentsPage: React.FC = () => {
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addWalkInModalOpen, setAddWalkInModalOpen] = useState(false);
+  const [editWalkInModalOpen, setEditWalkInModalOpen] = useState(false);
   const [walkInDetailsModalOpen, setWalkInDetailsModalOpen] = useState(false);
   const [selectedWalkInRecord, setSelectedWalkInRecord] = useState<any | null>(null);
+  const [selectedWalkInForEdit, setSelectedWalkInForEdit] = useState<any | null>(null);
   
   // Use real data hooks
   const { 
@@ -68,6 +71,7 @@ const AppointmentsPage: React.FC = () => {
     error: walkInError,
     fetchWalkInRecords,
     createWalkInRecord,
+    updateWalkInRecord,
     deleteWalkInRecord
   } = useWalkInRecords();
 
@@ -231,6 +235,25 @@ const AppointmentsPage: React.FC = () => {
     } catch (error: any) {
       throw new Error(error?.message || 'Failed to create walk-in record');
     }
+  };
+
+  const handleEditWalkIn = async (data: any) => {
+    try {
+      if (selectedWalkInForEdit?.id) {
+        await updateWalkInRecord(selectedWalkInForEdit.id, data);
+        setEditWalkInModalOpen(false);
+        setSelectedWalkInForEdit(null);
+        // Refresh walk-in records
+        await fetchWalkInRecords({ search });
+      }
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to update walk-in record');
+    }
+  };
+
+  const openEditWalkInModal = (record: any) => {
+    setSelectedWalkInForEdit(record);
+    setEditWalkInModalOpen(true);
   };
 
   // Get current data based on active tab
@@ -477,6 +500,12 @@ const AppointmentsPage: React.FC = () => {
                             <td className="px-6 py-4">{item.medicine_used || '-'}</td>
                             <td className="px-6 py-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <button 
+                                className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition-all duration-300 hover:shadow-sm"
+                                onClick={() => openEditWalkInModal(item)}
+                              >
+                                <Edit size={18} className="text-blue-600" />
+                              </button>
+                              <button 
                                 className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
                                 onClick={() => handleDelete(item.id, 'walkin')}
                               >
@@ -615,6 +644,17 @@ const AppointmentsPage: React.FC = () => {
         isOpen={addWalkInModalOpen}
         onClose={() => setAddWalkInModalOpen(false)}
         onSubmit={handleAddWalkIn}
+      />
+
+      {/* Edit Walk-In Modal */}
+      <EditWalkInModal
+        isOpen={editWalkInModalOpen}
+        onClose={() => {
+          setEditWalkInModalOpen(false);
+          setSelectedWalkInForEdit(null);
+        }}
+        onSubmit={handleEditWalkIn}
+        initialData={selectedWalkInForEdit}
       />
 
       {/* Walk-In Details Modal */}

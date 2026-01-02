@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, SafeAreaView } from "react-native";
 import { useFonts } from 'expo-font';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as auth from '../utils/auth.utils';
 
@@ -131,7 +132,8 @@ const styles = StyleSheet.create({
     }
 });
 
-export default function SignupPage({ navigation }) {
+export default function SignupPage() {
+    const router = useRouter();
     const [fontsLoaded] = useFonts({ IrishGrover: require('../assets/fonts/IrishGrover-Regular.ttf') });
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -176,7 +178,7 @@ export default function SignupPage({ navigation }) {
                 {
                     text: "Go to Login", 
                     onPress: () => {
-                        navigation.navigate('Login');
+                        router.replace('/login');
                     }
                 }
             ]);
@@ -188,7 +190,7 @@ export default function SignupPage({ navigation }) {
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.headerContainer}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Welcome')}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <MaterialIcons name="arrow-back" size={28} color="#D37F52" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Sign Up</Text>
@@ -304,7 +306,7 @@ export default function SignupPage({ navigation }) {
                     </Pressable>
                 </View>
                 
-                <Pressable onPress={() => navigation.navigate('Login')}>
+                <Pressable onPress={() => router.push('/login')}>
                     <Text style={styles.link}>Already have an account? Login</Text>
                 </Pressable>
             </ScrollView>

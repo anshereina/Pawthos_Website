@@ -6,16 +6,18 @@ import { OwnerSearchResult } from '../services/shippingPermitRecordService';
 import { Pet } from '../services/petService';
 import { usePets } from '../hooks/usePets';
 
-interface AddWalkInModalProps {
+interface EditWalkInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void> | void;
+  initialData?: any;
 }
 
-const AddWalkInModal: React.FC<AddWalkInModalProps> = ({ 
+const EditWalkInModal: React.FC<EditWalkInModalProps> = ({ 
   isOpen, 
   onClose, 
-  onSubmit 
+  onSubmit,
+  initialData 
 }) => {
   const { pets, fetchPets } = usePets();
   const [formData, setFormData] = useState({
@@ -41,6 +43,24 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
       fetchPets();
     }
   }, [isOpen, fetchPets]);
+
+  // Populate form with initial data
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setFormData({
+        date: initialData.date || '',
+        clientName: initialData.client_name || '',
+        contactNo: initialData.contact_no || '',
+        petName: initialData.pet_name || '',
+        petBirthday: initialData.pet_birthday || '',
+        breed: initialData.breed || '',
+        age: initialData.age || '',
+        gender: initialData.gender || '',
+        serviceType: initialData.service_type || '',
+        medicineUsed: initialData.medicine_used || '',
+      });
+    }
+  }, [isOpen, initialData]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -215,7 +235,7 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
       setSelectedOwnerData(null);
       setSelectedPetData(null);
     } catch (err: any) {
-      setError(err?.message || 'Failed to create walk-in record');
+      setError(err?.message || 'Failed to update walk-in record');
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +247,7 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Add New Walk-In Record</h2>
+          <h2 className="text-xl font-bold text-gray-900">Edit Walk-In Record</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -420,7 +440,7 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
               }`}
               disabled={submitting}
             >
-              {submitting ? 'Creating...' : 'Create Walk-In Record'}
+              {submitting ? 'Updating...' : 'Update Walk-In Record'}
             </button>
           </div>
         </form>
@@ -429,5 +449,5 @@ const AddWalkInModal: React.FC<AddWalkInModalProps> = ({
   );
 };
 
-export default AddWalkInModal;
+export default EditWalkInModal;
 

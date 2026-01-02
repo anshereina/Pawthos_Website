@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View, Image, Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
 const styles = StyleSheet.create({
   container: {
@@ -54,14 +55,12 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function Index({ navigation }) {
+export default function Index() {
+  const router = useRouter();
+
   const handleLoginPress = () => {
     try {
-      if (navigation && navigation.navigate) {
-        navigation.navigate('Login');
-      } else {
-        console.error('Navigation is not available');
-      }
+      router.push('/login');
     } catch (error) {
       console.error('Error navigating to Login:', error);
     }
@@ -69,11 +68,7 @@ export default function Index({ navigation }) {
 
   const handleSignupPress = () => {
     try {
-      if (navigation && navigation.navigate) {
-        navigation.navigate('Signup');
-      } else {
-        console.error('Navigation is not available');
-      }
+      router.push('/signup');
     } catch (error) {
       console.error('Error navigating to Signup:', error);
     }
