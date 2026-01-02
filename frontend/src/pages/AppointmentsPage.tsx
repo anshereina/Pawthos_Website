@@ -44,6 +44,8 @@ const AppointmentsPage: React.FC = () => {
   const [walkInDetailsModalOpen, setWalkInDetailsModalOpen] = useState(false);
   const [selectedWalkInRecord, setSelectedWalkInRecord] = useState<any | null>(null);
   const [selectedWalkInForEdit, setSelectedWalkInForEdit] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   
   // Use real data hooks
   const { 
@@ -109,6 +111,11 @@ const AppointmentsPage: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [search, activeTab, fetchAppointments, fetchServiceRequests, fetchWalkInRecords]);
+
+  // Reset to page 1 when tab or search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search]);
 
   if (user === undefined) {
     return <div>Loading...</div>;
@@ -278,8 +285,19 @@ const AppointmentsPage: React.FC = () => {
     }
   };
 
-  const currentData = getCurrentData();
+  const allData = getCurrentData();
   const isLoading = appointmentsLoading || requestsLoading || walkInLoading;
+
+  // Pagination logic
+  const totalPages = Math.ceil(allData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = allData.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Table columns based on tab
   let columns: string[] = [];
@@ -387,6 +405,13 @@ const AppointmentsPage: React.FC = () => {
           {isLoading && (
             <div className="flex justify-center py-8">
               <LoadingSpinner />
+            </div>
+          )}
+
+          {/* Note */}
+          {!isLoading && (
+            <div className="mb-3 text-sm text-gray-600 italic">
+              Note: You can view the details by clicking the row.
             </div>
           )}
 
@@ -609,6 +634,74 @@ const AppointmentsPage: React.FC = () => {
                   </div>
                 );
               })()}
+
+              {/* Pagination Controls */}
+              {allData.length > 0 && (
+                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(endIndex, allData.length)} of {allData.length} entries
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-2 rounded-lg border transition-all duration-200 ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-400'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage = 
+                          page === 1 || 
+                          page === totalPages || 
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+                        
+                        const showEllipsis = 
+                          (page === currentPage - 2 && currentPage > 3) ||
+                          (page === currentPage + 2 && currentPage < totalPages - 2);
+
+                        if (showEllipsis) {
+                          return <span key={page} className="px-2 text-gray-500">...</span>;
+                        }
+
+                        if (!showPage) return null;
+
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-2 rounded-lg border transition-all duration-200 ${
+                              currentPage === page
+                                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white border-green-700 shadow-md'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-400'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-2 rounded-lg border transition-all duration-200 ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-400'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>
