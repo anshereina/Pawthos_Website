@@ -584,6 +584,7 @@ class WalkInRecordBase(BaseModel):
     date: Optional[str] = None
     client_name: str
     contact_no: Optional[str] = None
+    barangay: Optional[str] = None
     pet_name: str
     pet_birthday: Optional[str] = None
     breed: Optional[str] = None
@@ -601,6 +602,7 @@ class WalkInRecordUpdate(BaseModel):
     date: Optional[str] = None
     client_name: Optional[str] = None
     contact_no: Optional[str] = None
+    barangay: Optional[str] = None
     pet_name: Optional[str] = None
     pet_birthday: Optional[str] = None
     breed: Optional[str] = None

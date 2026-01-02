@@ -6,6 +6,7 @@ export interface WalkInRecord {
   date?: string;
   client_name?: string;
   contact_no?: string;
+  barangay?: string;
   pet_name?: string;
   pet_birthday?: string;
   breed?: string;
@@ -24,6 +25,7 @@ export interface WalkInRecordCreate {
   date?: string;
   client_name: string;
   contact_no?: string;
+  barangay?: string;
   pet_name: string;
   pet_birthday?: string;
   breed?: string;
@@ -39,6 +41,7 @@ export interface WalkInRecordUpdate {
   date?: string;
   client_name?: string;
   contact_no?: string;
+  barangay?: string;
   pet_name?: string;
   pet_birthday?: string;
   breed?: string;

@@ -24,6 +24,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
     date: '',
     clientName: '',
     contactNo: '',
+    barangay: '',
     petName: '',
     petBirthday: '',
     breed: '',
@@ -51,6 +52,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: initialData.date || '',
         clientName: initialData.client_name || '',
         contactNo: initialData.contact_no || '',
+        barangay: initialData.barangay || '',
         petName: initialData.pet_name || '',
         petBirthday: initialData.pet_birthday || '',
         breed: initialData.breed || '',
@@ -69,6 +71,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: '',
         clientName: '',
         contactNo: '',
+        barangay: '',
         petName: '',
         petBirthday: '',
         breed: '',
@@ -206,6 +209,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: formData.date,
         client_name: formData.clientName,
         contact_no: formData.contactNo || undefined,
+        barangay: formData.barangay || undefined,
         pet_name: formData.petName,
         pet_birthday: formData.petBirthday || undefined,
         breed: formData.breed || undefined,
@@ -224,6 +228,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: '',
         clientName: '',
         contactNo: '',
+        barangay: '',
         petName: '',
         petBirthday: '',
         breed: '',
@@ -300,6 +305,20 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, contactNo: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="e.g., +63 912 345 6789"
+              />
+            </div>
+
+            {/* Barangay */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Barangay (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.barangay}
+                onChange={(e) => setFormData(prev => ({ ...prev, barangay: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="e.g., San Roque, Poblacion"
               />
             </div>
 
