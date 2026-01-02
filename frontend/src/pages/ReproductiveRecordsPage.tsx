@@ -274,7 +274,8 @@ const ReproductiveRecordsPage: React.FC = () => {
 
           {/* Records Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
-            <table className="w-full">
+            <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+              <table className="w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   {TABLE_COLUMNS.map(col => (
@@ -330,7 +331,8 @@ const ReproductiveRecordsPage: React.FC = () => {
                     ))
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
 
             {/* Pagination Controls */}
             {filteredPets.length > 0 && totalPages > 1 && (

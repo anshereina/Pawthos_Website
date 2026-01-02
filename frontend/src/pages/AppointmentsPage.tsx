@@ -418,7 +418,7 @@ const AppointmentsPage: React.FC = () => {
           {/* Appointments & Requests Table */}
           {!isLoading && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>

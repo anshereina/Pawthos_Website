@@ -468,7 +468,8 @@ const VaccinationRecordsPage: React.FC = () => {
                 <div className="p-6 text-center text-red-600">{error}</div>
               ) : (
                 <>
-                <table className="w-full">
+                <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                  <table className="w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINE_RECORDS_COLUMNS.map(col => (
@@ -533,7 +534,8 @@ const VaccinationRecordsPage: React.FC = () => {
                         })
                     )}
                   </tbody>
-                </table>
+                  </table>
+                </div>
                 {/* Pagination Controls */}
                 {activeTab === 'vaccine-records' && totalPages > 1 && (
                   <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
@@ -601,7 +603,8 @@ const VaccinationRecordsPage: React.FC = () => {
                 <div className="p-6 text-center text-red-600">{currentError}</div>
               ) : (
                 <>
-                <table className="w-full">
+                <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                  <table className="w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINATION_EVENTS_COLUMNS.map(col => (
@@ -666,7 +669,8 @@ const VaccinationRecordsPage: React.FC = () => {
                       ))
                     )}
                   </tbody>
-                </table>
+                  </table>
+                </div>
                 {/* Pagination Controls */}
                 {(activeTab === 'upcoming' || activeTab === 'all') && totalPages > 1 && (
                   <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">

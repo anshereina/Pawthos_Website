@@ -208,7 +208,8 @@ const VetHealthRecordsPage: React.FC = () => {
 
           {/* Records Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
-            <table className="w-full">
+            <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+              <table className="w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   {TABLE_COLUMNS.map(col => (
@@ -269,7 +270,8 @@ const VetHealthRecordsPage: React.FC = () => {
                   ))
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
             {/* Pagination Controls */}
             {totalItems > 0 && totalPages > 1 && (
               <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
