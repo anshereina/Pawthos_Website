@@ -100,10 +100,16 @@ def get_pets(
     limit: int = 100,
     species: Optional[str] = None,
     search: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Union[models.Admin, models.User] = Depends(auth.get_current_user)
 ):
-    """Get all pets with optional filtering"""
+    """Get all pets with optional filtering. Regular users see only their pets, admins see all pets."""
     query = db.query(Pet)
+    
+    # Filter by user_id for regular users (not admins)
+    if isinstance(current_user, models.User):
+        query = query.filter(Pet.user_id == current_user.id)
+    # Admins see all pets (no filter applied)
     
     if species and species.lower() != 'all':
         query = query.filter(Pet.species.ilike(f"%{species}%"))
@@ -121,7 +127,11 @@ def get_pets(
     return pets
 
 @router.get("/{pet_id}", response_model=PetSchema)
-def get_pet(pet_id: str, db: Session = Depends(get_db)):
+def get_pet(
+    pet_id: str, 
+    db: Session = Depends(get_db),
+    current_user: Union[models.Admin, models.User] = Depends(auth.get_current_user)
+):
     """Get a specific pet by pet_id or numeric ID"""
     # Try to get by numeric ID first (for mobile app)
     if pet_id.isdigit():
@@ -133,10 +143,19 @@ def get_pet(pet_id: str, db: Session = Depends(get_db)):
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
     
+    # Check if user has permission to view this pet
+    if isinstance(current_user, models.User) and pet.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this pet")
+    
     return pet
 
 @router.put("/{pet_id}", response_model=PetSchema)
-def update_pet(pet_id: str, pet_update: PetUpdate, db: Session = Depends(get_db)):
+def update_pet(
+    pet_id: str, 
+    pet_update: PetUpdate, 
+    db: Session = Depends(get_db),
+    current_user: Union[models.Admin, models.User] = Depends(auth.get_current_user)
+):
     """Update a pet record"""
     print(f"Updating pet {pet_id} with data: {pet_update.dict()}")
     
@@ -148,6 +167,10 @@ def update_pet(pet_id: str, pet_update: PetUpdate, db: Session = Depends(get_db)
     
     if db_pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
+    
+    # Check if user has permission to update this pet
+    if isinstance(current_user, models.User) and db_pet.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this pet")
     
     update_data = pet_update.dict(exclude_unset=True)
     print(f"Update data (exclude_unset=True): {update_data}")
@@ -207,7 +230,11 @@ def update_pet(pet_id: str, pet_update: PetUpdate, db: Session = Depends(get_db)
     return db_pet
 
 @router.delete("/{pet_id}")
-def delete_pet(pet_id: str, db: Session = Depends(get_db)):
+def delete_pet(
+    pet_id: str, 
+    db: Session = Depends(get_db),
+    current_user: Union[models.Admin, models.User] = Depends(auth.get_current_user)
+):
     """Delete a pet record and all related records"""
     # Try to get by numeric ID first (for mobile app)
     if pet_id.isdigit():
@@ -217,6 +244,10 @@ def delete_pet(pet_id: str, db: Session = Depends(get_db)):
     
     if db_pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
+    
+    # Check if user has permission to delete this pet
+    if isinstance(current_user, models.User) and db_pet.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this pet")
     
     # Import related models
     from core.models import VaccinationRecord, MedicalRecord, Appointment, PainAssessment

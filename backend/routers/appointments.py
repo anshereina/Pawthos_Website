@@ -46,10 +46,16 @@ def get_appointments(
     status: Optional[str] = Query(None, description="Filter by status"),
     date_from: Optional[date] = Query(None, description="Filter appointments from date"),
     date_to: Optional[date] = Query(None, description="Filter appointments to date"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_active_user)
 ):
-    """Get all appointments with optional filtering"""
+    """Get all appointments with optional filtering. Regular users see only their appointments, admins see all."""
     query = db.query(models.Appointment)
+    
+    # Filter by user_id for regular users (not admins)
+    if isinstance(current_user, models.User):
+        query = query.filter(models.Appointment.user_id == current_user.id)
+    # Admins see all appointments (no filter applied)
     
     if search:
         search_filter = f"%{search}%"

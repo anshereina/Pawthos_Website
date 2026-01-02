@@ -135,14 +135,26 @@ async def create_pain_assessment_with_image(
 def get_pain_assessments(
     skip: int = 0, 
     limit: int = 100, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_active_user)
 ):
-    """Get all pain assessments"""
-    assessments = db.query(models.PainAssessment).offset(skip).limit(limit).all()
+    """Get all pain assessments. Regular users see only their assessments, admins see all."""
+    query = db.query(models.PainAssessment)
+    
+    # Filter by user_id for regular users (not admins)
+    if isinstance(current_user, models.User):
+        query = query.filter(models.PainAssessment.user_id == current_user.id)
+    # Admins see all pain assessments (no filter applied)
+    
+    assessments = query.offset(skip).limit(limit).all()
     return assessments
 
 @router.get("/{assessment_id}", response_model=schemas.PainAssessment)
-def get_pain_assessment(assessment_id: int, db: Session = Depends(get_db)):
+def get_pain_assessment(
+    assessment_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_active_user)
+):
     """Get a specific pain assessment by id"""
     assessment = db.query(models.PainAssessment).filter(
         models.PainAssessment.id == assessment_id
@@ -151,13 +163,18 @@ def get_pain_assessment(assessment_id: int, db: Session = Depends(get_db)):
     if not assessment:
         raise HTTPException(status_code=404, detail="Pain assessment not found")
     
+    # Check if user has permission to view this assessment
+    if isinstance(current_user, models.User) and assessment.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this pain assessment")
+    
     return assessment
 
 @router.put("/{assessment_id}", response_model=schemas.PainAssessment)
 def update_pain_assessment(
     assessment_id: int, 
     assessment_update: schemas.PainAssessmentUpdate, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_active_user)
 ):
     """Update a pain assessment"""
     db_assessment = db.query(models.PainAssessment).filter(
@@ -166,6 +183,10 @@ def update_pain_assessment(
     
     if not db_assessment:
         raise HTTPException(status_code=404, detail="Pain assessment not found")
+    
+    # Check if user has permission to update this assessment
+    if isinstance(current_user, models.User) and db_assessment.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this pain assessment")
     
     # Update only provided fields
     update_data = assessment_update.dict(exclude_unset=True)
@@ -177,7 +198,11 @@ def update_pain_assessment(
     return db_assessment
 
 @router.delete("/{assessment_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_pain_assessment(assessment_id: int, db: Session = Depends(get_db)):
+def delete_pain_assessment(
+    assessment_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_active_user)
+):
     """Delete a pain assessment"""
     db_assessment = db.query(models.PainAssessment).filter(
         models.PainAssessment.id == assessment_id
@@ -185,6 +210,10 @@ def delete_pain_assessment(assessment_id: int, db: Session = Depends(get_db)):
     
     if not db_assessment:
         raise HTTPException(status_code=404, detail="Pain assessment not found")
+    
+    # Check if user has permission to delete this assessment
+    if isinstance(current_user, models.User) and db_assessment.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this pain assessment")
     
     db.delete(db_assessment)
     db.commit()

@@ -1,16 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
-from typing import List, Dict
+from typing import List, Dict, Union
 from core.database import get_db
-from core.models import VaccinationRecord, Pet, User
+from core.models import VaccinationRecord, Pet, User, Admin
 from core.schemas import VaccinationRecord as VaccinationRecordSchema, VaccinationRecordCreate, VaccinationRecordUpdate
+from core import auth
 
 router = APIRouter(prefix="/vaccination-records", tags=["vaccination-records"])
 
 @router.get("", response_model=List[VaccinationRecordSchema])
-def get_all_vaccination_records(db: Session = Depends(get_db)):
-    return db.query(VaccinationRecord).all()
+def get_all_vaccination_records(
+    db: Session = Depends(get_db),
+    current_user: Union[Admin, User] = Depends(auth.get_current_active_user)
+):
+    """Get all vaccination records. Regular users see only their records, admins see all."""
+    if isinstance(current_user, User):
+        # Regular users see only their vaccination records
+        return db.query(VaccinationRecord).filter(VaccinationRecord.user_id == current_user.id).all()
+    else:
+        # Admins see all vaccination records
+        return db.query(VaccinationRecord).all()
 
 @router.get("/statistics/dashboard", response_model=Dict)
 def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
