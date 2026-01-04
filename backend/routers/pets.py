@@ -5,7 +5,7 @@ from datetime import date
 import re
 
 from core.database import get_db
-from core.models import Pet
+from core.models import Pet, VaccinationDriveRecord
 from core.schemas import PetCreate, PetUpdate, Pet as PetSchema
 from core import models, auth
 
@@ -124,6 +124,22 @@ def get_pets(
         )
     
     pets = query.offset(skip).limit(limit).all()
+    
+    # Sync reproductive_status from vaccination drive records for pets that don't have it
+    for pet in pets:
+        if not pet.reproductive_status:
+            # Find the most recent vaccination drive record for this pet
+            drive_record = db.query(VaccinationDriveRecord).filter(
+                VaccinationDriveRecord.owner_name == pet.owner_name,
+                VaccinationDriveRecord.pet_name == pet.name
+            ).order_by(VaccinationDriveRecord.vaccination_date.desc()).first()
+            
+            if drive_record and drive_record.reproductive_status:
+                pet.reproductive_status = drive_record.reproductive_status.lower()  # Normalize to lowercase
+                db.flush()  # Don't commit yet, wait for end
+    
+    db.commit()  # Commit all updates at once
+    
     return pets
 
 @router.get("/{pet_id}", response_model=PetSchema)
@@ -146,6 +162,19 @@ def get_pet(
     # Check if user has permission to view this pet
     if isinstance(current_user, models.User) and pet.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to view this pet")
+    
+    # Sync reproductive_status from vaccination drive records if pet doesn't have it
+    if not pet.reproductive_status:
+        # Find the most recent vaccination drive record for this pet
+        drive_record = db.query(VaccinationDriveRecord).filter(
+            VaccinationDriveRecord.owner_name == pet.owner_name,
+            VaccinationDriveRecord.pet_name == pet.name
+        ).order_by(VaccinationDriveRecord.vaccination_date.desc()).first()
+        
+        if drive_record and drive_record.reproductive_status:
+            pet.reproductive_status = drive_record.reproductive_status.lower()  # Normalize to lowercase
+            db.commit()
+            db.refresh(pet)
     
     return pet
 

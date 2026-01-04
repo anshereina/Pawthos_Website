@@ -69,14 +69,24 @@ class UserService {
 
   // Update current user's profile
   async updateProfile(userData: UpdateUserData) {
-    const response = await axios.put(
-      `${API_BASE_URL}/users/update-profile`,
-      userData,
-      {
-        headers: getAuthHeaders()
-      }
-    );
-    return response.data;
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/users/update-profile`,
+        userData,
+        {
+          headers: getAuthHeaders()
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      // Log the full error for debugging
+      console.error('Profile update error details:', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message
+      });
+      throw error;
+    }
   }
 }
 

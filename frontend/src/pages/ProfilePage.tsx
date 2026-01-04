@@ -111,17 +111,35 @@ const ProfilePage: React.FC = () => {
       const updateData: any = {};
       
       if (section === 'personal') {
-        if (staffData.personal.name?.trim()) {
-          updateData.name = staffData.personal.name.trim();
+        const trimmedName = staffData.personal.name?.trim();
+        if (trimmedName && trimmedName !== user?.name) {
+          updateData.name = trimmedName;
         }
-        if (staffData.personal.email?.trim()) {
-          updateData.email = staffData.personal.email.trim();
+        
+        // Only include email if it's a valid email format and different from current
+        const trimmedEmail = staffData.personal.email?.trim();
+        if (trimmedEmail) {
+          // Basic email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (emailRegex.test(trimmedEmail)) {
+            if (trimmedEmail !== user?.email) {
+              updateData.email = trimmedEmail;
+            }
+          } else {
+            setSaveError('Please enter a valid email address (e.g., user@example.com)');
+            setIsSaving(false);
+            return;
+          }
         }
-        if (staffData.personal.phone?.trim()) {
-          updateData.phone_number = staffData.personal.phone.trim();
+        
+        const trimmedPhone = staffData.personal.phone?.trim();
+        if (trimmedPhone && trimmedPhone !== user?.phone_number) {
+          updateData.phone_number = trimmedPhone;
         }
-        if (staffData.personal.address?.trim()) {
-          updateData.address = staffData.personal.address.trim();
+        
+        const trimmedAddress = staffData.personal.address?.trim();
+        if (trimmedAddress && trimmedAddress !== user?.address) {
+          updateData.address = trimmedAddress;
         }
       }
       
@@ -146,20 +164,35 @@ const ProfilePage: React.FC = () => {
     } catch (error: any) {
       // Better error handling for 422 validation errors
       let errorMessage = 'Failed to update profile';
+      console.error('Full error object:', error);
+      console.error('Error response:', error?.response);
+      console.error('Error response data:', error?.response?.data);
+      
       if (error?.response?.status === 422) {
         const detail = error.response.data?.detail;
+        console.error('422 Validation detail:', detail);
+        
         if (Array.isArray(detail)) {
-          errorMessage = detail.map((err: any) => `${err.loc?.join('.')}: ${err.msg}`).join(', ');
+          // Pydantic validation errors
+          errorMessage = detail.map((err: any) => {
+            const field = err.loc?.slice(1).join('.') || 'field';
+            return `${field}: ${err.msg}`;
+          }).join(', ');
         } else if (typeof detail === 'string') {
           errorMessage = detail;
         } else if (detail?.message) {
           errorMessage = detail.message;
+        } else if (detail) {
+          errorMessage = JSON.stringify(detail);
         }
       } else if (error?.response?.data?.detail) {
         errorMessage = error.response.data.detail;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
+      
       setSaveError(errorMessage);
-      console.error('Error updating profile:', error);
+      console.error('Error updating profile:', errorMessage);
     } finally {
       setIsSaving(false);
     }

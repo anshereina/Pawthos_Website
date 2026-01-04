@@ -557,6 +557,7 @@ const PetRecordsPage: React.FC = () => {
     console.log('Photo URL from database:', selectedPet.photo_url);
     console.log('Constructed Photo URL:', getPhotoUrlForDisplay(selectedPet.photo_url));
     console.log('API_BASE_URL:', API_BASE_URL);
+    console.log('Reproductive Status:', selectedPet.reproductive_status);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans overflow-y-auto">
@@ -691,9 +692,9 @@ const PetRecordsPage: React.FC = () => {
                 <div className="flex justify-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <span className={`inline-flex items-center justify-center w-4 h-4 border-2 border-green-800 rounded ${
-                      selectedPet.reproductive_status === 'intact' ? 'bg-green-800' : 'bg-white'
+                      selectedPet.reproductive_status?.toLowerCase() === 'intact' ? 'bg-green-800' : 'bg-white'
                     }`}>
-                      {selectedPet.reproductive_status === 'intact' && (
+                      {selectedPet.reproductive_status?.toLowerCase() === 'intact' && (
                         <CheckSquare size={14} className="text-white" />
                       )}
                     </span>
@@ -701,15 +702,15 @@ const PetRecordsPage: React.FC = () => {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <span className={`inline-flex items-center justify-center w-4 h-4 border-2 border-green-800 rounded ${
-                      selectedPet.reproductive_status === 'castrated' || selectedPet.reproductive_status === 'spayed' ? 'bg-green-800' : 'bg-white'
+                      selectedPet.reproductive_status?.toLowerCase() === 'castrated' || selectedPet.reproductive_status?.toLowerCase() === 'spayed' ? 'bg-green-800' : 'bg-white'
                     }`}>
-                      {(selectedPet.reproductive_status === 'castrated' || selectedPet.reproductive_status === 'spayed') && (
+                      {(selectedPet.reproductive_status?.toLowerCase() === 'castrated' || selectedPet.reproductive_status?.toLowerCase() === 'spayed') && (
                         <CheckSquare size={14} className="text-white" />
                       )}
                     </span>
                     <span className="text-green-800 font-medium text-sm">
-                      {selectedPet.reproductive_status === 'castrated' ? 'Castrated' : 
-                       selectedPet.reproductive_status === 'spayed' ? 'Spayed' : 'Castrated/Spayed'}
+                      {selectedPet.reproductive_status?.toLowerCase() === 'castrated' ? 'Castrated' : 
+                       selectedPet.reproductive_status?.toLowerCase() === 'spayed' ? 'Spayed' : 'Castrated/Spayed'}
                     </span>
                   </label>
                 </div>
