@@ -284,7 +284,9 @@ const MedicalRecordsPage: React.FC = () => {
 
           {/* Instructional Note */}
           <div className="mb-4 text-green-700 text-sm font-medium">
-            Note: You can update the appointment status using the dropdown.
+            {activeTab === 'upcoming' 
+              ? 'Note: You can update the appointment status using the dropdown.'
+              : 'Note: You can view the details by clicking the row.'}
           </div>
 
           {/* Loading Spinner */}

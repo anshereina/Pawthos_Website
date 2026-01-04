@@ -25,12 +25,12 @@ const OtherServiceModal: React.FC<OtherServiceModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const vaccineOptions = [
-    'Nobivac Rabies',
-    'Defensor 3',
-    'Rabisin',
-    'Rabvac 3',
-    'Imrab 3',
-    'Rabies Vaccine (Generic)',
+    '4in1 Dog (All parasites)',
+    '4in1 Cat (All parasites)',
+    '4in1 Tricats (FVRCCP)',
+    '5in1 Dog (Anti-Parvo)',
+    '6in1 Dog (Anti Parvo + Corona Virus)',
+    '8in1 Dog (All Viruses)',
   ];
 
   const validateForm = (): boolean => {

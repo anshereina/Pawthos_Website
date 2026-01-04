@@ -6,13 +6,15 @@ interface EditVaccinationRecordModalProps {
   onClose: () => void;
   onSubmit: (data: any) => void;
   record: VaccinationRecordWithPet;
+  petName?: string; // Optional pet name prop
 }
 
 const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({ 
   isOpen, 
   onClose, 
   onSubmit, 
-  record
+  record,
+  petName
 }) => {
   const [formData, setFormData] = useState({
     vaccineName: '',
@@ -24,10 +26,15 @@ const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({
 
   useEffect(() => {
     if (record) {
+      // Handle both field names for compatibility (date_given or vaccination_date)
+      const vaccinationDate = record.date_given || record.vaccination_date || '';
+      // Handle both field names for compatibility (next_due_date or expiration_date)
+      const nextVaccinationDate = record.next_due_date || record.expiration_date || '';
+      
       setFormData({
         vaccineName: record.vaccine_name || '',
-        vaccinationDate: record.vaccination_date || '',
-        expirationDate: record.expiration_date || '', // Map expiration_date to Next Vaccination Date
+        vaccinationDate: vaccinationDate,
+        expirationDate: nextVaccinationDate,
         veterinarian: record.veterinarian || '',
         batchLotNo: record.batch_lot_no || '',
       });
@@ -53,7 +60,7 @@ const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({
               </label>
               <input
                 type="text"
-                value={record.pet_name || 'Unknown'}
+                value={petName || record.pet_name || 'Unknown'}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100"
                 disabled
               />

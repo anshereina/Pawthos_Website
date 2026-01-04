@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { UserCircle, ChevronDown, User, Settings, LogOut, Edit, Save, X, Heart, User as UserIcon, Briefcase } from 'lucide-react';
+import { UserCircle, ChevronDown, User, Settings, LogOut, Edit, Save, X, User as UserIcon, Briefcase } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { userService } from '../services/userService';
 
 const ProfilePage: React.FC = () => {
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, setUser } = useAuth();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   // Staff data initialized with current user info
   const [staffData, setStaffData] = useState({
@@ -29,12 +33,6 @@ const ProfilePage: React.FC = () => {
       employeeId: `EMP-${user?.id || '001'}`,
       dateHired: '2020-03-15',
       supervisor: 'Department Head'
-    },
-    emergency: {
-      name: 'Emergency Contact',
-      relationship: 'Family',
-      phone: '09181234567',
-      address: '123 Main Street, Cityville, Metro Manila'
     }
   });
 
@@ -103,9 +101,39 @@ const ProfilePage: React.FC = () => {
     setEditingSection(section);
   };
 
-  const handleSave = (section: string) => {
-    setEditingSection(null);
-    // Here you would typically save the data to the backend
+  const handleSave = async (section: string) => {
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(null);
+    
+    try {
+      // Prepare data based on section
+      const updateData: any = {};
+      
+      if (section === 'personal') {
+        updateData.name = staffData.personal.name;
+        updateData.email = staffData.personal.email;
+        updateData.phone_number = staffData.personal.phone;
+        updateData.address = staffData.personal.address;
+      }
+      
+      // Call API to update profile
+      const updatedUser = await userService.updateProfile(updateData);
+      
+      // Update user in AuthContext
+      if (setUser) {
+        setUser(updatedUser);
+      }
+      
+      setEditingSection(null);
+      setSaveSuccess('Profile updated successfully!');
+      setTimeout(() => setSaveSuccess(null), 3000);
+    } catch (error: any) {
+      setSaveError(error?.response?.data?.detail || 'Failed to update profile');
+      console.error('Error updating profile:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -168,6 +196,20 @@ const ProfilePage: React.FC = () => {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto min-h-0">
           <div className="max-w-4xl mx-auto space-y-6 pb-6">
+            {/* Success Message */}
+            {saveSuccess && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                {saveSuccess}
+              </div>
+            )}
+
+            {/* Error Message */}
+            {saveError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                {saveError}
+              </div>
+            )}
+
             {/* Profile Header Card */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center space-x-6">
@@ -205,10 +247,11 @@ const ProfilePage: React.FC = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleSave('personal')}
-                      className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      disabled={isSaving}
+                      className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Save size={16} />
-                      <span>Save</span>
+                      <span>{isSaving ? 'Saving...' : 'Save'}</span>
                     </button>
                     <button
                       onClick={handleCancel}
@@ -398,97 +441,6 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Emergency Contact Card */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <Heart size={20} className="mr-2 text-green-600" />
-                  Emergency Contact
-                </h3>
-                {editingSection !== 'emergency' ? (
-                  <button
-                    onClick={() => handleEdit('emergency')}
-                    className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <Edit size={16} />
-                    <span>Edit</span>
-                  </button>
-                ) : (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleSave('emergency')}
-                      className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    >
-                      <Save size={16} />
-                      <span>Save</span>
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="flex items-center space-x-1 px-3 py-1 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                      <X size={16} />
-                      <span>Cancel</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-                  {editingSection === 'emergency' ? (
-                    <input
-                      type="text"
-                      value={staffData.emergency.name}
-                      onChange={(e) => handleInputChange('emergency', 'name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  ) : (
-                    <p className="text-gray-800">{staffData.emergency.name}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
-                  {editingSection === 'emergency' ? (
-                    <input
-                      type="text"
-                      value={staffData.emergency.relationship}
-                      onChange={(e) => handleInputChange('emergency', 'relationship', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  ) : (
-                    <p className="text-gray-800">{staffData.emergency.relationship}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                  {editingSection === 'emergency' ? (
-                    <input
-                      type="tel"
-                      value={staffData.emergency.phone}
-                      onChange={(e) => handleInputChange('emergency', 'phone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  ) : (
-                    <p className="text-gray-800">{staffData.emergency.phone}</p>
-                  )}
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                  {editingSection === 'emergency' ? (
-                    <textarea
-                      value={staffData.emergency.address}
-                      onChange={(e) => handleInputChange('emergency', 'address', e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  ) : (
-                    <p className="text-gray-800">{staffData.emergency.address}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
 
           </div>
         </main>

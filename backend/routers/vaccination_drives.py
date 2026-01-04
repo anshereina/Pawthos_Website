@@ -365,11 +365,44 @@ def get_vaccination_drive_records(drive_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/event/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_vaccination_drives_by_event(event_id: int, db: Session = Depends(get_db)):
-    """Delete all vaccination drives for a specific event"""
+    """Delete all vaccination drives for a specific event and their associated vaccination records"""
     drives = db.query(VaccinationDrive).filter(VaccinationDrive.event_id == event_id).all()
     
+    # Get the event to find the event date
+    event = db.query(VaccinationEvent).filter(VaccinationEvent.id == event_id).first()
+    event_date = event.event_date.date() if event else None
+    
     for drive in drives:
-        # Delete all records for this drive first
+        # Get all drive records to identify pets
+        drive_records = db.query(VaccinationDriveRecord).filter(
+            VaccinationDriveRecord.drive_id == drive.id
+        ).all()
+        
+        # Extract pet identifiers (owner_name, pet_name)
+        pet_identifiers = [(record.owner_name, record.pet_name) for record in drive_records]
+        
+        if pet_identifiers and event_date:
+            owner_names = [owner for owner, _ in pet_identifiers]
+            pet_names = [pet for _, pet in pet_identifiers]
+            
+            # Find pets matching the owner and pet names
+            matching_pets = db.query(Pet).filter(
+                Pet.owner_name.in_(owner_names),
+                Pet.name.in_(pet_names)
+            ).all()
+            
+            if matching_pets:
+                pet_ids = [pet.id for pet in matching_pets]
+                # Delete vaccination records for these pets on this event date
+                # This ensures we only delete records that were created from this drive
+                deleted_vac_count = db.query(VaccinationRecord).filter(
+                    VaccinationRecord.pet_id.in_(pet_ids),
+                    func.date(VaccinationRecord.vaccination_date) == event_date,
+                    VaccinationRecord.veterinarian.in_(["Dr. Fe Templado", "Vaccination Drive"])
+                ).delete(synchronize_session=False)
+                print(f"🗑️  Deleted {deleted_vac_count} vaccination record(s) from pet vaccine cards")
+        
+        # Delete all drive records for this drive
         db.query(VaccinationDriveRecord).filter(VaccinationDriveRecord.drive_id == drive.id).delete()
         # Then delete the drive
         db.delete(drive)
