@@ -4,7 +4,7 @@ from typing import List, Union, Optional
 from datetime import datetime, timedelta, timezone
 from core import models, schemas, auth
 from core.database import get_db
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -506,14 +506,13 @@ def create_user(
 
 # Mobile-specific endpoints
 class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra='ignore')  # Pydantic v2 syntax - ignore extra fields like user_id
+    
     name: Optional[str] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
     address: Optional[str] = None
     photo_url: Optional[str] = None
-    
-    class Config:
-        extra = "ignore"  # Ignore extra fields like user_id instead of rejecting them
 
 class DashboardUser(BaseModel):
     id: int
@@ -538,7 +537,7 @@ def update_profile(
     """Web app profile update endpoint"""
     # Log received data for debugging
     try:
-        update_dict = user_update.dict(exclude_unset=True) if hasattr(user_update, 'dict') else user_update.model_dump(exclude_unset=True)
+        update_dict = user_update.model_dump(exclude_unset=True)
         print(f"Received update data: {update_dict}")
         print(f"Update data keys: {list(update_dict.keys())}")
     except Exception as e:
