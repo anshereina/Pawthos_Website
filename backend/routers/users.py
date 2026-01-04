@@ -4,7 +4,7 @@ from typing import List, Union, Optional
 from datetime import datetime, timedelta, timezone
 from core import models, schemas, auth
 from core.database import get_db
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -506,13 +506,24 @@ def create_user(
 
 # Mobile-specific endpoints
 class UserUpdate(BaseModel):
-    model_config = ConfigDict(extra='ignore')  # Pydantic v2 syntax - ignore extra fields like user_id
+    model_config = ConfigDict(extra='forbid')  # Forbid extra fields by default
     
     name: Optional[str] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
     address: Optional[str] = None
     photo_url: Optional[str] = None
+    
+    @model_validator(mode='before')
+    @classmethod
+    def remove_extra_fields(cls, data: any):
+        """Remove user_id and other extra fields before validation"""
+        if isinstance(data, dict):
+            # Create a new dict with only allowed fields
+            allowed_fields = {'name', 'email', 'phone_number', 'address', 'photo_url'}
+            filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
+            return filtered_data
+        return data
 
 class DashboardUser(BaseModel):
     id: int
@@ -538,10 +549,15 @@ def update_profile(
     # Log received data for debugging
     try:
         update_dict = user_update.model_dump(exclude_unset=True)
+        print(f"✅ Successfully parsed UserUpdate")
         print(f"Received update data: {update_dict}")
         print(f"Update data keys: {list(update_dict.keys())}")
+        print(f"Current user ID: {current_user.id}")
     except Exception as e:
-        print(f"Error logging update data: {e}")
+        print(f"❌ Error logging update data: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
     
     # Update only the fields that are provided (explicitly check each field)
     if user_update.name is not None:
