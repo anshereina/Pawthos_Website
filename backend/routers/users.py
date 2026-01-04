@@ -532,8 +532,16 @@ def update_profile(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Mobile app profile update endpoint"""
-    # Update only the fields that are provided
+    """Web app profile update endpoint"""
+    # Log received data for debugging
+    try:
+        update_dict = user_update.dict(exclude_unset=True) if hasattr(user_update, 'dict') else user_update.model_dump(exclude_unset=True)
+        print(f"Received update data: {update_dict}")
+        print(f"Update data keys: {list(update_dict.keys())}")
+    except Exception as e:
+        print(f"Error logging update data: {e}")
+    
+    # Update only the fields that are provided (explicitly check each field)
     if user_update.name is not None:
         current_user.name = user_update.name
     if user_update.email is not None:

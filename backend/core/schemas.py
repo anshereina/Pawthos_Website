@@ -44,6 +44,9 @@ class UserUpdate(BaseModel):
     address: Optional[str] = None
     phone_number: Optional[str] = None
     photo_url: Optional[str] = None
+    
+    class Config:
+        extra = "ignore"  # Ignore extra fields instead of rejecting them
 
 class User(UserBase):
     id: int

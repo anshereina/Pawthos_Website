@@ -150,8 +150,21 @@ const ProfilePage: React.FC = () => {
         return;
       }
       
+      // Log what we're sending for debugging
+      console.log('Sending update data:', updateData);
+      console.log('Update data keys:', Object.keys(updateData));
+      
+      // Ensure we only send allowed fields (exclude any extra fields)
+      const cleanUpdateData: any = {};
+      if (updateData.name !== undefined) cleanUpdateData.name = updateData.name;
+      if (updateData.email !== undefined) cleanUpdateData.email = updateData.email;
+      if (updateData.phone_number !== undefined) cleanUpdateData.phone_number = updateData.phone_number;
+      if (updateData.address !== undefined) cleanUpdateData.address = updateData.address;
+      
+      console.log('Clean update data:', cleanUpdateData);
+      
       // Call API to update profile
-      const updatedUser = await userService.updateProfile(updateData);
+      const updatedUser = await userService.updateProfile(cleanUpdateData);
       
       // Update user in AuthContext
       if (setUser) {

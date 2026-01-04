@@ -70,9 +70,26 @@ class UserService {
   // Update current user's profile
   async updateProfile(userData: UpdateUserData) {
     try {
+      // Explicitly filter to only include allowed fields - exclude user_id and any other extra fields
+      const allowedFields = ['name', 'email', 'phone_number', 'address', 'photo_url'];
+      const cleanData: any = {};
+      
+      allowedFields.forEach(field => {
+        if (userData[field as keyof UpdateUserData] !== undefined && userData[field as keyof UpdateUserData] !== null) {
+          cleanData[field] = userData[field as keyof UpdateUserData];
+        }
+      });
+      
+      // Explicitly remove user_id if it exists (shouldn't, but just in case)
+      delete (cleanData as any).user_id;
+      delete (cleanData as any).id;
+      
+      console.log('Sending clean update data:', cleanData);
+      console.log('Clean data keys:', Object.keys(cleanData));
+      
       const response = await axios.put(
         `${API_BASE_URL}/users/update-profile`,
-        userData,
+        cleanData,
         {
           headers: getAuthHeaders()
         }
@@ -83,7 +100,8 @@ class UserService {
       console.error('Profile update error details:', {
         status: error?.response?.status,
         data: error?.response?.data,
-        message: error?.message
+        message: error?.message,
+        requestData: userData
       });
       throw error;
     }
