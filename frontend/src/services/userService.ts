@@ -87,9 +87,12 @@ class UserService {
       console.log('Sending clean update data:', cleanData);
       console.log('Clean data keys:', Object.keys(cleanData));
       
+      // Create a fresh object to ensure no hidden properties
+      const finalData = JSON.parse(JSON.stringify(cleanData));
+      
       const response = await axios.put(
         `${API_BASE_URL}/users/update-profile`,
-        cleanData,
+        finalData,
         {
           headers: getAuthHeaders()
         }

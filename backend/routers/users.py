@@ -511,6 +511,9 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     address: Optional[str] = None
     photo_url: Optional[str] = None
+    
+    class Config:
+        extra = "ignore"  # Ignore extra fields like user_id instead of rejecting them
 
 class DashboardUser(BaseModel):
     id: int
