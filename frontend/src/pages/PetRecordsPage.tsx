@@ -393,12 +393,13 @@ const PetRecordsPage: React.FC = () => {
     try {
       setVaccinationRecordsLoading(true);
       // Map modal fields to backend API fields (schema expects date_given and next_due_date)
+      // EditVaccinationRecordModal uses: vaccineName, vaccinationDate, expirationDate, veterinarian, batchLotNo
       const mappedData = {
-        date_given: recordData.dateOfVaccination ? recordData.dateOfVaccination : undefined, // Schema expects date_given
-        vaccine_name: recordData.vaccineUsed,
-        batch_lot_no: recordData.batchNumber,
-        next_due_date: recordData.dateOfNextVaccination ? recordData.dateOfNextVaccination : undefined, // Schema expects next_due_date
-        veterinarian: recordData.veterinarianLicenseNumber,
+        date_given: recordData.vaccinationDate ? recordData.vaccinationDate : undefined, // Schema expects date_given
+        vaccine_name: recordData.vaccineName,
+        batch_lot_no: recordData.batchLotNo,
+        next_due_date: recordData.expirationDate ? recordData.expirationDate : undefined, // Schema expects next_due_date
+        veterinarian: recordData.veterinarian,
       };
       await vaccinationRecordService.updateVaccinationRecord(id, mappedData);
       // Refetch records from backend

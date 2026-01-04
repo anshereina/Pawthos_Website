@@ -46,7 +46,7 @@ def find_or_create_user(owner_name: str, owner_contact: str, db: Session) -> Use
     db.flush()
     return user
 
-def find_or_create_pet(owner_name: str, pet_name: str, species: str, breed: str, color: str, age: str, sex: str, db: Session) -> Pet:
+def find_or_create_pet(owner_name: str, pet_name: str, species: str, breed: str, color: str, age: str, sex: str, db: Session, reproductive_status: str = None) -> Pet:
     """Find existing pet by owner and name or create a new one"""
     # First try to find by owner name and pet name
     pet = db.query(Pet).filter(
@@ -55,6 +55,10 @@ def find_or_create_pet(owner_name: str, pet_name: str, species: str, breed: str,
     ).first()
     
     if pet:
+        # Update reproductive_status if provided and different
+        if reproductive_status and pet.reproductive_status != reproductive_status:
+            pet.reproductive_status = reproductive_status
+            db.flush()
         return pet
     
     # Generate a unique pet_id
@@ -81,7 +85,8 @@ def find_or_create_pet(owner_name: str, pet_name: str, species: str, breed: str,
         breed=breed or "",
         color=color or "",
         gender=sex.lower() if sex else "",
-        owner_name=owner_name
+        owner_name=owner_name,
+        reproductive_status=reproductive_status if reproductive_status else None
     )
     db.add(pet)
     db.flush()  # Get the pet ID
@@ -215,7 +220,8 @@ def create_vaccination_drive(drive_data: dict, db: Session = Depends(get_db)):
                 pet_record_data.get("color", ""),
                 pet_record_data.get("age", ""),
                 pet_record_data.get("sex", ""),
-                db
+                db,
+                pet_record_data.get("reproductive_status")
             )
             
             # Create vaccination record

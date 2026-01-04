@@ -107,14 +107,29 @@ const ProfilePage: React.FC = () => {
     setSaveSuccess(null);
     
     try {
-      // Prepare data based on section
+      // Prepare data based on section - only include non-empty values
       const updateData: any = {};
       
       if (section === 'personal') {
-        updateData.name = staffData.personal.name;
-        updateData.email = staffData.personal.email;
-        updateData.phone_number = staffData.personal.phone;
-        updateData.address = staffData.personal.address;
+        if (staffData.personal.name?.trim()) {
+          updateData.name = staffData.personal.name.trim();
+        }
+        if (staffData.personal.email?.trim()) {
+          updateData.email = staffData.personal.email.trim();
+        }
+        if (staffData.personal.phone?.trim()) {
+          updateData.phone_number = staffData.personal.phone.trim();
+        }
+        if (staffData.personal.address?.trim()) {
+          updateData.address = staffData.personal.address.trim();
+        }
+      }
+      
+      // Validate that we have at least one field to update
+      if (Object.keys(updateData).length === 0) {
+        setSaveError('Please fill in at least one field to update');
+        setIsSaving(false);
+        return;
       }
       
       // Call API to update profile
@@ -129,7 +144,21 @@ const ProfilePage: React.FC = () => {
       setSaveSuccess('Profile updated successfully!');
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch (error: any) {
-      setSaveError(error?.response?.data?.detail || 'Failed to update profile');
+      // Better error handling for 422 validation errors
+      let errorMessage = 'Failed to update profile';
+      if (error?.response?.status === 422) {
+        const detail = error.response.data?.detail;
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map((err: any) => `${err.loc?.join('.')}: ${err.msg}`).join(', ');
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (detail?.message) {
+          errorMessage = detail.message;
+        }
+      } else if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      }
+      setSaveError(errorMessage);
       console.error('Error updating profile:', error);
     } finally {
       setIsSaving(false);
