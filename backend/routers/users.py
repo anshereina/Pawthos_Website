@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 from core import models, schemas, auth
 from core.database import get_db
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -506,24 +506,14 @@ def create_user(
 
 # Mobile-specific endpoints
 class UserUpdate(BaseModel):
-    model_config = ConfigDict(extra='forbid')  # Forbid extra fields by default
+    # Use extra='ignore' to silently ignore extra fields like user_id
+    model_config = ConfigDict(extra='ignore')
     
     name: Optional[str] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
     address: Optional[str] = None
     photo_url: Optional[str] = None
-    
-    @model_validator(mode='before')
-    @classmethod
-    def remove_extra_fields(cls, data: any):
-        """Remove user_id and other extra fields before validation"""
-        if isinstance(data, dict):
-            # Create a new dict with only allowed fields
-            allowed_fields = {'name', 'email', 'phone_number', 'address', 'photo_url'}
-            filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
-            return filtered_data
-        return data
 
 class DashboardUser(BaseModel):
     id: int
@@ -540,12 +530,33 @@ class DashboardResponse(BaseModel):
     recent_pets: List[dict]
 
 @router.put("/update-profile", response_model=schemas.User)
-def update_profile(
-    user_update: UserUpdate,
+async def update_profile(
+    body: Dict[str, Any] = Body(...),
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
     """Web app profile update endpoint"""
+    # Log raw request body
+    print(f"🔍 Raw request body: {body}")
+    print(f"🔍 Raw body keys: {list(body.keys()) if isinstance(body, dict) else 'Not a dict'}")
+    
+    # Filter out user_id and other unwanted fields BEFORE Pydantic validation
+    allowed_fields = {'name', 'email', 'phone_number', 'address', 'photo_url'}
+    filtered_data = {k: v for k, v in body.items() if k in allowed_fields}
+    
+    print(f"✅ Filtered body: {filtered_data}")
+    print(f"✅ Filtered body keys: {list(filtered_data.keys())}")
+    
+    # Now create UserUpdate from filtered data (user_id is already removed)
+    try:
+        user_update = UserUpdate(**filtered_data)
+        print(f"✅ Successfully created UserUpdate from filtered data")
+    except Exception as e:
+        print(f"❌ Error creating UserUpdate: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
+    
     # Log received data for debugging
     try:
         update_dict = user_update.model_dump(exclude_unset=True)
