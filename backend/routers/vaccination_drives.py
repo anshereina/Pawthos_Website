@@ -4,7 +4,7 @@ from sqlalchemy import func
 from typing import List
 import json
 from core.database import get_db
-from core.models import VaccinationDrive, VaccinationDriveRecord, Pet, User, VaccinationRecord
+from core.models import VaccinationDrive, VaccinationDriveRecord, Pet, User, VaccinationRecord, VaccinationEvent
 from core.schemas import VaccinationDrive as VaccinationDriveSchema, VaccinationDriveCreate, VaccinationDriveRecord as VaccinationDriveRecordSchema, VaccinationDriveRecordCreate
 
 router = APIRouter(prefix="/vaccination-drives", tags=["vaccination-drives"])

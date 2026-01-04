@@ -570,13 +570,54 @@ const PetRecordsPage: React.FC = () => {
             </button>
             <h1 className="text-2xl font-bold text-gray-900">Pet Profile</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <UserCircle size={36} className="text-green-700" />
-            <div className="flex flex-col items-start">
-              <span className="font-semibold text-gray-900 leading-tight">{user?.name || ''}</span>
-              <span className="text-xs text-gray-500 -mt-1">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</span>
+          <div className="relative user-info-area">
+            <div 
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <UserCircle size={36} className="text-green-700" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 leading-tight">{user?.name || ''}</span>
+                <span className="text-xs text-gray-500 -mt-1">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</span>
+              </div>
+              <ChevronDown size={18} className="text-gray-500 ml-1" />
             </div>
-            <ChevronDown size={18} className="text-gray-500 ml-1" />
+            {isDropdownOpen && (
+              <div className="user-dropdown-menu absolute right-0 mt-3 w-52 bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-50 top-full backdrop-blur-sm">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-800">{user?.name || ''}</p>
+                  <p className="text-xs text-green-600">{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</p>
+                </div>
+                <button
+                  className="flex items-center w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-transparent transition-all duration-200"
+                  onClick={(e) => { e.preventDefault(); router.navigate({ to: '/profile' }); setIsDropdownOpen(false); }}
+                >
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <User size={16} className="text-green-600" />
+                  </div>
+                  <span className="font-medium">Profile</span>
+                </button>
+                <button
+                  className="flex items-center w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent transition-all duration-200"
+                  onClick={(e) => { e.preventDefault(); router.navigate({ to: '/account-settings' }); setIsDropdownOpen(false); }}
+                >
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <Settings size={16} className="text-blue-600" />
+                  </div>
+                  <span className="font-medium">Account Settings</span>
+                </button>
+                <div className="border-t border-gray-100 my-2"></div>
+                <button
+                  className="flex items-center w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-transparent transition-all duration-200"
+                  onClick={() => { setShowLogoutModal(true); setIsDropdownOpen(false); }}
+                >
+                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                    <LogOut size={16} className="text-red-600" />
+                  </div>
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </header>
 

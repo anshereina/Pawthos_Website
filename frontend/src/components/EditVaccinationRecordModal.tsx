@@ -27,14 +27,25 @@ const EditVaccinationRecordModal: React.FC<EditVaccinationRecordModalProps> = ({
   useEffect(() => {
     if (record) {
       // Handle both field names for compatibility (date_given or vaccination_date)
-      const vaccinationDate = record.date_given || record.vaccination_date || '';
+      const vaccinationDateRaw = record.date_given || record.vaccination_date || '';
       // Handle both field names for compatibility (next_due_date or expiration_date)
-      const nextVaccinationDate = record.next_due_date || record.expiration_date || '';
+      const nextVaccinationDateRaw = record.next_due_date || record.expiration_date || '';
+      
+      // Format dates to YYYY-MM-DD for date input fields
+      const formatDateForInput = (dateStr: string) => {
+        if (!dateStr) return '';
+        try {
+          const date = new Date(dateStr);
+          return date.toISOString().split('T')[0];
+        } catch {
+          return '';
+        }
+      };
       
       setFormData({
         vaccineName: record.vaccine_name || '',
-        vaccinationDate: vaccinationDate,
-        expirationDate: nextVaccinationDate,
+        vaccinationDate: formatDateForInput(vaccinationDateRaw),
+        expirationDate: formatDateForInput(nextVaccinationDateRaw),
         veterinarian: record.veterinarian || '',
         batchLotNo: record.batch_lot_no || '',
       });
