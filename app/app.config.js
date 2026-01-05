@@ -10,7 +10,7 @@ module.exports = {
     newArchEnabled: true,
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/adaptive-icon.png",
+        foregroundImage: "./assets/images/icon.png",
         backgroundColor: "#ffffff"
       },
       package: "com.anshesanchez_30.pawthos",

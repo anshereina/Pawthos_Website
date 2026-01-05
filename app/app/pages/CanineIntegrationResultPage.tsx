@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createPainAssessment } from '../../utils/painAssessments.utils';
@@ -8,27 +8,28 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff', // White background
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingTop: 12,
+    },
+    scrollView: {
+        flex: 1,
     },
     content: {
         width: '100%',
         maxWidth: 400, // Limit maximum width for better centering
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingVertical: 16,
+        paddingHorizontal: 24,
+        paddingTop: 12,
+        paddingBottom: 24,
     },
     // Circular Icon Container
     iconContainer: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: -20, // Creates overlap with the results card
+        marginBottom: -15, // Creates overlap with the results card
         elevation: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
@@ -40,11 +41,11 @@ const styles = StyleSheet.create({
     resultsCard: {
         backgroundColor: '#ffffff',
         borderRadius: 20,
-        padding: 32,
-        paddingTop: 45, 
-        width: '90%',
+        padding: 24,
+        paddingTop: 40, 
+        width: '100%',
         alignItems: 'center',
-        marginBottom: 32,
+        marginBottom: 20,
         elevation: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
@@ -52,17 +53,17 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
     },
     resultTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
         color: '#333',
-        marginBottom: 16,
+        marginBottom: 12,
         textAlign: 'center',
     },
     resultText: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#d37f52', // Terracotta color for result
-        marginBottom: 20,
+        marginBottom: 16,
         textAlign: 'center',
     },
     divider: {
@@ -72,25 +73,25 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     recommendationsTitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         color: '#333',
-        marginBottom: 5,
+        marginBottom: 8,
         textAlign: 'center',
     },
     recommendationsText: {
         fontSize: 12,
         color: '#666',
         textAlign: 'center',
-        lineHeight: 22,
+        lineHeight: 20,
     },
     // Button Container
     buttonContainer: {
         width: '100%',
         alignItems: 'center',
-        gap: 20,
-        marginTop: 'auto',
-        paddingBottom: 20,
+        gap: 16,
+        marginTop: 8,
+        paddingBottom: 8,
     },
     // Save Question Container
     saveQuestionContainer: {
@@ -103,14 +104,14 @@ const styles = StyleSheet.create({
     // Save Question Text
     saveQuestionText: {
         color: '#045b26',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
     },
     // Yes/No Text Buttons
     yesNoTextButton: {
         color: '#D37F52',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         textDecorationLine: 'underline',
     },
@@ -121,9 +122,9 @@ const styles = StyleSheet.create({
     // Second Opinion Button
     secondOpinionButton: {
         backgroundColor: '#D37F52', // Terracotta orange
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
         alignItems: 'center',
         width: '100%',
         maxWidth: 360,
@@ -132,13 +133,13 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
-        marginBottom: 8,
+        marginBottom: 6,
     },
     secondOpinionButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
-        letterSpacing: 0.5,
+        letterSpacing: 0.3,
     },
     // Note Text
     noteText: {
@@ -392,13 +393,16 @@ export default function CanineIntegrationResultPage({
 
     return (
         <View style={styles.container}>
-            
-            <View style={styles.content}>
+            <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={true}
+            >
                 {/* Circular Image */}
                 <View style={styles.iconContainer}>
                     <Image
                         source={resultImageSource}
-                        style={{ width: 60, height: 60, resizeMode: 'contain' }}
+                        style={{ width: 50, height: 50, resizeMode: 'contain' }}
                     />
                 </View>
 
@@ -418,7 +422,7 @@ export default function CanineIntegrationResultPage({
                             <Text style={styles.recommendationsTitle}>
                                 Total Score
                             </Text>
-                            <Text style={[styles.resultText, { fontSize: 20, color: '#045b26' }]}>
+                            <Text style={[styles.resultText, { fontSize: 18, color: '#045b26', marginBottom: 12 }]}>
                                 {selectedAnswers.reduce((sum, imageIndex) => {
                                     if (imageIndex === 0) return sum + 0;
                                     if (imageIndex === 1) return sum + 1;
@@ -510,7 +514,7 @@ export default function CanineIntegrationResultPage({
                         </>
                     )}
                 </View>
-            </View>
+            </ScrollView>
         </View>
     );
 }

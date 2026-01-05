@@ -58,21 +58,25 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
         
         // Filter pets based on selected pet type (cat/dog)
         const filteredPets = pets.filter((pet: any) => {
-          const petSpecies = pet.species.toLowerCase();
-          console.log(`Checking pet ${pet.name}: species="${pet.species}" (lowercase: "${petSpecies}")`);
+          const petSpecies = (pet.species || '').toLowerCase();
+          console.log(`Checking pet ${pet.name}: species="${pet.species}" (lowercase: "${petSpecies}"), selectedPet="${selectedPet}"`);
           
           if (selectedPet === 'DOG') {
             // Show dogs - check for "dog", "canine", "puppy", etc.
-            const isDog = petSpecies.includes('dog') || petSpecies.includes('canine') || petSpecies.includes('puppy');
+            // Also exclude cats explicitly
+            const isDog = (petSpecies.includes('dog') || petSpecies.includes('canine') || petSpecies.includes('puppy')) 
+                         && !petSpecies.includes('cat') && !petSpecies.includes('feline') && !petSpecies.includes('kitten');
             console.log(`  Is dog? ${isDog}`);
             return isDog;
           } else if (selectedPet === 'CAT') {
             // Show cats - check for "cat", "feline", "kitten", etc.
-            const isCat = petSpecies.includes('cat') || petSpecies.includes('feline') || petSpecies.includes('kitten');
+            // Also exclude dogs explicitly
+            const isCat = (petSpecies.includes('cat') || petSpecies.includes('feline') || petSpecies.includes('kitten'))
+                         && !petSpecies.includes('dog') && !petSpecies.includes('canine') && !petSpecies.includes('puppy');
             console.log(`  Is cat? ${isCat}`);
             return isCat;
           }
-          return true;
+          return false; // Don't show any pets if pet type is not selected
         });
         setRegisteredPets(filteredPets);
         console.log('Filtered pets for', selectedPet, ':', filteredPets);
