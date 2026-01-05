@@ -233,7 +233,7 @@ const AnimalControlRecordsPage: React.FC = () => {
           {/* Animal Control Records Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-              <table className="w-full">
+            <table className="w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 <tr>
                   {getColumns().map(col => (
@@ -299,7 +299,7 @@ const AnimalControlRecordsPage: React.FC = () => {
                   ))
                 )}
               </tbody>
-              </table>
+            </table>
             </div>
             {/* Pagination Controls */}
             {totalPages > 1 && (

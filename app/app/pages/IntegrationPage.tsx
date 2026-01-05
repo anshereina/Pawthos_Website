@@ -450,12 +450,12 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
                 
                 <View style={styles.cardIconContainer}>
                   <View style={styles.iconCircle}>
-                    <MaterialCommunityIcons name="dog" size={48} color="#065f46" />
+                    <MaterialCommunityIcons name="dog" size={36} color="#065f46" />
                   </View>
                   <View style={styles.pawPrints}>
-                    <MaterialIcons name="pets" size={16} color="rgba(6, 95, 70, 0.3)" style={styles.paw1} />
-                    <MaterialIcons name="pets" size={14} color="rgba(6, 95, 70, 0.3)" style={styles.paw2} />
-                    <MaterialIcons name="pets" size={12} color="rgba(6, 95, 70, 0.3)" style={styles.paw3} />
+                    <MaterialIcons name="pets" size={12} color="rgba(6, 95, 70, 0.3)" style={styles.paw1} />
+                    <MaterialIcons name="pets" size={10} color="rgba(6, 95, 70, 0.3)" style={styles.paw2} />
+                    <MaterialIcons name="pets" size={9} color="rgba(6, 95, 70, 0.3)" style={styles.paw3} />
                   </View>
                 </View>
                 
@@ -464,18 +464,18 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
                   <Text style={styles.cardSubtitle}>Canine Pain Assessment</Text>
                   <View style={styles.cardFeatures}>
                     <View style={styles.feature}>
-                      <Ionicons name="camera" size={14} color="#065f46" />
+                      <Ionicons name="camera" size={11} color="#065f46" />
                       <Text style={styles.featureText}>Photo Analysis</Text>
                     </View>
                     <View style={styles.feature}>
-                      <MaterialCommunityIcons name="clipboard-check" size={14} color="#065f46" />
+                      <MaterialCommunityIcons name="clipboard-check" size={11} color="#065f46" />
                       <Text style={styles.featureText}>Behavioral Assessment</Text>
                     </View>
                   </View>
                 </View>
                 
                 <View style={styles.cardArrow}>
-                  <MaterialIcons name="arrow-forward" size={24} color="#065f46" />
+                  <MaterialIcons name="arrow-forward" size={20} color="#065f46" />
                 </View>
               </TouchableOpacity>
             </Animated.View>
@@ -517,12 +517,12 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
                 
                 <View style={styles.cardIconContainer}>
                   <View style={styles.iconCircle}>
-                    <MaterialCommunityIcons name="cat" size={48} color="#047857" />
+                    <MaterialCommunityIcons name="cat" size={36} color="#047857" />
                   </View>
                   <View style={styles.pawPrints}>
-                    <MaterialIcons name="pets" size={16} color="rgba(4, 120, 87, 0.3)" style={styles.paw1} />
-                    <MaterialIcons name="pets" size={14} color="rgba(4, 120, 87, 0.3)" style={styles.paw2} />
-                    <MaterialIcons name="pets" size={12} color="rgba(4, 120, 87, 0.3)" style={styles.paw3} />
+                    <MaterialIcons name="pets" size={12} color="rgba(4, 120, 87, 0.3)" style={styles.paw1} />
+                    <MaterialIcons name="pets" size={10} color="rgba(4, 120, 87, 0.3)" style={styles.paw2} />
+                    <MaterialIcons name="pets" size={9} color="rgba(4, 120, 87, 0.3)" style={styles.paw3} />
                   </View>
                 </View>
                 
@@ -531,18 +531,18 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
                   <Text style={styles.cardSubtitle}>Feline Pain Assessment</Text>
                   <View style={styles.cardFeatures}>
                     <View style={styles.feature}>
-                      <Ionicons name="camera" size={14} color="#047857" />
+                      <Ionicons name="camera" size={11} color="#047857" />
                       <Text style={styles.featureText}>Photo Analysis</Text>
                     </View>
                     <View style={styles.feature}>
-                      <MaterialCommunityIcons name="clipboard-check" size={14} color="#047857" />
+                      <MaterialCommunityIcons name="clipboard-check" size={11} color="#047857" />
                       <Text style={styles.featureText}>Behavioral Assessment</Text>
                     </View>
                   </View>
                 </View>
                 
                 <View style={styles.cardArrow}>
-                  <MaterialIcons name="arrow-forward" size={24} color="#047857" />
+                  <MaterialIcons name="arrow-forward" size={20} color="#047857" />
                 </View>
               </TouchableOpacity>
             </Animated.View>
@@ -755,19 +755,19 @@ const styles = StyleSheet.create({
   },
   
   heroTitle: { 
-    fontSize: 26, 
+    fontSize: 20, 
     fontWeight: 'bold', 
     color: '#1f2937', 
     fontFamily: 'Jumper', 
-    marginBottom: 8,
-    letterSpacing: 0.5,
+    marginBottom: 6,
+    letterSpacing: 0.3,
   },
   heroSubtitle: { 
-    fontSize: 16, 
+    fontSize: 13, 
     color: '#6b7280', 
     fontFamily: 'Flink', 
-    marginBottom: 16,
-    lineHeight: 22,
+    marginBottom: 12,
+    lineHeight: 18,
   },
   
   badgeContainer: {
@@ -778,21 +778,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     alignSelf: 'flex-start', 
-    borderRadius: 16, 
-    paddingHorizontal: 14, 
-    paddingVertical: 8,
-    elevation: 4,
+    borderRadius: 12, 
+    paddingHorizontal: 10, 
+    paddingVertical: 6,
+    elevation: 3,
     shadowColor: '#045b26',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   heroBadgeText: { 
     color: '#FFFFFF', 
-    fontSize: 13, 
+    fontSize: 11, 
     fontWeight: 'bold', 
     fontFamily: 'Jumper', 
-    marginLeft: 8,
+    marginLeft: 6,
   },
   trustBadge: {
     flexDirection: 'row',
@@ -805,49 +805,50 @@ const styles = StyleSheet.create({
   },
   trustText: {
     color: '#045b26',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 4,
     fontFamily: 'Flink',
   },
 
   // Enhanced Selection Cards
   cardsContainer: {
     flex: 1,
-    marginTop: 10,
+    marginTop: 8,
   },
   selectionPrompt: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: '#374151',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
     fontFamily: 'Jumper',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   cardsRow: { 
     flexDirection: 'column', 
-    gap: 16,
+    gap: 12,
     marginHorizontal: 16,
+    paddingBottom: 20,
   },
   cardWrapper: {
     width: '100%',
-    marginBottom: 8,
+    marginBottom: 0,
   },
   selectCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 28,
-    elevation: 8,
+    borderRadius: 16,
+    padding: 18,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.8)',
-    minHeight: 140,
+    minHeight: 110,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -857,20 +858,20 @@ const styles = StyleSheet.create({
   
   cardIconContainer: {
     position: 'relative',
-    marginRight: 24,
+    marginRight: 16,
   },
   iconCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
   },
   pawPrints: {
     position: 'absolute',
@@ -887,39 +888,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: { 
-    fontSize: 24, 
+    fontSize: 18, 
     fontWeight: 'bold', 
     color: '#1f2937', 
     fontFamily: 'Jumper', 
-    marginBottom: 4,
-    letterSpacing: 0.5,
+    marginBottom: 3,
+    letterSpacing: 0.3,
   },
   cardSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
     fontFamily: 'Flink',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   cardFeatures: {
     flexDirection: 'column',
-    gap: 6,
+    gap: 4,
   },
   feature: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   featureText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#6b7280',
     fontFamily: 'Flink',
     fontWeight: '500',
   },
   
   cardArrow: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',

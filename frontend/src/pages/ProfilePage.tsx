@@ -134,7 +134,14 @@ const ProfilePage: React.FC = () => {
         
         const trimmedPhone = staffData.personal.phone?.trim();
         if (trimmedPhone && trimmedPhone !== user?.phone_number) {
-          updateData.phone_number = trimmedPhone;
+          // Validate phone number: must be exactly 11 digits
+          const phoneDigitsOnly = trimmedPhone.replace(/\D/g, '');
+          if (phoneDigitsOnly.length !== 11) {
+            setSaveError('Phone number must be exactly 11 digits');
+            setIsSaving(false);
+            return;
+          }
+          updateData.phone_number = phoneDigitsOnly;
         }
         
         const trimmedAddress = staffData.personal.address?.trim();
@@ -371,8 +378,15 @@ const ProfilePage: React.FC = () => {
                     <input
                       type="tel"
                       value={staffData.personal.phone}
-                      onChange={(e) => handleInputChange('personal', 'phone', e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                        if (value.length <= 11) {
+                          handleInputChange('personal', 'phone', value);
+                        }
+                      }}
+                      maxLength={11}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="11 digits only"
                     />
                   ) : (
                     <p className="text-gray-800">{staffData.personal.phone}</p>

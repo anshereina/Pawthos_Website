@@ -15,8 +15,8 @@ export default function BottomNavigationBar({
   const tabs = [
     { id: 'home', icon: 'home', label: 'Home' },
     { id: 'pets', icon: 'pets', label: 'Pets' },
-    { id: 'appointment', icon: 'event', label: 'Appointments' },
-    { id: 'account', icon: 'person', label: 'Account' },
+    { id: 'appointments', icon: 'event', label: 'Appointments' },
+    { id: 'profile', icon: 'person', label: 'Account' },
   ];
 
   return (

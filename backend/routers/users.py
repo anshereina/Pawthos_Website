@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List, Union, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 from core import models, schemas, auth
 from core.database import get_db
 from pydantic import BaseModel, ConfigDict
+import json
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -531,28 +532,34 @@ class DashboardResponse(BaseModel):
 
 @router.put("/update-profile", response_model=schemas.User)
 async def update_profile(
-    body: Dict[str, Any] = Body(...),
+    request: Request,
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
     """Web app profile update endpoint"""
-    # Log raw request body
-    print(f"🔍 Raw request body: {body}")
-    print(f"🔍 Raw body keys: {list(body.keys()) if isinstance(body, dict) else 'Not a dict'}")
-    
-    # Filter out user_id and other unwanted fields BEFORE Pydantic validation
-    allowed_fields = {'name', 'email', 'phone_number', 'address', 'photo_url'}
-    filtered_data = {k: v for k, v in body.items() if k in allowed_fields}
-    
-    print(f"✅ Filtered body: {filtered_data}")
-    print(f"✅ Filtered body keys: {list(filtered_data.keys())}")
-    
-    # Now create UserUpdate from filtered data (user_id is already removed)
+    # Manually parse request body to avoid FastAPI's automatic validation
     try:
+        body_bytes = await request.body()
+        body = json.loads(body_bytes)
+        
+        print(f"🔍 Raw request body: {body}")
+        print(f"🔍 Raw body keys: {list(body.keys()) if isinstance(body, dict) else 'Not a dict'}")
+        
+        # Filter out user_id and other unwanted fields BEFORE Pydantic validation
+        allowed_fields = {'name', 'email', 'phone_number', 'address', 'photo_url'}
+        filtered_data = {k: v for k, v in body.items() if k in allowed_fields}
+        
+        print(f"✅ Filtered body: {filtered_data}")
+        print(f"✅ Filtered body keys: {list(filtered_data.keys())}")
+        
+        # Now create UserUpdate from filtered data (user_id is already removed)
         user_update = UserUpdate(**filtered_data)
         print(f"✅ Successfully created UserUpdate from filtered data")
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON decode error: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
     except Exception as e:
-        print(f"❌ Error creating UserUpdate: {e}")
+        print(f"❌ Error processing request: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions, Animated, Easing } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions, Animated, Easing, BackHandler } from "react-native";
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 // Navigation will be passed as props
 import { useFonts } from 'expo-font';
@@ -594,13 +594,16 @@ export default function MainApp({ navigation }: { navigation: any }) {
     // Navigate back to previous page
     const navigateBack = () => {
         if (navigationHistory.length <= 1) {
+            // Always go to Home, never to login
+            setNavigationHistory([{page: 'Home'}]);
             setSelectedMenu('Home');
             return;
         }
         
         // Remove current page from history and go to previous
-        setNavigationHistory(prev => prev.slice(0, -1));
-        const previousPageInfo = getPreviousPage();
+        const newHistory = navigationHistory.slice(0, -1);
+        setNavigationHistory(newHistory);
+        const previousPageInfo = newHistory[newHistory.length - 1];
         
         // Restore navigation data if it exists
         if (previousPageInfo.data) {
@@ -672,6 +675,18 @@ export default function MainApp({ navigation }: { navigation: any }) {
         }
     };
 
+    // Handle Android back button
+    React.useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            // Prevent default behavior (app exit)
+            // Instead, navigate back within the app
+            navigateBack();
+            return true; // Prevent default back action
+        });
+
+        return () => backHandler.remove();
+    }, [navigationHistory]);
+
     // Load user data and dashboard data on mount
     React.useEffect(() => {
         const loadUserData = async () => {
@@ -725,7 +740,11 @@ export default function MainApp({ navigation }: { navigation: any }) {
     const confirmLogout = async () => {
         try {
             await performLogout();
-        } finally {
+            setLogoutVisible(false);
+            navigation.navigate('Login');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Still navigate to login even if logout fails
             setLogoutVisible(false);
             navigation.navigate('Login');
         }

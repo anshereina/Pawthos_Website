@@ -469,7 +469,7 @@ const VaccinationRecordsPage: React.FC = () => {
               ) : (
                 <>
                 <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                  <table className="w-full">
+                <table className="w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINE_RECORDS_COLUMNS.map(col => (
@@ -534,7 +534,7 @@ const VaccinationRecordsPage: React.FC = () => {
                         })
                     )}
                   </tbody>
-                  </table>
+                </table>
                 </div>
                 {/* Pagination Controls */}
                 {activeTab === 'vaccine-records' && totalPages > 1 && (
@@ -604,7 +604,7 @@ const VaccinationRecordsPage: React.FC = () => {
               ) : (
                 <>
                 <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                  <table className="w-full">
+                <table className="w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINATION_EVENTS_COLUMNS.map(col => (
@@ -669,7 +669,7 @@ const VaccinationRecordsPage: React.FC = () => {
                       ))
                     )}
                   </tbody>
-                  </table>
+                </table>
                 </div>
                 {/* Pagination Controls */}
                 {(activeTab === 'upcoming' || activeTab === 'all') && totalPages > 1 && (

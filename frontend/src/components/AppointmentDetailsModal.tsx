@@ -70,10 +70,11 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               <>
                 {(() => {
                   const appointment = data as Appointment;
-                  // Parse notes to extract Medicine Used, Contact Number, and Owner Birthday
+                  // Parse notes to extract Medicine Used, Contact Number, Owner Birthday, and Message/Remarks
                   let medicineUsed = '';
                   let contactNumber = '';
                   let ownerBirthday = '';
+                  let messageRemarks = '';
                   
                   if (appointment.notes) {
                     const notesParts = appointment.notes.split(' | ');
@@ -84,8 +85,19 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                         contactNumber = part.replace('Contact: ', '');
                       } else if (part.startsWith('Owner Birthday: ')) {
                         ownerBirthday = part.replace('Owner Birthday: ', '');
+                      } else if (!part.startsWith('Medicine Used: ') && !part.startsWith('Contact: ') && !part.startsWith('Owner Birthday: ')) {
+                        // This is the message/remarks (not prefixed with any of the above)
+                        if (messageRemarks) {
+                          messageRemarks += ' | ' + part;
+                        } else {
+                          messageRemarks = part;
+                        }
                       }
                     });
+                    // If no structured parts found, treat entire notes as message/remarks
+                    if (!medicineUsed && !contactNumber && !ownerBirthday && appointment.notes) {
+                      messageRemarks = appointment.notes;
+                    }
                   }
 
                   // Get owner name
@@ -231,6 +243,16 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                         </label>
                         <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                           {medicineUsed || '-'}
+                        </div>
+                      </div>
+
+                      {/* Message/Remarks */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Message/Remarks
+                        </label>
+                        <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 min-h-[60px]">
+                          {messageRemarks || '-'}
                         </div>
                       </div>
 

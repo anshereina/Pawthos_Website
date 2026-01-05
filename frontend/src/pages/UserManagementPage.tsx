@@ -398,7 +398,7 @@ const UserManagementPage: React.FC = () => {
               </div>
             )}
             <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-              <table className="w-full">
+            <table className="w-full">
               {/* Table Header */}
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                 {getTableHeaders()}
@@ -422,7 +422,7 @@ const UserManagementPage: React.FC = () => {
                   currentUsers.map((user, index) => renderTableRow(user, index))
                 )}
               </tbody>
-              </table>
+            </table>
             </div>
 
             {/* Pagination Controls */}

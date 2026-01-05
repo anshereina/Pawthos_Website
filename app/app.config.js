@@ -21,7 +21,13 @@ module.exports = {
         "READ_MEDIA_IMAGES",
         "INTERNET",
         "ACCESS_NETWORK_STATE"
-      ]
+      ],
+      usesCleartextTraffic: false,
+      config: {
+        googleMaps: {
+          apiKey: ""
+        }
+      }
     },
     ios: {
       supportsTablet: true

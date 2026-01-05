@@ -206,6 +206,60 @@ def create_appointment(
     if isinstance(db_appointment.time, datetime_time):
         db_appointment.time = db_appointment.time.strftime("%H:%M:%S")
     
+    # Create notification/alert if appointment is created by a mobile user
+    if isinstance(current_user, models.User):
+        try:
+            import json
+            import re
+            
+            # Generate alert ID (same logic as alerts router)
+            def generate_alert_id_local(db_session: Session) -> str:
+                last_alert = db_session.query(models.Alert).order_by(models.Alert.id.desc()).first()
+                if last_alert:
+                    match = re.search(r'ALT-(\d+)', last_alert.alert_id)
+                    if match:
+                        next_num = int(match.group(1)) + 1
+                    else:
+                        next_num = 1
+                else:
+                    next_num = 1
+                return f"ALT-{next_num:04d}"
+            
+            # Get user email for notification
+            user_email = current_user.email if hasattr(current_user, 'email') else None
+            
+            # Create alert/notification for admins
+            alert_id = generate_alert_id_local(db)
+            alert_title = f"New Appointment Request: {payload.get('type', 'Appointment')}"
+            alert_message = f"A new appointment has been requested by {payload.get('owner_name', current_user.name)}"
+            if payload.get('pet_name'):
+                alert_message += f" for pet {payload.get('pet_name')}"
+            if payload.get('date'):
+                alert_message += f" on {payload.get('date')}"
+            
+            # Get all admin emails for notification
+            admin_users = db.query(models.Admin).all()
+            admin_emails = [admin.email for admin in admin_users if hasattr(admin, 'email') and admin.email]
+            
+            if admin_emails:
+                db_alert = models.Alert(
+                    alert_id=alert_id,
+                    title=alert_title,
+                    message=alert_message,
+                    priority="Medium",
+                    submitted_by=current_user.name if hasattr(current_user, 'name') else "System",
+                    submitted_by_email=user_email or "system@pawthos.com",
+                    recipients=json.dumps(admin_emails)
+                )
+                db.add(db_alert)
+                db.commit()
+        except Exception as e:
+            # Don't fail appointment creation if notification fails
+            print(f"Failed to create notification for appointment: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't rollback the appointment, just skip notification
+    
     return db_appointment
 
 @router.put("/{appointment_id}", response_model=schemas.Appointment)

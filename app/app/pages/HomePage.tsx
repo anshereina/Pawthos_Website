@@ -727,7 +727,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                 marginTop: 8,
                                 textAlign: 'center',
                             }}>
-                                BAI Rabies Hotline
+                                City Vet Hotline
                             </Text>
                             <Text style={{
                                 fontSize: 10,
@@ -735,8 +735,8 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                 fontFamily: 'Flink',
                                 textAlign: 'center',
                             }}>
-                                0968 667 6812
-                                8528 2240 local 1506
+                                Tel. 8808-2020
+                                Local 109
                             </Text>
                         </TouchableOpacity>
 

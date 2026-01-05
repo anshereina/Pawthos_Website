@@ -79,6 +79,12 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         fontSize: 16,
         backgroundColor: '#f9f9f9',
+        color: '#000',
+    },
+    dateInput: {
+        backgroundColor: '#fff',
+        fontWeight: '600',
+        color: '#045b26',
     },
     inputError: {
         borderColor: '#ff6b6b',
@@ -425,10 +431,12 @@ export default function EditPetProfileModal({
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Pet's Date of Birth</Text>
                             <TextInput
-                                style={[styles.input, errors.date_of_birth && styles.inputError]}
+                                style={[styles.input, styles.dateInput, errors.date_of_birth && styles.inputError]}
                                 value={formData.date_of_birth}
                                 onChangeText={(value) => handleInputChange('date_of_birth', value)}
                                 placeholder="YYYY-MM-DD"
+                                placeholderTextColor="#999"
+                                keyboardType="numeric"
                             />
                             {errors.date_of_birth && <Text style={styles.errorText}>{errors.date_of_birth}</Text>}
                         </View>
@@ -436,10 +444,12 @@ export default function EditPetProfileModal({
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Owner's Birthday</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, styles.dateInput]}
                                 value={formData.owner_birthday as string}
                                 onChangeText={(value) => handleInputChange('owner_birthday', value)}
                                 placeholder="YYYY-MM-DD"
+                                placeholderTextColor="#999"
+                                keyboardType="numeric"
                             />
                         </View>
                     </ScrollView>

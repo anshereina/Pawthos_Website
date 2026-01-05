@@ -10,18 +10,13 @@ import {
   Settings, 
   LogOut, 
   Lock, 
-  Bell, 
   Shield, 
   Eye, 
   EyeOff,
   Save,
   X,
   Edit,
-  Trash2,
-  Smartphone,
-  Mail,
-  Globe,
-  CalendarClock
+  Trash2
 } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
 import axios from 'axios';
@@ -42,24 +37,6 @@ const AccountSettingsPage: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-
-  // Notification preferences
-  const [notifications, setNotifications] = useState({
-    email: true,
-    sms: false,
-    push: true,
-    appointmentReminders: true,
-    systemUpdates: true,
-    marketing: false
-  });
-
-  // Privacy settings
-  const [privacy, setPrivacy] = useState({
-    profileVisibility: 'public',
-    showEmail: true,
-    showPhone: false,
-    allowContact: true
-  });
 
   // Security settings
   const [security, setSecurity] = useState({
@@ -120,14 +97,6 @@ const AccountSettingsPage: React.FC = () => {
 
   const handleCancel = () => {
     setEditingSection(null);
-  };
-
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handlePrivacyChange = (key: string, value: string | boolean) => {
-    setPrivacy(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSecurityChange = (key: string, value: string | boolean) => {
@@ -297,175 +266,6 @@ const AccountSettingsPage: React.FC = () => {
                     <Save size={16} />
                     <span>{isSavingPassword ? 'Updating...' : 'Update Password'}</span>
                   </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Notification Preferences */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <Bell size={20} className="mr-2 text-green-600" />
-                  Notification Preferences
-                </h3>
-                {editingSection !== 'notifications' ? (
-                  <button
-                    onClick={() => handleEdit('notifications')}
-                    className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <Edit size={16} />
-                    <span>Edit</span>
-                  </button>
-                ) : (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleSave('notifications')}
-                      className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    >
-                      <Save size={16} />
-                      <span>Save</span>
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="flex items-center space-x-1 px-3 py-1 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                      <X size={16} />
-                      <span>Cancel</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <Mail size={16} className="mr-2 text-gray-600" />
-                    <span className="text-sm font-medium">Email Notifications</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifications.email}
-                      onChange={(e) => handleNotificationChange('email', e.target.checked)}
-                      disabled={editingSection !== 'notifications'}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <Smartphone size={16} className="mr-2 text-gray-600" />
-                    <span className="text-sm font-medium">SMS Notifications</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifications.sms}
-                      onChange={(e) => handleNotificationChange('sms', e.target.checked)}
-                      disabled={editingSection !== 'notifications'}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <Bell size={16} className="mr-2 text-gray-600" />
-                    <span className="text-sm font-medium">Push Notifications</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifications.push}
-                      onChange={(e) => handleNotificationChange('push', e.target.checked)}
-                      disabled={editingSection !== 'notifications'}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <CalendarClock size={16} className="mr-2 text-gray-600" />
-                    <span className="text-sm font-medium">Appointment Reminders</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifications.appointmentReminders}
-                      onChange={(e) => handleNotificationChange('appointmentReminders', e.target.checked)}
-                      disabled={editingSection !== 'notifications'}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Privacy Settings */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <Globe size={20} className="mr-2 text-green-600" />
-                  Privacy Settings
-                </h3>
-                {editingSection !== 'privacy' ? (
-                  <button
-                    onClick={() => handleEdit('privacy')}
-                    className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <Edit size={16} />
-                    <span>Edit</span>
-                  </button>
-                ) : (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleSave('privacy')}
-                      className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    >
-                      <Save size={16} />
-                      <span>Save</span>
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="flex items-center space-x-1 px-3 py-1 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                      <X size={16} />
-                      <span>Cancel</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Profile Visibility</label>
-                  <select
-                    value={privacy.profileVisibility}
-                    onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
-                    disabled={editingSection !== 'privacy'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                    <option value="staff-only">Staff Only</option>
-                  </select>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <Mail size={16} className="mr-2 text-gray-600" />
-                    <span className="text-sm font-medium">Show Email Address</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={privacy.showEmail}
-                      onChange={(e) => handlePrivacyChange('showEmail', e.target.checked)}
-                      disabled={editingSection !== 'privacy'}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                  </label>
                 </div>
               </div>
             </div>
