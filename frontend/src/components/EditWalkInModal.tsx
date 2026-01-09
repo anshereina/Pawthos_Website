@@ -24,6 +24,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
     date: '',
     clientName: '',
     contactNo: '',
+    clientBirthday: '',
     barangay: '',
     petName: '',
     petBirthday: '',
@@ -52,6 +53,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: initialData.date || '',
         clientName: initialData.client_name || '',
         contactNo: initialData.contact_no || '',
+        clientBirthday: initialData.client_birthday || '',
         barangay: initialData.barangay || '',
         petName: initialData.pet_name || '',
         petBirthday: initialData.pet_birthday || '',
@@ -71,6 +73,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: '',
         clientName: '',
         contactNo: '',
+        clientBirthday: '',
         barangay: '',
         petName: '',
         petBirthday: '',
@@ -88,10 +91,26 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
 
   // Auto-fill owner data when owner is selected
   const handleOwnerChange = (ownerName: string, ownerData?: OwnerSearchResult) => {
+    // Format birthdate from ownerData if available
+    let formattedBirthday = '';
+    if (ownerData?.birthdate) {
+      // Convert date string to YYYY-MM-DD format for input
+      try {
+        const date = new Date(ownerData.birthdate);
+        if (!isNaN(date.getTime())) {
+          formattedBirthday = date.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        // If parsing fails, use as is
+        formattedBirthday = ownerData.birthdate;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       clientName: ownerName,
       contactNo: ownerData?.contact_number || prev.contactNo,
+      clientBirthday: formattedBirthday || prev.clientBirthday,
     }));
     setSelectedOwnerData(ownerData || null);
     
@@ -209,6 +228,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: formData.date,
         client_name: formData.clientName,
         contact_no: formData.contactNo || undefined,
+        client_birthday: formData.clientBirthday || undefined,
         barangay: formData.barangay || undefined,
         pet_name: formData.petName,
         pet_birthday: formData.petBirthday || undefined,
@@ -228,6 +248,7 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
         date: '',
         clientName: '',
         contactNo: '',
+        clientBirthday: '',
         barangay: '',
         petName: '',
         petBirthday: '',
@@ -305,6 +326,19 @@ const EditWalkInModal: React.FC<EditWalkInModalProps> = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, contactNo: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="e.g., +63 912 345 6789"
+              />
+            </div>
+
+            {/* Client's Birthday */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Client's Birthday (Optional)
+              </label>
+              <input
+                type="date"
+                value={formData.clientBirthday}
+                onChange={(e) => setFormData(prev => ({ ...prev, clientBirthday: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 

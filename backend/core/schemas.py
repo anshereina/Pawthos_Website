@@ -44,7 +44,25 @@ class UserUpdate(BaseModel):
     address: Optional[str] = None
     phone_number: Optional[str] = None
     photo_url: Optional[str] = None
-    
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Normalize and validate phone numbers.
+
+        Rules:
+        - Strip all non-digit characters
+        - If provided, must be exactly 11 digits
+        """
+        if v is None:
+            return v
+
+        digits_only = "".join(ch for ch in v if ch.isdigit())
+        if digits_only and len(digits_only) != 11:
+            raise ValueError("Phone number must contain exactly 11 digits")
+        return digits_only or None
+
     class Config:
         extra = "ignore"  # Ignore extra fields instead of rejecting them
 
@@ -587,6 +605,7 @@ class WalkInRecordBase(BaseModel):
     date: Optional[str] = None
     client_name: str
     contact_no: Optional[str] = None
+    client_birthday: Optional[str] = None
     barangay: Optional[str] = None
     pet_name: str
     pet_birthday: Optional[str] = None
@@ -605,6 +624,7 @@ class WalkInRecordUpdate(BaseModel):
     date: Optional[str] = None
     client_name: Optional[str] = None
     contact_no: Optional[str] = None
+    client_birthday: Optional[str] = None
     barangay: Optional[str] = None
     pet_name: Optional[str] = None
     pet_birthday: Optional[str] = None

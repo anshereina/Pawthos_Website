@@ -308,6 +308,7 @@ class WalkInRecord(Base):
     date = Column(String(255), nullable=True)
     client_name = Column(String(255), nullable=False)
     contact_no = Column(String(255), nullable=True)
+    client_birthday = Column(String(255), nullable=True)
     barangay = Column(String(255), nullable=True)
     pet_name = Column(String(255), nullable=False)
     pet_birthday = Column(String(255), nullable=True)

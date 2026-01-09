@@ -6,6 +6,7 @@ interface WalkInRecord {
   date?: string;
   client_name?: string;
   contact_no?: string;
+  client_birthday?: string;
   barangay?: string;
   pet_name?: string;
   pet_birthday?: string;
@@ -86,6 +87,16 @@ const WalkInDetailsModal: React.FC<WalkInDetailsModalProps> = ({
                   </label>
                   <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                     {data.contact_no || '-'}
+                  </div>
+                </div>
+
+                {/* Client's Birthday */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Client's Birthday
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                    {formatDate(data.client_birthday)}
                   </div>
                 </div>
 
