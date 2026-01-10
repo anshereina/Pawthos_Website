@@ -50,7 +50,10 @@ def get_appointments(
     current_user = Depends(auth.get_current_active_user)
 ):
     """Get all appointments with optional filtering. Regular users see only their appointments, admins see all."""
-    query = db.query(models.Appointment)
+    query = db.query(models.Appointment).options(
+        joinedload(models.Appointment.pet),
+        joinedload(models.Appointment.user)
+    )
     
     # Filter by user_id for regular users (not admins)
     if isinstance(current_user, models.User):
@@ -267,15 +270,27 @@ def update_appointment(
     appointment_id: int,
     appointment_update: schemas.AppointmentUpdate,
     db: Session = Depends(get_db),
-    current_user: models.Admin = Depends(auth.get_current_active_user)
+    current_user: models.Admin | models.User = Depends(auth.get_current_active_user)
 ):
-    """Update an appointment"""
+    """Update an appointment.
+
+    Admins can update any appointment.
+    Regular users can only update their own appointments.
+    """
     appointment = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
     if not appointment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Appointment not found"
         )
+
+    # If the current user is a regular user, ensure they own this appointment
+    if isinstance(current_user, models.User):
+        if getattr(appointment, "user_id", None) != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to update this appointment"
+            )
     
     for field, value in appointment_update.dict(exclude_unset=True).items():
         setattr(appointment, field, value)
@@ -288,6 +303,49 @@ def update_appointment(
     if isinstance(getattr(appointment, 'time', None), datetime_time):
         appointment.time = appointment.time.strftime("%H:%M:%S")
     
+    return appointment
+
+
+@router.patch("/{appointment_id}/status", response_model=schemas.Appointment)
+def update_appointment_status(
+    appointment_id: int,
+    status: str,
+    db: Session = Depends(get_db),
+    current_user: models.Admin | models.User = Depends(auth.get_current_active_user)
+):
+    """Update only the status of an appointment.
+
+    This endpoint is used by the mobile app for cancel / simple status changes.
+    """
+    appointment = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
+    if not appointment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found"
+        )
+
+    # Regular users can only update their own appointments
+    if isinstance(current_user, models.User):
+        if getattr(appointment, "user_id", None) != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to update this appointment"
+            )
+
+    # Normalize status string
+    normalized_status = status.strip().lower()
+    allowed_statuses = {"pending", "approved", "completed", "rescheduled", "cancelled", "canceled"}
+    if normalized_status not in allowed_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status value: {status}"
+        )
+
+    # Store canonical spelling
+    appointment.status = "cancelled" if normalized_status in {"cancelled", "canceled"} else normalized_status
+
+    db.commit()
+    db.refresh(appointment)
     return appointment
 
 @router.delete("/{appointment_id}")

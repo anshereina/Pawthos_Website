@@ -281,8 +281,8 @@ class Appointment(Base):
     __tablename__ = "appointments"
 
     id = Column(Integer, primary_key=True, index=True)
-    pet_id = Column(Integer, nullable=True)  # Removed ForeignKey to match mobile backend
-    user_id = Column(Integer, nullable=True)  # Removed ForeignKey to match mobile backend
+    pet_id = Column(Integer, ForeignKey("pets.id", ondelete="SET NULL"), nullable=True)  # Added ForeignKey back for relationship
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # Added ForeignKey back for relationship
     type = Column(String(255), nullable=False)  # service type
     date = Column(String(255), nullable=False)  # Changed to String to match mobile backend
     time = Column(String(255), nullable=False)  # Changed to String to match mobile backend
@@ -299,6 +299,10 @@ class Appointment(Base):
     owner_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=True)  # Made nullable to match mobile backend
+    
+    # Relationships
+    pet = relationship("Pet", foreign_keys=[pet_id])
+    user = relationship("User", foreign_keys=[user_id])
 
 class WalkInRecord(Base):
     __tablename__ = "walk_in_records"
