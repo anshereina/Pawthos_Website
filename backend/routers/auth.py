@@ -222,13 +222,46 @@ class Token(BaseModel):
 
 @router.post("/api/register", response_model=schemas.User)
 async def register(user: UserCreate, db: Session = Depends(get_db)):
-    """Mobile app user registration endpoint"""
-    # Check if user already exists
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+    """Mobile app user registration endpoint with placeholder account claiming"""
+    
+    # Check if email is already registered (excluding placeholder accounts)
+    existing_user = db.query(models.User).filter(
+        models.User.email == user.email,
+        models.User.is_placeholder == 0  # Only check non-placeholder users
+    ).first()
+    
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Hash password
+    # Derive a default name if not provided
+    derived_name = user.name
+    try:
+        if not derived_name and user.email and "@" in user.email:
+            derived_name = user.email.split("@")[0]
+    except Exception:
+        pass
+    
+    # Check if there's a placeholder account with the same name that we can claim
+    placeholder_user = None
+    if derived_name:
+        placeholder_user = auth.find_placeholder_user_by_name(db, derived_name)
+    
+    # If placeholder exists, claim it instead of creating a new user
+    if placeholder_user:
+        print(f"🔄 Claiming placeholder account for {derived_name} with email {user.email}")
+        claimed_user = auth.claim_placeholder_account(
+            db=db,
+            placeholder_user=placeholder_user,
+            email=user.email,
+            password=user.password,
+            phone_number=user.phone_number,
+            address=user.address
+        )
+        print(f"✅ Placeholder account claimed successfully: user_id={claimed_user.id}")
+        return claimed_user
+    
+    # No placeholder found, create a new user account
+    print(f"➕ Creating new user account for {derived_name} with email {user.email}")
     hashed_password = auth.get_password_hash(user.password)
     
     # Generate OTP
@@ -237,13 +270,14 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     
     # Create user
     db_user = models.User(
-        name=user.name,
+        name=derived_name,
         email=user.email,
         password_hash=hashed_password,
         phone_number=user.phone_number,
         address=user.address,
         otp_code=otp_code,
-        otp_expires_at=otp_expires_at
+        otp_expires_at=otp_expires_at,
+        is_placeholder=0  # Not a placeholder
     )
     
     db.add(db_user)
@@ -257,6 +291,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
     
+    print(f"✅ New user account created successfully: user_id={db_user.id}")
     return db_user
 
 @router.post("/api/verify-otp")

@@ -29,6 +29,7 @@ class User(Base):
     phone_number = Column(String(20), nullable=True)
     photo_url = Column(String(500), nullable=True)  # Add photo URL column
     is_confirmed = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
+    is_placeholder = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True (marks auto-created users)
     otp_code = Column(String(10), nullable=True)
     otp_expires_at = Column(DateTime(timezone=True), nullable=True)
     reset_token = Column(String(255), nullable=True)  # Password reset token

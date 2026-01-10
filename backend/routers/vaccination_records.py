@@ -320,7 +320,8 @@ def find_or_create_user_for_pet(owner_name: str, db: Session) -> User:
         phone_number="Not Available",  # Placeholder value
         address="Not Available",  # Placeholder value
         photo_url="",  # Empty string for optional field
-        is_confirmed=0
+        is_confirmed=0,
+        is_placeholder=1  # Mark as placeholder account
     )
     db.add(user)
     db.flush()

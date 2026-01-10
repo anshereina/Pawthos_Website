@@ -72,6 +72,7 @@ class User(UserBase):
     email: Optional[str] = None
     created_at: Optional[datetime]
     is_confirmed: Optional[int] = None
+    is_placeholder: Optional[int] = None  # 0 = real user, 1 = placeholder
 
     class Config:
         from_attributes = True

@@ -53,6 +53,36 @@ def get_admin(db: Session, email: str):
 def get_user(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
+def find_placeholder_user_by_name(db: Session, name: str):
+    """Find a placeholder user account by name (for claiming during signup)"""
+    return db.query(models.User).filter(
+        models.User.name == name,
+        models.User.is_placeholder == 1
+    ).first()
+
+def claim_placeholder_account(db: Session, placeholder_user: models.User, email: str, password: str, 
+                             phone_number: str = None, address: str = None):
+    """Claim a placeholder account by updating it with real user credentials"""
+    # Update the placeholder account with real credentials
+    placeholder_user.email = email
+    placeholder_user.password_hash = get_password_hash(password)
+    placeholder_user.is_placeholder = 0  # No longer a placeholder
+    placeholder_user.is_confirmed = 1  # Auto-confirm since they're claiming an existing account
+    
+    # Update contact info if provided
+    if phone_number:
+        placeholder_user.phone_number = phone_number
+    if address:
+        placeholder_user.address = address
+    
+    # Clear any OTP codes since we're auto-confirming
+    placeholder_user.otp_code = None
+    placeholder_user.otp_expires_at = None
+    
+    db.commit()
+    db.refresh(placeholder_user)
+    return placeholder_user
+
 def get_user_by_type(db: Session, email: str, user_type: str):
     if user_type == "admin":
         return get_admin(db, email)

@@ -40,7 +40,8 @@ def find_or_create_user(owner_name: str, owner_contact: str, db: Session) -> Use
         phone_number=owner_contact if owner_contact and owner_contact.strip() else "Not Available",  # Use provided contact or placeholder
         address="Not Available",  # Placeholder value
         photo_url="",  # Empty string for optional field
-        is_confirmed=0
+        is_confirmed=0,
+        is_placeholder=1  # Mark as placeholder account
     )
     db.add(user)
     db.flush()
