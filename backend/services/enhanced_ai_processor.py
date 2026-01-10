@@ -14,10 +14,10 @@ except ImportError:
 # Configure Enhanced AI
 AI_API_KEY = os.getenv("AI_API_KEY")
 
-# Fallback API key if environment variable is not set
+# No fallback key - must be set in environment variables
 if not AI_API_KEY:
-    AI_API_KEY = "AIzaSyB3XDsEqilYW6BefX4SzOWYgC_dKyputmk"
-    logging.warning("Using fallback API key")
+    logging.error("AI_API_KEY not found in environment variables. Please set it in Railway or .env file.")
+    AI_API_KEY = None
 
 if AI_AVAILABLE and AI_API_KEY:
     try:
