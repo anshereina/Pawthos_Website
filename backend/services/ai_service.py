@@ -1,11 +1,24 @@
 import warnings
 import os
-import cv2
-import numpy as np
-from PIL import Image, ImageOps, ExifTags
-from io import BytesIO
 import logging
 from typing import Optional, Dict, Any
+
+# Try to import OpenCV (optional - not required for Gemini AI)
+try:
+    import cv2
+    import numpy as np
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    logging.warning("OpenCV not available - cascade detection disabled")
+
+try:
+    from PIL import Image, ImageOps, ExifTags
+    from io import BytesIO
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    logging.warning("PIL not available")
 
 # Suppress deprecation warnings from torchvision
 warnings.filterwarnings("ignore", category=UserWarning, module="torchvision")
@@ -27,14 +40,16 @@ except ImportError as e:
     ELD_AVAILABLE = False
     logging.warning(f"ELD model not available: {e}")
 
-# Import Enhanced AI Processor
+# Import Enhanced AI Processor (Gemini) - This is the primary method
 try:
     from services.enhanced_ai_processor import process_image_with_enhanced_ai
     ENHANCED_AI_AVAILABLE = True
-    logging.info("Enhanced AI processor imported successfully")
+    logging.info("✅ Enhanced AI processor (Gemini) imported successfully")
 except ImportError as e:
     ENHANCED_AI_AVAILABLE = False
-    logging.warning(f"Enhanced AI processor not available: {e}")
+    logging.error(f"❌ Enhanced AI processor not available: {e}")
+    import traceback
+    logging.error(f"Traceback: {traceback.format_exc()}")
 
 class AIService:
     """Service for AI-powered pain assessment functionality"""
@@ -51,7 +66,11 @@ class AIService:
         self._initialize_eld_model()
     
     def _initialize_cascades(self):
-        """Initialize OpenCV Haar cascades for face detection"""
+        """Initialize OpenCV Haar cascades for face detection (optional - not needed for Gemini)"""
+        if not CV2_AVAILABLE:
+            logging.info("Skipping cascade initialization (OpenCV not available)")
+            return
+            
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
         # Cat face cascade
@@ -95,13 +114,18 @@ class AIService:
         Enhanced prediction using Gemini AI with comprehensive analysis
         """
         try:
-            # Use Enhanced AI Processor if available
+            # Use Enhanced AI Processor if available (PREFERRED METHOD)
             if ENHANCED_AI_AVAILABLE:
                 logging.info("Using Enhanced AI Processor with Gemini AI")
                 return process_image_with_enhanced_ai(image_bytes)
             
-            # Fallback to original ELD model
+            # Fallback to original ELD model (requires cascades)
             logging.info("Falling back to original ELD model")
+            
+            # Check if cascades are available for fallback
+            if self.cat_face_cascade is None or self.cat_face_cascade.empty():
+                raise ValueError("AI service not properly configured. Cat detection cascade not available.")
+            
             # Robust image load with EXIF orientation fix
             try:
                 pil_image = Image.open(BytesIO(image_bytes)).convert('RGB')
@@ -141,7 +165,7 @@ class AIService:
                 scaleFactor=1.05 if not self.eld_strict else 1.03,
                 minNeighbors=4 if not self.eld_strict else 6,
                 minSize=(64, 64) if not self.eld_strict else (96, 96)
-            ) if (self.cat_face_cascade is not None and not self.cat_face_cascade.empty()) else []
+            )
             
             # Strict species gate: require a cat face to proceed
             if len(faces_pre) == 0:
@@ -363,8 +387,13 @@ class AIService:
 # Global instance - wrap in try-except to prevent import failures
 # Allow import to succeed even if initialization fails, so router can handle it gracefully
 try:
-    ai_service = AIService()
-    logging.info("✅ AI Service initialized successfully")
+    # Only create AIService if we have Enhanced AI (Gemini) available
+    if ENHANCED_AI_AVAILABLE:
+        ai_service = AIService()
+        logging.info("✅ AI Service initialized successfully with Enhanced AI (Gemini)")
+    else:
+        logging.error("❌ Enhanced AI (Gemini) not available - AI service disabled")
+        ai_service = None
 except Exception as e:
     logging.error(f"❌ Failed to initialize AI Service: {e}")
     import traceback
