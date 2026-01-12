@@ -667,7 +667,11 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
     };
 
     const handleRegister = async () => {
-        if (!validateForm()) return;
+        // Validate form and show error if validation fails
+        const isValid = validateForm();
+        if (!isValid) {
+            return; // Stop here if validation fails
+        }
 
         try {
             setIsRegistering(true);
@@ -763,11 +767,22 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                     ]
                 );
             } else {
-                Alert.alert('Registration Failed', result.message || 'Failed to register pet. Please try again.');
+                // Show error but don't navigate away
+                Alert.alert(
+                    'Registration Failed', 
+                    result.message || 'Failed to register pet. Please check your inputs and try again.',
+                    [{ text: 'OK', style: 'default' }]
+                );
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Registration error:', error);
-            Alert.alert('Error', 'An error occurred while registering the pet. Please try again.');
+            // Show detailed error but don't navigate away
+            const errorMessage = error?.message || 'An unexpected error occurred while registering the pet.';
+            Alert.alert(
+                'Registration Error', 
+                errorMessage + '\n\nPlease check your inputs and try again.',
+                [{ text: 'OK', style: 'default' }]
+            );
         } finally {
             setIsRegistering(false);
         }

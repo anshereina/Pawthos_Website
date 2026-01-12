@@ -289,18 +289,61 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
     // Prefill when rescheduling
     useEffect(() => {
         if (appointmentToEdit) {
+            console.log('Loading appointment to edit:', appointmentToEdit);
             setEditingAppointmentId(appointmentToEdit.id);
             setAppointmentFor(appointmentToEdit.type || 'Please Select');
+            
+            // Load date
             if (appointmentToEdit.date) {
                 const [y, m, d] = String(appointmentToEdit.date).split('-').map((v: string) => parseInt(v, 10));
                 if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
                     setSelectedDate(new Date(y, m - 1, d));
                 }
             }
+            
+            // Load time
             if (appointmentToEdit.time) {
                 setSelectedTime(appointmentToEdit.time);
             }
-            // Lock non-date/time fields by disabling UI already done via selectedPet and disabled inputs
+            
+            // Load pet details - create a mock pet object from appointment data
+            if (appointmentToEdit.pet_id || appointmentToEdit.pet_name) {
+                const petFromAppointment: PetData = {
+                    id: appointmentToEdit.pet_id || 0,
+                    pet_id: String(appointmentToEdit.pet_id || ''),
+                    name: appointmentToEdit.pet_name || '',
+                    species: appointmentToEdit.pet_species || 'Please Select',
+                    breed: appointmentToEdit.pet_breed || '',
+                    gender: appointmentToEdit.pet_gender || '',
+                    date_of_birth: appointmentToEdit.pet?.date_of_birth || '',
+                    weight: appointmentToEdit.pet_weight ? parseFloat(appointmentToEdit.pet_weight) : undefined,
+                    owner_name: appointmentToEdit.owner_name || '',
+                    reproductive_status: appointmentToEdit.pet?.reproductive_status || ''
+                };
+                
+                console.log('Created pet object from appointment:', petFromAppointment);
+                
+                // Set the pet as selected
+                setSelectedPet(petFromAppointment);
+                setPetName(petFromAppointment.name);
+                setPetId(petFromAppointment.pet_id);
+                setSpecies(petFromAppointment.species);
+                
+                // Set other fields from appointment data
+                if (appointmentToEdit.pet_age) {
+                    setAge(appointmentToEdit.pet_age);
+                }
+                if (appointmentToEdit.pet_gender) {
+                    const genderLower = appointmentToEdit.pet_gender.toLowerCase();
+                    if (genderLower === 'female' || genderLower === 'f') {
+                        setGender('Female');
+                    } else if (genderLower === 'male' || genderLower === 'm') {
+                        setGender('Male');
+                    }
+                }
+            }
+            
+            // Lock non-date/time fields by setting selectedPet (UI is already disabled via selectedPet check)
         }
     }, [appointmentToEdit]);
 
@@ -405,7 +448,20 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
             setReproductiveStatus(null);
         }
         
-        setSpecies(pet.species === 'Canine' ? 'Canine' : pet.species === 'Feline' ? 'Feline' : 'Please Select');
+        // Map species with case-insensitive matching
+        if (pet.species) {
+            const speciesLower = pet.species.toLowerCase();
+            if (speciesLower.includes('canine') || speciesLower.includes('dog')) {
+                setSpecies('Canine');
+            } else if (speciesLower.includes('feline') || speciesLower.includes('cat')) {
+                setSpecies('Feline');
+            } else {
+                setSpecies(pet.species); // Use the species as-is if it doesn't match known types
+            }
+        } else {
+            setSpecies('Please Select');
+        }
+        
         setShowPetDropdown(false);
         setPetSearchQuery('');
     };
@@ -734,17 +790,26 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                         <View style={styles.formSection}>
                             <Text style={styles.sectionTitle}>Type of Vaccination</Text>
                             <TouchableOpacity 
-                                style={styles.dropdownContainer}
-                                onPress={() => setShowVaccinationOptions(!showVaccinationOptions)}
+                                style={[
+                                    styles.dropdownContainer,
+                                    editingAppointmentId && styles.inputFieldDisabled
+                                ]}
+                                onPress={() => !editingAppointmentId && setShowVaccinationOptions(!showVaccinationOptions)}
+                                disabled={!!editingAppointmentId}
                             >
-                                <Text style={styles.dropdownText}>{vaccinationType}</Text>
+                                <Text style={[
+                                    styles.dropdownText,
+                                    editingAppointmentId && { color: '#666' }
+                                ]}>
+                                    {vaccinationType}
+                                </Text>
                                 <MaterialIcons 
                                     name={showVaccinationOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                     size={24} 
-                                    color="#666" 
+                                    color={editingAppointmentId ? "#999" : "#666"} 
                                 />
                             </TouchableOpacity>
-                            {showVaccinationOptions && vaccinationOptions.map((option) => (
+                            {showVaccinationOptions && !editingAppointmentId && vaccinationOptions.map((option) => (
                                 <TouchableOpacity
                                     key={option}
                                     style={[
@@ -770,20 +835,27 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     <View style={styles.formSection}>
                         <Text style={styles.sectionTitle}>Name of Pet</Text>
                         <TouchableOpacity 
-                            style={styles.dropdownContainer}
-                            onPress={() => setShowPetDropdown(!showPetDropdown)}
+                            style={[
+                                styles.dropdownContainer,
+                                editingAppointmentId && styles.inputFieldDisabled
+                            ]}
+                            onPress={() => !editingAppointmentId && setShowPetDropdown(!showPetDropdown)}
+                            disabled={!!editingAppointmentId}
                         >
-                            <Text style={styles.dropdownText}>
+                            <Text style={[
+                                styles.dropdownText,
+                                editingAppointmentId && { color: '#666' }
+                            ]}>
                                 {selectedPet ? selectedPet.name : 'Select a pet'}
                             </Text>
                             <MaterialIcons 
                                 name={showPetDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color="#666" 
+                                color={editingAppointmentId ? "#999" : "#666"} 
                             />
                         </TouchableOpacity>
                         
-                        {showPetDropdown && (
+                        {showPetDropdown && !editingAppointmentId && (
                             <View style={styles.searchableDropdownContainer}>
                                 <TextInput
                                     style={styles.searchInput}
@@ -834,17 +906,26 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     <View style={styles.formSection}>
                         <Text style={styles.sectionTitle}>Type of Species</Text>
                         <TouchableOpacity 
-                            style={styles.dropdownContainer}
-                            onPress={() => setShowSpeciesOptions(!showSpeciesOptions)}
+                            style={[
+                                styles.dropdownContainer,
+                                selectedPet && styles.inputFieldDisabled
+                            ]}
+                            onPress={() => !selectedPet && setShowSpeciesOptions(!showSpeciesOptions)}
+                            disabled={!!selectedPet}
                         >
-                            <Text style={styles.dropdownText}>{species}</Text>
+                            <Text style={[
+                                styles.dropdownText,
+                                selectedPet && { color: '#666' }
+                            ]}>
+                                {species}
+                            </Text>
                             <MaterialIcons 
                                 name={showSpeciesOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color="#666" 
+                                color={selectedPet ? "#999" : "#666"} 
                             />
                         </TouchableOpacity>
-                        {showSpeciesOptions && speciesOptions.map((option) => (
+                        {showSpeciesOptions && !selectedPet && speciesOptions.map((option) => (
                             <TouchableOpacity
                                 key={option}
                                 style={[

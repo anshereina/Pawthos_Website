@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions, Animated, Easing, BackHandler } from "react-native";
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
-// Navigation will be passed as props
+// Navigation using expo-router
+import { useRouter } from "expo-router";
 import { useFonts } from 'expo-font';
 import BottomNavigationBar from './components/BottomNavigationBar';
 import BottomGradient from './components/BottomGradient';
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
     },
 });
 
-function CollapsibleMenu({ open, onClose, setSelectedMenu, navigation, onRequestLogout, addToHistory }: { open: boolean, onClose: () => void, setSelectedMenu: (label: string) => void, navigation: any, onRequestLogout: () => void, addToHistory: (page: string, data?: any) => void }) {
+function CollapsibleMenu({ open, onClose, setSelectedMenu, onRequestLogout, addToHistory }: { open: boolean, onClose: () => void, setSelectedMenu: (label: string) => void, onRequestLogout: () => void, addToHistory: (page: string, data?: any) => void }) {
     const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
     const [isVisible, setIsVisible] = useState(false);
     const [hasAnimated, setHasAnimated] = useState(false);
@@ -525,7 +526,8 @@ function CollapsibleMenu({ open, onClose, setSelectedMenu, navigation, onRequest
     );
 }
 
-export default function MainApp({ navigation }: { navigation: any }) {
+export default function MainApp() {
+    const router = useRouter();
     const [fontsLoaded] = useFonts({
         IrishGrover: require('../assets/fonts/IrishGrover-Regular.ttf'),
     });
@@ -739,14 +741,16 @@ export default function MainApp({ navigation }: { navigation: any }) {
     const cancelLogout = () => setLogoutVisible(false);
     const confirmLogout = async () => {
         try {
+            console.log('Logging out user...');
             await performLogout();
             setLogoutVisible(false);
-            navigation.navigate('Login');
+            // Use router.replace to navigate to login and prevent going back
+            router.replace('/login');
         } catch (error) {
             console.error('Logout error:', error);
             // Still navigate to login even if logout fails
             setLogoutVisible(false);
-            navigation.navigate('Login');
+            router.replace('/login');
         }
     };
 
@@ -895,6 +899,7 @@ export default function MainApp({ navigation }: { navigation: any }) {
         onCategoryChange={handleCategoryChange}
     />,
     "CanineIntegrationResult": <CanineIntegrationResultPage 
+        onSecondOpinion={() => navigateToPage('CanineIntegration')}
         onHome={() => navigateToPage('Home')} 
         onSecondOpinionAppointment={() => navigateToPage('SecondOpinionAppointment')}
         selectedAnswers={navigationData.beaap_answers || []}
@@ -947,10 +952,12 @@ export default function MainApp({ navigation }: { navigation: any }) {
 
     return (
         <View style={styles.container}>
-            {/* Hide navbar for Pet Details to enable full-screen experience */}
-            {selectedMenu !== 'Pet Details' && (
+            {/* Hide navbar for Pet Details and Integration pages to enable full-screen experience */}
+            {selectedMenu !== 'Pet Details' && 
+             !selectedMenu.includes('Integration') && 
+             !selectedMenu.includes('Canine') && (
                 <View style={styles.navbar}>
-                    {(selectedMenu === 'Home' || selectedMenu === 'Appointment' || selectedMenu === 'Pain Assessment' || selectedMenu === 'Pet profile' || selectedMenu === 'My account' || selectedMenu === 'Integration') ? (
+                    {(selectedMenu === 'Home' || selectedMenu === 'Appointment' || selectedMenu === 'Pain Assessment' || selectedMenu === 'Pet profile' || selectedMenu === 'My account') ? (
                         // Base pages layout (Home, Appointment, Pain Assessment, Pet profile, My account, Integration)
                         <>
                             <View style={styles.homeHeaderLeft}>
@@ -1016,7 +1023,6 @@ export default function MainApp({ navigation }: { navigation: any }) {
                 open={menuOpen}
                 onClose={() => setMenuOpen(false)}
                 setSelectedMenu={setSelectedMenu}
-                navigation={navigation}
                 onRequestLogout={requestLogout}
                 addToHistory={addToHistory}
             />

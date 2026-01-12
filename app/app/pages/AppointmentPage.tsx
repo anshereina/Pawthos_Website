@@ -554,7 +554,7 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                         </Text>
                                         <View style={[styles.statusBadge, getStatusBadgeStyle(item.status)]}>
                                             <Text style={[styles.statusText, { color: getStatusTextColor(item.status) }]}>
-                                                {item.status}
+                                                {item.status.toLowerCase() === 'scheduled' ? 'To be Approved' : item.status}
                                             </Text>
                                         </View>
                                     </View>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, SafeAreaView } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from "react-native";
 import { useFonts } from 'expo-font';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
@@ -181,6 +181,8 @@ export default function SignupPage() {
     const [error, setError] = useState<string | null>(null);
     const [showOTPModal, setShowOTPModal] = useState(false);
     const [otpCode, setOtpCode] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     if (!fontsLoaded) return null;
 
@@ -251,7 +253,12 @@ export default function SignupPage() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+            >
+                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.headerContainer}>
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -342,8 +349,15 @@ export default function SignupPage() {
                             value={password}
                             onChangeText={setPassword}
                             style={styles.input}
-                            secureTextEntry
+                            secureTextEntry={!showPassword}
                         />
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                            <MaterialIcons 
+                                name={showPassword ? "visibility" : "visibility-off"} 
+                                size={20} 
+                                color="#999" 
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     {/* Confirm Password */}
@@ -355,8 +369,15 @@ export default function SignupPage() {
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                             style={styles.input}
-                            secureTextEntry
+                            secureTextEntry={!showConfirmPassword}
                         />
+                        <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                            <MaterialIcons 
+                                name={showConfirmPassword ? "visibility" : "visibility-off"} 
+                                size={20} 
+                                color="#999" 
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     <Text style={styles.requiredText}>
@@ -374,6 +395,7 @@ export default function SignupPage() {
                     <Text style={styles.link}>Already have an account? Login</Text>
                 </Pressable>
             </ScrollView>
+            </KeyboardAvoidingView>
 
             {/* OTP Verification Modal */}
             {showOTPModal && (

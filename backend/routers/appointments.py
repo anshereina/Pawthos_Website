@@ -309,13 +309,14 @@ def update_appointment(
 @router.patch("/{appointment_id}/status", response_model=schemas.Appointment)
 def update_appointment_status(
     appointment_id: int,
-    status: str,
+    status_update: dict,
     db: Session = Depends(get_db),
     current_user: models.Admin | models.User = Depends(auth.get_current_active_user)
 ):
     """Update only the status of an appointment.
 
     This endpoint is used by the mobile app for cancel / simple status changes.
+    Expects JSON body: {"status": "cancelled"}
     """
     appointment = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
     if not appointment:
@@ -332,20 +333,90 @@ def update_appointment_status(
                 detail="You are not allowed to update this appointment"
             )
 
+    # Extract status from request body
+    new_status = status_update.get("status", "")
+    if not new_status:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Status field is required in request body"
+        )
+
     # Normalize status string
-    normalized_status = status.strip().lower()
-    allowed_statuses = {"pending", "approved", "completed", "rescheduled", "cancelled", "canceled"}
+    normalized_status = new_status.strip().lower()
+    allowed_statuses = {"pending", "approved", "completed", "rescheduled", "cancelled", "canceled", "scheduled"}
     if normalized_status not in allowed_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid status value: {status}"
+            detail=f"Invalid status value: {new_status}"
         )
 
+    # Store old status for notification comparison
+    old_status = appointment.status
+    
     # Store canonical spelling
     appointment.status = "cancelled" if normalized_status in {"cancelled", "canceled"} else normalized_status
 
     db.commit()
     db.refresh(appointment)
+    
+    # Create notification if status changed and it's an admin updating a user's appointment
+    if isinstance(current_user, models.Admin) and old_status != appointment.status:
+        try:
+            import json
+            import re
+            
+            # Only notify if appointment belongs to a user (has user_id)
+            if hasattr(appointment, 'user_id') and appointment.user_id:
+                # Get the user who owns the appointment
+                user = db.query(models.User).filter(models.User.id == appointment.user_id).first()
+                
+                if user and hasattr(user, 'email') and user.email:
+                    # Generate alert ID
+                    def generate_alert_id_local(db_session: Session) -> str:
+                        last_alert = db_session.query(models.Alert).order_by(models.Alert.id.desc()).first()
+                        if last_alert:
+                            match = re.search(r'ALT-(\d+)', last_alert.alert_id)
+                            if match:
+                                next_num = int(match.group(1)) + 1
+                            else:
+                                next_num = 1
+                        else:
+                            next_num = 1
+                        return f"ALT-{next_num:04d}"
+                    
+                    alert_id = generate_alert_id_local(db)
+                    
+                    # Create appropriate message based on status
+                    status_display = appointment.status.capitalize()
+                    if appointment.status == "approved":
+                        alert_title = f"Appointment Approved"
+                        alert_message = f"Your appointment on {appointment.date} has been approved."
+                    elif appointment.status in ["rejected", "cancelled"]:
+                        alert_title = f"Appointment {status_display}"
+                        alert_message = f"Your appointment on {appointment.date} has been {appointment.status}."
+                    else:
+                        alert_title = f"Appointment Status Updated"
+                        alert_message = f"Your appointment on {appointment.date} status has been changed to {status_display}."
+                    
+                    # Create alert for the user
+                    db_alert = models.Alert(
+                        alert_id=alert_id,
+                        title=alert_title,
+                        message=alert_message,
+                        priority="High" if appointment.status in ["approved", "rejected", "cancelled"] else "Medium",
+                        submitted_by=current_user.name if hasattr(current_user, 'name') else "Admin",
+                        submitted_by_email=current_user.email if hasattr(current_user, 'email') else "admin@pawthos.com",
+                        recipients=json.dumps([user.email])
+                    )
+                    db.add(db_alert)
+                    db.commit()
+                    print(f"✅ Created notification for user {user.email} about appointment status change to {appointment.status}")
+        except Exception as e:
+            # Don't fail status update if notification fails
+            print(f"❌ Failed to create notification for appointment status update: {e}")
+            import traceback
+            traceback.print_exc()
+    
     return appointment
 
 @router.delete("/{appointment_id}")

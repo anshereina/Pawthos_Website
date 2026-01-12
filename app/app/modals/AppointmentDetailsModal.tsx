@@ -204,11 +204,21 @@ export default function AppointmentDetailsModal({
                         <View style={styles.modalField}>
                             <Text style={styles.modalFieldLabel}>Status:</Text>
                             <View style={styles.statusContainer}>
-                                <Text style={styles.modalFieldValue}>{appointmentData.status}</Text>
+                                <Text style={styles.modalFieldValue}>{appointmentData.status.toLowerCase() === 'scheduled' ? 'To be Approved' : appointmentData.status}</Text>
                                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(appointmentData.status) }]}>
-                                    <Text style={styles.statusText}>{appointmentData.status}</Text>
+                                    <Text style={styles.statusText}>{appointmentData.status.toLowerCase() === 'scheduled' ? 'To be Approved' : appointmentData.status}</Text>
                                 </View>
                             </View>
+                        </View>
+                        
+                        {/* Message / Remarks from website */}
+                        <View style={styles.modalField}>
+                            <Text style={styles.modalFieldLabel}>Message / Remarks:</Text>
+                            <Text style={styles.modalFieldValue}>
+                                {appointmentData.notes && appointmentData.notes.trim().length > 0 
+                                    ? appointmentData.notes 
+                                    : 'No remarks yet.'}
+                            </Text>
                         </View>
                         
                         <View style={styles.modalField}>
@@ -284,16 +294,6 @@ export default function AppointmentDetailsModal({
                                 <Text style={styles.modalFieldValue}>Pet information not available</Text>
                             </View>
                         )}
-                        
-                        {/* Message / Remarks from website */}
-                        <View style={styles.modalField}>
-                            <Text style={styles.modalFieldLabel}>Message / Remarks:</Text>
-                            <Text style={styles.modalFieldValue}>
-                                {appointmentData.notes && appointmentData.notes.trim().length > 0 
-                                    ? appointmentData.notes 
-                                    : 'No remarks yet.'}
-                            </Text>
-                        </View>
                         
                         <TouchableOpacity 
                             style={styles.cancelButton}
