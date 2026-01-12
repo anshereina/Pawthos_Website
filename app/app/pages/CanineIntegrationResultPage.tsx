@@ -85,6 +85,29 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 20,
     },
+    // Scoring Explanation
+    scoringExplanation: {
+        backgroundColor: '#f5f9f7',
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 16,
+        width: '100%',
+        borderLeftWidth: 4,
+        borderLeftColor: '#4a7c59',
+    },
+    scoringTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#045b26',
+        marginBottom: 8,
+        textAlign: 'left',
+    },
+    scoringText: {
+        fontSize: 12,
+        color: '#333',
+        textAlign: 'left',
+        lineHeight: 18,
+    },
     // Button Container
     buttonContainer: {
         width: '100%',
@@ -433,6 +456,32 @@ export default function CanineIntegrationResultPage({
                                     return sum;
                                 }, 0)} / 40
                             </Text>
+                            
+                            {/* Scoring Explanation */}
+                            <View style={styles.scoringExplanation}>
+                                <Text style={styles.scoringTitle}>📊 How Scoring Works</Text>
+                                <Text style={styles.scoringText}>
+                                    We assessed 8 areas of your dog's behavior: breathing, eyes, walking, activity, appetite, attitude, posture, and touch response. Each area is scored 0-5 points based on pain indicators.
+                                    {'\n\n'}
+                                    <Text style={{ fontWeight: 'bold' }}>Your dog's total: </Text>
+                                    {selectedAnswers.reduce((sum, imageIndex) => {
+                                        if (imageIndex === 0) return sum + 0;
+                                        if (imageIndex === 1) return sum + 1;
+                                        if (imageIndex === 2) return sum + 2;
+                                        if (imageIndex === 3) return sum + 3;
+                                        if (imageIndex === 4) return sum + 4;
+                                        if (imageIndex === 5) return sum + 5;
+                                        return sum;
+                                    }, 0)} points out of 40 possible
+                                    {'\n\n'}
+                                    • 0-4: Minimal or no pain{'\n'}
+                                    • 5-11: Mild pain{'\n'}
+                                    • 12-19: Moderate pain{'\n'}
+                                    • 20-26: Moderate to severe pain{'\n'}
+                                    • 27-33: Severe pain{'\n'}
+                                    • 34-40: Worst possible pain
+                                </Text>
+                            </View>
                         </>
                     )}
                     

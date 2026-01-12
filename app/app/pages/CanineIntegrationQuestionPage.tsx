@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChange }: { onSelect: (label: string, data?: any) => void, onCategoryChange?: (category: string) => void }) {
   const scrollRef = useRef<ScrollView | null>(null);
   const [currentCategory, setCurrentCategory] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState(Array(8).fill(null));
+  // Changed to allow multiple selections per category (array of arrays)
+  const [selectedAnswers, setSelectedAnswers] = useState<number[][]>(Array(8).fill(null).map(() => []));
 
   const categories = [
     'Breathing',
@@ -126,23 +127,39 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
 
   const handleImageSelect = (imageIndex: number) => {
     const newAnswers = [...selectedAnswers];
-    newAnswers[currentCategory] = imageIndex;
+    const currentSelections = newAnswers[currentCategory] || [];
+    
+    // Toggle selection - if already selected, remove it; otherwise add it
+    if (currentSelections.includes(imageIndex)) {
+      newAnswers[currentCategory] = currentSelections.filter(idx => idx !== imageIndex);
+    } else {
+      newAnswers[currentCategory] = [...currentSelections, imageIndex];
+    }
+    
     setSelectedAnswers(newAnswers);
   };
 
   const handleNext = async () => {
-    if (selectedAnswers[currentCategory] === null) {
-      Alert.alert('Selection Required', 'Please select an option before proceeding.');
+    if (!selectedAnswers[currentCategory] || selectedAnswers[currentCategory].length === 0) {
+      Alert.alert('Selection Required', 'Please select at least one option before proceeding.');
       return;
     }
 
     if (currentCategory < categories.length - 1) {
       setCurrentCategory(currentCategory + 1);
     } else {
-      // Calculate total score
-      const totalScore = selectedAnswers.reduce((sum, imageIndex, categoryIndex) => {
-        const score = categoryData[categoryIndex].images[imageIndex]?.score || 0;
-        return sum + score;
+      // Calculate total score (average score per category if multiple selections)
+      const totalScore = selectedAnswers.reduce((sum, imageIndices, categoryIndex) => {
+        if (!imageIndices || imageIndices.length === 0) return sum;
+        
+        // Calculate average score for this category if multiple selections
+        const categoryTotal = imageIndices.reduce((catSum, imageIndex) => {
+          const score = categoryData[categoryIndex].images[imageIndex]?.score || 0;
+          return catSum + score;
+        }, 0);
+        
+        const averageScore = categoryTotal / imageIndices.length;
+        return sum + averageScore;
       }, 0);
 
       // Save assessment data to AsyncStorage for the result page
@@ -171,7 +188,7 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
     }
   };
 
-  const isCurrentCategoryAnswered = selectedAnswers[currentCategory] !== null;
+  const isCurrentCategoryAnswered = selectedAnswers[currentCategory]?.length > 0;
 
   return (
     <View style={styles.container}>
@@ -205,7 +222,10 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
           {/* Category Description */}
           <View style={styles.categoryContainer}>
             <Text style={styles.categoryTitle}>
-              Select the image that best represents your dog's {categories[currentCategory].toLowerCase()}:
+              Select one or more images that represent your dog's {categories[currentCategory].toLowerCase()}:
+            </Text>
+            <Text style={styles.categorySubtitle}>
+              💡 Tip: You can select multiple behaviors if your dog shows different symptoms
             </Text>
           </View>
 
@@ -216,13 +236,18 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
                 key={index}
                 style={[
                   styles.imageContainer,
-                  selectedAnswers[currentCategory] === index && styles.selectedImage
+                  selectedAnswers[currentCategory]?.includes(index) && styles.selectedImage
                 ]}
                 onPress={() => handleImageSelect(index)}
                 activeOpacity={0.9}
               >
                 <Image source={image.source} style={styles.image} />
                 <Text style={styles.imageText}>{image.text}</Text>
+                {selectedAnswers[currentCategory]?.includes(index) && (
+                  <View style={styles.checkmarkContainer}>
+                    <MaterialIcons name="check-circle" size={24} color="#045b26" />
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -335,6 +360,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  categorySubtitle: {
+    color: '#4a7c59',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  checkmarkContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
   },
   imageGrid: {
     flexDirection: 'row',

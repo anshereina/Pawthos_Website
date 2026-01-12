@@ -901,7 +901,27 @@ export default function MainApp() {
     "CanineIntegrationResult": <CanineIntegrationResultPage 
         onSecondOpinion={() => navigateToPage('CanineIntegration')}
         onHome={() => navigateToPage('Home')} 
-        onSecondOpinionAppointment={() => navigateToPage('SecondOpinionAppointment')}
+        onSecondOpinionAppointment={async () => {
+            try {
+                // Read assessment data to get pet information
+                const assessmentDataString = await AsyncStorage.getItem('currentAssessmentData');
+                if (assessmentDataString) {
+                    const assessmentData = JSON.parse(assessmentDataString);
+                    // Store pet data for appointment scheduling
+                    setNavigationData({
+                        prefilledPet: {
+                            pet_id: assessmentData.pet_id,
+                            pet_name: assessmentData.pet_name,
+                            pet_type: assessmentData.pet_type
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error reading assessment data for second opinion:', error);
+            }
+            setAppointmentType('Consultation');
+            navigateToPage('Appointment Scheduling');
+        }}
         selectedAnswers={navigationData.beaap_answers || []}
     />,
     "IntegrationQuestionsDog": <IntegrationQuestionsPage petType="dog" onBack={() => navigateToPage('CanineIntegration')} onNext={() => { setSelectedPetType('dog'); navigateToPage('IntegrationPicture'); }} />,

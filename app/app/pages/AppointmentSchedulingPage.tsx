@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function AppointmentSchedulingPage({ initialAppointmentType, onBack, onNavigate, appointmentToEdit }: { initialAppointmentType?: string, onBack?: () => void, onNavigate?: (page: string) => void, appointmentToEdit?: any }) {
+export default function AppointmentSchedulingPage({ initialAppointmentType, onBack, onNavigate, appointmentToEdit, prefilledPet }: { initialAppointmentType?: string, onBack?: () => void, onNavigate?: (page: string) => void, appointmentToEdit?: any, prefilledPet?: { pet_id: number, pet_name: string, pet_type: string } }) {
     const [editingAppointmentId, setEditingAppointmentId] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [appointmentFor, setAppointmentFor] = useState(initialAppointmentType || 'Please Select');
@@ -346,6 +346,43 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
             // Lock non-date/time fields by setting selectedPet (UI is already disabled via selectedPet check)
         }
     }, [appointmentToEdit]);
+
+    // Prefill when coming from Second Opinion (AI Pain Assessment)
+    useEffect(() => {
+        if (prefilledPet && !appointmentToEdit) {
+            console.log('Loading prefilled pet from Second Opinion:', prefilledPet);
+            
+            // Find the full pet data from userPets
+            const petData = userPets.find(pet => pet.id === prefilledPet.pet_id);
+            
+            if (petData) {
+                console.log('Found full pet data:', petData);
+                // Use the handlePetSelect logic to fill in all details
+                setSelectedPet(petData);
+                setPetName(petData.name);
+                setPetId(String(petData.id));
+                setBirthday(petData.date_of_birth || '');
+                setAge(calculateAge(petData.date_of_birth));
+                setGender(petData.gender === 'F' || petData.gender === 'Female' ? 'Female' : 'Male');
+                setReproductiveStatus(petData.reproductive_status === 'Intact' ? 'Intact' : 'Castrated/Spayed');
+                
+                // Set species with normalization
+                const normalizedSpecies = petData.species ? petData.species.toLowerCase() : '';
+                if (normalizedSpecies.includes('canine') || normalizedSpecies.includes('dog')) {
+                    setSpecies('Canine');
+                } else if (normalizedSpecies.includes('feline') || normalizedSpecies.includes('cat')) {
+                    setSpecies('Feline');
+                } else {
+                    setSpecies('Please Select');
+                }
+                
+                setShowPetDropdown(false);
+                setPetSearchQuery('');
+            } else {
+                console.log('Pet data not found in userPets, will try again when pets are loaded');
+            }
+        }
+    }, [prefilledPet, userPets, appointmentToEdit]);
 
     const fetchUserPets = async () => {
         setIsLoadingPets(true);
