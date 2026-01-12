@@ -129,6 +129,42 @@ const styles = StyleSheet.create({
         marginTop: 8,
         textAlign: 'center',
         fontStyle: 'italic',
+    },
+    modalOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    modalContent: {
+        backgroundColor: '#ffffff',
+        borderRadius: 14,
+        padding: 24,
+        width: '85%',
+        maxWidth: 400,
+        shadowColor: '#000',
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#045b26',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#4a7c59',
+        textAlign: 'center',
+        marginBottom: 24,
     }
 });
 
@@ -143,6 +179,8 @@ export default function SignupPage() {
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showOTPModal, setShowOTPModal] = useState(false);
+    const [otpCode, setOtpCode] = useState("");
 
     if (!fontsLoaded) return null;
 
@@ -174,7 +212,33 @@ export default function SignupPage() {
         if (!result.success) {
             setError(result.message || "Signup failed");
         } else {
-            Alert.alert("Success!", result.message || "Account created successfully!", [
+            // Show OTP modal after successful registration
+            setShowOTPModal(true);
+            Alert.alert(
+                "Verification Required", 
+                "A verification code has been sent to your email. Please enter the code to complete registration.",
+                [{ text: "OK" }]
+            );
+        }
+    };
+
+    const handleVerifyOTP = async () => {
+        if (!otpCode || otpCode.length !== 6) {
+            setError("Please enter a valid 6-digit code");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        const result = await auth.verifyOTP(email, otpCode);
+        setLoading(false);
+
+        if (!result.success) {
+            setError(result.message || "OTP verification failed");
+        } else {
+            setShowOTPModal(false);
+            Alert.alert("Success!", "Your email has been verified! You can now log in.", [
                 {
                     text: "Go to Login", 
                     onPress: () => {
@@ -310,6 +374,50 @@ export default function SignupPage() {
                     <Text style={styles.link}>Already have an account? Login</Text>
                 </Pressable>
             </ScrollView>
+
+            {/* OTP Verification Modal */}
+            {showOTPModal && (
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Email Verification</Text>
+                        <Text style={styles.modalSubtitle}>
+                            Enter the 6-digit code sent to {email}
+                        </Text>
+                        
+                        <View style={styles.inputRow}>
+                            <MaterialIcons name="verified-user" size={20} color="#4a7c59" />
+                            <TextInput
+                                placeholder="Enter 6-digit code"
+                                placeholderTextColor="#999"
+                                value={otpCode}
+                                onChangeText={setOtpCode}
+                                style={styles.input}
+                                keyboardType="number-pad"
+                                maxLength={6}
+                                autoFocus
+                            />
+                        </View>
+
+                        {error && <Text style={styles.error}>{error}</Text>}
+
+                        <Pressable 
+                            style={styles.button} 
+                            onPress={handleVerifyOTP} 
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.buttonText}>VERIFY CODE</Text>
+                            )}
+                        </Pressable>
+
+                        <Pressable onPress={() => setShowOTPModal(false)}>
+                            <Text style={styles.link}>Cancel</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
