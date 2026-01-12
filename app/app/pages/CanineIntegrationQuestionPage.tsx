@@ -34,12 +34,12 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
     // Breathing
     {
       images: [
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_0_No_Pain.png'), text: 'Breathing normally', score: 0 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_1-2_Mild_Pain.png'), text: 'Breathing normally', score: 0 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_3-4_Moderate_Pain.jpg'), text: 'May pant, intermittently', score: 1 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_5-6_Moderate_to_Severe_Pain.png'), text: 'Crying often noted, possibly with an increased breathing effort', score: 2 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_7-8_Severe_Pain.jpg'), text: 'Fast breathing rate with more noticeable effort, frequent panting episodes common', score: 3 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_9-10_Worst_Pain_Possible.webp'), text: 'Panting; increased breathing rate and effort', score: 4 }
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_0_No_Pain.png'), text: 'Breathing calmly at rest', score: 0 },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_1-2_Mild_Pain.png'), text: 'Breathing normally during activity', score: 0 },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_3-4_Moderate_Pain.jpg'), text: 'May sometimes have trouble catching their breath', score: 1 },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_5-6_Moderate_to_Severe_Pain.png'), text: 'Often breathes heavily and may need extra effort to breathe', score: 2 },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_7-8_Severe_Pain.jpg'), text: 'Breathing is fast and often looks harder than normal, with frequent panting', score: 3 },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_9-10_Worst_Pain_Possible.webp'), text: 'Panting with faster and more difficult breathing', score: 4 }
       ]
     },
     // Eyes
@@ -49,29 +49,29 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
         { source: require('../../assets/images/caninepictures/eyes/Eyes_1-2_Mild_Pain.png'), text: 'Eyes bright and alert', score: 0 },
         { source: require('../../assets/images/caninepictures/eyes/Eyes_3-4_Moderate_Pain.png'), text: 'Eyes slightly more dull in appearance; can have a slightly furrowed brow', score: 1 },
         { source: require('../../assets/images/caninepictures/eyes/Eyes_5-6_Moderate_to_Severe.png'), text: 'Dull eyes; worried look', score: 2 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_7-8_Severe_Pain.png'), text: 'Also have distanced look', score: 3 },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_7-8_Severe_Pain.png'), text: 'Dull eyes; seems distant or unfocused', score: 3 },
         { source: require('../../assets/images/caninepictures/eyes/Eyes_9-10_Worst_Pain_Possible.png'), text: 'Dull eyes; have a pained look', score: 4 }
       ]
     },
     // Ambulation
     {
       images: [
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_0_No_Pain.png'), text: 'Walks normally on all four legs; no tenesmus present', score: 0 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_1-2_Mild_Pain.png'), text: 'Walks normally; may exhibit very subtle tenesmus when walking', score: 1 },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_0_No_Pain.png'), text: 'Moves normally on all four legs with no difficulty or discomfort', score: 0 },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_1-2_Mild_Pain.png'), text: 'Walks normally; may show slight discomfort', score: 1 },
         { source: require('../../assets/images/caninepictures/ambulation/Ambulation_3-4_Moderate_Pain.webp'), text: 'Noticeably slower to lie down or rise up; may exhibit "lameness" when walking', score: 2 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Very slow to rise up and lie down; hesitates when moving; difficulty on stairs; reluctant to turn corners; stiff to start out; may be limping', score: 3 },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Very slow to rise up and lie down; hesitation with movement; difficulty on stairs; reluctant to turn corners; stiff to start out; may be limping', score: 3 },
         { source: require('../../assets/images/caninepictures/ambulation/Ambulation_7-8_Severe_Pain.jpg'), text: 'Obvious difficulty rising up or lying down; will not bear weight on affected leg; avoids stairs; obvious lameness', score: 4 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_9-10_Worst_Pain_Possible.jpg'), text: 'May refuse to get up; may not be able to rise up to take more than a few steps, will not bear weight on affected limb', score: 5 }
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_9-10_Worst_Pain_Possible.jpg'), text: 'May refuse to get up; may not be able to or willing to take more than a few steps; will not bear weight on affected limb', score: 5 }
       ]
     },
     // Activity
     {
       images: [
         { source: require('../../assets/images/caninepictures/activity/Activity_0_No_Pain.png'), text: 'Engages in play and all normal activities', score: 0 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'May show first signs of being just a little more slow to lie down or rise up; bubbly', score: 1 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'May be slightly unsettled and have some difficulty getting comfortable; shifting weight', score: 2 },
+        { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'May be slightly slower to lie down or get up', score: 1 },
+        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'May be a bit restless, having trouble getting comfortable and shifting weight', score: 2 },
         { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Do not want to interact but may be in a room with a family member; obvious lameness when walking; may lick painful area', score: 3 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Avoids interaction with family or other people; unwilling to get up or move; may frequently lick a painful area', score: 4 },
+        { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Avoids interaction with family or environment; unwilling to get up or move; may frequently lick a painful area', score: 4 },
         { source: require('../../assets/images/caninepictures/activity/Activity_9-10_Worst_Pain_Possible.png'), text: 'Difficulty in being distracted from pain, even with gentle touch or something familiar', score: 5 }
       ]
     },
@@ -80,8 +80,8 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
       images: [
         { source: require('../../assets/images/caninepictures/activity/Activity_0_No_Pain.png'), text: 'Eating and drinking normally', score: 0 },
         { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'Eating and drinking normally', score: 0 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'Appetite more finicky; such as wanting dog treats or "people" food', score: 1 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Will frequently lose appetite', score: 2 },
+        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'Picky eater; may only want treats or human food', score: 1 },
+        { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Frequently not interested in eating', score: 2 },
         { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Loss of appetite; may not want to drink', score: 3 },
         { source: require('../../assets/images/caninepictures/activity/Activity_9-10_Worst_Pain_Possible.png'), text: 'No interest in food or water', score: 4 }
       ]
@@ -89,23 +89,23 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
     // Attitude
     {
       images: [
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_0_No_Pain.jpg'), text: 'Happy; interested in surroundings, very playing; seeks attention', score: 0 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_1-2_Mild_Pain.png'), text: 'Happy and engaged; may seem a little more subdued with occasional "off" moments; interspersed with normal behaviors', score: 1 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_3-4_Moderate_Pain.png'), text: 'Subdued, engages less or does not initiate play', score: 2 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_5-6_Moderate_to_Severe_Pain.png'), text: 'Anxious, unsettled or restless; unable to settle or sleep well', score: 3 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_7-8_Severe_Pain.avif'), text: 'Frightened, fearful, worried, reclusive, potentially aggressive', score: 4 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_9-10_Worst_Pain_Possible.jpg'), text: 'Extremely depressed or mentally responsive; does not get up, lying immobile in pain in distress at all', score: 5 }
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_0_No_Pain.jpg'), text: 'Happy; interested in surroundings and playing; seeks attention', score: 0 },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_1-2_Mild_Pain.png'), text: 'Happy and alert, though sometimes a bit quiet; overall behaves normally', score: 1 },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_3-4_Moderate_Pain.png'), text: 'Less lively; doesn\'t initiate play', score: 2 },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_5-6_Moderate_to_Severe_Pain.png'), text: 'Feels unsettled and can\'t sleep well', score: 3 },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_7-8_Severe_Pain.avif'), text: 'Scared, anxious, and may act aggressive', score: 4 },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_9-10_Worst_Pain_Possible.jpg'), text: 'Extremely low energy; lying motionless and clearly in pain', score: 5 }
       ]
     },
     // Posture
     {
       images: [
-        { source: require('../../assets/images/caninepictures/posture/Posture_0_No_Pain.jpg'), text: 'Comfortable at rest and during play; perky ears and wagging tail', score: 0 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_1-2_Mild_Pain.png'), text: 'May show occasional shifting of position; tail may be down just a little more, ears slightly flatter', score: 1 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_3-4_Moderate_Pain.png'), text: 'Difficulty squatting or lifting leg to urinate; subtle changes in position; tail more tucked; head/ears more flattened', score: 2 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_5-6_Moderate_to_Severe_Pain.png'), text: 'Abnormal weight distribution when standing; difficulty posturing to urinate/defecate; neck or back below belly; head hanging low; tucked tail', score: 3 },
+        { source: require('../../assets/images/caninepictures/posture/Posture_0_No_Pain.jpg'), text: 'Comfortable at rest and during play; ears up and wagging tail', score: 0 },
+        { source: require('../../assets/images/caninepictures/posture/Posture_1-2_Mild_Pain.png'), text: 'May show occasional shifting of position; tail may be down just a little more; ears slightly flatter', score: 1 },
+        { source: require('../../assets/images/caninepictures/posture/Posture_3-4_Moderate_Pain.png'), text: 'Difficulty squatting or lifting leg to urinate; subtle changes in position; tail more tucked and ears more flattened', score: 2 },
+        { source: require('../../assets/images/caninepictures/posture/Posture_5-6_Moderate_to_Severe_Pain.png'), text: 'Abnormal weight distribution when standing; difficulty posturing to urinate; arched back; tucked belly; head hanging low; tucked tail', score: 3 },
         { source: require('../../assets/images/caninepictures/posture/Posture_7-8_Severe_Pain.png'), text: 'Tail tucked; ears flattened or pinned back; abnormal posture when standing; may refuse to move or stand', score: 4 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_9-10_Worst_Pain_Possible.png'), text: 'Refuses to liey down or rest on side of affected leg/s; may prefer to be very tucked up or stretched out', score: 5 }
+        { source: require('../../assets/images/caninepictures/posture/Posture_9-10_Worst_Pain_Possible.png'), text: 'Refuses to lay down or rest on side at all; pained ears; may prefer to be very tucked up or stretched out', score: 5 }
       ]
     },
     // Palpation
@@ -114,9 +114,9 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
         { source: require('../../assets/images/caninepictures/palpation/Palpation_0_No_Pain.jpg'), text: 'Enjoys being touched and petted; no body tension present', score: 0 },
         { source: require('../../assets/images/caninepictures/palpation/Palpation_1-2_Mild_Pain.jpg'), text: 'Enjoys being touched and petted; no body tension present', score: 0 },
         { source: require('../../assets/images/caninepictures/palpation/Palpation_3-4_Moderate_Pain.png'), text: 'Does not mind touch except on painful area; turns head to look where touched; mild body tension', score: 1 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Withdraws from people; may not want to be touched; pulls away from a hand when touched; moderate body tension when being touched', score: 2 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_7-8_Severe_Pain.jpg'), text: 'Significant body tension when painful area is touched; may vocalize in pain, guards a painful area by pulling away in a dramatic manner', score: 3 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_9-10_Worst_Pain_Possible.jpg'), text: 'Severe body tension when touched; will not tolerate touch of painful areas; becomes fearful when other areas that are not painful are touched', score: 4 }
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Withdraws from people; may not want to be touched; Pulls away from a hand when touched; moderate body tension when being touched', score: 2 },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_7-8_Severe_Pain.jpg'), text: 'Significant body tension when painful area is touched; may vocalize in pain; guards a painful area by pulling away in a dramatic manner', score: 3 },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_9-10_Worst_Pain_Possible.jpg'), text: 'Severe body tension when touched; will not tolerate touch of painful area; becomes fearful when other areas that are not painful are touched', score: 4 }
       ]
     }
   ];
