@@ -227,9 +227,9 @@ def send_email_otp(email: str, otp_code: str):
                 print(f"📧 Sending OTP via Resend to {email}")
                 
                 params = {
-                    "from": "Pawthos <onboarding@resend.dev>",  # Use verified domain later
+                    "from": "Pawthos <noreply@cityvetsanpedro.me>",
                     "to": [email],
-                    "subject": "Pawthos OTP Code",
+                    "subject": "Pawthos Email Verification",
                     "html": f"""
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                         <h2 style="color: #045b26;">Pawthos Email Verification</h2>
