@@ -277,6 +277,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         address=user.address,
         otp_code=otp_code,
         otp_expires_at=otp_expires_at,
+        is_confirmed=0,  # User must verify email
         is_placeholder=0  # Not a placeholder
     )
     

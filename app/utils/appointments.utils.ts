@@ -240,10 +240,31 @@ export function formatAppointmentDate(dateString: string): string {
 }
 
 export function formatAppointmentTime(timeString: string): string {
-  const time = new Date(`1970-01-01T${timeString}`);
-  return time.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  try {
+    if (!timeString) {
+      return 'Not specified';
+    }
+    
+    let formattedTime = timeString;
+    
+    if (timeString.match(/^\d{1,2}:\d{2}$/)) {
+      formattedTime = `${timeString}:00`;
+    }
+    
+    const time = new Date(`1970-01-01T${formattedTime}`);
+    
+    if (isNaN(time.getTime())) {
+      console.warn('Invalid time format:', timeString);
+      return timeString; 
+    }
+    
+    return time.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    console.error('Error formatting time:', error, timeString);
+    return timeString || 'Not specified';
+  }
 }
