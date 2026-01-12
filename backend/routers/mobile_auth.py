@@ -68,14 +68,35 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     # If placeholder exists, claim it instead of creating a new user
     if placeholder_user:
         print(f"🔄 Claiming placeholder account for {derived_name} with email {user.email}")
+        
+        # Generate OTP for email verification
+        otp_code = auth.generate_otp()
+        otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+        
         claimed_user = auth.claim_placeholder_account(
             db=db,
             placeholder_user=placeholder_user,
             email=user.email,
             password=user.password,
             phone_number=user.phone_number,
-            address=user.address
+            address=user.address,
+            otp_code=otp_code,
+            otp_expires_at=otp_expires_at
         )
+        
+        # Send OTP via email (using Resend API)
+        if user.email:
+            try:
+                email_sent = auth.send_email_otp(user.email, otp_code)
+                if email_sent:
+                    print(f"✅ OTP email sent to {user.email} for claimed account")
+                else:
+                    print(f"⚠️ Failed to send OTP email to {user.email}")
+                    raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
+            except Exception as e:
+                print(f"⚠️ Failed to send OTP email: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
+        
         print(f"✅ Placeholder account claimed successfully: user_id={claimed_user.id}")
         return claimed_user
     

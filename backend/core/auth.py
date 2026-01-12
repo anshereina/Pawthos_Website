@@ -61,13 +61,14 @@ def find_placeholder_user_by_name(db: Session, name: str):
     ).first()
 
 def claim_placeholder_account(db: Session, placeholder_user: models.User, email: str, password: str, 
-                             phone_number: str = None, address: str = None):
+                             phone_number: str = None, address: str = None, otp_code: str = None, 
+                             otp_expires_at: datetime = None):
     """Claim a placeholder account by updating it with real user credentials"""
     # Update the placeholder account with real credentials
     placeholder_user.email = email
     placeholder_user.password_hash = get_password_hash(password)
     placeholder_user.is_placeholder = 0  # No longer a placeholder
-    placeholder_user.is_confirmed = 1  # Auto-confirm since they're claiming an existing account
+    placeholder_user.is_confirmed = 0  # Require OTP verification
     
     # Update contact info if provided
     if phone_number:
@@ -75,9 +76,11 @@ def claim_placeholder_account(db: Session, placeholder_user: models.User, email:
     if address:
         placeholder_user.address = address
     
-    # Clear any OTP codes since we're auto-confirming
-    placeholder_user.otp_code = None
-    placeholder_user.otp_expires_at = None
+    # Set OTP for email verification
+    if otp_code:
+        placeholder_user.otp_code = otp_code
+    if otp_expires_at:
+        placeholder_user.otp_expires_at = otp_expires_at
     
     db.commit()
     db.refresh(placeholder_user)
