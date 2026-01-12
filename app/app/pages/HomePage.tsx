@@ -690,7 +690,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     </View>
                 </View>
 
-                {/* Emergency Contacts */}
+                {/* Contacts */}
                 <View style={{ 
                     marginBottom: 24,
                     paddingHorizontal: 16,
@@ -702,7 +702,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         fontFamily: 'Jumper',
                         marginBottom: 16,
                     }}>
-                        Emergency Contacts
+                        Contacts
                     </Text>
                     <View style={{
                         flexDirection: 'row',
@@ -773,20 +773,26 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     </View>
                 </View>
 
-                {/* More Services */}
+                {/* Responsible Pet Care */}
                 <View style={{ 
                     marginBottom: 100,
                     paddingHorizontal: 16,
                 }}>
-                    <Text style={{
-                        fontSize: 18,
-                        fontWeight: 'bold',
-                        color: '#000',
-                        fontFamily: 'Jumper',
+                    <View style={{ 
+                        flexDirection: 'row', 
+                        alignItems: 'center',
                         marginBottom: 16,
                     }}>
-                        More Services
-                    </Text>
+                        <MaterialCommunityIcons name="shield-check" size={22} color="#045b26" style={{ marginRight: 8 }} />
+                        <Text style={{
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            color: '#000',
+                            fontFamily: 'Jumper',
+                        }}>
+                            Responsible Pet Care
+                        </Text>
+                    </View>
                     <View style={{ 
                         flexDirection: 'row', 
                         flexWrap: 'wrap', 

@@ -189,27 +189,50 @@ export default function EditProfileModal({
             Alert.alert('Error', 'Name is required');
             return;
         }
-        if (!formData.email.trim()) {
-            Alert.alert('Error', 'Email is required');
+
+        // Basic email format validation
+        const trimmedEmail = (formData.email || '').trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+            Alert.alert('Invalid email', 'Please enter a valid email address (e.g., user@example.com).');
             return;
         }
+
+        // Normalize and validate phone number: digits only, must be exactly 11 digits if provided
+        let normalizedPhone = formData.phone_number;
+        if (normalizedPhone && normalizedPhone.trim().length > 0) {
+            const digitsOnly = normalizedPhone.replace(/\D/g, '');
+            if (digitsOnly.length !== 11) {
+                Alert.alert('Invalid phone number', 'Phone number must be exactly 11 digits.');
+                return;
+            }
+            normalizedPhone = digitsOnly;
+        } else {
+            normalizedPhone = undefined as any;
+        }
+
+        const payload = { 
+            ...formData, 
+            email: trimmedEmail,
+            phone_number: normalizedPhone,
+        };
 
         // If there's a new image, upload it first
         if (newImageUri) {
             const serverUrl = await uploadImage(newImageUri);
             if (serverUrl) {
                 // Update formData with the server URL
-                const updatedData = { ...formData, photo_url: serverUrl };
+                const updatedData = { ...payload, photo_url: serverUrl };
                 onSave(updatedData);
             } else {
                 Alert.alert('Error', 'Failed to upload profile picture. Save without image?', [
                     { text: 'Cancel', style: 'cancel' },
-                    { text: 'Save Without Image', onPress: () => onSave(formData) }
+                    { text: 'Save Without Image', onPress: () => onSave(payload) }
                 ]);
             }
         } else {
             // No new image, just save the other fields
-            onSave(formData);
+            onSave(payload);
         }
     };
 
@@ -282,10 +305,11 @@ export default function EditProfileModal({
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Email *</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: '#f3f4f6' }]}
                                 value={formData.email}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-                                placeholder="Enter your email"
+                                editable={false}
+                                selectTextOnFocus={false}
+                                placeholder="Email (read-only)"
                                 placeholderTextColor="#999"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
@@ -297,7 +321,13 @@ export default function EditProfileModal({
                             <TextInput
                                 style={styles.input}
                                 value={formData.phone_number}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, phone_number: text }))}
+                                onChangeText={(text) => {
+                                    const digitsOnly = text.replace(/\D/g, '');
+                                    if (digitsOnly.length <= 11) {
+                                        setFormData(prev => ({ ...prev, phone_number: digitsOnly }));
+                                    }
+                                }}
+                                maxLength={11}
                                 placeholder="Enter your phone number"
                                 placeholderTextColor="#999"
                                 keyboardType="phone-pad"

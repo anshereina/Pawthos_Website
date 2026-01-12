@@ -29,7 +29,7 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
   const [loadingPets, setLoadingPets] = useState(false);
   
   // Function to fetch registered pets from API
-  const fetchRegisteredPets = async () => {
+  const fetchRegisteredPets = async (petTypeOverride?: string) => {
     console.log('fetchRegisteredPets called');
     try {
       setLoadingPets(true);
@@ -54,21 +54,22 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
         const pets = await response.json();
         console.log('API call successful, pets received:', pets.length);
         console.log('All pets from API:', pets.map((pet: any) => ({ name: pet.name, species: pet.species })));
-        console.log('Selected pet type:', selectedPet);
+        const effectivePetType = petTypeOverride || selectedPet;
+        console.log('Selected pet type (effective):', effectivePetType);
         
         // Filter pets based on selected pet type (cat/dog)
         const filteredPets = pets.filter((pet: any) => {
           const petSpecies = (pet.species || '').toLowerCase();
-          console.log(`Checking pet ${pet.name}: species="${pet.species}" (lowercase: "${petSpecies}"), selectedPet="${selectedPet}"`);
+          console.log(`Checking pet ${pet.name}: species="${pet.species}" (lowercase: "${petSpecies}"), selectedPet="${effectivePetType}"`);
           
-          if (selectedPet === 'DOG') {
+          if (effectivePetType === 'DOG') {
             // Show dogs - check for "dog", "canine", "puppy", etc.
             // Also exclude cats explicitly
             const isDog = (petSpecies.includes('dog') || petSpecies.includes('canine') || petSpecies.includes('puppy')) 
                          && !petSpecies.includes('cat') && !petSpecies.includes('feline') && !petSpecies.includes('kitten');
             console.log(`  Is dog? ${isDog}`);
             return isDog;
-          } else if (selectedPet === 'CAT') {
+          } else if (effectivePetType === 'CAT') {
             // Show cats - check for "cat", "feline", "kitten", etc.
             // Also exclude dogs explicitly
             const isCat = (petSpecies.includes('cat') || petSpecies.includes('feline') || petSpecies.includes('kitten'))
@@ -83,9 +84,9 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
         console.log('Current selectedRegisteredPet state:', selectedRegisteredPet);
         
         // If no pets found, show a helpful message
-        if (filteredPets.length === 0 && pets.length > 0) {
+        if (filteredPets.length === 0 && pets.length > 0 && effectivePetType) {
           console.log('No pets matched the filter, but pets exist. Available species:', [...new Set(pets.map((p: any) => p.species))]);
-          console.log(`You selected ${selectedPet} but only have pets with species: ${[...new Set(pets.map((p: any) => p.species))].join(', ')}`);
+          console.log(`You selected ${effectivePetType} but only have pets with species: ${[...new Set(pets.map((p: any) => p.species))].join(', ')}`);
         }
       } else {
         console.error('Failed to fetch pets:', response.status, response.statusText);
@@ -132,7 +133,7 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
         console.log('Failed to mark pet_registered=yes for DOG:', e);
       }
       try {
-        await fetchRegisteredPets();
+        await fetchRegisteredPets('DOG');
       } catch (e) {
         console.log('Failed to prefetch registered pets:', e);
       }
@@ -182,7 +183,7 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
       }
       // Fetch registered pets when "Yes" is clicked
       console.log('Fetching registered pets...');
-      await fetchRegisteredPets();
+      await fetchRegisteredPets(selectedPet);
       console.log('Setting showSecondModal to true');
       console.log('Current showSecondModal state before setTimeout:', showSecondModal);
       setTimeout(() => {
