@@ -67,10 +67,31 @@ def create_pet(
             detail="Species must be either 'feline' or 'canine' (or common names like 'cat', 'dog')"
         )
     
-    # Only attach user_id when the authenticated principal is a User.
-    # Admin accounts do not exist in the users table, so forcing their ID
-    # causes a foreign key violation when they create pets.
-    user_id = current_user.id if isinstance(current_user, models.User) else None
+    # Determine user_id: If current user is a User, use their ID.
+    # If Admin is creating the pet, find or create a User for the owner_name
+    user_id = None
+    if isinstance(current_user, models.User):
+        user_id = current_user.id
+    else:
+        # Admin is creating the pet - find or create a placeholder user for the owner
+        # This ensures pets are always associated with a user for proper cascade deletion
+        from core.models import User
+        
+        # Try to find existing user by name
+        existing_user = db.query(User).filter(User.name == pet.owner_name).first()
+        
+        if existing_user:
+            user_id = existing_user.id
+        else:
+            # Create a placeholder user for this pet owner
+            placeholder_user = User(
+                name=pet.owner_name,
+                is_placeholder=1,  # Mark as placeholder
+                is_confirmed=0
+            )
+            db.add(placeholder_user)
+            db.flush()  # Flush to get the ID without committing
+            user_id = placeholder_user.id
     
     pet_id = generate_pet_id(db)
     
@@ -85,7 +106,7 @@ def create_pet(
         breed=pet.breed,
         gender=pet.gender,
         reproductive_status=pet.reproductive_status,
-        user_id=user_id  # Set to authenticated user when applicable
+        user_id=user_id  # Always set user_id to ensure cascade deletion works
     )
     
     db.add(db_pet)

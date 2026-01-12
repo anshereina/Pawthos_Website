@@ -463,7 +463,7 @@ def delete_user(
     db: Session = Depends(get_db),
     current_admin: models.Admin = Depends(auth.get_current_admin)
 ):
-    """Delete a user"""
+    """Delete a user and all associated pets (cascade delete)"""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(
@@ -471,9 +471,19 @@ def delete_user(
             detail="User not found"
         )
     
+    # Count associated pets before deletion for informational message
+    from core.models import Pet
+    pet_count = db.query(Pet).filter(Pet.user_id == user_id).count()
+    
+    # Delete the user (pets will be cascade deleted automatically by the database)
     db.delete(user)
     db.commit()
-    return {"message": "User deleted successfully"}
+    
+    message = f"User '{user.name}' deleted successfully"
+    if pet_count > 0:
+        message += f" along with {pet_count} associated pet(s)"
+    
+    return {"message": message}
 
 @router.post("/", response_model=schemas.User)
 def create_user(

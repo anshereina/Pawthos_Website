@@ -31,6 +31,7 @@ const UserManagementPage: React.FC = () => {
   // User management state
   const [selectedRole, setSelectedRole] = useState<'admin' | 'user'>('admin');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,10 +62,19 @@ const UserManagementPage: React.FC = () => {
     }
   }, [user]);
 
-  // Reset to first page when role or search changes
+  // Debounce search term to avoid excessive API calls
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to first page when role or debounced search changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [selectedRole, searchTerm]);
+  }, [selectedRole, debouncedSearchTerm]);
 
   // Pagination logic
   const totalItems = users.length;
@@ -110,7 +120,7 @@ const UserManagementPage: React.FC = () => {
       }
 
       const params: any = {};
-      if (searchTerm) params.search = searchTerm;
+      if (debouncedSearchTerm) params.search = debouncedSearchTerm;
       
       let endpoint = '';
       if (selectedRole === 'admin') {
@@ -148,7 +158,7 @@ const UserManagementPage: React.FC = () => {
     } finally {
       setLoadingUsers(false);
     }
-  }, [selectedRole, searchTerm, router, logout, user]);
+  }, [selectedRole, debouncedSearchTerm, router, logout, user]);
 
   React.useEffect(() => {
     if (user) {
