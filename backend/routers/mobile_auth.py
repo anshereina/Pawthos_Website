@@ -83,6 +83,10 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     print(f"➕ Creating new user account for {derived_name} with email {user.email}")
     hashed_password = auth.get_password_hash(user.password)
     
+    # Generate OTP
+    otp_code = auth.generate_otp()
+    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+    
     # Create user
     db_user = models.User(
         name=derived_name,
@@ -90,13 +94,24 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         password_hash=hashed_password,
         phone_number=user.phone_number,
         address=user.address,
-        is_confirmed=1,
+        otp_code=otp_code,
+        otp_expires_at=otp_expires_at,
+        is_confirmed=0,  # User must verify email
         is_placeholder=0  # Not a placeholder
     )
     
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
+    # Send OTP via email
+    if user.email:
+        try:
+            auth.send_email_otp(user.email, otp_code)
+            print(f"✅ OTP email sent to {user.email}")
+        except Exception as e:
+            print(f"⚠️ Failed to send OTP email: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
     
     print(f"✅ New user account created successfully: user_id={db_user.id}")
     return db_user
