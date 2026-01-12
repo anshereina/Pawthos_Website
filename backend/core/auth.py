@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from . import models, schemas
 from .database import get_db
-from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SMTP_USER, SMTP_PASS
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SMTP_USER, SMTP_PASS, RESEND_API_KEY
 import random
 import smtplib
 import logging
@@ -216,10 +216,44 @@ def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Sess
     return user
 
 def send_email_otp(email: str, otp_code: str):
-    """Send OTP code via email"""
+    """Send OTP code via email using Resend API"""
     try:
+        # Try Resend first (modern, Railway-compatible)
+        if RESEND_API_KEY:
+            try:
+                import resend
+                resend.api_key = RESEND_API_KEY
+                
+                print(f"📧 Sending OTP via Resend to {email}")
+                
+                params = {
+                    "from": "Pawthos <onboarding@resend.dev>",  # Use verified domain later
+                    "to": [email],
+                    "subject": "Pawthos OTP Code",
+                    "html": f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #045b26;">Pawthos Email Verification</h2>
+                        <p>Your OTP code is:</p>
+                        <h1 style="color: #D37F52; font-size: 32px; letter-spacing: 5px;">{otp_code}</h1>
+                        <p>This code will expire in 10 minutes.</p>
+                        <p style="color: #666;">If you did not request this code, please ignore this email.</p>
+                        <hr style="border: 1px solid #eee; margin: 20px 0;">
+                        <p style="color: #999; font-size: 12px;">City Veterinary Office of San Pedro</p>
+                    </div>
+                    """
+                }
+                
+                response = resend.Emails.send(params)
+                print(f"✅ OTP email sent via Resend to {email}")
+                return True
+                
+            except Exception as e:
+                print(f"❌ Resend failed: {str(e)}")
+                # Fall through to SMTP fallback
+        
+        # Fallback to SMTP (will fail on Railway but works locally)
         if not SMTP_USER or not SMTP_PASS:
-            print("⚠️ SMTP credentials not configured, skipping email send")
+            print("⚠️ No email service configured (RESEND_API_KEY or SMTP credentials)")
             return False
         
         # Create message
@@ -239,45 +273,20 @@ def send_email_otp(email: str, otp_code: str):
         msg.attach(MIMEText(body, 'plain'))
         
         # Send email with timeout
-        print(f"🔧 Attempting to send email to {email}")
+        print(f"🔧 Attempting to send email via SMTP to {email}")
         
-        # Try multiple SMTP servers and ports
-        smtp_configs = [
-            ('smtp.gmail.com', 587, False),  # Gmail TLS
-            ('smtp.gmail.com', 465, True),   # Gmail SSL
-            ('smtp-mail.outlook.com', 587, False),  # Outlook TLS
-            ('smtp-mail.outlook.com', 465, True),    # Outlook SSL
-        ]
-        
-        for host, port, use_ssl in smtp_configs:
-            try:
-                print(f"🔧 Trying {host}:{port} (SSL: {use_ssl})")
-                if use_ssl:
-                    server = smtplib.SMTP_SSL(host, port, timeout=10)
-                    print(f"🔧 SMTP SSL connection established on {host}:{port}")
-                else:
-                    server = smtplib.SMTP(host, port, timeout=10)
-                    print(f"🔧 SMTP connection established on {host}:{port}")
-                    server.starttls()
-                    print(f"🔧 TLS started")
-                
-                server.login(SMTP_USER, SMTP_PASS)
-                print(f"🔧 SMTP login successful")
-                text = msg.as_string()
-                server.sendmail(SMTP_USER, email, text)
-                print(f"🔧 Email sent successfully")
-                server.quit()
-                print(f"🔧 SMTP connection closed")
-                
-                print(f"✅ OTP email sent to {email} via {host}:{port}")
-                return True
-                
-            except Exception as e:
-                print(f"❌ Failed {host}:{port}: {str(e)}")
-                continue
-        
-        print(f"❌ All SMTP servers failed for {email}")
-        return False
+        # Try Gmail SMTP
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_USER, email, msg.as_string())
+            server.quit()
+            print(f"✅ OTP email sent via SMTP to {email}")
+            return True
+        except Exception as e:
+            print(f"❌ SMTP failed: {str(e)}")
+            return False
         
     except Exception as e:
         print(f"❌ Error sending email to {email}: {str(e)}")

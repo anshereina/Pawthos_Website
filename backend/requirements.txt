@@ -32,3 +32,6 @@ Pillow==10.4.0
 
 # AI Service Dependencies (Required for pain assessment)
 google-generativeai>=0.3.2
+
+# Email Service (Resend API)
+resend>=0.8.0

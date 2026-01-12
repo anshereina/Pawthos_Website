@@ -96,7 +96,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         address=user.address,
         otp_code=otp_code,
         otp_expires_at=otp_expires_at,
-        is_confirmed=0,  # User must verify email
+        is_confirmed=0,  # User must verify email with OTP
         is_placeholder=0  # Not a placeholder
     )
     
@@ -104,11 +104,15 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     
-    # Send OTP via email
+    # Send OTP via email (using Resend API)
     if user.email:
         try:
-            auth.send_email_otp(user.email, otp_code)
-            print(f"✅ OTP email sent to {user.email}")
+            email_sent = auth.send_email_otp(user.email, otp_code)
+            if email_sent:
+                print(f"✅ OTP email sent to {user.email}")
+            else:
+                print(f"⚠️ Failed to send OTP email to {user.email}")
+                raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
         except Exception as e:
             print(f"⚠️ Failed to send OTP email: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
