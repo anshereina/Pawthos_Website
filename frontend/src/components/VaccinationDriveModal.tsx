@@ -431,15 +431,15 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const handleExportPDF = () => {
     if (!event) return;
 
-    // Use landscape orientation for better table visibility
-    const doc = new jsPDF('landscape', 'mm', 'a4');
+    // Use portrait orientation
+    const doc = new jsPDF('portrait', 'mm', 'a4');
     
     // Set up colors
     const primaryColor = [34, 139, 34]; // Green
     
-    // Header background (adjust width for landscape: 297mm instead of 210mm)
+    // Header background
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, 297, 35, 'F');
+    doc.rect(0, 0, 210, 35, 'F');
     
     // Add logos to header
     try {
@@ -449,16 +449,16 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       
       // Add SanPedro logo on the right
       const sanPedroLogo = '/images/logos/SanPedro.png';
-      doc.addImage(sanPedroLogo, 'PNG', 262, 5, 25, 25);
+      doc.addImage(sanPedroLogo, 'PNG', 175, 5, 25, 25);
     } catch (error) {
       console.warn('Failed to load logos:', error);
     }
     
-    // Header text (centered - adjust for landscape width)
+    // Header text (centered)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('Vaccination Drive Report', 148.5, 20, { align: 'center' });
+    doc.text('Vaccination Drive Report', 105, 20, { align: 'center' });
     
     // Event Information Section
     let yPosition = 50;
@@ -525,18 +525,19 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       record.otherServices.join(', ') || ''
     ]);
     
-    // Create table with proper column widths
+    // Create table with optimized column widths for portrait orientation
     autoTable(doc, {
       head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status', 'Other Services']],
       body: tableData,
       startY: yPosition,
       styles: {
-        fontSize: 7,
-        cellPadding: 2,
+        fontSize: 6.5,
+        cellPadding: 1.5,
         overflow: 'linebreak',
         cellWidth: 'wrap',
         halign: 'left',
         valign: 'middle',
+        minCellHeight: 5,
       },
       headStyles: {
         fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
@@ -544,25 +545,27 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         fontStyle: 'bold',
         halign: 'center',
         valign: 'middle',
+        fontSize: 6.5,
+        minCellHeight: 8,
       },
       columnStyles: {
-        0: { cellWidth: 8, halign: 'center' },  // #
-        1: { cellWidth: 25 },  // Owner Name
-        2: { cellWidth: 22 },  // Pet Name
-        3: { cellWidth: 20 },  // Owner's Birthday
-        4: { cellWidth: 20 },  // Contact
-        5: { cellWidth: 15 },  // Species
-        6: { cellWidth: 20 },  // Breed
-        7: { cellWidth: 15 },  // Color
-        8: { cellWidth: 12 },  // Age
-        9: { cellWidth: 12 },  // Sex
-        10: { cellWidth: 22 }, // Reproductive Status
-        11: { cellWidth: 'auto' }, // Other Services
+        0: { cellWidth: 7, halign: 'center' },  // #
+        1: { cellWidth: 20 },  // Owner Name
+        2: { cellWidth: 18 },  // Pet Name
+        3: { cellWidth: 16 },  // Owner's Birthday
+        4: { cellWidth: 16 },  // Contact
+        5: { cellWidth: 12 },  // Species
+        6: { cellWidth: 15 },  // Breed
+        7: { cellWidth: 12 },  // Color
+        8: { cellWidth: 10 },  // Age
+        9: { cellWidth: 9 },   // Sex
+        10: { cellWidth: 16 }, // Reproductive Status
+        11: { cellWidth: 19 }, // Other Services
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
-      margin: { left: 10, right: 10 },
+      margin: { left: 5, right: 5 },
       didDrawPage: (data: any) => {
         // Footer
         const pageSize = doc.internal.pageSize;
@@ -583,7 +586,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     });
     
     // Save the PDF
-    const fileName = `Vaccination_Drive_${event.event_title || 'Report'}_${event.event_date || new Date().toISOString().split('T')[0]}.pdf`;
+    const fileName = `Vaccination-${event.barangay || 'Unknown'}-${event.event_date || new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
   };
 
