@@ -431,14 +431,15 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const handleExportPDF = () => {
     if (!event) return;
 
-    const doc = new jsPDF();
+    // Use landscape orientation for better table visibility
+    const doc = new jsPDF('landscape', 'mm', 'a4');
     
     // Set up colors
     const primaryColor = [34, 139, 34]; // Green
     
-    // Header background
+    // Header background (adjust width for landscape: 297mm instead of 210mm)
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, 210, 35, 'F');
+    doc.rect(0, 0, 297, 35, 'F');
     
     // Add logos to header
     try {
@@ -448,16 +449,16 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       
       // Add SanPedro logo on the right
       const sanPedroLogo = '/images/logos/SanPedro.png';
-      doc.addImage(sanPedroLogo, 'PNG', 175, 5, 25, 25);
+      doc.addImage(sanPedroLogo, 'PNG', 262, 5, 25, 25);
     } catch (error) {
       console.warn('Failed to load logos:', error);
     }
     
-    // Header text (centered)
+    // Header text (centered - adjust for landscape width)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('Vaccination Drive Report', 105, 20, { align: 'center' });
+    doc.text('Vaccination Drive Report', 148.5, 20, { align: 'center' });
     
     // Event Information Section
     let yPosition = 50;
@@ -524,24 +525,44 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       record.otherServices.join(', ') || ''
     ]);
     
-    // Create table
+    // Create table with proper column widths
     autoTable(doc, {
       head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status', 'Other Services']],
       body: tableData,
       startY: yPosition,
       styles: {
-        fontSize: 8,
-        cellPadding: 3,
+        fontSize: 7,
+        cellPadding: 2,
+        overflow: 'linebreak',
+        cellWidth: 'wrap',
+        halign: 'left',
+        valign: 'middle',
       },
       headStyles: {
         fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
+        halign: 'center',
+        valign: 'middle',
+      },
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center' },  // #
+        1: { cellWidth: 25 },  // Owner Name
+        2: { cellWidth: 22 },  // Pet Name
+        3: { cellWidth: 20 },  // Owner's Birthday
+        4: { cellWidth: 20 },  // Contact
+        5: { cellWidth: 15 },  // Species
+        6: { cellWidth: 20 },  // Breed
+        7: { cellWidth: 15 },  // Color
+        8: { cellWidth: 12 },  // Age
+        9: { cellWidth: 12 },  // Sex
+        10: { cellWidth: 22 }, // Reproductive Status
+        11: { cellWidth: 'auto' }, // Other Services
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
-      margin: { left: 20, right: 20 },
+      margin: { left: 10, right: 10 },
       didDrawPage: (data: any) => {
         // Footer
         const pageSize = doc.internal.pageSize;
