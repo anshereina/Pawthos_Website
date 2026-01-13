@@ -322,6 +322,7 @@ export default function SignupPage() {
                             onChangeText={setPhoneNumber}
                             style={styles.input}
                             keyboardType="phone-pad"
+                            maxLength={11}
                         />
                     </View>
 

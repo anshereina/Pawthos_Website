@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { getUserAlerts, Alert as AlertType } from '../../utils/alerts.utils';
 import { getCurrentUser } from '../../utils/auth.utils';
@@ -23,11 +23,19 @@ export default function NotificationPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch alerts when component mounts
   useEffect(() => {
     fetchAlerts();
   }, []);
+  
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAlerts();
+    setRefreshing(false);
+  };
 
   // Load read notification IDs from AsyncStorage
   const loadReadNotifications = async (): Promise<Set<number>> => {
@@ -219,7 +227,13 @@ export default function NotificationPage() {
       </View>
       
       {/* Notification Feed */}
-      <ScrollView style={styles.feed} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView 
+        style={styles.feed} 
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4CAF50']} />
+        }
+      >
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color="#4CAF50" />

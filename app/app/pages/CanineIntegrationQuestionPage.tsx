@@ -164,13 +164,20 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
 
       // Save assessment data to AsyncStorage for the result page
       try {
-        const assessmentData = {
+        // Get existing assessment data (includes pet_registered, pet_id, pet_name, etc.)
+        const existingDataString = await AsyncStorage.getItem('currentAssessmentData');
+        let assessmentData = existingDataString ? JSON.parse(existingDataString) : {};
+        
+        // Merge with new assessment results
+        assessmentData = {
+          ...assessmentData,
           pet_type: 'dog',
           assessment_type: 'BEAAP',
           beaap_answers: selectedAnswers,
           total_score: totalScore,
           timestamp: new Date().toISOString(),
         };
+        
         await AsyncStorage.setItem('currentAssessmentData', JSON.stringify(assessmentData));
         
         // Navigate to results page with data

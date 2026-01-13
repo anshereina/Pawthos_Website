@@ -58,10 +58,20 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         
-        if (response.status === 400) {
+        // Check for cat detection error
+        if (response.status === 400 || response.status === 422) {
+          const errorMessage = errorData.detail?.error_message 
+            || errorData.detail?.message 
+            || errorData.message 
+            || 'No cat face detected in the image.';
+          const errorGuidance = errorData.detail?.error_guidance 
+            || errorData.detail?.guidance
+            || errorData.error_guidance 
+            || 'Please take a clear photo of your cat\'s face in good lighting. Make sure the entire face is visible and the lighting is adequate.';
+          
           Alert.alert(
             'Cat Face Not Detected',
-            'Please take a clear photo of your cat\'s face in good lighting.',
+            `${errorMessage}\n\n${errorGuidance}`,
             [{ text: 'OK', onPress: onCancel }]
           );
           return;
