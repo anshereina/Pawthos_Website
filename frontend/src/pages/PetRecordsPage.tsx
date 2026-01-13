@@ -721,66 +721,87 @@ const PetRecordsPage: React.FC = () => {
             <div className="flex-1 mt-8">
               <div className="bg-green-800 rounded-2xl px-8 py-8 shadow-lg">
                 <h3 className="text-center text-white text-xl font-semibold mb-8">{selectedPet.name}'s Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Left column */}
-                  <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-4">
                     <div>
-                      <label className="block text-white mb-1">Type of Species:</label>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Owner's Name</label>
+                      <input 
+                        type="text" 
+                        value={selectedPet.owner_name || ''} 
+                        className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm" 
+                        disabled 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Owner's Birthday</label>
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          value={formatDateForProfile(selectedPet.owner_birthday)} 
+                          className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm pr-10" 
+                          disabled 
+                        />
+                        <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-700" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Species</label>
                       <input 
                         type="text" 
                         value={selectedPet.species || ''} 
-                        className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
+                        className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm capitalize" 
                         disabled 
                       />
                     </div>
                     <div>
-                      <label className="block text-white mb-1">Age:</label>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Breed</label>
                       <input 
                         type="text" 
-                        value={calculateAge(selectedPet.date_of_birth)} 
-                        className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
+                        value={selectedPet.breed || ''} 
+                        className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm" 
                         disabled 
                       />
                     </div>
+                  </div>
+                  {/* Right column */}
+                  <div className="flex flex-col gap-4">
                     <div>
-                      <label className="block text-white mb-1">Pet's Date of Birth:</label>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Pet's Date of Birth</label>
                       <div className="relative">
                         <input 
                           type="text" 
                           value={formatDateForProfile(selectedPet.date_of_birth)} 
-                          className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800 pr-10" 
+                          className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm pr-10" 
                           disabled 
                         />
-                        <Calendar size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-700" />
+                        <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-700" />
                       </div>
                     </div>
-                  </div>
-                  {/* Right column */}
-                  <div className="flex flex-col gap-5">
                     <div>
-                      <label className="block text-white mb-1">Breed:</label>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Age</label>
                       <input 
                         type="text" 
-                        value={selectedPet.breed || ''} 
-                        className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
+                        value={calculateAge(selectedPet.date_of_birth)} 
+                        className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm" 
                         disabled 
                       />
                     </div>
                     <div>
-                      <label className="block text-white mb-1">Color:</label>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Color</label>
                       <input 
                         type="text" 
                         value={selectedPet.color || ''} 
-                        className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
+                        className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm" 
                         disabled 
                       />
                     </div>
                     <div>
-                      <label className="block text-white mb-1">Sex:</label>
+                      <label className="block text-white text-sm mb-1.5 font-medium">Sex</label>
                       <input 
                         type="text" 
                         value={selectedPet.gender || ''} 
-                        className="w-full rounded-lg bg-gray-100 border-none px-4 py-2 text-gray-800" 
+                        className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2 text-gray-800 text-sm capitalize" 
                         disabled 
                       />
                     </div>

@@ -22,7 +22,7 @@ const TABS = [
   { label: 'Walk-In', value: 'walkin' },
 ];
 
-const STATUS_OPTIONS: string[] = ['Pending', 'Approved', 'Completed', 'Rescheduled', 'Rejected'];
+const STATUS_OPTIONS: string[] = ['Pending', 'Approve', 'Completed', 'Cancel', 'Resched'];
 
 const AppointmentsPage: React.FC = () => {
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
@@ -35,7 +35,7 @@ const AppointmentsPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<Appointment | ServiceRequest | null>(null);
   const [selectedItemType, setSelectedItemType] = useState<'appointment' | 'request'>('appointment');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<'Pending' | 'Approved' | 'Completed' | 'Rescheduled' | 'Rejected'>('Pending');
+  const [selectedStatus, setSelectedStatus] = useState<'Pending' | 'Approve' | 'Completed' | 'Cancel' | 'Resched'>('Pending');
   const [selectedItemForStatus, setSelectedItemForStatus] = useState<{id: number, type: 'appointment' | 'request'} | null>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);

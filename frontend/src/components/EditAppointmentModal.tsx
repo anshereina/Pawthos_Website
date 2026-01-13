@@ -134,10 +134,10 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value="Pending">Pending</option>
-                <option value="Confirmed">Confirmed</option>
+                <option value="Approve">Approve</option>
                 <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="Rescheduled">Rescheduled</option>
+                <option value="Cancel">Cancel</option>
+                <option value="Resched">Resched</option>
               </select>
             </div>
             <div>

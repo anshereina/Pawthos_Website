@@ -83,6 +83,19 @@ export const pdfExportService = {
   generateAnimalControlPDF(records: AnimalControlRecord[], options: ExportOptions = {}) {
     const doc = new jsPDF('landscape');
       
+      // Add logos to header
+      try {
+        // Add CityVet logo on the left
+        const cityVetLogo = '/images/logos/CityVet.jpg';
+        doc.addImage(cityVetLogo, 'JPEG', 10, 5, 20, 20);
+        
+        // Add SanPedro logo on the right
+        const sanPedroLogo = '/images/logos/SanPedro.png';
+        doc.addImage(sanPedroLogo, 'PNG', 267, 5, 20, 20);
+      } catch (error) {
+        console.warn('Failed to load logos:', error);
+      }
+      
       // Title
       const title = `Animal Control Records Report`;
       const subtitle = options.date ? `Date: ${new Date(options.date).toLocaleDateString()}` : 'All Records';
@@ -92,14 +105,14 @@ export const pdfExportService = {
 
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text(title, 105, 20, { align: 'center' });
+      doc.text(title, 148.5, 15, { align: 'center' });
 
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.text(subtitle, 105, 30, { align: 'center' });
+      doc.text(subtitle, 148.5, 23, { align: 'center' });
       
       if (recordTypeText) {
-        doc.text(recordTypeText, 105, 37, { align: 'center' });
+        doc.text(recordTypeText, 148.5, 30, { align: 'center' });
       }
 
       // Generate date for filename

@@ -189,7 +189,11 @@ const ReportsAlertsPage: React.FC = () => {
     : ['Alert ID', 'Title', 'Submitted By', 'Priority', 'Recipients', 'Action'];
 
   const isLoading = reportsLoading || alertsLoading;
-  const currentData = activeTab === 'reports' ? reports : alerts;
+  // Filter out appointment requests from the app in the alerts tab
+  const filteredAlerts = activeTab === 'alerts' 
+    ? alerts.filter(alert => !alert.title.startsWith('New Appointment Request:'))
+    : alerts;
+  const currentData = activeTab === 'reports' ? reports : filteredAlerts;
   
   // Pagination logic
   const totalItems = currentData.length;

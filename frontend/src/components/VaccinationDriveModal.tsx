@@ -436,17 +436,31 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     // Set up colors
     const primaryColor = [34, 139, 34]; // Green
     
-    // Header
+    // Header background
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, 210, 30, 'F');
+    doc.rect(0, 0, 210, 35, 'F');
     
+    // Add logos to header
+    try {
+      // Add CityVet logo on the left
+      const cityVetLogo = '/images/logos/CityVet.jpg';
+      doc.addImage(cityVetLogo, 'JPEG', 10, 5, 25, 25);
+      
+      // Add SanPedro logo on the right
+      const sanPedroLogo = '/images/logos/SanPedro.png';
+      doc.addImage(sanPedroLogo, 'PNG', 175, 5, 25, 25);
+    } catch (error) {
+      console.warn('Failed to load logos:', error);
+    }
+    
+    // Header text (centered)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('Vaccination Drive Report', 20, 20);
+    doc.text('Vaccination Drive Report', 105, 20, { align: 'center' });
     
     // Event Information Section
-    let yPosition = 45;
+    let yPosition = 50;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');

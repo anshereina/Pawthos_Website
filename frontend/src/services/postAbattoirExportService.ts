@@ -11,9 +11,23 @@ export const postAbattoirExportService = {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { jsPDF } = require('jspdf');
       const doc = new jsPDF('landscape');
+      
+      // Add logos to header
+      try {
+        // Add CityVet logo on the left
+        const cityVetLogo = '/images/logos/CityVet.jpg';
+        doc.addImage(cityVetLogo, 'JPEG', 10, 5, 20, 20);
+        
+        // Add SanPedro logo on the right
+        const sanPedroLogo = '/images/logos/SanPedro.png';
+        doc.addImage(sanPedroLogo, 'PNG', 267, 5, 20, 20);
+      } catch (error) {
+        console.warn('Failed to load logos:', error);
+      }
+      
       // Header
       doc.setFontSize(14);
-      doc.text('Post Abattoir Inspection Records', 14, 16);
+      doc.text('Post Abattoir Inspection Records', 148.5, 16, { align: 'center' });
 
       const body = records.map(r => [
         new Date(r.date).toLocaleDateString(),
@@ -27,7 +41,7 @@ export const postAbattoirExportService = {
       // Try autotable
       const autoTable = (doc as any).autoTable;
       if (autoTable) {
-        autoTable.call(doc, { head, body, startY: 22, styles: { fontSize: 8 } });
+        autoTable.call(doc, { head, body, startY: 28, styles: { fontSize: 8 } });
       } else {
         // Simple manual table
         let y = 26;

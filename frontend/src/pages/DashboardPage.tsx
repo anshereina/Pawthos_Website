@@ -458,22 +458,18 @@ const YearlyVaccinationReportCard = () => {
               {totalVaccinations.toLocaleString()}
             </span>
           </div>
-          {yearlyStats?.summary && (
-            <>
-              <div className="bg-white bg-opacity-50 rounded-lg p-2">
-                <span className="text-gray-600">Canine:</span>
-                <span className="ml-1 font-semibold text-blue-700">
-                  {yearlyStats.summary.total_canine.toLocaleString()}
-                </span>
-              </div>
-              <div className="bg-white bg-opacity-50 rounded-lg p-2">
-                <span className="text-gray-600">Feline:</span>
-                <span className="ml-1 font-semibold text-cyan-700">
-                  {yearlyStats.summary.total_feline.toLocaleString()}
-                </span>
-              </div>
-            </>
-          )}
+          <div className="bg-white bg-opacity-50 rounded-lg p-2">
+            <span className="text-gray-600">Canine:</span>
+            <span className="ml-1 font-semibold text-blue-700">
+              {yearlyStats?.summary?.total_canine?.toLocaleString() || '0'}
+            </span>
+          </div>
+          <div className="bg-white bg-opacity-50 rounded-lg p-2">
+            <span className="text-gray-600">Feline:</span>
+            <span className="ml-1 font-semibold text-cyan-700">
+              {yearlyStats?.summary?.total_feline?.toLocaleString() || '0'}
+            </span>
+          </div>
         </div>
       </div>
     </div>

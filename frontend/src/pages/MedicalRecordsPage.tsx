@@ -7,9 +7,12 @@ import PageHeader from '../components/PageHeader';
 import { useMedicalRecords } from '../hooks/useMedicalRecords';
 import { useAppointments } from '../hooks/useAppointments';
 import { appointmentService } from '../services/appointmentService';
+import { medicalRecordService } from '../services/medicalRecordService';
 import EditMedicalRecordModal from '../components/EditMedicalRecordModal';
 import DeleteMedicalRecordModal from '../components/DeleteMedicalRecordModal';
 import ViewMedicalRecordModal from '../components/ViewMedicalRecordModal';
+import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
+import EditAppointmentModal from '../components/EditAppointmentModal';
 
 import DeleteAppointmentModal from '../components/DeleteAppointmentModal';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -31,6 +34,8 @@ const MedicalRecordsPage: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
+  const [isAppointmentDetailsModalOpen, setIsAppointmentDetailsModalOpen] = useState(false);
+  const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
   const previousTabRef = useRef<string>(activeTab);
   
@@ -92,6 +97,7 @@ const MedicalRecordsPage: React.FC = () => {
 
   const handleStatusChange = async (appointment: any, newStatus: string) => {
     try {
+      // Update appointment status
       await updateAppointment(appointment.id, {
         pet_id: appointment.pet_id,
         type: appointment.type,
@@ -101,6 +107,23 @@ const MedicalRecordsPage: React.FC = () => {
         notes: appointment.notes,
         status: newStatus,
       });
+      
+      // If status is changed to Completed, create a medical record
+      if (newStatus === 'Completed') {
+        try {
+          await medicalRecordService.createMedicalRecord(appointment.pet_id, {
+            reason_for_visit: appointment.type,
+            date_visited: appointment.date,
+            veterinarian: appointment.veterinarian || 'Dr. Ma Fe Templado',
+            notes: appointment.notes || '',
+          });
+          console.log('Medical record created successfully for completed appointment');
+        } catch (medRecError) {
+          console.error('Failed to create medical record:', medRecError);
+          // Don't fail the status update if medical record creation fails
+        }
+      }
+      
       setStatusDropdownOpen(null);
     } catch (error) {
       console.error('Failed to update appointment status:', error);
@@ -128,6 +151,34 @@ const MedicalRecordsPage: React.FC = () => {
     setIsDeleteAppointmentModalOpen(true);
   };
 
+  const handleAppointmentRowClick = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setIsAppointmentDetailsModalOpen(true);
+  };
+
+  const handleEditAppointmentClick = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setIsEditAppointmentModalOpen(true);
+  };
+
+  const handleEditAppointment = async (data: any) => {
+    try {
+      await updateAppointment(selectedAppointment.id, {
+        pet_id: selectedAppointment.pet_id,
+        type: data.type,
+        date: data.date,
+        time: data.time,
+        veterinarian: data.veterinarian,
+        notes: data.notes,
+        status: data.status,
+      });
+      setIsEditAppointmentModalOpen(false);
+      setSelectedAppointment(null);
+    } catch (error) {
+      console.error('Failed to update appointment:', error);
+    }
+  };
+
   // Close status dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -142,11 +193,12 @@ const MedicalRecordsPage: React.FC = () => {
     };
   }, []);
 
-  // Filter data based on search
+  // Filter data based on search - only show Approved appointments in Upcoming Appointments tab
   const filteredAppointments = appointments.filter(appointment => 
-    appointment.pet?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    appointment.status === 'Approve' && // Only show approved appointments
+    (appointment.pet?.name?.toLowerCase().includes(search.toLowerCase()) ||
     appointment.type?.toLowerCase().includes(search.toLowerCase()) ||
-    appointment.veterinarian?.toLowerCase().includes(search.toLowerCase())
+    appointment.veterinarian?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const filteredMedicalRecords = medicalRecords.filter(record => 
@@ -328,7 +380,8 @@ const MedicalRecordsPage: React.FC = () => {
                   {activeTab === 'upcoming' && currentItems.map((appointment: any, i: number) => (
                     <tr
                       key={appointment.id}
-                      className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100`}
+                      onClick={() => handleAppointmentRowClick(appointment)}
+                      className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
                     >
                       <td className="px-4 py-3">
                         {new Date(appointment.date).toLocaleDateString()}
@@ -351,8 +404,15 @@ const MedicalRecordsPage: React.FC = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
+                          <button 
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm" 
+                            title="Edit"
+                            onClick={() => handleEditAppointmentClick(appointment)}
+                          >
+                            <Edit size={18} className="text-green-600" />
+                          </button>
                           <button 
                             className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm" 
                             title="Delete"
@@ -424,7 +484,7 @@ const MedicalRecordsPage: React.FC = () => {
                     className="bg-white border border-gray-200 rounded-xl shadow-2xl"
                     style={dropdownStyle}
                   >
-                    {['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Rescheduled'].map((option: string) => (
+                    {['Pending', 'Approve', 'Completed', 'Cancel', 'Resched'].map((option: string) => (
                       <div
                         key={option}
                         className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
@@ -538,6 +598,26 @@ const MedicalRecordsPage: React.FC = () => {
           setSelectedAppointment(null);
         }}
         onConfirm={handleDeleteAppointment}
+        appointment={selectedAppointment}
+      />
+
+      <AppointmentDetailsModal
+        isOpen={isAppointmentDetailsModalOpen}
+        onClose={() => {
+          setIsAppointmentDetailsModalOpen(false);
+          setSelectedAppointment(null);
+        }}
+        data={selectedAppointment}
+        type="appointment"
+      />
+
+      <EditAppointmentModal
+        isOpen={isEditAppointmentModalOpen}
+        onClose={() => {
+          setIsEditAppointmentModalOpen(false);
+          setSelectedAppointment(null);
+        }}
+        onSubmit={handleEditAppointment}
         appointment={selectedAppointment}
       />
     </div>
