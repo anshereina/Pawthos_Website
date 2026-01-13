@@ -525,47 +525,24 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       record.otherServices.join(', ') || ''
     ]);
     
-    // Create table with optimized column widths for portrait orientation
+    // Create table
     autoTable(doc, {
       head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status', 'Other Services']],
       body: tableData,
       startY: yPosition,
       styles: {
-        fontSize: 6.5,
-        cellPadding: 1.5,
-        overflow: 'linebreak',
-        cellWidth: 'wrap',
-        halign: 'left',
-        valign: 'middle',
-        minCellHeight: 5,
+        fontSize: 8,
+        cellPadding: 3,
       },
       headStyles: {
         fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        halign: 'center',
-        valign: 'middle',
-        fontSize: 6.5,
-        minCellHeight: 8,
-      },
-      columnStyles: {
-        0: { cellWidth: 7, halign: 'center' },  // #
-        1: { cellWidth: 20 },  // Owner Name
-        2: { cellWidth: 18 },  // Pet Name
-        3: { cellWidth: 16 },  // Owner's Birthday
-        4: { cellWidth: 16 },  // Contact
-        5: { cellWidth: 12 },  // Species
-        6: { cellWidth: 15 },  // Breed
-        7: { cellWidth: 12 },  // Color
-        8: { cellWidth: 10 },  // Age
-        9: { cellWidth: 9 },   // Sex
-        10: { cellWidth: 16 }, // Reproductive Status
-        11: { cellWidth: 19 }, // Other Services
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
-      margin: { left: 5, right: 5 },
+      margin: { left: 20, right: 20 },
       didDrawPage: (data: any) => {
         // Footer
         const pageSize = doc.internal.pageSize;
