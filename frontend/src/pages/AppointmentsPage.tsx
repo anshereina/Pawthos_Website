@@ -197,7 +197,7 @@ const AppointmentsPage: React.FC = () => {
         await updateAppointment(appointmentId, { 
           status, 
           notes: remarks,
-          ...(newDateTime && status === 'Rescheduled' && {
+          ...(newDateTime && status === 'Resched' && {
             date: newDateTime.split('T')[0],
             time: newDateTime.split('T')[1]
           })
