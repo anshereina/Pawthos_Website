@@ -179,7 +179,7 @@ const AppointmentsPage: React.FC = () => {
     setSelectedWalkInRecord(null);
   };
 
-  const openStatusModal = (status: 'Pending' | 'Approved' | 'Completed' | 'Rescheduled' | 'Rejected', itemId: number, type: 'appointment' | 'request') => {
+  const openStatusModal = (status: 'Pending' | 'Approve' | 'Completed' | 'Resched' | 'Cancel', itemId: number, type: 'appointment' | 'request') => {
     setSelectedStatus(status);
     setSelectedItemForStatus({ id: itemId, type });
     setStatusModalOpen(true);
