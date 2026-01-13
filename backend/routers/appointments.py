@@ -328,14 +328,21 @@ def update_appointment(
                     
                     alert_id = generate_alert_id_local(db)
                     
-                    # Create appropriate message based on status
+                    # Create appropriate message based on status (handle new status values)
                     status_display = appointment.status.capitalize()
-                    if appointment.status == "approved":
+                    status_lower = appointment.status.lower()
+                    if status_lower in ["approved", "approve"]:
                         alert_title = f"Appointment Approved"
                         alert_message = f"Your appointment on {appointment.date} has been approved."
-                    elif appointment.status in ["rejected", "cancelled"]:
-                        alert_title = f"Appointment {status_display}"
-                        alert_message = f"Your appointment on {appointment.date} has been {appointment.status}."
+                    elif status_lower in ["rejected", "cancelled", "cancel"]:
+                        alert_title = f"Appointment Cancelled"
+                        alert_message = f"Your appointment on {appointment.date} has been cancelled."
+                    elif status_lower in ["rescheduled", "resched"]:
+                        alert_title = f"Appointment Rescheduled"
+                        alert_message = f"Your appointment on {appointment.date} has been rescheduled."
+                    elif status_lower == "completed":
+                        alert_title = f"Appointment Completed"
+                        alert_message = f"Your appointment on {appointment.date} has been completed."
                     else:
                         alert_title = f"Appointment Status Updated"
                         alert_message = f"Your appointment on {appointment.date} status has been changed to {status_display}."
@@ -345,7 +352,7 @@ def update_appointment(
                         alert_id=alert_id,
                         title=alert_title,
                         message=alert_message,
-                        priority="High" if appointment.status in ["approved", "rejected", "cancelled"] else "Medium",
+                        priority="High" if status_lower in ["approved", "approve", "rejected", "cancelled", "cancel"] else "Medium",
                         submitted_by=current_user.name if hasattr(current_user, 'name') else "Admin",
                         submitted_by_email=current_user.email if hasattr(current_user, 'email') else "admin@pawthos.com",
                         recipients=json.dumps([user.email])
@@ -404,7 +411,8 @@ def update_appointment_status(
 
     # Normalize status string
     normalized_status = new_status.strip().lower()
-    allowed_statuses = {"pending", "approved", "completed", "rescheduled", "cancelled", "canceled", "scheduled"}
+    # Updated allowed statuses to match frontend: Approve, Cancel, Resched
+    allowed_statuses = {"pending", "approved", "approve", "completed", "rescheduled", "resched", "cancelled", "canceled", "cancel", "scheduled"}
     if normalized_status not in allowed_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -414,8 +422,19 @@ def update_appointment_status(
     # Store old status for notification comparison
     old_status = appointment.status
     
-    # Store canonical spelling
-    appointment.status = "cancelled" if normalized_status in {"cancelled", "canceled"} else normalized_status
+    # Store canonical spelling - normalize to match frontend expectations
+    if normalized_status in {"cancelled", "canceled", "cancel"}:
+        appointment.status = "Cancel"
+    elif normalized_status in {"approved", "approve"}:
+        appointment.status = "Approve"
+    elif normalized_status in {"rescheduled", "resched"}:
+        appointment.status = "Resched"
+    elif normalized_status == "completed":
+        appointment.status = "Completed"
+    elif normalized_status == "pending":
+        appointment.status = "Pending"
+    else:
+        appointment.status = normalized_status
 
     db.commit()
     db.refresh(appointment)
@@ -447,14 +466,21 @@ def update_appointment_status(
                     
                     alert_id = generate_alert_id_local(db)
                     
-                    # Create appropriate message based on status
+                    # Create appropriate message based on status (handle new status values)
                     status_display = appointment.status.capitalize()
-                    if appointment.status == "approved":
+                    status_lower = appointment.status.lower()
+                    if status_lower in ["approved", "approve"]:
                         alert_title = f"Appointment Approved"
                         alert_message = f"Your appointment on {appointment.date} has been approved."
-                    elif appointment.status in ["rejected", "cancelled"]:
-                        alert_title = f"Appointment {status_display}"
-                        alert_message = f"Your appointment on {appointment.date} has been {appointment.status}."
+                    elif status_lower in ["rejected", "cancelled", "cancel"]:
+                        alert_title = f"Appointment Cancelled"
+                        alert_message = f"Your appointment on {appointment.date} has been cancelled."
+                    elif status_lower in ["rescheduled", "resched"]:
+                        alert_title = f"Appointment Rescheduled"
+                        alert_message = f"Your appointment on {appointment.date} has been rescheduled."
+                    elif status_lower == "completed":
+                        alert_title = f"Appointment Completed"
+                        alert_message = f"Your appointment on {appointment.date} has been completed."
                     else:
                         alert_title = f"Appointment Status Updated"
                         alert_message = f"Your appointment on {appointment.date} status has been changed to {status_display}."
@@ -464,7 +490,7 @@ def update_appointment_status(
                         alert_id=alert_id,
                         title=alert_title,
                         message=alert_message,
-                        priority="High" if appointment.status in ["approved", "rejected", "cancelled"] else "Medium",
+                        priority="High" if status_lower in ["approved", "approve", "rejected", "cancelled", "cancel"] else "Medium",
                         submitted_by=current_user.name if hasattr(current_user, 'name') else "Admin",
                         submitted_by_email=current_user.email if hasattr(current_user, 'email') else "admin@pawthos.com",
                         recipients=json.dumps([user.email])
