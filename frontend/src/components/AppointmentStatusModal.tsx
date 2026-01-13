@@ -4,7 +4,7 @@ import { X, Calendar } from 'lucide-react';
 interface AppointmentStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
-  status: 'Pending' | 'Approved' | 'Completed' | 'Rescheduled' | 'Rejected';
+  status: 'Pending' | 'Approve' | 'Completed' | 'Resched' | 'Cancel';
   appointmentId: number;
   onStatusUpdate: (appointmentId: number, status: string, remarks: string, newDateTime?: string) => Promise<void>;
   loading?: boolean;
@@ -26,14 +26,14 @@ const AppointmentStatusModal: React.FC<AppointmentStatusModalProps> = ({
     switch (status) {
       case 'Pending':
         return 'Thank you for your request. It is currently under review by our team. We will update you as soon as a decision has been made. Please check your dashboard regularly for notifications.';
-      case 'Approved':
+      case 'Approve':
         return 'Your request has been approved and is now confirmed in our system. Kindly prepare for the scheduled appointment. If you need to make any changes, feel free to reach out ahead of time. We look forward to assisting you.';
       case 'Completed':
         return 'Your appointment has been successfully completed. We hope the service met your expectations. If you have any follow-up questions or concerns, don\'t hesitate to contact us.';
-      case 'Rescheduled':
+      case 'Resched':
         return 'We have rescheduled your appointment due to a conflict in availability. Please review the new date and time and let us know if it works for you. We apologize for any inconvenience this may cause. Your understanding is greatly appreciated.';
-      case 'Rejected':
-        return 'We regret to inform you that your request has been rejected. This may be due to incomplete information. Please review your request and consider submitting it again with the necessary details. Feel free to contact us if you need further clarification.';
+      case 'Cancel':
+        return 'We regret to inform you that your request has been cancelled. This may be due to incomplete information. Please review your request and consider submitting it again with the necessary details. Feel free to contact us if you need further clarification.';
       default:
         return '';
     }
@@ -44,14 +44,14 @@ const AppointmentStatusModal: React.FC<AppointmentStatusModalProps> = ({
     switch (status) {
       case 'Pending':
         return 'Add Remarks for Pending Status';
-      case 'Approved':
+      case 'Approve':
         return 'Add Remarks for Approved Status';
       case 'Completed':
         return 'Add Remarks for Completed Appointment';
-      case 'Rescheduled':
+      case 'Resched':
         return 'Add Remarks for Rescheduled Appointment';
-      case 'Rejected':
-        return 'Add Remarks for Rejected Request';
+      case 'Cancel':
+        return 'Add Remarks for Cancelled Request';
       default:
         return 'Add Remarks';
     }
@@ -68,7 +68,7 @@ const AppointmentStatusModal: React.FC<AppointmentStatusModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (status === 'Rescheduled' && !newDateTime) {
+    if (status === 'Resched' && !newDateTime) {
       alert('Please enter the new date and time for rescheduling.');
       return;
     }
@@ -121,8 +121,8 @@ const AppointmentStatusModal: React.FC<AppointmentStatusModalProps> = ({
               />
             </div>
 
-            {/* New Time & Date Field (only for Rescheduled) */}
-            {status === 'Rescheduled' && (
+            {/* New Time & Date Field (only for Resched) */}
+            {status === 'Resched' && (
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
                   New Time & Date
