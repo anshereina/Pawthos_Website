@@ -97,6 +97,8 @@ const MedicalRecordsPage: React.FC = () => {
 
   const handleStatusChange = async (appointment: any, newStatus: string) => {
     try {
+      console.log('handleStatusChange called with:', appointment.id, newStatus);
+      
       // Update appointment status
       await updateAppointment(appointment.id, {
         pet_id: appointment.pet_id,
@@ -108,10 +110,13 @@ const MedicalRecordsPage: React.FC = () => {
         status: newStatus,
       });
       
+      console.log('Status updated successfully');
+      
       // Close the dropdown
       setStatusDropdownOpen(null);
       
       // Refetch appointments to update the UI
+      console.log('Refetching appointments after status change...');
       await fetchAppointments();
       
       // If status is changed to Completed, create a medical record
@@ -169,6 +174,7 @@ const MedicalRecordsPage: React.FC = () => {
 
   const handleEditAppointment = async (data: any) => {
     try {
+      console.log('Updating appointment:', selectedAppointment.id, data);
       await updateAppointment(selectedAppointment.id, {
         pet_id: selectedAppointment.pet_id,
         type: data.type,
@@ -178,18 +184,26 @@ const MedicalRecordsPage: React.FC = () => {
         notes: data.notes,
         status: data.status,
       });
+      
+      console.log('Appointment updated successfully');
       setIsEditAppointmentModalOpen(false);
       setSelectedAppointment(null);
       
       // Refetch appointments to update the UI
+      console.log('Refetching appointments...');
       await fetchAppointments();
       
       // If status changed to Completed, also refetch medical records
       if (data.status === 'Completed') {
+        console.log('Status is Completed, refetching medical records...');
         await refetchMedicalRecords();
       }
-    } catch (error) {
+      
+      // Show success message
+      alert('Appointment updated successfully!');
+    } catch (error: any) {
       console.error('Failed to update appointment:', error);
+      alert(`Failed to update appointment: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -482,7 +496,10 @@ const MedicalRecordsPage: React.FC = () => {
               {/* Status Dropdown Menu - Rendered outside table to avoid z-index issues */}
               {statusDropdownOpen !== null && (() => {
                 const buttonElement = document.getElementById(`status-btn-${statusDropdownOpen}`);
-                if (!buttonElement) return null;
+                if (!buttonElement) {
+                  console.log('Button element not found for dropdown');
+                  return null;
+                }
                 
                 const rect = buttonElement.getBoundingClientRect();
                 const dropdownStyle = {
@@ -490,22 +507,32 @@ const MedicalRecordsPage: React.FC = () => {
                   top: `${rect.bottom + 8}px`,
                   left: `${rect.left}px`,
                   minWidth: '150px',
-                  zIndex: 9999
+                  zIndex: 99999, // Increased z-index
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                 };
 
                 return (
                   <div 
-                    className="bg-white border border-gray-200 rounded-xl shadow-2xl"
+                    className="status-dropdown-menu"
                     style={dropdownStyle}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {['Pending', 'Approve', 'Completed', 'Cancel', 'Resched'].map((option: string) => (
                       <div
                         key={option}
                         className="px-4 py-2 hover:bg-green-50 cursor-pointer text-green-700 whitespace-nowrap transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Status option clicked:', option);
                           const appointment = filteredAppointments.find((apt: any) => apt.id === statusDropdownOpen);
                           if (appointment) {
+                            console.log('Found appointment, updating status');
                             handleStatusChange(appointment, option);
+                          } else {
+                            console.error('Appointment not found');
                           }
                         }}
                       >

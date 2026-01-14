@@ -65,7 +65,7 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
         type: appointment.type || '',
         date: appointment.date || '',
         time: timeValue,
-        veterinarian: appointment.veterinarian || '',
+        veterinarian: appointment.veterinarian || 'Dr. Fe Templado',
         medicineUsed: extractedMedicineUsed,
         notes: extractedMessageRemarks,
         status: appointment.status || 'Pending',
