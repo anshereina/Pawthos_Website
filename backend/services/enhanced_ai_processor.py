@@ -41,14 +41,29 @@ logging.info(f"AI_API_KEY present: {bool(AI_API_KEY)}")
 ENHANCED_PROCESSING_PROMPT = """
 You are a veterinary AI specialist analyzing a cat's facial expression for pain assessment.
 
-**CRITICAL FIRST STEP - CAT DETECTION**:
-Before any analysis, you MUST first determine if there is actually a cat in the image. If there is no cat, return an error immediately.
+**CRITICAL FIRST STEP - STRICT CAT DETECTION**:
+Before ANY analysis, you MUST determine if there is ACTUALLY A CAT (Felis catus) in the image.
+
+**REJECT if the image contains**:
+- Dogs (canines)
+- Humans (people, faces, hands, etc.)
+- Other animals (rabbits, rodents, birds, reptiles, etc.)
+- Objects (toys, stuffed animals, drawings, cartoons)
+- No visible animal at all
+- Unclear or unidentifiable subjects
+
+**ONLY ACCEPT if**:
+- There is clearly a REAL, LIVING CAT (domestic cat, Felis catus)
+- The cat's face is clearly visible
+- The image shows an actual photograph (not drawing/cartoon/3D render)
+
+**IF NO REAL CAT OR NOT A CAT**: Return error immediately - DO NOT analyze. DO NOT try to find cat features in non-cat images.
 
 **PROCESSING ORDER**:
-1. **FIRST**: Check if there is a cat in the image - if NO CAT, return error immediately
-2. **SECOND**: If cat detected, analyze the cat's facial features with EXTREME PRECISION and place visual landmark dots at exact anatomical locations
+1. **FIRST**: Strictly verify this is a REAL CAT - if NOT a cat or no cat visible, return error immediately
+2. **SECOND**: If genuine cat detected, analyze the cat's facial features with EXTREME PRECISION
 3. **THIRD**: Assess the pain level based on facial expression analysis
-4. **FOURTH**: Provide detailed facial analysis based on the pain level findings
+4. **FOURTH**: Provide detailed facial analysis
 5. **FIFTH**: Give recommendations based on the pain level assessment
 
 **LANDMARK ACCURACY IS CRITICAL**: You must place each landmark dot with surgical precision at the exact anatomical location. This is for veterinary pain assessment, so accuracy is essential for proper diagnosis.

@@ -864,7 +864,7 @@ export default function MainApp() {
         Home: <HomePage onSelect={navigateToPage} />, 
         "My account": <MyAccountPage onUserDataUpdate={refreshUserData} />, 
         "Appointment": <AppointmentPage onNavigate={navigateWithData} />, 
-        "Appointment Scheduling": <AppointmentSchedulingPage initialAppointmentType={appointmentType} onBack={navigateBack} onNavigate={navigateToPage} {...navigationData} />, 
+        "Appointment Scheduling": <AppointmentSchedulingPage key={navigationData.appointmentToEdit?.id || 'new'} initialAppointmentType={appointmentType} onBack={navigateBack} onNavigate={navigateToPage} {...navigationData} />, 
         "Pet profile": <PetProfilePage onNavigate={navigateWithData} />,
         "Register Pet": <RegisterPetPage onNavigate={navigateToPage} />, 
         "Pet Details": <PetDetailsPage onNavigate={navigateWithData as any} petId={navigationData.petId} />, 

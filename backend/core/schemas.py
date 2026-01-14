@@ -686,11 +686,11 @@ class ServiceRequest(ServiceRequestBase):
 class PainAssessmentBase(BaseModel):
     pet_id: int
     user_id: int
-    pet_name: str
-    pet_type: str
-    pain_level: str
+    pet_name: Optional[str] = None  # Made optional to match mobile app
+    pet_type: Optional[str] = None  # Made optional to match mobile app
+    pain_level: Optional[str] = None  # Made optional to match mobile app
     pain_score: Optional[int] = None  # Add pain_score field (0-2)
-    assessment_date: str
+    assessment_date: Optional[str] = None  # Made optional with auto-default in backend
     recommendations: Optional[str] = None
     notes: Optional[str] = None  # Add notes field
     image_url: Optional[str] = None
@@ -698,8 +698,20 @@ class PainAssessmentBase(BaseModel):
     assessment_answers: Optional[str] = None
     questions_completed: Optional[bool] = None
 
-class PainAssessmentCreate(PainAssessmentBase):
-    pass
+class PainAssessmentCreate(BaseModel):
+    pet_id: int  # Required
+    pet_name: Optional[str] = None
+    pet_type: Optional[str] = None
+    pain_level: Optional[str] = None
+    pain_score: Optional[int] = None
+    assessment_date: Optional[str] = None  # Auto-default in backend
+    recommendations: Optional[str] = None
+    notes: Optional[str] = None
+    image_url: Optional[str] = None
+    basic_answers: Optional[str] = None
+    assessment_answers: Optional[str] = None
+    questions_completed: Optional[bool] = None
+    # user_id is not in the create schema - it's extracted from auth token
 
 class PainAssessmentUpdate(BaseModel):
     pet_id: Optional[int] = None

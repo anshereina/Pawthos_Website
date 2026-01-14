@@ -116,9 +116,12 @@ async def predict_pain_eld(
         image_bytes = file.file.read()
         result = ai_service.predict_pain_eld(image_bytes)
         
+        logging.info(f"AI Service Result: {result}")
+        
         # Check if the result contains an error (no cat detected)
         if result.get("error") and result.get("error_type") == "NO_CAT_DETECTED":
             error_guidance = result.get('error_guidance', 'Please upload a clear photo of a cat\'s face for pain assessment.')
+            logging.warning(f"No cat detected in image")
             raise HTTPException(
                 status_code=400, 
                 detail={
@@ -126,6 +129,19 @@ async def predict_pain_eld(
                     "error_type": "NO_CAT_DETECTED",
                     "error_message": "No cat face detected in the image",
                     "error_guidance": error_guidance
+                }
+            )
+        
+        # Check if AI returned success=False (indicating detection failure)
+        if not result.get("success", True):
+            logging.warning(f"AI returned success=False: {result}")
+            raise HTTPException(
+                status_code=400, 
+                detail={
+                    "error": True,
+                    "error_type": result.get("error_type", "NO_CAT_DETECTED"),
+                    "error_message": result.get("error_message", "No cat face detected in the image"),
+                    "error_guidance": result.get("error_guidance", "Please upload a clear photo of a cat's face for pain assessment.")
                 }
             )
         
