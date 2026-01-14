@@ -44,7 +44,7 @@ const MedicalRecordsPage: React.FC = () => {
   
   // Fetch data from backend
   const { medicalRecords, loading: medicalRecordsLoading, error: medicalRecordsError, updateMedicalRecord, deleteMedicalRecord, refetch: refetchMedicalRecords } = useMedicalRecords();
-  const { appointments, loading: appointmentsLoading, error: appointmentsError, updateAppointment } = useAppointments();
+  const { appointments, loading: appointmentsLoading, error: appointmentsError, updateAppointment, fetchAppointments } = useAppointments();
 
   const handleItemClick = (path: string) => {
     router.navigate({ to: path });
@@ -107,6 +107,12 @@ const MedicalRecordsPage: React.FC = () => {
         notes: appointment.notes,
         status: newStatus,
       });
+      
+      // Close the dropdown
+      setStatusDropdownOpen(null);
+      
+      // Refetch appointments to update the UI
+      await fetchAppointments();
       
       // If status is changed to Completed, create a medical record
       if (newStatus === 'Completed') {
@@ -174,6 +180,14 @@ const MedicalRecordsPage: React.FC = () => {
       });
       setIsEditAppointmentModalOpen(false);
       setSelectedAppointment(null);
+      
+      // Refetch appointments to update the UI
+      await fetchAppointments();
+      
+      // If status changed to Completed, also refetch medical records
+      if (data.status === 'Completed') {
+        await refetchMedicalRecords();
+      }
     } catch (error) {
       console.error('Failed to update appointment:', error);
     }
