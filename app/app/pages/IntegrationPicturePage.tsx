@@ -492,8 +492,10 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
         let errorData;
         try {
           errorData = await response.json();
+          console.log('📋 Error data from API:', errorData);
         } catch {
           const errorText = await response.text();
+          console.error('📋 Error text from API:', errorText);
         // Hide technical error details from user
         const userFriendlyMessage = `Failed to analyze image\n\nPlease try again with a different photo.\n\nMake sure:\n• The image is clear and well-lit\n• The cat's face is visible\n• The file is not corrupted`;
         setErrorMessage(userFriendlyMessage);
@@ -529,14 +531,30 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
           return;
         }
         
-        // Handle specific error types (400 status with error object)
-        if (response.status === 400 && errorData.error && errorData.error_type) {
-          // Cat detection failed - show user-friendly message
-          const userFriendlyMessage = `No cat face detected in the image\n\nPlease upload a clear photo of a cat's face for pain assessment.\n\nTips:\n• Make sure the cat's face is clearly visible\n• Take the photo in good lighting\n• Ensure the cat is calm and facing the camera`;
+        // Handle specific error types (400 status with NO_CAT_DETECTED)
+        // FastAPI wraps the error in {"detail": {...}} format
+        if (response.status === 400) {
+          const detail = errorData.detail;
+          console.log('🐱 Cat detection detail:', detail);
+          
+          // Check if it's a structured error object
+          if (detail && typeof detail === 'object' && detail.error_type === 'NO_CAT_DETECTED') {
+            // Cat detection failed - show user-friendly message
+            const userFriendlyMessage = `No Cat Detected\n\n${detail.error_message || 'No cat face detected in the image'}\n\n${detail.error_guidance || 'Please upload a clear photo of a cat\'s face for pain assessment.'}`;
+            setErrorMessage(userFriendlyMessage);
+            setErrorType('400');
+            setErrorModalVisible(true);
+            setIsCheckingImage(false);
+            setUploadProgress(0);
+            return;
+          }
+          // Fallback for other 400 errors
+          const userFriendlyMessage = `Invalid Image\n\nPlease upload a clear photo of a cat's face for pain assessment.\n\nTips:\n• Make sure the cat's face is clearly visible\n• Take the photo in good lighting\n• Ensure the cat is calm and facing the camera`;
           setErrorMessage(userFriendlyMessage);
           setErrorType('400');
           setErrorModalVisible(true);
           setIsCheckingImage(false);
+          setUploadProgress(0);
           return;
         }
         

@@ -56,22 +56,34 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
       setStatusText('Processing results...');
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.log('🔍 Scanning error data:', errorData);
+        } catch {
+          errorData = {};
+        }
         
-        // Check for cat detection error
-        if (response.status === 400 || response.status === 422) {
-          const errorMessage = errorData.detail?.error_message 
-            || errorData.detail?.message 
-            || errorData.message 
-            || 'No cat face detected in the image.';
-          const errorGuidance = errorData.detail?.error_guidance 
-            || errorData.detail?.guidance
-            || errorData.error_guidance 
-            || 'Please take a clear photo of your cat\'s face in good lighting. Make sure the entire face is visible and the lighting is adequate.';
+        // Check for NO_CAT_DETECTED error (FastAPI wraps in detail)
+        if (response.status === 400) {
+          const detail = errorData.detail;
           
+          // Check if it's the NO_CAT_DETECTED error
+          if (detail && typeof detail === 'object' && detail.error_type === 'NO_CAT_DETECTED') {
+            // Pass the error to result page instead of showing alert
+            onDone({
+              error: true,
+              error_type: 'NO_CAT_DETECTED',
+              error_message: detail.error_message || 'No cat face detected in the image',
+              error_guidance: detail.error_guidance || 'Please upload a clear photo of a cat\'s face for pain assessment.'
+            }, imageUri);
+            return;
+          }
+          
+          // Fallback for other 400 errors
           Alert.alert(
-            'Cat Face Not Detected',
-            `${errorMessage}\n\n${errorGuidance}`,
+            'Invalid Image',
+            'Please upload a clear photo of a cat\'s face for pain assessment.',
             [{ text: 'OK', onPress: onCancel }]
           );
           return;
@@ -88,8 +100,20 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
 
         throw new Error(errorData.message || 'Analysis failed');
       }
-
+      
       const result = await response.json();
+      
+      // Check if result itself contains an error (in case AI service returns error without HTTP error status)
+      if (result.error && result.error_type === 'NO_CAT_DETECTED') {
+        // Pass the error to result page to show the error modal
+        onDone({
+          error: true,
+          error_type: 'NO_CAT_DETECTED',
+          error_message: result.error_message || 'No cat face detected in the image',
+          error_guidance: result.error_guidance || 'Please upload a clear photo of a cat\'s face for pain assessment.'
+        }, imageUri);
+        return;
+      }
       setProgress(100);
       setStatusText('Analysis complete!');
 

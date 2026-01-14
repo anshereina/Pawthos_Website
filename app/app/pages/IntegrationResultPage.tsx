@@ -740,6 +740,10 @@ export default function IntegrationResultPage({
                     // Check if image_url is already a server URL or local file path
                     let result;
                     const imageUrlString = String(imageToUse || '');
+                    console.log('=== SAVE ASSESSMENT DEBUG ===');
+                    console.log('Image URL string:', imageUrlString);
+                    console.log('Assessment data:', JSON.stringify(assessmentData, null, 2));
+                    
                     if (imageUrlString.startsWith('file://')) {
                         // Local file path - upload via multipart endpoint
                         console.log('Using multipart upload for local file');
@@ -755,26 +759,52 @@ export default function IntegrationResultPage({
                         result = await createPainAssessment(assessmentData);
                     }
 
+                    console.log('=== SAVE RESULT ===');
+                    console.log('Result:', JSON.stringify(result, null, 2));
+
                     if (result.success) {
                         console.log('Assessment created and saved successfully');
                         setIsSaved(true);
                         // Clear the assessment data from storage
                         await AsyncStorage.removeItem('currentAssessmentData');
                         
+                        // Show success message
+                        Alert.alert('Success', 'Assessment saved successfully!');
+                        
                         // Don't navigate automatically - stay on the same page
                         // The user can choose to navigate using the back arrow or second opinion button
                     } else {
                         console.error('Failed to save assessment:', result.message);
-                        Alert.alert('Error', 'Failed to save assessment. Please try again.');
+                        const errorMessage = result.message || 'Failed to save assessment. Please try again.';
+                        console.error('Full error result:', JSON.stringify(result, null, 2));
+                        Alert.alert(
+                            'Error', 
+                            `Failed to save assessment.\n\nReason: ${errorMessage}\n\nPlease try again or contact support if the issue persists.`
+                        );
                         setSaveChoice(null);
                     }
                 } else {
                     Alert.alert('Error', 'No assessment data found to save.');
                     setSaveChoice(null);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error saving assessment:', error);
-                Alert.alert('Error', 'Failed to save assessment. Please try again.');
+                console.error('Error details:', {
+                    message: error?.message,
+                    name: error?.name,
+                    stack: error?.stack
+                });
+                
+                // Extract error message
+                let errorMessage = 'Failed to save assessment. Please try again.';
+                if (error?.message) {
+                    errorMessage = error.message;
+                }
+                
+                Alert.alert(
+                    'Error', 
+                    `Failed to save assessment.\n\nError: ${errorMessage}\n\nPlease try again or contact support if the issue persists.`
+                );
                 setSaveChoice(null);
             } finally {
                 setIsSaving(false);
