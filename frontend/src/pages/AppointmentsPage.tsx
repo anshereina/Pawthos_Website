@@ -267,8 +267,8 @@ const AppointmentsPage: React.FC = () => {
   const getCurrentData = () => {
     switch (activeTab) {
       case 'appointments':
-        // Show only non-completed appointments in Appointments tab
-        return appointments.filter(apt => apt.status !== 'Completed');
+        // Show only pending appointments (exclude Approved and Completed)
+        return appointments.filter(apt => apt.status !== 'Completed' && apt.status !== 'Approve');
       case 'request':
         // Show only non-completed service requests in Requests tab
         return serviceRequests.filter(req => req.status !== 'Completed');
