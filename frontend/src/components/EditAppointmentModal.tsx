@@ -33,6 +33,13 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
         timeValue = timeValue.substring(0, 5);
       }
 
+      // Normalize date to YYYY-MM-DD (backend expects a date, not full ISO string)
+      let dateValue = appointment.date || '';
+      if (dateValue && typeof dateValue === 'string' && dateValue.includes('T')) {
+        // Example: "2024-11-13T00:00:00" -> "2024-11-13"
+        dateValue = dateValue.split('T')[0];
+      }
+
       // Parse notes to extract Medicine Used and other data
       let extractedMedicineUsed = '';
       let extractedContactNumber = '';
@@ -63,7 +70,7 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
 
       setFormData({
         type: appointment.type || '',
-        date: appointment.date || '',
+        date: dateValue,
         time: timeValue,
         veterinarian: appointment.veterinarian || 'Dr. Fe Templado',
         medicineUsed: extractedMedicineUsed,

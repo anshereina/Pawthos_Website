@@ -98,12 +98,18 @@ const MedicalRecordsPage: React.FC = () => {
   const handleStatusChange = async (appointment: any, newStatus: string) => {
     try {
       console.log('handleStatusChange called with:', appointment.id, newStatus);
+
+      // Normalize date to YYYY-MM-DD to satisfy backend (Pydantic date field)
+      let normalizedDate = appointment.date;
+      if (normalizedDate && typeof normalizedDate === 'string' && normalizedDate.includes('T')) {
+        normalizedDate = normalizedDate.split('T')[0];
+      }
       
       // Update appointment status
       await updateAppointment(appointment.id, {
         pet_id: appointment.pet_id,
         type: appointment.type,
-        date: appointment.date,
+        date: normalizedDate,
         time: appointment.time,
         veterinarian: appointment.veterinarian,
         notes: appointment.notes,
@@ -124,7 +130,7 @@ const MedicalRecordsPage: React.FC = () => {
         try {
           await medicalRecordService.createMedicalRecord(appointment.pet_id, {
             reason_for_visit: appointment.type,
-            date_visited: appointment.date,
+            date_visited: normalizedDate,
             veterinarian: appointment.veterinarian || 'Dr. Ma Fe Templado',
             notes: appointment.notes || '',
           });
