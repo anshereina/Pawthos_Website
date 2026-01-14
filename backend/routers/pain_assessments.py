@@ -99,40 +99,40 @@ async def create_pain_assessment_with_image(
         # Handle image upload
         image_url = None
         if file:
-        # Validate file type
-        allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
-        file_extension = Path(file.filename).suffix.lower()
-        if file_extension not in allowed_extensions:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
-            )
+            # Validate file type
+            allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+            file_extension = Path(file.filename).suffix.lower()
+            if file_extension not in allowed_extensions:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
+                )
+            
+            # Validate file size (max 10MB)
+            if file.size and file.size > 10 * 1024 * 1024:
+                raise HTTPException(
+                    status_code=400,
+                    detail="File too large. Maximum size is 10MB."
+                )
+            
+            # Generate unique filename and save (absolute path under backend/uploads)
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            backend_dir = Path(__file__).resolve().parent.parent
+            upload_dir = backend_dir / "uploads"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            file_path = upload_dir / unique_filename
+            
+            try:
+                with open(file_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
+                image_url = f"/uploads/{unique_filename}"
+                print(f"Image uploaded successfully: {image_url}")
+            except Exception as e:
+                print(f"ERROR: Failed to upload image: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
+            finally:
+                file.file.close()
         
-        # Validate file size (max 10MB)
-        if file.size and file.size > 10 * 1024 * 1024:
-            raise HTTPException(
-                status_code=400,
-                detail="File too large. Maximum size is 10MB."
-            )
-        
-        # Generate unique filename and save (absolute path under backend/uploads)
-        unique_filename = f"{uuid.uuid4()}{file_extension}"
-        backend_dir = Path(__file__).resolve().parent.parent
-        upload_dir = backend_dir / "uploads"
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        file_path = upload_dir / unique_filename
-        
-        try:
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            image_url = f"/uploads/{unique_filename}"
-            print(f"Image uploaded successfully: {image_url}")
-        except Exception as e:
-            print(f"ERROR: Failed to upload image: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
-        finally:
-            file.file.close()
-    
         db_assessment = models.PainAssessment(
             pet_id=pet_id,
             user_id=current_user.id,  # Use authenticated user's ID
