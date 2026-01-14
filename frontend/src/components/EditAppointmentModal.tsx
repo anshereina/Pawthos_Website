@@ -19,6 +19,7 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
     date: '',
     time: '',
     veterinarian: '',
+    medicineUsed: '',
     notes: '',
     status: '',
   });
@@ -32,12 +33,41 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
         timeValue = timeValue.substring(0, 5);
       }
 
+      // Parse notes to extract Medicine Used and other data
+      let extractedMedicineUsed = '';
+      let extractedContactNumber = '';
+      let extractedOwnerBirthday = '';
+      let extractedMessageRemarks = '';
+      
+      if (appointment.notes) {
+        const notesParts = appointment.notes.split(' | ');
+        notesParts.forEach((part: string) => {
+          if (part.startsWith('Medicine Used: ')) {
+            extractedMedicineUsed = part.replace('Medicine Used: ', '');
+          } else if (part.startsWith('Contact: ')) {
+            extractedContactNumber = part.replace('Contact: ', '');
+          } else if (part.startsWith('Owner Birthday: ')) {
+            extractedOwnerBirthday = part.replace('Owner Birthday: ', '');
+          } else if (!part.startsWith('Medicine Used: ') && !part.startsWith('Contact: ') && !part.startsWith('Owner Birthday: ')) {
+            if (extractedMessageRemarks) {
+              extractedMessageRemarks += ' | ' + part;
+            } else {
+              extractedMessageRemarks = part;
+            }
+          }
+        });
+        if (!extractedMedicineUsed && !extractedContactNumber && !extractedOwnerBirthday && appointment.notes) {
+          extractedMessageRemarks = appointment.notes;
+        }
+      }
+
       setFormData({
         type: appointment.type || '',
         date: appointment.date || '',
         time: timeValue,
         veterinarian: appointment.veterinarian || '',
-        notes: appointment.notes || '',
+        medicineUsed: extractedMedicineUsed,
+        notes: extractedMessageRemarks,
         status: appointment.status || 'Pending',
       });
     }
@@ -45,7 +75,29 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Reconstruct notes with Medicine Used and other structured data
+    const noteParts = [];
+    if (formData.medicineUsed) {
+      noteParts.push(`Medicine Used: ${formData.medicineUsed}`);
+    }
+    if (contactNumber) {
+      noteParts.push(`Contact: ${contactNumber}`);
+    }
+    if (ownerBirthday) {
+      noteParts.push(`Owner Birthday: ${ownerBirthday}`);
+    }
+    if (formData.notes) {
+      noteParts.push(formData.notes);
+    }
+    
+    const reconstructedNotes = noteParts.join(' | ');
+    
+    // Submit with reconstructed notes
+    onSubmit({
+      ...formData,
+      notes: reconstructedNotes
+    });
   };
 
   if (!isOpen) return null;
@@ -223,17 +275,6 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
                 </div>
               </div>
 
-              {/* Medicine Used */}
-              {medicineUsed && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Medicine Used
-                  </label>
-                  <div className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900">
-                    {medicineUsed}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Editable Appointment Details */}
@@ -302,6 +343,23 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Medicine Used - Editable */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Medicine Used
+              </label>
+              <input
+                type="text"
+                value={formData.medicineUsed}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  medicineUsed: e.target.value 
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Enter medicine or vaccine used"
+              />
             </div>
 
             <div>
