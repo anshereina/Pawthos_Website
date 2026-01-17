@@ -69,9 +69,10 @@ class PainAssessmentService {
       }
 
       const headers = this.getAuthHeaders();
+      const headersObj = headers as Record<string, string>;
       console.log('🔍 getAllPainAssessments - Headers:', {
-        'Content-Type': headers['Content-Type'],
-        'Authorization': headers['Authorization'] ? 'Bearer ***' : 'Missing'
+        'Content-Type': headersObj['Content-Type'] || 'Missing',
+        'Authorization': headersObj['Authorization'] ? 'Bearer ***' : 'Missing'
       });
 
       const response = await fetch(this.baseUrl, {
