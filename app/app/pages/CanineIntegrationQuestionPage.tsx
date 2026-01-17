@@ -48,9 +48,9 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
         { source: require('../../assets/images/caninepictures/eyes/Eyes_0_No_Pain.png'), text: 'Eyes bright and alert', score: 0 },
         { source: require('../../assets/images/caninepictures/eyes/Eyes_1-2_Mild_Pain.png'), text: 'Eyes bright and alert', score: 0 },
         { source: require('../../assets/images/caninepictures/eyes/Eyes_3-4_Moderate_Pain.png'), text: 'Eyes slightly more dull in appearance; can have a slightly furrowed brow', score: 1 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_5-6_Moderate_to_Severe.png'), text: 'Dull eyes; worried look', score: 2 },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_5-6_Moderate_to_Severe.jpg'), text: 'Dull eyes; worried look', score: 2 },
         { source: require('../../assets/images/caninepictures/eyes/Eyes_7-8_Severe_Pain.png'), text: 'Dull eyes; seems distant or unfocused', score: 3 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_9-10_Worst_Pain_Possible.png'), text: 'Dull eyes; have a pained look', score: 4 }
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_9-10_Worst_Pain_Possible.jpg'), text: 'Dull eyes; have a pained look', score: 4 }
       ]
     },
     // Ambulation
