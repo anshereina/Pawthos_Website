@@ -56,12 +56,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   });
 
   const [petRecords, setPetRecords] = useState<PetVaccinationRecord[]>([]);
-  const [editingRecord, setEditingRecord] = useState<PetVaccinationRecord | null>(null);
+  // Removed unused: const [editingRecord, setEditingRecord] = useState<PetVaccinationRecord | null>(null);
   const [saving, setSaving] = useState(false);
   
   // Data for dropdowns
   const [pets, setPets] = useState<Pet[]>([]);
-  const [loadingPets, setLoadingPets] = useState(false);
+  const [_loadingPets, setLoadingPets] = useState(false);
   
 
   // Pagination state

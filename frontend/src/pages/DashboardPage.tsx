@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
-import { Cat, Dog, PieChart, LineChart, Bell, AlertTriangle, FileText } from 'lucide-react';
+import { Cat, Dog, LineChart, Bell, AlertTriangle, FileText } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
