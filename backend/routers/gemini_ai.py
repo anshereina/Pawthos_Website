@@ -289,8 +289,10 @@ async def assess_pain_with_gemini(
         if additional_context:
             prompt += f"\n\n**Additional Context:** {additional_context}"
         
-        # Initialize Gemini model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Initialize Gemini model (use latest available model)
+        model_name = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+        model = genai.GenerativeModel(model_name)
+        logging.info(f"Using Gemini model: {model_name}")
         
         # Prepare image for Gemini
         import PIL.Image

@@ -14,6 +14,10 @@ except ImportError:
 # Configure Enhanced AI
 AI_API_KEY = os.getenv("AI_API_KEY")
 
+# Model configuration - can be overridden via environment variable
+# Options: 'gemini-3-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+
 # No fallback key - must be set in environment variables
 if not AI_API_KEY:
     logging.error("AI_API_KEY not found in environment variables. Please set it in Railway or .env file.")
@@ -22,7 +26,7 @@ if not AI_API_KEY:
 if AI_AVAILABLE and AI_API_KEY:
     try:
         genai.configure(api_key=AI_API_KEY)
-        logging.info("Enhanced AI processing configured successfully")
+        logging.info(f"Enhanced AI processing configured successfully with model: {GEMINI_MODEL}")
     except Exception as e:
         logging.error(f"Failed to configure Enhanced AI: {e}")
         AI_AVAILABLE = False
@@ -36,6 +40,7 @@ else:
 # Debug logging
 logging.info(f"AI_AVAILABLE: {AI_AVAILABLE}")
 logging.info(f"AI_API_KEY present: {bool(AI_API_KEY)}")
+logging.info(f"GEMINI_MODEL: {GEMINI_MODEL}")
 
 # Enhanced Gemini AI prompt with accurate landmark detection
 ENHANCED_PROCESSING_PROMPT = """
@@ -355,47 +360,89 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
             }
         }
     
-    try:
-        # Prepare prompt
-        prompt = ENHANCED_PROCESSING_PROMPT
-        if additional_context:
-            prompt += f"\n\n**Additional Context:** {additional_context}"
-        
-        # Initialize Gemini model
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        
-        # Prepare image
-        import PIL.Image
-        import io
-        pil_image = PIL.Image.open(io.BytesIO(image_bytes))
-        
-        # Generate response - let Gemini AI do all the work
-        logging.info("Using Gemini AI for comprehensive pain assessment")
-        response = model.generate_content([prompt, pil_image])
-        
-        # Parse and return what Gemini AI gives us
-        result = parse_enhanced_response(response.text)
-        
-        # Add processing metadata
-        result["_processing_metadata"] = {
-            "enhanced_processing": True,
-            "timestamp": datetime.utcnow().isoformat(),
-            "version": "2.0"
-        }
-        
-        return result
-        
-    except Exception as e:
-        logging.error(f"Error in Gemini AI assessment: {e}")
-        return {
-            "success": False,
-            "pain_level": "Level 1 (Mild Pain)",
-            "pain_score": 5,
-            "confidence": 0.2,
-            "analysis": f"AI assessment error: {e}",
-            "model_type": "ELD",
-            "raw_response": str(e)
-        }
+    # Try primary model first, fallback to alternative models if quota exceeded
+    models_to_try = [GEMINI_MODEL]
+    
+    # Add fallback models if primary model fails (prefer newer models first)
+    if GEMINI_MODEL == "gemini-3-flash-preview":
+        models_to_try.extend(["gemini-2.0-flash", "gemini-1.5-flash"])
+    elif GEMINI_MODEL == "gemini-2.0-flash":
+        models_to_try.extend(["gemini-1.5-flash", "gemini-1.5-pro"])
+    
+    last_error = None
+    
+    for model_name in models_to_try:
+        try:
+            prompt = ENHANCED_PROCESSING_PROMPT
+            if additional_context:
+                prompt += f"\n\n**Additional Context:** {additional_context}"
+            
+            model = genai.GenerativeModel(model_name)
+            
+            import PIL.Image
+            import io
+            pil_image = PIL.Image.open(io.BytesIO(image_bytes))
+            
+            logging.info(f"Using Gemini AI model '{model_name}' for comprehensive pain assessment")
+            response = model.generate_content([prompt, pil_image])
+            
+            result = parse_enhanced_response(response.text)
+            
+            result["_processing_metadata"] = {
+                "enhanced_processing": True,
+                "timestamp": datetime.utcnow().isoformat(),
+                "model_used": model_name,
+                "version": "2.0"
+            }
+            
+            return result
+            
+        except Exception as e:
+            error_str = str(e)
+            last_error = e
+            
+            # Check if it's a quota error
+            if "quota" in error_str.lower() or "free_tier" in error_str.lower() or "limit" in error_str.lower():
+                logging.warning(f"Quota/limit error with model '{model_name}': {e}")
+                if model_name != models_to_try[-1]:  # Not the last model to try
+                    logging.info(f"Trying fallback model...")
+                    continue  # Try next model
+                else:
+                    # All models exhausted, return error
+                    logging.error(f"All models exhausted due to quota limits")
+                    return {
+                        "success": False,
+                        "error": True,
+                        "error_type": "QUOTA_EXCEEDED",
+                        "error_message": f"API quota exceeded. Please check your Google Cloud billing or try again later.",
+                        "pain_level": "Level 1 (Mild Pain)",
+                        "pain_score": 5,
+                        "confidence": 0.2,
+                        "analysis": f"AI assessment failed due to quota limits: {error_str}",
+                        "model_type": "ELD",
+                        "raw_response": str(e)
+                    }
+            else:
+                # Non-quota error, log and try next model if available
+                logging.error(f"Error with model '{model_name}': {e}")
+                if model_name != models_to_try[-1]:  # Not the last model to try
+                    logging.info(f"Trying fallback model...")
+                    continue
+                else:
+                    # All models exhausted, return error
+                    break
+    
+    # If we get here, all models failed with non-quota errors
+    logging.error(f"Error in Gemini AI assessment with all models: {last_error}")
+    return {
+        "success": False,
+        "pain_level": "Level 1 (Mild Pain)",
+        "pain_score": 5,
+        "confidence": 0.2,
+        "analysis": f"AI assessment error: {last_error}",
+        "model_type": "ELD",
+        "raw_response": str(last_error) if last_error else "Unknown error"
+    }
 
 def is_enhanced_ai_available() -> bool:
     """Check if Enhanced AI is available"""

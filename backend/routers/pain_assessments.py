@@ -24,39 +24,39 @@ def create_pain_assessment(assessment: schemas.PainAssessmentCreate, current_use
     print(f"Image URL: {assessment.image_url}")
     
     try:
-        # Match old backend behavior: don't validate pet/user existence, just create the assessment
-        # Store pet_type as-is without normalization (like old backend)
-        
-        db_assessment = models.PainAssessment(
-            pet_id=assessment.pet_id,
-            user_id=current_user.id,  # Use authenticated user's ID
-            pet_name=assessment.pet_name or "Pet",
-            pet_type=assessment.pet_type,  # Store as-is without normalization
-            pain_level=assessment.pain_level,
-            pain_score=assessment.pain_score,
-            assessment_date=assessment.assessment_date,
-            recommendations=assessment.recommendations,
-            notes=assessment.notes,
-            image_url=assessment.image_url,
-            basic_answers=assessment.basic_answers,
-            assessment_answers=assessment.assessment_answers,
-            questions_completed=assessment.questions_completed,
-            created_at=datetime.utcnow()
-        )
-        
+    # Match old backend behavior: don't validate pet/user existence, just create the assessment
+    # Store pet_type as-is without normalization (like old backend)
+    
+    db_assessment = models.PainAssessment(
+        pet_id=assessment.pet_id,
+        user_id=current_user.id,  # Use authenticated user's ID
+        pet_name=assessment.pet_name or "Pet",
+        pet_type=assessment.pet_type,  # Store as-is without normalization
+        pain_level=assessment.pain_level,
+        pain_score=assessment.pain_score,
+        assessment_date=assessment.assessment_date,
+        recommendations=assessment.recommendations,
+        notes=assessment.notes,
+        image_url=assessment.image_url,
+        basic_answers=assessment.basic_answers,
+        assessment_answers=assessment.assessment_answers,
+        questions_completed=assessment.questions_completed,
+        created_at=datetime.utcnow()
+    )
+    
         print("Creating pain assessment record in database...")
-        db.add(db_assessment)
-        db.commit()
-        db.refresh(db_assessment)
-        
-        # Debug logging
+    db.add(db_assessment)
+    db.commit()
+    db.refresh(db_assessment)
+    
+    # Debug logging
         print(f"=== PAIN ASSESSMENT CREATED SUCCESSFULLY (JSON) ===")
-        print(f"Assessment ID: {db_assessment.id}")
-        print(f"Image URL: {db_assessment.image_url}")
-        print(f"Pet Name: {db_assessment.pet_name}")
-        print(f"Pain Level: {db_assessment.pain_level}")
-        
-        return db_assessment
+    print(f"Assessment ID: {db_assessment.id}")
+    print(f"Image URL: {db_assessment.image_url}")
+    print(f"Pet Name: {db_assessment.pet_name}")
+    print(f"Pain Level: {db_assessment.pain_level}")
+    
+    return db_assessment
         
     except Exception as e:
         print(f"ERROR: Failed to create pain assessment: {str(e)}")
@@ -94,75 +94,75 @@ async def create_pain_assessment_with_image(
     print(f"File: {file.filename if file else 'None'}")
     
     try:
-        # Match old backend behavior: don't validate pet/user existence
+    # Match old backend behavior: don't validate pet/user existence
+    
+    # Handle image upload
+    image_url = None
+    if file:
+        # Validate file type
+        allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+        file_extension = Path(file.filename).suffix.lower()
+        if file_extension not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
+            )
         
-        # Handle image upload
-        image_url = None
-        if file:
-            # Validate file type
-            allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
-            file_extension = Path(file.filename).suffix.lower()
-            if file_extension not in allowed_extensions:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
-                )
-            
-            # Validate file size (max 10MB)
-            if file.size and file.size > 10 * 1024 * 1024:
-                raise HTTPException(
-                    status_code=400,
-                    detail="File too large. Maximum size is 10MB."
-                )
-            
-            # Generate unique filename and save (absolute path under backend/uploads)
-            unique_filename = f"{uuid.uuid4()}{file_extension}"
-            backend_dir = Path(__file__).resolve().parent.parent
-            upload_dir = backend_dir / "uploads"
-            upload_dir.mkdir(parents=True, exist_ok=True)
-            file_path = upload_dir / unique_filename
-            
-            try:
-                with open(file_path, "wb") as buffer:
-                    shutil.copyfileobj(file.file, buffer)
-                image_url = f"/uploads/{unique_filename}"
+        # Validate file size (max 10MB)
+        if file.size and file.size > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=400,
+                detail="File too large. Maximum size is 10MB."
+            )
+        
+        # Generate unique filename and save (absolute path under backend/uploads)
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        backend_dir = Path(__file__).resolve().parent.parent
+        upload_dir = backend_dir / "uploads"
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        file_path = upload_dir / unique_filename
+        
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            image_url = f"/uploads/{unique_filename}"
                 print(f"Image uploaded successfully: {image_url}")
-            except Exception as e:
+        except Exception as e:
                 print(f"ERROR: Failed to upload image: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
-            finally:
-                file.file.close()
-        
-        db_assessment = models.PainAssessment(
-            pet_id=pet_id,
-            user_id=current_user.id,  # Use authenticated user's ID
-            pet_name=pet_name,
-            pet_type=pet_type,  # Store as-is without normalization
-            pain_level=pain_level,
-            pain_score=pain_score,
-            assessment_date=assessment_date,
-            recommendations=recommendations,
-            notes=notes,
-            image_url=image_url,
-            basic_answers=basic_answers,
-            assessment_answers=assessment_answers,
-            questions_completed=questions_completed,
-            created_at=datetime.utcnow()
-        )
-        
+            raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
+        finally:
+            file.file.close()
+    
+    db_assessment = models.PainAssessment(
+        pet_id=pet_id,
+        user_id=current_user.id,  # Use authenticated user's ID
+        pet_name=pet_name,
+        pet_type=pet_type,  # Store as-is without normalization
+        pain_level=pain_level,
+        pain_score=pain_score,
+        assessment_date=assessment_date,
+        recommendations=recommendations,
+        notes=notes,
+        image_url=image_url,
+        basic_answers=basic_answers,
+        assessment_answers=assessment_answers,
+        questions_completed=questions_completed,
+        created_at=datetime.utcnow()
+    )
+    
         print("Creating pain assessment record in database...")
-        db.add(db_assessment)
-        db.commit()
-        db.refresh(db_assessment)
-        
-        # Debug logging
+    db.add(db_assessment)
+    db.commit()
+    db.refresh(db_assessment)
+    
+    # Debug logging
         print(f"=== PAIN ASSESSMENT CREATED SUCCESSFULLY ===")
-        print(f"Assessment ID: {db_assessment.id}")
-        print(f"Image URL: {db_assessment.image_url}")
-        print(f"Pet Name: {db_assessment.pet_name}")
-        print(f"Pain Level: {db_assessment.pain_level}")
-        
-        return db_assessment
+    print(f"Assessment ID: {db_assessment.id}")
+    print(f"Image URL: {db_assessment.image_url}")
+    print(f"Pet Name: {db_assessment.pet_name}")
+    print(f"Pain Level: {db_assessment.pain_level}")
+    
+    return db_assessment
         
     except HTTPException:
         # Re-raise HTTP exceptions

@@ -129,7 +129,7 @@ export default function EditProfileModal({
             const formData = new FormData();
             const filename = uri.split('/').pop() || 'photo.jpg';
             const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : 'image/jpeg';
+            const type = match ? `image/${match[1] === 'jpg' ? 'jpeg' : match[1]}` : 'image/jpeg';
             
             console.log('Filename:', filename);
             console.log('Type:', type);
@@ -154,11 +154,13 @@ export default function EditProfileModal({
             const uploadUrl = `${API_BASE_URL}/upload-user-photo`;
             console.log('Upload URL:', uploadUrl);
             
+            // Note: Do NOT set Content-Type header - React Native needs to set it with multipart boundary
             const response = await fetch(uploadUrl, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                },
+                    // Explicitly don't set Content-Type - let React Native set it with boundary
+                } as any,
                 body: formData,
             });
 
@@ -166,18 +168,39 @@ export default function EditProfileModal({
             console.log('Response ok:', response.ok);
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Upload failed:', errorText);
-                throw new Error(`Failed to upload image: ${response.status} - ${errorText}`);
+                let errorMessage = `Upload failed with status ${response.status}`;
+                try {
+                    const errorText = await response.text();
+                    console.error('Upload failed response:', errorText);
+                    
+                    // Try to parse as JSON for structured error
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMessage = errorJson.detail || errorMessage;
+                    } catch {
+                        errorMessage = errorText || errorMessage;
+                    }
+                } catch (e) {
+                    console.error('Error reading error response:', e);
+                }
+                
+                console.error('Upload failed:', errorMessage);
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
             console.log('Upload response:', data);
+            
+            if (!data.photo_url) {
+                throw new Error('Server did not return photo_url');
+            }
+            
             return data.photo_url; // Returns server URL like "/uploads/user_123_timestamp.jpg"
             
         } catch (error) {
             console.error('Image upload error:', error);
-            Alert.alert('Error', `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Alert.alert('Upload Error', `Failed to upload image: ${errorMessage}`);
             return null;
         } finally {
             setUploading(false);

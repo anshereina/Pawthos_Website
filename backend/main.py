@@ -282,30 +282,59 @@ async def upload_user_photo(
 ):
     """Upload user profile photo (for mobile app)"""
     try:
-        # Validate file type
-        if not file.content_type or not file.content_type.startswith('image/'):
-            raise HTTPException(status_code=400, detail="File must be an image")
+        # Read file content first
+        content = await file.read()
+        
+        # Validate file type - be more lenient for React Native FormData
+        # React Native might not send content-type correctly, so check file extension and magic bytes
+        file_extension = Path(file.filename).suffix.lower() if file.filename else '.jpg'
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+        
+        # Check if content-type is valid, or if extension is valid (React Native fallback)
+        content_type_valid = file.content_type and file.content_type.startswith('image/')
+        extension_valid = file_extension in valid_extensions
+        
+        if not content_type_valid and not extension_valid:
+            raise HTTPException(status_code=400, detail=f"File must be an image. Received: content_type={file.content_type}, extension={file_extension}")
+        
+        # Validate magic bytes (first few bytes of file to confirm it's an image)
+        if len(content) < 4:
+            raise HTTPException(status_code=400, detail="File is too small to be a valid image")
+        
+        # Check common image file signatures
+        is_image = (
+            content[:2] == b'\xff\xd8' or  # JPEG
+            content[:8] == b'\x89PNG\r\n\x1a\n' or  # PNG
+            content[:6] in (b'GIF87a', b'GIF89a') or  # GIF
+            content[:4] == b'RIFF' and content[8:12] == b'WEBP'  # WEBP
+        )
+        
+        if not is_image:
+            raise HTTPException(status_code=400, detail="File does not appear to be a valid image format")
         
         # Generate unique filename
-        file_extension = Path(file.filename).suffix.lower() if file.filename else '.jpg'
+        if not file_extension or file_extension not in valid_extensions:
+            file_extension = '.jpg'  # Default to jpg if extension is invalid
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         filename = f"user_{current_user.id}_{timestamp}{file_extension}"
         file_path = UPLOAD_DIR / filename
         
         # Save file
         with open(file_path, "wb") as buffer:
-            content = await file.read()
             buffer.write(content)
         
         # Update user photo URL in database
         photo_url = f"/uploads/{filename}"
         current_user.photo_url = photo_url
         db.commit()
+        db.refresh(current_user)
         
         return {"photo_url": photo_url}
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to upload photo: {str(e)}")
 
 @app.post("/api/upload-pet-photo")

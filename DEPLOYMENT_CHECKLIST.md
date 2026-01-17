@@ -1,349 +1,290 @@
-# Deployment Checklist - Placeholder Account Claiming
+# Pawthos Deployment Checklist
 
-## Pre-Deployment
-
-### 1. Backup Database
-- [ ] Create full database backup
-- [ ] Test backup restoration (optional but recommended)
-```bash
-mysqldump -u username -p pawthos_db > backup_$(date +%Y%m%d_%H%M%S).sql
-```
-
-### 2. Review Changes
-- [ ] All 7 backend files modified correctly
-- [ ] No linter errors in modified files
-- [ ] Migration script reviewed and understood
-
-### 3. Test Environment (Recommended)
-- [ ] Applied changes to test/dev environment first
-- [ ] Ran manual tests successfully
-- [ ] Verified no breaking changes
+Quick reference checklist for deploying Pawthos to production.
 
 ---
 
-## Deployment Steps
+## Pre-Deployment Preparation
 
-### Step 1: Apply Database Migration ⚠️ CRITICAL
-```bash
-mysql -u username -p pawthos_db < backend/migrations/add_is_placeholder_to_users.sql
-```
+### Accounts & Access
+- [ ] Railway account created and verified
+- [ ] Vercel account created and verified
+- [ ] GitHub repository access confirmed
+- [ ] Namecheap domain access (`cityvetsanpedro.me`)
+- [ ] Gmail account with App Password generated
 
-**Verification:**
-```sql
--- Check column exists
-SHOW COLUMNS FROM users LIKE 'is_placeholder';
-
--- Check indexes created
-SHOW INDEX FROM users WHERE Key_name IN ('idx_users_is_placeholder', 'idx_users_name');
-
--- Check existing placeholders marked
-SELECT COUNT(*) FROM users WHERE is_placeholder = 1;
-```
-
-- [ ] Migration executed successfully
-- [ ] `is_placeholder` column exists
-- [ ] Indexes created
-- [ ] Existing placeholder users marked (if any)
-
-### Step 2: Deploy Backend Code
-
-```bash
-cd backend
-
-# Pull latest code (if using git)
-git pull origin main
-
-# Restart backend server
-# (Method depends on your setup - systemd, pm2, docker, etc.)
-
-# Example for development:
-# uvicorn main:app --reload
-
-# Example for production with systemd:
-# sudo systemctl restart pawthos-backend
-```
-
-- [ ] Backend code updated
-- [ ] Backend server restarted
-- [ ] Server starts without errors
-- [ ] No import errors in logs
-
-### Step 3: Verify Deployment
-
-**Check Backend Health:**
-```bash
-# Test API is responding
-curl http://localhost:8000/docs
-
-# Or whatever your backend URL is
-curl https://your-domain.com/api/docs
-```
-
-- [ ] API responding correctly
-- [ ] Swagger docs accessible
-- [ ] No errors in startup logs
+### Code Ready
+- [ ] All code pushed to GitHub main branch
+- [ ] `.env.example` file up to date
+- [ ] Frontend `.env` configured locally and tested
+- [ ] Backend `requirements.txt` finalized
+- [ ] Database migrations tested locally
+- [ ] `_redirects` file present in `frontend/public/`
 
 ---
 
-## Post-Deployment Testing
+## Backend Deployment (Railway)
 
-### Test 1: Create Placeholder (via Admin)
-- [ ] Login to admin panel
-- [ ] Create a pet with test owner name
-- [ ] Verify placeholder user created in database
-```sql
-SELECT * FROM users WHERE name = 'Test Owner' AND is_placeholder = 1;
-```
+### Railway Project Setup
+- [ ] New Railway project created from GitHub repo
+- [ ] PostgreSQL database added to project
+- [ ] Root directory set to `backend`
+- [ ] Start command verified: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-### Test 2: Claim Placeholder (via Mobile/API)
-- [ ] Sign up with same name as test owner
-- [ ] Use different email than placeholder
-- [ ] Verify account claimed (same user_id)
-```sql
-SELECT * FROM users WHERE name = 'Test Owner';
--- Should show: is_placeholder=0, real email
-```
+### Environment Variables
+- [ ] `DATABASE_URL` copied from PostgreSQL service
+- [ ] `SECRET_KEY` generated (min 32 characters)
+- [ ] `SMTP_USER` set (Gmail address)
+- [ ] `SMTP_PASS` set (Gmail App Password)
+- [ ] `ENVIRONMENT` set to `production`
+- [ ] `CORS_ORIGINS` includes frontend URL
 
-### Test 3: Login with Claimed Account
-- [ ] Login with new email and password
-- [ ] Verify access token received
-- [ ] Verify user ID matches claimed account
-
-### Test 4: Verify Records Linked
-- [ ] Fetch user's pets via API
-- [ ] Verify test pet appears
-- [ ] Check vaccination records linked
-
-### Test 5: New User Without Placeholder
-- [ ] Sign up with completely new name
-- [ ] Verify new account created (not claimed)
-- [ ] Verify login works
+### Database & Deployment
+- [ ] Initial deployment completed
+- [ ] Railway CLI installed (`npm install -g @railway/cli`)
+- [ ] Railway project linked (`railway link`)
+- [ ] Database migrations run (`railway run alembic upgrade head`)
+- [ ] Backend URL noted: `https://____________.railway.app`
+- [ ] API docs accessible at `/docs` endpoint
+- [ ] Health check passed: `curl https://your-backend.railway.app/`
 
 ---
 
-## Monitoring (First 24 Hours)
+## Frontend Deployment (Vercel)
 
-### Check Logs Regularly
-Watch for these patterns:
+### Vercel Project Setup
+- [ ] New Vercel project created from GitHub
+- [ ] Framework preset set to "Create React App"
+- [ ] Root directory set to `frontend`
+- [ ] Build command: `npm run build`
+- [ ] Output directory: `build`
 
-**Good signs:**
+### Environment Variables
+- [ ] `REACT_APP_API_URL` set to Railway backend URL
+
+### Deployment
+- [ ] Initial deployment completed
+- [ ] Preview URL working
+- [ ] SPA routing working (test refresh on different routes)
+- [ ] API calls working from frontend
+- [ ] No CORS errors in browser console
+
+---
+
+## Domain Configuration (Namecheap)
+
+### Vercel Domain Setup
+- [ ] `cityvetsanpedro.me` added to Vercel
+- [ ] `www.cityvetsanpedro.me` added to Vercel
+- [ ] DNS records noted from Vercel
+
+### Namecheap DNS Configuration
+- [ ] Logged into Namecheap account
+- [ ] Navigated to Advanced DNS for domain
+- [ ] A Record added: `@` → `76.76.19.19`
+- [ ] CNAME Record added: `www` → `cname.vercel-dns.com`
+- [ ] Old conflicting records removed
+- [ ] DNS changes saved
+
+### Domain Verification
+- [ ] Domain verified in Vercel (may take 1-2 hours)
+- [ ] SSL certificate auto-provisioned by Vercel
+- [ ] `https://cityvetsanpedro.me` accessible
+- [ ] `https://www.cityvetsanpedro.me` accessible
+- [ ] Both URLs redirect correctly
+
+---
+
+## Post-Deployment Configuration
+
+### CORS Update
+- [ ] Railway `CORS_ORIGINS` includes both domain URLs
+- [ ] Backend redeployed after CORS update
+- [ ] CORS tested from live frontend
+
+### Admin Account Setup
+- [ ] First user registered via API or frontend
+- [ ] OTP email received and verified
+- [ ] User promoted to admin in database
+- [ ] Admin login tested
+- [ ] Admin dashboard accessible
+
+### Testing Full Application
+
+#### Authentication & Users
+- [ ] New user registration works
+- [ ] OTP email delivery works
+- [ ] Email verification works
+- [ ] Login works
+- [ ] Password reset works
+- [ ] User profile updates work
+
+#### Core Features
+- [ ] Pet registration works
+- [ ] Pet list displays correctly
+- [ ] Medical records creation works
+- [ ] Vaccination records creation works
+- [ ] Appointment scheduling works
+- [ ] Appointment list displays
+- [ ] Walk-in registration works
+
+#### Admin Features
+- [ ] Admin dashboard loads
+- [ ] User management works
+- [ ] Reports generation works
+- [ ] Vaccination drives creation works
+- [ ] Animal control records work
+- [ ] Shipping permits work
+- [ ] Meat inspection records work
+- [ ] Pain assessment features work
+
+---
+
+## Monitoring & Maintenance
+
+### Railway Monitoring
+- [ ] Deployment logs reviewed
+- [ ] No errors in recent logs
+- [ ] Metrics checked (CPU, Memory, Network)
+- [ ] PostgreSQL database connection stable
+- [ ] Auto-deploy from GitHub enabled
+
+### Vercel Monitoring
+- [ ] Build logs reviewed
+- [ ] No build warnings or errors
+- [ ] Analytics configured
+- [ ] Auto-deploy from GitHub enabled
+
+### Application Health
+- [ ] API response times acceptable (<2s)
+- [ ] Frontend load times acceptable (<3s)
+- [ ] Database queries optimized
+- [ ] No JavaScript errors in browser console
+- [ ] Mobile responsiveness checked
+
+---
+
+## Security Checklist
+
+- [ ] `.env` files not committed to Git
+- [ ] `SECRET_KEY` is strong and unique
+- [ ] Database password is strong
+- [ ] Gmail App Password used (not regular password)
+- [ ] HTTPS enforced on all endpoints
+- [ ] CORS properly restricted to frontend domain
+- [ ] API rate limiting considered
+- [ ] Input validation working
+- [ ] SQL injection protection verified (SQLAlchemy ORM)
+- [ ] XSS protection in place
+
+---
+
+## Backup & Recovery
+
+- [ ] Railway automatic backups verified
+- [ ] Manual database backup tested:
+  ```bash
+  railway run pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
+  ```
+- [ ] Backup restoration process documented
+- [ ] Environment variables backed up securely
+- [ ] GitHub repository access documented
+
+---
+
+## Documentation
+
+- [ ] README.md updated with production URLs
+- [ ] API documentation accessible at `/docs`
+- [ ] Deployment guide reviewed
+- [ ] Admin credentials documented securely
+- [ ] Emergency contacts list created
+
+---
+
+## Final Verification
+
+- [ ] All checklist items completed
+- [ ] Production URLs noted below
+- [ ] Team notified of deployment
+- [ ] Users can access application
+- [ ] Support channels ready
+
+---
+
+## Production URLs
+
+**Frontend**: https://cityvetsanpedro.me
+
+**Backend API**: https://____________.railway.app
+
+**API Docs**: https://____________.railway.app/docs
+
+**Database**: Railway PostgreSQL (internal)
+
+---
+
+## Deployment Information
+
+**Deployment Date**: ___________________
+
+**Deployed By**: ___________________
+
+**Version**: ___________________
+
+**Notes**:
 ```
-🔄 Claiming placeholder account for [name]
-✅ Placeholder account claimed successfully
-➕ Creating new user account for [name]
-✅ New user account created successfully
-```
-
-**Bad signs (investigate):**
-```
-❌ Any error messages related to users/registration
-⚠️  Duplicate key violations
-⚠️  Foreign key constraint errors
-```
-
-### Database Queries to Run
-
-**Every few hours, check:**
-
-```sql
--- Count placeholders vs real users
-SELECT 
-    is_placeholder,
-    COUNT(*) as count
-FROM users 
-GROUP BY is_placeholder;
-
--- Check for potential duplicates
-SELECT 
-    name, 
-    COUNT(*) as count 
-FROM users 
-WHERE is_placeholder = 0
-GROUP BY name 
-HAVING count > 1;
-
--- Monitor recent signups
-SELECT 
-    id, 
-    name, 
-    email, 
-    is_placeholder, 
-    created_at
-FROM users 
-WHERE created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)
-ORDER BY created_at DESC;
+[Add any deployment notes, issues encountered, or special configurations]
 ```
 
 ---
 
 ## Rollback Plan (If Needed)
 
-### If Critical Issues Arise:
+If deployment fails or critical issues occur:
 
-**Step 1: Revert Code**
-```bash
-cd backend
-git revert [commit-hash]  # or checkout previous version
-sudo systemctl restart pawthos-backend
-```
+1. **Frontend Rollback**:
+   - Go to Vercel → Deployments
+   - Find previous working deployment
+   - Click "Promote to Production"
 
-**Step 2: Rollback Database (Optional)**
-```sql
--- Remove column (will lose is_placeholder data)
-ALTER TABLE users DROP COLUMN is_placeholder;
+2. **Backend Rollback**:
+   - Go to Railway → Deployments
+   - Click on previous working deployment
+   - Click "Redeploy"
 
--- Remove indexes
-DROP INDEX idx_users_is_placeholder ON users;
-DROP INDEX idx_users_name ON users;
-```
+3. **Database Rollback**:
+   ```bash
+   railway run alembic downgrade -1
+   ```
 
-**Step 3: Restore from Backup (If Necessary)**
-```bash
-mysql -u username -p pawthos_db < backup_YYYYMMDD_HHMMSS.sql
-```
+4. **Emergency Contacts**:
+   - Railway Support: support@railway.app
+   - Vercel Support: support@vercel.com
+   - Development Team: [Your contact info]
 
 ---
 
-## Success Criteria
+## Post-Launch Tasks
 
-✅ **Deployment is successful if:**
+After successful deployment:
 
-1. **Technical:**
-   - [ ] Migration applied without errors
-   - [ ] Backend starts without errors
-   - [ ] All API endpoints responding
-   - [ ] No linter errors
-   - [ ] Logs show expected messages
-
-2. **Functional:**
-   - [ ] Placeholder users created with is_placeholder=1
-   - [ ] Signup claims placeholders correctly
-   - [ ] Same user_id maintained after claim
-   - [ ] Login works with claimed accounts
-   - [ ] Pet records remain linked
-   - [ ] New users (no placeholder) work normally
-
-3. **Data Integrity:**
-   - [ ] No duplicate users created
-   - [ ] No foreign key violations
-   - [ ] No lost pet records
-   - [ ] No orphaned vaccination records
+- [ ] Monitor application for 24 hours
+- [ ] Collect user feedback
+- [ ] Document any issues
+- [ ] Plan first maintenance window
+- [ ] Schedule regular backups
+- [ ] Set up uptime monitoring (UptimeRobot, etc.)
+- [ ] Configure error tracking (Sentry, etc.)
+- [ ] Set up usage analytics
 
 ---
 
-## Known Limitations
+**Status**: ⬜ Not Started | 🟡 In Progress | ✅ Completed | ❌ Failed
 
-### Name Matching
-- **Case-sensitive:** "John Doe" ≠ "john doe"
-- **Exact match required:** "John Doe" ≠ "John A. Doe"
-- **Solution:** Users can contact support for manual merge
-
-### Multiple Placeholders Same Name
-- **If exists:** System claims first found (oldest)
-- **Others remain:** Can be cleaned up manually
-- **Future:** Implement fuzzy matching or manual merge tool
-
-### Phone Number Changes
-- **If changed:** User's new phone replaces placeholder phone
-- **If blank:** Placeholder phone remains
-- **No issue:** Just data update
+**Overall Deployment Status**: _____________
 
 ---
 
-## Support Information
-
-### Where to Look for Help
-
-1. **Full Documentation:**
-   - `backend/docs/PLACEHOLDER_ACCOUNT_CLAIMING.md`
-
-2. **Testing Guides:**
-   - `backend/tests/MANUAL_TESTING_GUIDE.md`
-   - `backend/tests/test_placeholder_claiming.py`
-
-3. **Setup Guide:**
-   - `PLACEHOLDER_CLAIMING_SETUP.md`
-
-4. **Visual Diagrams:**
-   - `VISUAL_FLOW_DIAGRAM.md`
-
-5. **Summary:**
-   - `IMPLEMENTATION_SUMMARY.md`
-
-### Common Issues Reference
-
-See "Common Issues & Solutions" section in:
-- `backend/tests/MANUAL_TESTING_GUIDE.md`
-
----
-
-## Final Sign-Off
-
-**Deployment Completed By:** ___________________
-
-**Date & Time:** ___________________
-
-**Environment:** 
-- [ ] Development
-- [ ] Staging
-- [ ] Production
-
-**Tests Passed:**
-- [ ] Create placeholder
-- [ ] Claim placeholder
-- [ ] Login with claimed account
-- [ ] Records linked correctly
-- [ ] New user signup
-
-**Issues Encountered:** _________________________
-
-**Resolution:** ___________________________________
-
-**Status:** 
-- [ ] ✅ Successful - No issues
-- [ ] ⚠️ Successful - Minor issues (documented)
-- [ ] ❌ Failed - Rolled back
-
-**Notes:** ________________________________________
-
----
-
-## Next Steps (Optional)
-
-### After Stable for 1 Week:
-
-1. **Cleanup Old Placeholders (Optional)**
-```sql
--- Find old unclaimed placeholders (>6 months, no pets)
-SELECT u.* 
-FROM users u
-LEFT JOIN pets p ON u.id = p.user_id
-WHERE u.is_placeholder = 1 
-  AND u.created_at < DATE_SUB(NOW(), INTERVAL 6 MONTH)
-  AND p.id IS NULL;
-
--- Archive or delete after review
-```
-
-2. **Performance Review**
-- Check query performance on name lookups
-- Verify indexes being used
-- Monitor database load
-
-3. **Feature Enhancements**
-- Plan fuzzy name matching
-- Design manual merge tool
-- Consider notification system
-
----
-
-## 🎉 Congratulations!
-
-You've successfully implemented a robust solution to prevent duplicate user accounts while maintaining data integrity. Your Pawthos system is now more reliable and user-friendly!
-
-**Questions or issues?** Refer to the documentation files listed above.
-
-
-
-
+*Keep this checklist updated for future deployments and reference.*
 
