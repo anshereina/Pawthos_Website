@@ -54,7 +54,7 @@ const RecordCard: React.FC<RecordCardProps> = ({
 
 // Main Records Page
 const RecordsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
 

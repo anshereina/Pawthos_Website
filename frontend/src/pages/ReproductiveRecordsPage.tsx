@@ -5,7 +5,7 @@ import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import { useAuth } from '../features/auth/AuthContext';
-import { petService, Pet } from '../services/petService';
+// Removed unused imports: petService, Pet
 import { reproductiveRecordService, CreateReproductiveRecord, ReproductiveRecord } from '../services/reproductiveRecordService';
 import AddReproductiveRecordModal from '../components/AddReproductiveRecordModal';
 import EditReproductiveRecordModal from '../components/EditReproductiveRecordModal';
@@ -74,9 +74,7 @@ const ReproductiveRecordsPage: React.FC = () => {
     router.navigate({ to: path });
   };
 
-  const handleBack = () => {
-    router.navigate({ to: '/records' });
-  };
+  // Removed unused function: handleBack
 
   const handleAddPet = async (petData: any) => {
     try {

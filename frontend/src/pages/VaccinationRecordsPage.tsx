@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserCircle, ChevronDown, CalendarClock, Search, Edit, Trash2, Plus } from 'lucide-react';
+import { CalendarClock, Search, Edit, Trash2, Plus } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
-import { vaccinationRecordService, VaccinationRecord, VaccinationRecordWithPet } from '../services/vaccinationRecordService';
+import { vaccinationRecordService, VaccinationRecordWithPet } from '../services/vaccinationRecordService';
 import { petService, Pet } from '../services/petService';
 import { useVaccinationEvents } from '../hooks/useVaccinationEvents';
 import { VaccinationEvent } from '../services/vaccinationEventService';
@@ -112,13 +112,14 @@ const VaccinationRecordsPage: React.FC = () => {
     }
   }, [activeTab, fetchRecords, fetchAllEvents]);
 
+  // Removed unused function: getCurrentData
   // Get current data based on active tab
-  const getCurrentData = () => {
-    if (activeTab === 'vaccine-records') {
-      return records;
-    }
-    return vaccinationEvents;
-  };
+  // const getCurrentData = () => {
+  //   if (activeTab === 'vaccine-records') {
+  //     return records;
+  //   }
+  //   return vaccinationEvents;
+  // };
 
   const getCurrentLoading = () => {
     if (activeTab === 'vaccine-records') {
