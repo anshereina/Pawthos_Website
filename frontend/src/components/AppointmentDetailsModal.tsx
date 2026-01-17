@@ -26,10 +26,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     });
   };
 
-  const formatTime = (timeString: string | undefined) => {
-    if (!timeString) return '-';
-    return timeString;
-  };
+  // Removed unused function: formatTime
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
