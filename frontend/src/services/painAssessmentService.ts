@@ -47,13 +47,19 @@ export interface PainAssessmentUpdate {
 class PainAssessmentService {
   private baseUrl = `${config.apiUrl}/pain-assessments`;
 
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem('access_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+  }
+
   async getAllPainAssessments(): Promise<PainAssessment[]> {
     try {
       const response = await fetch(this.baseUrl, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -71,9 +77,7 @@ class PainAssessmentService {
     try {
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -91,9 +95,7 @@ class PainAssessmentService {
     try {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(assessment),
       });
 
@@ -112,9 +114,7 @@ class PainAssessmentService {
     try {
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(assessment),
       });
 
@@ -133,9 +133,7 @@ class PainAssessmentService {
     try {
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {
