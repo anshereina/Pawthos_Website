@@ -367,6 +367,14 @@ export default function CanineIntegrationResultPage({
                     if (result.success) {
                         console.log('Canine assessment created and saved successfully');
                         setIsSaved(true);
+                        
+                        // Save pet info for second opinion before clearing
+                        await AsyncStorage.setItem('canineAssessmentPetInfo', JSON.stringify({
+                            pet_id: assessmentData.pet_id,
+                            pet_name: assessmentData.pet_name,
+                            pet_type: assessmentData.pet_type || 'dog'
+                        }));
+                        
                         // Clear the assessment data from storage
                         await AsyncStorage.removeItem('currentAssessmentData');
                         

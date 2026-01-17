@@ -903,21 +903,26 @@ export default function MainApp() {
         onHome={() => navigateToPage('Home')} 
         onSecondOpinionAppointment={async () => {
             try {
-                // Read assessment data to get pet information
-                const assessmentDataString = await AsyncStorage.getItem('currentAssessmentData');
-                if (assessmentDataString) {
-                    const assessmentData = JSON.parse(assessmentDataString);
+                // First try to read from saved pet info (after assessment was saved)
+                let petInfoString = await AsyncStorage.getItem('canineAssessmentPetInfo');
+                if (!petInfoString) {
+                    // Fallback to current assessment data (before saving)
+                    petInfoString = await AsyncStorage.getItem('currentAssessmentData');
+                }
+                
+                if (petInfoString) {
+                    const petData = JSON.parse(petInfoString);
                     // Store pet data for appointment scheduling
                     setNavigationData({
                         prefilledPet: {
-                            pet_id: assessmentData.pet_id,
-                            pet_name: assessmentData.pet_name,
-                            pet_type: assessmentData.pet_type
+                            pet_id: petData.pet_id,
+                            pet_name: petData.pet_name,
+                            pet_type: petData.pet_type || 'dog'
                         }
                     });
                 }
             } catch (error) {
-                console.error('Error reading assessment data for second opinion:', error);
+                console.error('Error reading pet data for second opinion:', error);
             }
             setAppointmentType('Consultation');
             navigateToPage('Appointment Scheduling');

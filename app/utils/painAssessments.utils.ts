@@ -161,7 +161,9 @@ export const createPainAssessment = async (assessmentData: PainAssessmentCreate)
                     assessmentData.recommendations ? `Recommendations: ${assessmentData.recommendations}` : undefined,
                 ].filter(Boolean).join('\n') || undefined,
             basic_answers: assessmentData.basic_answers,  // Include question answers
-            assessment_answers: assessmentData.assessment_answers,  // Include detailed answers
+            assessment_answers: assessmentData.beaap_answers 
+                ? JSON.stringify({ beaap_answers: assessmentData.beaap_answers, assessment_type: 'BEAAP' })
+                : assessmentData.assessment_answers,  // Include detailed answers or BEAAP answers
         };
 
         // Debug: Log what's being sent to backend

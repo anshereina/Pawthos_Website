@@ -128,14 +128,14 @@ const styles = StyleSheet.create({
     },
 });
 
-// Pain assessment questions
+// Pain assessment questions (Feline)
 const painAssessmentQuestions = [
     'Reluctance to jump onto counters or furniture (does it less)',
     'Difficulty jumping up or down from counters or furniture (falls or seems clumsy)',
     'Difficulty or avoids going up or down stairs',
     'Less playful',
     'Restlessness or difficulty finding a comfortable position',
-    'Vocalizing (purring, or hissing) when touched or moving',
+    'Vocalizing (purring, or hissing) when touched or moving)',
     'Decreased appetite',
     'Less desire to interact with people or animals (hiding, resisting being pet, brushed, held, or picked up)',
     'Excessive licking, biting or scratching a body part',
@@ -145,6 +145,86 @@ const painAssessmentQuestions = [
     'Stopped using or has difficulty getting in or out of litter box',
     'Stopped grooming completely or certain areas'
 ];
+
+// BEAAP categories (Canine)
+const beaapCategories = [
+    'Breathing',
+    'Eyes',
+    'Ambulation',
+    'Activity',
+    'Appetite',
+    'Attitude',
+    'Posture',
+    'Palpation'
+];
+
+// BEAAP category descriptions
+const beaapCategoryDescriptions: { [key: number]: string[] } = {
+    0: [ // Breathing
+        'Breathing calmly at rest',
+        'Breathing normally during activity',
+        'May sometimes have trouble catching their breath',
+        'Often breathes heavily and may need extra effort to breathe',
+        'Breathing is fast and often looks harder than normal, with frequent panting',
+        'Panting with faster and more difficult breathing'
+    ],
+    1: [ // Eyes
+        'Eyes bright and alert',
+        'Eyes bright and alert',
+        'Eyes slightly more dull in appearance; can have a slightly furrowed brow',
+        'Dull eyes; worried look',
+        'Dull eyes; seems distant or unfocused',
+        'Dull eyes; have a pained look'
+    ],
+    2: [ // Ambulation
+        'Moves normally on all four legs with no difficulty or discomfort',
+        'Walks normally; may show slight discomfort',
+        'Noticeably slower to lie down or rise up; may exhibit "lameness" when walking',
+        'Very slow to rise up and lie down; hesitation with movement; difficulty on stairs; reluctant to turn corners; stiff to start out; may be limping',
+        'Obvious difficulty rising up or lying down; will not bear weight on affected leg; avoids stairs; obvious lameness',
+        'May refuse to get up; may not be able to or willing to take more than a few steps; will not bear weight on affected limb'
+    ],
+    3: [ // Activity
+        'Engages in play and all normal activities',
+        'May be slightly slower to lie down or get up',
+        'May be a bit restless, having trouble getting comfortable and shifting weight',
+        'Do not want to interact but may be in a room with a family member; obvious lameness when walking; may lick painful area',
+        'Avoids interaction with family or environment; unwilling to get up or move; may frequently lick a painful area',
+        'Difficulty in being distracted from pain, even with gentle touch or something familiar'
+    ],
+    4: [ // Appetite
+        'Eating and drinking normally',
+        'Eating and drinking normally',
+        'Picky eater; may only want treats or human food',
+        'Frequently not interested in eating',
+        'Loss of appetite; may not want to drink',
+        'No interest in food or water'
+    ],
+    5: [ // Attitude
+        'Happy; interested in surroundings and playing; seeks attention',
+        'Happy and alert, though sometimes a bit quiet; overall behaves normally',
+        'Less lively; doesn\'t initiate play',
+        'Feels unsettled and can\'t sleep well',
+        'Scared, anxious, and may act aggressive',
+        'Extremely low energy; lying motionless and clearly in pain'
+    ],
+    6: [ // Posture
+        'Comfortable at rest and during play; ears up and wagging tail',
+        'May show occasional shifting of position; tail may be down just a little more; ears slightly flatter',
+        'Difficulty squatting or lifting leg to urinate; subtle changes in position; tail more tucked and ears more flattened',
+        'Abnormal weight distribution when standing; difficulty posturing to urinate; arched back; tucked belly; head hanging low; tucked tail',
+        'Tail tucked; ears flattened or pinned back; abnormal posture when standing; may refuse to move or stand',
+        'Refuses to lay down or rest on side at all; pained ears; may prefer to be very tucked up or stretched out'
+    ],
+    7: [ // Palpation
+        'Enjoys being touched and petted; no body tension present',
+        'Enjoys being touched and petted; no body tension present',
+        'Does not mind touch except on painful area; turns head to look where touched; mild body tension',
+        'Withdraws from people; may not want to be touched; Pulls away from a hand when touched; moderate body tension when being touched',
+        'Significant body tension when painful area is touched; may vocalize in pain; guards a painful area by pulling away in a dramatic manner',
+        'Severe body tension when touched; will not tolerate touch of painful area; becomes fearful when other areas that are not painful are touched'
+    ]
+};
 
 const getPainLevelColorStyle = (painLevel?: string) => {
     const level = (painLevel || '').toLowerCase();
@@ -243,73 +323,119 @@ export default function PainAssessmentDetailsModal({ visible, onClose, record }:
                                 {/* Questions and Answers */}
                                 <Text style={[styles.modalTitle, { marginBottom: 12, fontSize: 18 }]}>Assessment Questions & Answers</Text>
                                 
-                                {painAssessmentQuestions.map((question, index) => {
-                                    // Parse the assessment answers if available
-                                    let answer = 'Not answered';
+                                {(() => {
+                                    // Check if this is a canine assessment with BEAAP answers
+                                    const petType = (record.pet_type || '').toLowerCase();
+                                    const isCanine = petType === 'dog' || petType === 'canine';
                                     
-                                    // Debug logging for first question only
-                                    if (index === 0) {
-                                        console.log('=== DEBUG ASSESSMENT DATA ===');
-                                        console.log('Record:', record);
-                                        console.log('Assessment answers:', (record as any).assessment_answers);
-                                        console.log('Basic answers:', (record as any).basic_answers);
-                                    }
+                                    let beaapAnswers: number[][] | null = null;
                                     
-                                    // Try to get answers from assessment_answers first (like in the React example)
-                                    if ((record as any).assessment_answers) {
+                                    if (isCanine && (record as any).assessment_answers) {
                                         try {
-                                            const answers = JSON.parse((record as any).assessment_answers);
-                                            if (Array.isArray(answers) && answers[index] !== undefined) {
-                                                answer = answers[index];
-                                            } else if (typeof answers === 'object' && answers[question] !== undefined) {
-                                                answer = answers[question];
+                                            const parsed = JSON.parse((record as any).assessment_answers);
+                                            if (parsed.beaap_answers && Array.isArray(parsed.beaap_answers)) {
+                                                beaapAnswers = parsed.beaap_answers;
                                             }
                                         } catch (e) {
-                                            console.log('Error parsing assessment_answers:', e);
+                                            console.log('Error parsing BEAAP answers:', e);
                                         }
                                     }
                                     
-                                    // Fallback to basic_answers if assessment_answers didn't work
-                                    if (answer === 'Not answered' && (record as any).basic_answers) {
-                                        try {
-                                            const answers = JSON.parse((record as any).basic_answers);
-                                            if (Array.isArray(answers) && answers[index] !== undefined) {
-                                                answer = answers[index];
-                                            } else if (typeof answers === 'object' && answers[question] !== undefined) {
-                                                answer = answers[question];
+                                    // Display BEAAP categories for canine assessments
+                                    if (isCanine && beaapAnswers) {
+                                        return beaapCategories.map((category, categoryIndex) => {
+                                            const selectedIndices = beaapAnswers![categoryIndex] || [];
+                                            let answerText = 'Not answered';
+                                            
+                                            if (selectedIndices.length > 0) {
+                                                const descriptions = selectedIndices.map((imageIndex: number) => {
+                                                    return beaapCategoryDescriptions[categoryIndex]?.[imageIndex] || `Selected image ${imageIndex + 1}`;
+                                                });
+                                                answerText = descriptions.join('; ');
                                             }
-                                        } catch (e) {
-                                            console.log('Error parsing basic_answers:', e);
+                                            
+                                            return (
+                                                <View key={categoryIndex} style={styles.questionContainer}>
+                                                    <Text style={styles.questionText}>
+                                                        {categoryIndex + 1}. {category}
+                                                    </Text>
+                                                    <Text style={styles.answerText}>
+                                                        Answer: {answerText}
+                                                    </Text>
+                                                </View>
+                                            );
+                                        });
+                                    }
+                                    
+                                    // Display feline questions for other assessments
+                                    return painAssessmentQuestions.map((question, index) => {
+                                        // Parse the assessment answers if available
+                                        let answer = 'Not answered';
+                                        
+                                        // Debug logging for first question only
+                                        if (index === 0) {
+                                            console.log('=== DEBUG ASSESSMENT DATA ===');
+                                            console.log('Record:', record);
+                                            console.log('Assessment answers:', (record as any).assessment_answers);
+                                            console.log('Basic answers:', (record as any).basic_answers);
                                         }
-                                    }
-                                    
-                                    // Convert boolean values to Yes/No
-                                    if (answer === true) {
-                                        answer = 'Yes';
-                                    } else if (answer === false) {
-                                        answer = 'No';
-                                    } else if (String(answer) === 'true') {
-                                        answer = 'Yes';
-                                    } else if (String(answer) === 'false') {
-                                        answer = 'No';
-                                    }
-                                    
-                                    // Debug when answer is found
-                                    if (index === 0) {
-                                        console.log(`Question ${index + 1} final answer:`, answer);
-                                    }
-                                    
-                                    return (
-                                        <View key={index} style={styles.questionContainer}>
-                                            <Text style={styles.questionText}>
-                                                {index + 1}. {question}
-                                            </Text>
-                                            <Text style={styles.answerText}>
-                                                Answer: {answer}
-                                            </Text>
-                                        </View>
-                                    );
-                                })}
+                                        
+                                        // Try to get answers from assessment_answers first (like in the React example)
+                                        if ((record as any).assessment_answers) {
+                                            try {
+                                                const answers = JSON.parse((record as any).assessment_answers);
+                                                if (Array.isArray(answers) && answers[index] !== undefined) {
+                                                    answer = answers[index];
+                                                } else if (typeof answers === 'object' && answers[question] !== undefined) {
+                                                    answer = answers[question];
+                                                }
+                                            } catch (e) {
+                                                console.log('Error parsing assessment_answers:', e);
+                                            }
+                                        }
+                                        
+                                        // Fallback to basic_answers if assessment_answers didn't work
+                                        if (answer === 'Not answered' && (record as any).basic_answers) {
+                                            try {
+                                                const answers = JSON.parse((record as any).basic_answers);
+                                                if (Array.isArray(answers) && answers[index] !== undefined) {
+                                                    answer = answers[index];
+                                                } else if (typeof answers === 'object' && answers[question] !== undefined) {
+                                                    answer = answers[question];
+                                                }
+                                            } catch (e) {
+                                                console.log('Error parsing basic_answers:', e);
+                                            }
+                                        }
+                                        
+                                        // Convert boolean values to Yes/No
+                                        if (answer === true) {
+                                            answer = 'Yes';
+                                        } else if (answer === false) {
+                                            answer = 'No';
+                                        } else if (String(answer) === 'true') {
+                                            answer = 'Yes';
+                                        } else if (String(answer) === 'false') {
+                                            answer = 'No';
+                                        }
+                                        
+                                        // Debug when answer is found
+                                        if (index === 0) {
+                                            console.log(`Question ${index + 1} final answer:`, answer);
+                                        }
+                                        
+                                        return (
+                                            <View key={index} style={styles.questionContainer}>
+                                                <Text style={styles.questionText}>
+                                                    {index + 1}. {question}
+                                                </Text>
+                                                <Text style={styles.answerText}>
+                                                    Answer: {answer}
+                                                </Text>
+                                            </View>
+                                        );
+                                    });
+                                })()}
                             </>
                         )}
                     </ScrollView>

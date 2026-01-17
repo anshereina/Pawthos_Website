@@ -93,7 +93,7 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
         { source: require('../../assets/images/caninepictures/attitude/Attitude_1-2_Mild_Pain.png'), text: 'Happy and alert, though sometimes a bit quiet; overall behaves normally', score: 1 },
         { source: require('../../assets/images/caninepictures/attitude/Attitude_3-4_Moderate_Pain.png'), text: 'Less lively; doesn\'t initiate play', score: 2 },
         { source: require('../../assets/images/caninepictures/attitude/Attitude_5-6_Moderate_to_Severe_Pain.png'), text: 'Feels unsettled and can\'t sleep well', score: 3 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_7-8_Severe_Pain.avif'), text: 'Scared, anxious, and may act aggressive', score: 4 },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_7-8_Severe_Pain.jpg'), text: 'Scared, anxious, and may act aggressive', score: 4 },
         { source: require('../../assets/images/caninepictures/attitude/Attitude_9-10_Worst_Pain_Possible.jpg'), text: 'Extremely low energy; lying motionless and clearly in pain', score: 5 }
       ]
     },
