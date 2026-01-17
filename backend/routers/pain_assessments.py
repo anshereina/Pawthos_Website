@@ -182,15 +182,29 @@ def get_pain_assessments(
     current_user = Depends(auth.get_current_active_user)
 ):
     """Get all pain assessments. Regular users see only their assessments, admins see all."""
-    query = db.query(models.PainAssessment)
-    
-    # Filter by user_id for regular users (not admins)
-    if isinstance(current_user, models.User):
-        query = query.filter(models.PainAssessment.user_id == current_user.id)
-    # Admins see all pain assessments (no filter applied)
-    
-    assessments = query.offset(skip).limit(limit).all()
-    return assessments
+    try:
+        print(f"=== GET PAIN ASSESSMENTS REQUEST ===")
+        print(f"User type: {type(current_user).__name__}")
+        print(f"User ID: {current_user.id if hasattr(current_user, 'id') else 'N/A'}")
+        
+        query = db.query(models.PainAssessment)
+        
+        # Filter by user_id for regular users (not admins)
+        if isinstance(current_user, models.User):
+            query = query.filter(models.PainAssessment.user_id == current_user.id)
+            print(f"Filtering by user_id: {current_user.id}")
+        else:
+            print("Admin user - showing all assessments")
+        # Admins see all pain assessments (no filter applied)
+        
+        assessments = query.offset(skip).limit(limit).all()
+        print(f"Found {len(assessments)} pain assessments")
+        return assessments
+    except Exception as e:
+        print(f"ERROR in get_pain_assessments: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 @router.get("/{assessment_id}", response_model=schemas.PainAssessment)
 def get_pain_assessment(

@@ -7,13 +7,26 @@ export const usePainAssessments = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAssessments = useCallback(async () => {
+    // Check if token exists before making request
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setError('No authentication token found. Please log in.');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       const data = await painAssessmentService.getAllPainAssessments();
       setAssessments(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch pain assessments');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch pain assessments';
+      setError(errorMessage);
+      // If authentication error, don't set assessments
+      if (errorMessage.includes('Authentication failed') || errorMessage.includes('No authentication token')) {
+        setAssessments([]);
+      }
     } finally {
       setLoading(false);
     }

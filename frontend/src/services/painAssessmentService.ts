@@ -49,21 +49,39 @@ class PainAssessmentService {
 
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No authentication token found. Please log in again.');
+    }
     return {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      'Authorization': `Bearer ${token}`,
     };
   }
 
   async getAllPainAssessments(): Promise<PainAssessment[]> {
     try {
+      const headers = this.getAuthHeaders();
       const response = await fetch(this.baseUrl, {
         method: 'GET',
-        headers: this.getAuthHeaders(),
+        headers,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          // Clear invalid token and redirect to login
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        const errorText = await response.text();
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -75,13 +93,27 @@ class PainAssessmentService {
 
   async getPainAssessment(id: number): Promise<PainAssessment> {
     try {
+      const headers = this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'GET',
-        headers: this.getAuthHeaders(),
+        headers,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        const errorText = await response.text();
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -93,14 +125,28 @@ class PainAssessmentService {
 
   async createPainAssessment(assessment: PainAssessmentCreate): Promise<PainAssessment> {
     try {
+      const headers = this.getAuthHeaders();
       const response = await fetch(this.baseUrl, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers,
         body: JSON.stringify(assessment),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        const errorText = await response.text();
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -112,14 +158,28 @@ class PainAssessmentService {
 
   async updatePainAssessment(id: number, assessment: PainAssessmentUpdate): Promise<PainAssessment> {
     try {
+      const headers = this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'PUT',
-        headers: this.getAuthHeaders(),
+        headers,
         body: JSON.stringify(assessment),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        const errorText = await response.text();
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -131,13 +191,27 @@ class PainAssessmentService {
 
   async deletePainAssessment(id: number): Promise<void> {
     try {
+      const headers = this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'DELETE',
-        headers: this.getAuthHeaders(),
+        headers,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        const errorText = await response.text();
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error deleting pain assessment:', error);
