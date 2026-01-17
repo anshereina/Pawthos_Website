@@ -15,7 +15,8 @@ except ImportError:
 AI_API_KEY = os.getenv("AI_API_KEY")
 
 # Model configuration - can be overridden via environment variable
-# Options: 'gemini-3-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'
+# Options: 'gemini-3-flash-preview', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-2.0-flash-exp'
+# Note: Use '-latest' suffix for stable versions, not just the base name
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
 # No fallback key - must be set in environment variables
@@ -364,10 +365,13 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
     models_to_try = [GEMINI_MODEL]
     
     # Add fallback models if primary model fails (prefer newer models first)
+    # Note: Use correct model names - gemini-1.5-flash should be gemini-1.5-flash-latest
     if GEMINI_MODEL == "gemini-3-flash-preview":
-        models_to_try.extend(["gemini-2.0-flash", "gemini-1.5-flash"])
-    elif GEMINI_MODEL == "gemini-2.0-flash":
-        models_to_try.extend(["gemini-1.5-flash", "gemini-1.5-pro"])
+        models_to_try.extend(["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"])
+    elif GEMINI_MODEL == "gemini-2.0-flash-exp":
+        models_to_try.extend(["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"])
+    elif GEMINI_MODEL == "gemini-1.5-flash-latest":
+        models_to_try.extend(["gemini-1.5-pro-latest"])
     
     last_error = None
     
