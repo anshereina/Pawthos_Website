@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Upload, Eye, Trash2, Camera } from 'lucide-react';
+import { Search, Upload, Eye, Trash2, Camera } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
