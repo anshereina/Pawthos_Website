@@ -60,20 +60,42 @@ class PainAssessmentService {
 
   async getAllPainAssessments(): Promise<PainAssessment[]> {
     try {
+      const token = localStorage.getItem('access_token');
+      console.log('🔍 getAllPainAssessments - Token exists:', !!token);
+      console.log('🔍 getAllPainAssessments - Base URL:', this.baseUrl);
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
       const headers = this.getAuthHeaders();
+      console.log('🔍 getAllPainAssessments - Headers:', {
+        'Content-Type': headers['Content-Type'],
+        'Authorization': headers['Authorization'] ? 'Bearer ***' : 'Missing'
+      });
+
       const response = await fetch(this.baseUrl, {
         method: 'GET',
         headers,
+        credentials: 'include', // Include cookies if needed
       });
 
+      console.log('🔍 getAllPainAssessments - Response status:', response.status);
+      console.log('🔍 getAllPainAssessments - Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ getAllPainAssessments - Error response:', errorText);
+        
         if (response.status === 401) {
+          console.error('❌ 401 Unauthorized - Token may be invalid or expired');
+          console.error('❌ Token (first 20 chars):', token.substring(0, 20) + '...');
           // Clear invalid token and redirect to login
           localStorage.removeItem('access_token');
           window.location.href = '/login';
           throw new Error('Authentication failed. Please log in again.');
         }
-        const errorText = await response.text();
+        
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = JSON.parse(errorText);
@@ -84,9 +106,11 @@ class PainAssessmentService {
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ getAllPainAssessments - Success, got', data.length, 'assessments');
+      return data;
     } catch (error) {
-      console.error('Error fetching pain assessments:', error);
+      console.error('❌ Error fetching pain assessments:', error);
       throw error;
     }
   }

@@ -183,11 +183,24 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    token_data = verify_token(token, credentials_exception)
-    user = get_user_by_type(db, email=token_data.email, user_type=token_data.user_type)
-    if user is None:
+    try:
+        print(f"=== GET_CURRENT_USER CALLED ===")
+        print(f"Token (first 20 chars): {token[:20] if token else 'None'}...")
+        token_data = verify_token(token, credentials_exception)
+        print(f"Token validated - Email: {token_data.email}, User type: {token_data.user_type}")
+        user = get_user_by_type(db, email=token_data.email, user_type=token_data.user_type)
+        if user is None:
+            print(f"❌ User not found: {token_data.email} (type: {token_data.user_type})")
+            raise credentials_exception
+        print(f"✅ User found: {user.email} (ID: {user.id}, Confirmed: {getattr(user, 'is_confirmed', 'N/A')})")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error in get_current_user: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise credentials_exception
-    return user
 
 def get_current_active_user(current_user: Union[models.Admin, models.User] = Depends(get_current_user)):
     return current_user
