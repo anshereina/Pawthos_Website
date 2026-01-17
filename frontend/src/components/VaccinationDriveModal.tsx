@@ -61,7 +61,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   
   // Data for dropdowns
   const [pets, setPets] = useState<Pet[]>([]);
-  const [_loadingPets, setLoadingPets] = useState(false);
+  const [, setLoadingPets] = useState(false);
   
 
   // Pagination state

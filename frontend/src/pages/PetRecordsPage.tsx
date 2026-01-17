@@ -60,7 +60,7 @@ const PetRecordsPage: React.FC = () => {
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [vaccinationRecords, setVaccinationRecords] = useState<VaccinationRecord[]>([]);
   const [medicalRecordsLoading, setMedicalRecordsLoading] = useState(false);
-  const [vaccinationRecordsLoading, setVaccinationRecordsLoading] = useState(false);
+  const [, setVaccinationRecordsLoading] = useState(false);
   const [isAddMedicalRecordModalOpen, setIsAddMedicalRecordModalOpen] = useState(false);
   const [isEditMedicalRecordModalOpen, setIsEditMedicalRecordModalOpen] = useState(false);
   const [isDeleteMedicalRecordModalOpen, setIsDeleteMedicalRecordModalOpen] = useState(false);

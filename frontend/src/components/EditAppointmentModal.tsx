@@ -141,7 +141,8 @@ const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
     return { medicineUsed, contactNumber, ownerBirthday, messageRemarks };
   };
 
-  const { medicineUsed, contactNumber, ownerBirthday, messageRemarks } = parseNotes(appointment?.notes || '');
+  const { contactNumber, ownerBirthday } = parseNotes(appointment?.notes || '');
+  // Removed unused: medicineUsed, messageRemarks
   
   // Get owner and pet information
   const ownerName = appointment?.owner_name || appointment?.client_name || appointment?.user?.name || appointment?.pet?.owner_name || '-';
