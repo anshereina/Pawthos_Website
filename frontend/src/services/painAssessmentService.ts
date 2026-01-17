@@ -78,7 +78,6 @@ class PainAssessmentService {
       const response = await fetch(this.baseUrl, {
         method: 'GET',
         headers,
-        credentials: 'include', // Include cookies if needed
       });
 
       console.log('🔍 getAllPainAssessments - Response status:', response.status);
