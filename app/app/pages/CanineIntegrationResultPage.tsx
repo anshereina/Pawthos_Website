@@ -499,6 +499,9 @@ export default function CanineIntegrationResultPage({
                 <View style={styles.buttonContainer}>
                     {petRegistered === 'yes' ? (
                         <>
+                            <Text style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 }}>
+                                Note: If you want to ask for second opinion, save the assessment and set an appointment with San Pedro City Vet Office.
+                            </Text>
                             <View style={styles.saveQuestionContainer}>
                                 <Text style={styles.saveQuestionText}>Save Assessment?</Text>
                                 

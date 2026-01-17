@@ -224,9 +224,15 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
 
     const filteredRecords = activeFilter === 'All' 
         ? painAssessmentRecords 
-        : painAssessmentRecords.filter(record => 
-            activeFilter === 'Dogs' ? record.pet_type === 'Dog' : record.pet_type === 'Cat'
-        );
+        : painAssessmentRecords.filter(record => {
+            const petType = (record.pet_type || '').toLowerCase();
+            if (activeFilter === 'Dogs') {
+                return petType === 'dog' || petType === 'canine' || petType.includes('dog');
+            } else if (activeFilter === 'Cats') {
+                return petType === 'cat' || petType === 'feline' || petType.includes('cat');
+            }
+            return true;
+        });
 
     const handleAddAssessment = () => {
         // Navigate to integration flow for new assessment
@@ -331,7 +337,11 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                             onPress={() => handleRecordPress(record)}
                         >
                             <Text style={styles.tableCell}>{record.pet_name}</Text>
-                            <Text style={styles.tableCell}>{record.pet_type}</Text>
+                            <Text style={styles.tableCell}>
+                                {(record.pet_type || '').toLowerCase().includes('dog') || (record.pet_type || '').toLowerCase().includes('canine') ? 'Dog' : 
+                                 (record.pet_type || '').toLowerCase().includes('cat') || (record.pet_type || '').toLowerCase().includes('feline') ? 'Cat' : 
+                                 record.pet_type}
+                            </Text>
                             <Text style={[styles.painLevelCell, getPainLevelColorStyle(record.pain_level)]}>
                                 {derivePainLevelLabel({ pain_level: record.pain_level, pain_score: record.pain_score })}
                             </Text>

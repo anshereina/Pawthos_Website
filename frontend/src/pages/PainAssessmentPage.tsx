@@ -362,7 +362,14 @@ const PainAssessmentPage: React.FC = () => {
                           >
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
-                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48 capitalize">{assessment.pet_type}</td>
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48 capitalize">
+                              {(() => {
+                                const petType = (assessment.pet_type || '').toLowerCase();
+                                if (petType.includes('dog') || petType.includes('canine')) return 'Dog';
+                                if (petType.includes('cat') || petType.includes('feline')) return 'Cat';
+                                return assessment.pet_type;
+                              })()}
+                            </td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">
                               <div className="flex items-center space-x-2">
                                 <span>{formatAssessmentDate(assessment.assessment_date)}</span>
