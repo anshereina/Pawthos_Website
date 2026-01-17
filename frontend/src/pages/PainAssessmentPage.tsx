@@ -115,6 +115,14 @@ const PainAssessmentPage: React.FC = () => {
     }
   }, [user, router]);
 
+  // Reset to first page when filter or search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, search]);
+
+  const handleItemClick = (path: string) => {
+    router.navigate({ to: path });
+  };
 
   if (user === undefined) {
     return <div>Loading...</div>;
@@ -122,10 +130,6 @@ const PainAssessmentPage: React.FC = () => {
   if (user === null) {
     return null;
   }
-
-  const handleItemClick = (path: string) => {
-    router.navigate({ to: path });
-  };
 
   if (loading) {
     return (
@@ -191,11 +195,6 @@ const PainAssessmentPage: React.FC = () => {
     setIsDeleteModalOpen(false);
     setAssessmentToDelete(null);
   };
-
-  // Reset to first page when filter or search changes
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, search]);
 
   // Filter assessments based on search and filter
   const filteredAssessments = assessments.filter(assessment => {
