@@ -199,6 +199,16 @@ export default function EditPetProfileModal({
     const speciesOptions = ['Dog', 'Cat'];
     const genderOptions = ['male', 'female'];
 
+    const formatDateForInput = (dateString: string) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+        } catch {
+            return dateString;
+        }
+    };
+
     useEffect(() => {
         console.log('=== EDIT MODAL DEBUG ===');
         console.log('Modal visible:', visible);
@@ -211,8 +221,8 @@ export default function EditPetProfileModal({
                 breed: petData.breed || '',
                 color: petData.color || '',
                 gender: petData.gender || '',
-                date_of_birth: petData.date_of_birth || '',
-                owner_birthday: petData.owner_birthday || '',
+                date_of_birth: formatDateForInput(petData.date_of_birth || ''),
+                owner_birthday: formatDateForInput(petData.owner_birthday || ''),
             };
             console.log('Setting form data:', initialData);
             setFormData(initialData);
@@ -286,27 +296,35 @@ export default function EditPetProfileModal({
         return text.replace(/[^A-Za-z\s\-]/g, '');
     };
 
+    const formatDateInput = (value: string) => {
+        // Remove all non-numeric characters
+        const numbers = value.replace(/\D/g, '');
+        
+        // Format as YYYY-MM-DD
+        if (numbers.length <= 4) {
+            return numbers;
+        } else if (numbers.length <= 6) {
+            return `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+        } else {
+            return `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
+        }
+    };
+
     const handleInputChange = (field: keyof PetData, value: string) => {
         // Apply text filtering for specific fields
         if (field === 'name' || field === 'breed' || field === 'color') {
             const filteredValue = filterTextInput(value);
             setFormData(prev => ({ ...prev, [field]: filteredValue }));
+        } else if (field === 'date_of_birth' || field === 'owner_birthday') {
+            // Format date input to YYYY-MM-DD
+            const formattedValue = formatDateInput(value);
+            setFormData(prev => ({ ...prev, [field]: formattedValue }));
         } else {
             setFormData(prev => ({ ...prev, [field]: value }));
         }
         
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }));
-        }
-    };
-
-    const formatDateForInput = (dateString: string) => {
-        if (!dateString) return '';
-        try {
-            const date = new Date(dateString);
-            return date.toISOString().split('T')[0];
-        } catch {
-            return dateString;
         }
     };
 

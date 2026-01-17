@@ -874,25 +874,25 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                         <TouchableOpacity 
                             style={[
                                 styles.dropdownContainer,
-                                editingAppointmentId && styles.inputFieldDisabled
+                                (editingAppointmentId || prefilledPet) && styles.inputFieldDisabled
                             ]}
-                            onPress={() => !editingAppointmentId && setShowPetDropdown(!showPetDropdown)}
-                            disabled={!!editingAppointmentId}
+                            onPress={() => !editingAppointmentId && !prefilledPet && setShowPetDropdown(!showPetDropdown)}
+                            disabled={!!editingAppointmentId || !!prefilledPet}
                         >
                             <Text style={[
                                 styles.dropdownText,
-                                editingAppointmentId && { color: '#666' }
+                                (editingAppointmentId || prefilledPet) && { color: '#666' }
                             ]}>
                                 {selectedPet ? selectedPet.name : 'Select a pet'}
                             </Text>
                             <MaterialIcons 
                                 name={showPetDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color={editingAppointmentId ? "#999" : "#666"} 
+                                color={(editingAppointmentId || prefilledPet) ? "#999" : "#666"} 
                             />
                         </TouchableOpacity>
                         
-                        {showPetDropdown && !editingAppointmentId && (
+                        {showPetDropdown && !editingAppointmentId && !prefilledPet && (
                             <View style={styles.searchableDropdownContainer}>
                                 <TextInput
                                     style={styles.searchInput}
