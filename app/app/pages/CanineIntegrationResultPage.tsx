@@ -204,19 +204,24 @@ export default function CanineIntegrationResultPage({
             return 'Unknown';
         }
         
-        // Use the provided total score from props if available
+        // Use the provided selectedAnswers from props if available
+        // selectedAnswers is an array of arrays: [[imageIndices for category 0], [imageIndices for category 1], ...]
         if (selectedAnswers && selectedAnswers.length > 0) {
-            // Calculate total score from the answers using the new scoring system
-            const totalScore = selectedAnswers.reduce((sum, imageIndex, categoryIndex) => {
-                // This is a simplified calculation - in practice, you'd need the category data here
-                // For now, we'll use the old method as fallback
-                if (imageIndex === 0) return sum + 0;
-                if (imageIndex === 1) return sum + 1;
-                if (imageIndex === 2) return sum + 2;
-                if (imageIndex === 3) return sum + 3;
-                if (imageIndex === 4) return sum + 4;
-                if (imageIndex === 5) return sum + 5;
-                return sum;
+            // Calculate total score from the nested array structure
+            // Each category can have multiple image selections, so we need to calculate average per category
+            const totalScore = selectedAnswers.reduce((sum, imageIndices, categoryIndex) => {
+                // imageIndices is an array of selected image indices for this category
+                if (!imageIndices || imageIndices.length === 0) return sum;
+                
+                // Calculate the maximum score from selected images in this category (worst pain indicator)
+                // Or average if multiple selections - using max for conservative assessment
+                const categoryScore = Math.max(...imageIndices.map(imageIndex => {
+                    // Map image index to score (0-5 scale per category)
+                    // Image index 0 = score 0, index 1 = score 1, etc.
+                    return imageIndex;
+                }));
+                
+                return sum + categoryScore;
             }, 0);
             
             // Map total score to 6 pain levels (0-40 scale → BEAP)
@@ -446,14 +451,11 @@ export default function CanineIntegrationResultPage({
                                 Total Score
                             </Text>
                             <Text style={[styles.resultText, { fontSize: 18, color: '#045b26', marginBottom: 12 }]}>
-                                {selectedAnswers.reduce((sum, imageIndex) => {
-                                    if (imageIndex === 0) return sum + 0;
-                                    if (imageIndex === 1) return sum + 1;
-                                    if (imageIndex === 2) return sum + 2;
-                                    if (imageIndex === 3) return sum + 3;
-                                    if (imageIndex === 4) return sum + 4;
-                                    if (imageIndex === 5) return sum + 5;
-                                    return sum;
+                                {selectedAnswers.reduce((sum, imageIndices) => {
+                                    if (!imageIndices || imageIndices.length === 0) return sum;
+                                    // Use max score from selected images in this category
+                                    const categoryScore = Math.max(...imageIndices.map(imageIndex => imageIndex));
+                                    return sum + categoryScore;
                                 }, 0)} / 40
                             </Text>
                             
@@ -464,14 +466,11 @@ export default function CanineIntegrationResultPage({
                                     We assessed 8 areas of your dog's behavior: breathing, eyes, walking, activity, appetite, attitude, posture, and touch response. Each area is scored 0-5 points based on pain indicators.
                                     {'\n\n'}
                                     <Text style={{ fontWeight: 'bold' }}>Your dog's total: </Text>
-                                    {selectedAnswers.reduce((sum, imageIndex) => {
-                                        if (imageIndex === 0) return sum + 0;
-                                        if (imageIndex === 1) return sum + 1;
-                                        if (imageIndex === 2) return sum + 2;
-                                        if (imageIndex === 3) return sum + 3;
-                                        if (imageIndex === 4) return sum + 4;
-                                        if (imageIndex === 5) return sum + 5;
-                                        return sum;
+                                    {selectedAnswers.reduce((sum, imageIndices) => {
+                                        if (!imageIndices || imageIndices.length === 0) return sum;
+                                        // Use max score from selected images in this category
+                                        const categoryScore = Math.max(...imageIndices.map(imageIndex => imageIndex));
+                                        return sum + categoryScore;
                                     }, 0)} points out of 40 possible
                                     {'\n\n'}
                                     • 0-4: Minimal or no pain{'\n'}
@@ -499,7 +498,7 @@ export default function CanineIntegrationResultPage({
                 <View style={styles.buttonContainer}>
                     {petRegistered === 'yes' ? (
                         <>
-                            <Text style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 }}>
+                            <Text style={styles.noteText}>
                                 Note: If you want to ask for second opinion, save the assessment and set an appointment with San Pedro City Vet Office.
                             </Text>
                             <View style={styles.saveQuestionContainer}>

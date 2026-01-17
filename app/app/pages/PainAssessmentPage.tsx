@@ -227,9 +227,9 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
         : painAssessmentRecords.filter(record => {
             const petType = (record.pet_type || '').toLowerCase();
             if (activeFilter === 'Dogs') {
-                return petType === 'dog' || petType === 'canine' || petType.includes('dog');
+                return petType === 'dog' || petType === 'canine';
             } else if (activeFilter === 'Cats') {
-                return petType === 'cat' || petType === 'feline' || petType.includes('cat');
+                return petType === 'cat' || petType === 'feline';
             }
             return true;
         });
@@ -338,9 +338,11 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                         >
                             <Text style={styles.tableCell}>{record.pet_name}</Text>
                             <Text style={styles.tableCell}>
-                                {(record.pet_type || '').toLowerCase().includes('dog') || (record.pet_type || '').toLowerCase().includes('canine') ? 'Dog' : 
-                                 (record.pet_type || '').toLowerCase().includes('cat') || (record.pet_type || '').toLowerCase().includes('feline') ? 'Cat' : 
-                                 record.pet_type}
+                                {record.pet_type?.toLowerCase() === 'dog' || record.pet_type?.toLowerCase() === 'canine' 
+                                    ? 'Dog' 
+                                    : record.pet_type?.toLowerCase() === 'cat' || record.pet_type?.toLowerCase() === 'feline' 
+                                    ? 'Cat' 
+                                    : record.pet_type}
                             </Text>
                             <Text style={[styles.painLevelCell, getPainLevelColorStyle(record.pain_level)]}>
                                 {derivePainLevelLabel({ pain_level: record.pain_level, pain_score: record.pain_score })}

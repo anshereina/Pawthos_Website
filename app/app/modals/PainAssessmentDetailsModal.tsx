@@ -223,7 +223,7 @@ export default function PainAssessmentDetailsModal({ visible, onClose, record }:
                                 </View>
 
                                 {/* Assessment Image */}
-                                {record.image_url && (
+                                {record.image_url && buildImageUrl(record.image_url) && (
                                     <View style={styles.imageSection}>
                                         <Text style={[styles.modalTitle, { marginBottom: 12, fontSize: 18 }]}>Assessment Photo</Text>
                                         <View style={styles.imageContainer}>
@@ -231,6 +231,10 @@ export default function PainAssessmentDetailsModal({ visible, onClose, record }:
                                                 source={{ uri: buildImageUrl(record.image_url) }}
                                                 style={styles.assessmentImage}
                                                 resizeMode="cover"
+                                                onError={(error) => {
+                                                    console.log('Failed to load assessment image:', error);
+                                                    console.log('Image URL:', buildImageUrl(record.image_url));
+                                                }}
                                             />
                                         </View>
                                     </View>

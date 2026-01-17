@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Image, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -521,72 +521,8 @@ export default function IntegrationResultPage({
     apiResult
 }: IntegrationResultPageProps) {
     
-    // Calculate pain level from basic_answers if not available or defaults to No Pain
-    const calculatePainLevelFromBasicAnswers = (basicAnswersStr: string | null | undefined): string | null => {
-        if (!basicAnswersStr) return null;
-        try {
-            const answers = JSON.parse(basicAnswersStr);
-            if (!Array.isArray(answers)) return null;
-            
-            // Count number of "Yes" answers (true values)
-            const yesCount = answers.filter(a => a === true || a === 'Yes' || a === 'yes').length;
-            const totalQuestions = answers.length;
-            
-            // Calculate percentage of Yes answers
-            const yesPercentage = totalQuestions > 0 ? (yesCount / totalQuestions) * 100 : 0;
-            
-            // Map to pain levels based on number of positive indicators
-            // 0-2 Yes answers (0-14%): Level 0 (No Pain)
-            // 3-5 Yes answers (15-36%): Level 1 (Mild Pain)
-            // 6-8 Yes answers (37-57%): Level 2 (Moderate Pain)
-            // 9-11 Yes answers (58-79%): Level 3 (Moderate to Severe Pain)
-            // 12-13 Yes answers (80-93%): Level 4 (Severe Pain)
-            // 14 Yes answers (100%): Level 5 (Worst Pain Possible)
-            
-            if (yesCount === 0 || yesCount <= 2) {
-                return 'Level 0 (No Pain)';
-            } else if (yesCount <= 5) {
-                return 'Level 1 (Mild Pain)';
-            } else if (yesCount <= 8) {
-                return 'Level 2 (Moderate Pain)';
-            } else if (yesCount <= 11) {
-                return 'Level 3 (Moderate to Severe Pain)';
-            } else if (yesCount <= 13) {
-                return 'Level 4 (Severe Pain)';
-            } else {
-                return 'Level 5 (Worst Pain Possible)';
-            }
-        } catch (e) {
-            console.error('Error calculating pain level from basic_answers:', e);
-            return null;
-        }
-    };
-
-    // Get basic_answers from AsyncStorage to calculate pain level if needed
-    const [calculatedPainLevel, setCalculatedPainLevel] = useState<string | null>(null);
-    useEffect(() => {
-        (async () => {
-            try {
-                const assessmentDataString = await AsyncStorage.getItem('currentAssessmentData');
-                if (assessmentDataString) {
-                    const assessmentData = JSON.parse(assessmentDataString);
-                    const calculated = calculatePainLevelFromBasicAnswers(assessmentData.basic_answers);
-                    setCalculatedPainLevel(calculated);
-                }
-            } catch (e) {
-                // ignore
-            }
-        })();
-    }, []);
-
-    // Use painLevel if provided and not "No Pain" or "Unknown", otherwise use calculated from basic_answers, then fall back to severityLevel
-    let currentPainLevel = painLevel || severityLevel;
-    
-    // If pain level is "No Pain" or "Unknown" and we have basic_answers, use calculated pain level
-    const painLevelLower = (currentPainLevel || '').toLowerCase();
-    if ((painLevelLower.includes('no pain') || painLevelLower.includes('unknown') || !currentPainLevel) && calculatedPainLevel) {
-        currentPainLevel = calculatedPainLevel;
-    }
+    // Use painLevel if provided, otherwise fall back to severityLevel
+    const currentPainLevel = painLevel || severityLevel;
 
     // Normalize various backend/result strings to a consistent 6-level BEAP set
     const normalizePainLevel = (level: string): string => {
@@ -1074,7 +1010,7 @@ export default function IntegrationResultPage({
                         
                         {petRegistered === 'yes' && !isSaved && (
                             <>
-                                <Text style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 }}>
+                                <Text style={[styles.disclaimerText, { marginBottom: 8, fontSize: 13, color: '#666', textAlign: 'center' }]}>
                                     Note: If you want to ask for second opinion, save the assessment and set an appointment with San Pedro City Vet Office.
                                 </Text>
                                 <TouchableOpacity 
