@@ -66,6 +66,9 @@ const PainAssessmentPage: React.FC = () => {
   const router = useRouter();
 
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'feline' | 'canine'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
   const [selectedAssessment, setSelectedAssessment] = useState<PainAssessment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [assessmentToDelete, setAssessmentToDelete] = useState<PainAssessment | null>(null);
@@ -189,6 +192,45 @@ const PainAssessmentPage: React.FC = () => {
     setAssessmentToDelete(null);
   };
 
+  // Reset to first page when filter or search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, search]);
+
+  // Filter assessments based on search and filter
+  const filteredAssessments = assessments.filter(assessment => {
+    // Filter by pet type
+    if (filter !== 'all') {
+      const petTypeLower = (assessment.pet_type || '').toLowerCase();
+      if (filter === 'feline' && !petTypeLower.includes('cat') && !petTypeLower.includes('feline')) {
+        return false;
+      }
+      if (filter === 'canine' && !petTypeLower.includes('dog') && !petTypeLower.includes('canine')) {
+        return false;
+      }
+    }
+    
+    // Filter by search term
+    const searchLower = search.toLowerCase();
+    return (
+      assessment.pet_name?.toLowerCase().includes(searchLower) ||
+      assessment.pet_type?.toLowerCase().includes(searchLower) ||
+      assessment.pain_level?.toLowerCase().includes(searchLower) ||
+      assessment.id.toString().includes(searchLower)
+    );
+  });
+
+  // Pagination calculations
+  const totalItems = filteredAssessments.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentAssessmentsPage = filteredAssessments.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
+  const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
       <Sidebar
@@ -215,9 +257,8 @@ const PainAssessmentPage: React.FC = () => {
           )}
           
           {/* Top Control Panel */}
-          <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-6 mb-6 hover:shadow-md transition-shadow duration-300">
-            <div className="flex justify-end items-center">
-              {/* Search and Actions */}
+          <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 mb-4 hover:shadow-md transition-shadow duration-300">
+            <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
                 {/* Search Bar */}
                 <div className="relative">
@@ -230,11 +271,6 @@ const PainAssessmentPage: React.FC = () => {
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
-                {/* Filter Button */}
-                <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg">
-                  <Filter size={20} />
-                  <span className="font-semibold">Filter</span>
-                </button>
                 {/* Export Button */}
                 <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg">
                   <Upload size={20} />
@@ -244,87 +280,198 @@ const PainAssessmentPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Pain Assessment Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
-            <div className="table-scroll-container max-w-full">
-              <table className="w-full min-w-[1200px] table-fixed">
-                {/* Table Header */}
-                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                  <tr>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-32">Assessment ID</th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Name</th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Type</th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-48">Assessment Date</th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-48">Pain Level</th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-48">Status</th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm whitespace-nowrap w-32">Action</th>
-                  </tr>
-                </thead>
-                
-                {/* Table Body */}
-                <tbody>
-                  {assessments.length > 0 ? (
-                    assessments.map((assessment, i) => (
-                                          <tr 
-                      key={assessment.id}
-                      className={`${
-                        i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
-                      } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 cursor-pointer border-b border-gray-100`}
-                      onClick={() => handleRowClick(assessment.id)}
-                    >
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pet_type}</td>
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">
-                          <div className="flex items-center space-x-2">
-                            <span>{formatAssessmentDate(assessment.assessment_date)}</span>
-                            {assessment.image_url && (
-                              <div title="Has photo">
-                                <Camera size={16} className="text-green-600" />
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
-                        <td className="px-6 py-4 text-gray-900 whitespace-nowrap w-48">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            assessment.questions_completed 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {assessment.questions_completed ? 'Completed' : 'Pending Review'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap w-32">
-                          <div className="flex items-center space-x-3" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => handleViewAssessment(assessment.id)}
-                              className="p-2.5 text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 rounded-xl transition-all duration-300 hover:shadow-sm"
-                              title="View assessment"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteAssessment(assessment.id)}
-                              className="p-2.5 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:shadow-sm"
-                              title="Delete assessment"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                        No assessments found matching your criteria.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+          {/* Instructional Note */}
+          <div className="mb-4 text-green-700 text-sm font-medium">
+            Note: You can view the details by clicking the row.
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-gray-700">Filter by:</span>
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  filter === 'all'
+                    ? 'bg-green-800 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All ({assessments.length})
+              </button>
+              <button
+                onClick={() => setFilter('feline')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  filter === 'feline'
+                    ? 'bg-green-800 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Cats ({assessments.filter(a => {
+                  const petType = (a.pet_type || '').toLowerCase();
+                  return petType.includes('cat') || petType.includes('feline');
+                }).length})
+              </button>
+              <button
+                onClick={() => setFilter('canine')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  filter === 'canine'
+                    ? 'bg-green-800 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Dogs ({assessments.filter(a => {
+                  const petType = (a.pet_type || '').toLowerCase();
+                  return petType.includes('dog') || petType.includes('canine');
+                }).length})
+              </button>
             </div>
+          </div>
+
+          {/* Pain Assessment Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+            {loading ? (
+              <div className="p-6 text-center">Loading...</div>
+            ) : error ? (
+              <div className="p-6 text-center text-red-600">{error}</div>
+            ) : (
+              <>
+                <div className="table-scroll-container max-w-full overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                  <table className="w-full min-w-[1200px] table-fixed">
+                    {/* Table Header */}
+                    <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Assessment ID</th>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Name</th>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Type</th>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Assessment Date</th>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pain Level</th>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Status</th>
+                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Action</th>
+                      </tr>
+                    </thead>
+                    
+                    {/* Table Body */}
+                    <tbody>
+                      {currentAssessmentsPage.length > 0 ? (
+                        currentAssessmentsPage.map((assessment, i) => (
+                          <tr 
+                            key={assessment.id}
+                            className={`${
+                              i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
+                            } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 cursor-pointer border-b border-gray-100`}
+                            onClick={() => handleRowClick(assessment.id)}
+                          >
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48 capitalize">{assessment.pet_type}</td>
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">
+                              <div className="flex items-center space-x-2">
+                                <span>{formatAssessmentDate(assessment.assessment_date)}</span>
+                                {assessment.image_url && (
+                                  <div title="Has photo">
+                                    <Camera size={16} className="text-green-600" />
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
+                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                assessment.questions_completed 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {assessment.questions_completed ? 'Completed' : 'Pending Review'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap w-32" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleViewAssessment(assessment.id)}
+                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
+                                  title="View assessment"
+                                >
+                                  <Eye size={16} className="text-green-600" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAssessment(assessment.id)}
+                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
+                                  title="Delete assessment"
+                                >
+                                  <Trash2 size={16} className="text-red-600" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                            No assessments found matching your criteria.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-700">
+                      <span>
+                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePreviousPage()}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Previous
+                      </button>
+                      <div className="flex space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                          if (!shouldShow) {
+                            if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
+                            if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                            return null;
+                          }
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={() => handleNextPage()}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </main>
       </div>
