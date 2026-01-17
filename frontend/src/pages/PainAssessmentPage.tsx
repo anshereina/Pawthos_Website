@@ -345,7 +345,6 @@ const PainAssessmentPage: React.FC = () => {
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Type</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Assessment Date</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pain Level</th>
-                        <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Status</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Action</th>
                       </tr>
                     </thead>
@@ -375,15 +374,6 @@ const PainAssessmentPage: React.FC = () => {
                               </div>
                             </td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
-                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                assessment.questions_completed 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {assessment.questions_completed ? 'Completed' : 'Pending Review'}
-                              </span>
-                            </td>
                             <td className="px-4 py-3 whitespace-nowrap w-32" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-2">
                                 <button
@@ -406,7 +396,7 @@ const PainAssessmentPage: React.FC = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                          <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                             No assessments found matching your criteria.
                           </td>
                         </tr>
