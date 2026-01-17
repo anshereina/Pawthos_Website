@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator, field_serializer
 from typing import Optional
 from datetime import datetime, date, time
 
@@ -731,6 +731,22 @@ class PainAssessmentUpdate(BaseModel):
 class PainAssessment(PainAssessmentBase):
     id: int
     created_at: Optional[datetime] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def convert_assessment_date(cls, data):
+        """Convert datetime to ISO format string if needed"""
+        if hasattr(data, 'assessment_date'):
+            # Handle SQLAlchemy model instance - convert datetime to string
+            assessment_date = getattr(data, 'assessment_date', None)
+            if isinstance(assessment_date, datetime):
+                # Temporarily convert to string for validation
+                setattr(data, 'assessment_date', assessment_date.isoformat())
+        elif isinstance(data, dict) and 'assessment_date' in data:
+            # Handle dict input
+            if isinstance(data['assessment_date'], datetime):
+                data['assessment_date'] = data['assessment_date'].isoformat()
+        return data
 
     class Config:
         from_attributes = True 
