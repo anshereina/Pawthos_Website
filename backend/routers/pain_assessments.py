@@ -187,19 +187,19 @@ def get_pain_assessments(
         print(f"User type: {type(current_user).__name__}")
         print(f"User ID: {current_user.id if hasattr(current_user, 'id') else 'N/A'}")
         
-    query = db.query(models.PainAssessment)
-    
-    # Filter by user_id for regular users (not admins)
-    if isinstance(current_user, models.User):
-        query = query.filter(models.PainAssessment.user_id == current_user.id)
+        query = db.query(models.PainAssessment)
+        
+        # Filter by user_id for regular users (not admins)
+        if isinstance(current_user, models.User):
+            query = query.filter(models.PainAssessment.user_id == current_user.id)
             print(f"Filtering by user_id: {current_user.id}")
         else:
             print("Admin user - showing all assessments")
-    # Admins see all pain assessments (no filter applied)
-    
-    assessments = query.offset(skip).limit(limit).all()
+        # Admins see all pain assessments (no additional filter applied)
+        
+        assessments = query.offset(skip).limit(limit).all()
         print(f"Found {len(assessments)} pain assessments")
-    return assessments
+        return assessments
     except Exception as e:
         print(f"ERROR in get_pain_assessments: {str(e)}")
         import traceback
