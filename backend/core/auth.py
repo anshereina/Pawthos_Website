@@ -184,17 +184,21 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        print(f"=== GET_CURRENT_USER CALLED ===")
+        print("=== GET_CURRENT_USER CALLED ===")
         print(f"Token (first 20 chars): {token[:20] if token else 'None'}...")
-    token_data = verify_token(token, credentials_exception)
+
+        token_data = verify_token(token, credentials_exception)
         print(f"Token validated - Email: {token_data.email}, User type: {token_data.user_type}")
-    user = get_user_by_type(db, email=token_data.email, user_type=token_data.user_type)
-    if user is None:
+
+        user = get_user_by_type(db, email=token_data.email, user_type=token_data.user_type)
+        if user is None:
             print(f"❌ User not found: {token_data.email} (type: {token_data.user_type})")
             raise credentials_exception
+
         print(f"✅ User found: {user.email} (ID: {user.id}, Confirmed: {getattr(user, 'is_confirmed', 'N/A')})")
         return user
     except HTTPException:
+        # Re-raise FastAPI HTTP exceptions as-is
         raise
     except Exception as e:
         print(f"❌ Error in get_current_user: {str(e)}")
