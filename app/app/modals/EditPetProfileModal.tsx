@@ -9,10 +9,12 @@ import {
     ScrollView,
     Alert,
     ActivityIndicator,
-    SafeAreaView
+    Image
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { PetData } from '../../utils/pets.utils';
+import * as ImagePicker from 'expo-image-picker';
+import { PetData, uploadPetPhoto } from '../../utils/pets.utils';
+import { API_BASE_URL } from '../../utils/config';
 
 interface EditPetProfileModalProps {
     visible: boolean;
@@ -182,6 +184,43 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 20,
     },
+    photoSection: {
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    photoWrapper: {
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+        overflow: 'hidden',
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    petPhoto: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    photoPlaceholderIcon: {
+        opacity: 0.5,
+    },
+    photoButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#045b26',
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    photoButtonText: {
+        color: '#045b26',
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: 6,
+    },
 });
 
 export default function EditPetProfileModal({
@@ -195,6 +234,8 @@ export default function EditPetProfileModal({
     const [loading, setLoading] = useState(false);
     const [showSpeciesPicker, setShowSpeciesPicker] = useState(false);
     const [showGenderPicker, setShowGenderPicker] = useState(false);
+    const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
     const speciesOptions = ['Dog', 'Cat'];
     const genderOptions = ['male', 'female'];
@@ -227,6 +268,7 @@ export default function EditPetProfileModal({
             console.log('Setting form data:', initialData);
             setFormData(initialData);
             setErrors({});
+            setLocalPhotoUri(null);
         }
     }, [visible, petData]);
 
@@ -271,13 +313,34 @@ export default function EditPetProfileModal({
 
         setLoading(true);
         try {
-            await onSave(formData);
+            let newPhotoUrl: string | undefined;
+
+            // If a new photo was selected, upload it first
+            if (localPhotoUri && petData) {
+                setUploadingPhoto(true);
+                const result = await uploadPetPhoto(petData.id, localPhotoUri);
+                setUploadingPhoto(false);
+
+                if (result.success && result.photo_url) {
+                    newPhotoUrl = result.photo_url;
+                } else if (!result.success && result.message) {
+                    Alert.alert('Photo Upload Failed', result.message);
+                }
+            }
+
+            const payload: Partial<PetData> = {
+                ...formData,
+                ...(newPhotoUrl ? { photo_url: newPhotoUrl } : {}),
+            };
+
+            await onSave(payload);
             Alert.alert('Success', 'Pet profile updated successfully!');
             onClose();
         } catch (error) {
             Alert.alert('Error', 'Failed to update pet profile. Please try again.');
         } finally {
             setLoading(false);
+            setUploadingPhoto(false);
         }
     };
 
@@ -328,6 +391,111 @@ export default function EditPetProfileModal({
         }
     };
 
+    const requestMediaLibraryPermission = async () => {
+        const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+        if (existingStatus !== 'granted') {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert(
+                    'Permission Required',
+                    'We need access to your photos to update your pet picture.',
+                    [{ text: 'OK' }]
+                );
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const requestCameraPermission = async () => {
+        const { status: existingStatus } = await ImagePicker.getCameraPermissionsAsync();
+        if (existingStatus !== 'granted') {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert(
+                    'Permission Required',
+                    'We need camera permission to take a new pet photo.',
+                    [{ text: 'OK' }]
+                );
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const openCamera = async () => {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) return;
+
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            setLocalPhotoUri(result.assets[0].uri);
+        }
+    };
+
+    const openImageLibrary = async () => {
+        const hasPermission = await requestMediaLibraryPermission();
+        if (!hasPermission) return;
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            setLocalPhotoUri(result.assets[0].uri);
+        }
+    };
+
+    const handlePickPhoto = () => {
+        Alert.alert(
+            'Update Pet Photo',
+            'Choose how you want to update the pet picture',
+            [
+                { text: 'Camera', onPress: openCamera },
+                { text: 'Photo Library', onPress: openImageLibrary },
+                { text: 'Cancel', style: 'cancel' },
+            ]
+        );
+    };
+
+    const handleRemovePhoto = () => {
+        Alert.alert(
+            'Remove Photo',
+            'Are you sure you want to remove this photo?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: () => {
+                        setLocalPhotoUri(null);
+                        // Removing photo on backend is optional; leave existing server photo_url unchanged here.
+                    },
+                },
+            ]
+        );
+    };
+
+    const getDisplayPhotoUri = () => {
+        if (localPhotoUri) return localPhotoUri;
+        if (petData?.photo_url) {
+            if (petData.photo_url.startsWith('http')) {
+                return petData.photo_url;
+            }
+            return `${API_BASE_URL.replace('/api', '')}${petData.photo_url}`;
+        }
+        return null;
+    };
+
     if (!petData) return null;
 
     return (
@@ -344,6 +512,46 @@ export default function EditPetProfileModal({
                         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                             <MaterialIcons name="close" size={24} color="#666" />
                         </TouchableOpacity>
+                    </View>
+
+                    {/* Photo preview and actions */}
+                    <View style={styles.photoSection}>
+                        <View style={styles.photoWrapper}>
+                            {getDisplayPhotoUri() ? (
+                                <Image
+                                    source={{ uri: getDisplayPhotoUri() as string }}
+                                    style={styles.petPhoto}
+                                />
+                            ) : (
+                                <MaterialIcons
+                                    name="pets"
+                                    size={36}
+                                    color="#999"
+                                    style={styles.photoPlaceholderIcon}
+                                />
+                            )}
+                        </View>
+                        <TouchableOpacity
+                            style={styles.photoButton}
+                            onPress={handlePickPhoto}
+                            disabled={loading || uploadingPhoto}
+                        >
+                            <MaterialIcons name="photo-camera" size={18} color="#045b26" />
+                            <Text style={styles.photoButtonText}>
+                                {getDisplayPhotoUri() ? 'Change Photo' : 'Add Photo'}
+                            </Text>
+                        </TouchableOpacity>
+                        {getDisplayPhotoUri() && (
+                            <TouchableOpacity
+                                onPress={handleRemovePhoto}
+                                disabled={loading || uploadingPhoto}
+                                style={{ marginTop: 6 }}
+                            >
+                                <Text style={{ fontSize: 12, color: '#666', textDecorationLine: 'underline' }}>
+                                    Remove current photo
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <ScrollView 

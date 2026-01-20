@@ -140,9 +140,14 @@ export default function ResetPasswordPage({ navigation, route }) {
     const [success, setSuccess] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [tokenInput, setTokenInput] = useState("");
 
-    // Get token from route params
-    const token = route?.params?.token;
+    // Optional token and email from deep link / navigation
+    const tokenFromRoute = route?.params?.token as string | undefined;
+    const emailFromRoute = route?.params?.email as string | undefined;
+
+    // Use token from route when present, otherwise fall back to manual input
+    const effectiveToken = (tokenFromRoute || tokenInput.trim());
 
     // Password validation
     const passwordRequirements = {
@@ -157,8 +162,8 @@ export default function ResetPasswordPage({ navigation, route }) {
     const passwordsMatch = newPassword === confirmPassword;
 
     const handleResetPassword = async () => {
-        if (!token) {
-            setError("Invalid reset token. Please request a new password reset.");
+        if (!effectiveToken) {
+            setError("Please enter the reset code that was sent to your email.");
             return;
         }
 
@@ -176,7 +181,7 @@ export default function ResetPasswordPage({ navigation, route }) {
         setError(null);
         setSuccess(null);
 
-        const result = await auth.resetPassword(token, newPassword);
+        const result = await auth.resetPassword(effectiveToken, newPassword);
         setLoading(false);
 
         if (result.success) {
@@ -216,14 +221,36 @@ export default function ResetPasswordPage({ navigation, route }) {
             </View>
             
             <Text style={styles.title}>Reset Password</Text>
-            <Text style={styles.subtitle}>Enter your new password below</Text>
+            <Text style={styles.subtitle}>
+                {tokenFromRoute
+                    ? "Enter your new password below."
+                    : "Enter the reset code from your email and choose a new password."}
+            </Text>
             
             <View style={styles.infoBox}>
                 <Text style={styles.infoText}>
-                    🔒 Choose a strong password to keep your account secure. 
-                    Make sure it's different from your previous password.
+                    🔒 A reset code was sent to your email
+                    {emailFromRoute ? ` (${emailFromRoute})` : ""}.{" "}
+                    Enter that code below together with your new password. 
+                    Make sure your new password is strong and different from your previous one.
                 </Text>
             </View>
+
+            {/* Reset code / OTP input when no token was provided via deep link */}
+            {!tokenFromRoute && (
+                <View style={styles.inputRow}>
+                    <MaterialIcons name="vpn-key" size={22} color="#045b26" />
+                    <TextInput
+                        placeholder="Reset code from email"
+                        placeholderTextColor="#b2d8c5"
+                        value={tokenInput}
+                        onChangeText={setTokenInput}
+                        style={styles.input}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                </View>
+            )}
             
             <View style={styles.inputRow}>
                 <MaterialIcons name="lock-outline" size={22} color="#045b26" />
@@ -281,9 +308,9 @@ export default function ResetPasswordPage({ navigation, route }) {
             {success && <Text style={styles.success}>{success}</Text>}
             
             <Pressable 
-                style={[styles.button, (!isPasswordValid || !passwordsMatch || !token) && { opacity: 0.6 }]} 
+                style={[styles.button, (!isPasswordValid || !passwordsMatch || !effectiveToken) && { opacity: 0.6 }]} 
                 onPress={handleResetPassword} 
-                disabled={loading || !isPasswordValid || !passwordsMatch || !token}
+                disabled={loading || !isPasswordValid || !passwordsMatch || !effectiveToken}
             >
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>RESET PASSWORD</Text>}
             </Pressable>

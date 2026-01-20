@@ -267,6 +267,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
     
     // Loading state
     const [isScheduling, setIsScheduling] = useState(false);
+    const [petRegistered, setPetRegistered] = useState<'yes' | 'no' | null>(null);
     
     // Dropdown visibility states
     const [showAppointmentOptions, setShowAppointmentOptions] = useState(false);
@@ -284,6 +285,28 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
     // Fetch user's pets on component mount
     useEffect(() => {
         fetchUserPets();
+    }, []);
+
+    // Detect if this appointment is coming from an unregistered pet (Feline Second Opinion)
+    useEffect(() => {
+        const loadAssessmentContext = async () => {
+            try {
+                const stored = await AsyncStorage.getItem('currentAssessmentData');
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    if (data.pet_registered === 'no') {
+                        setPetRegistered('no');
+                        // For unregistered pets, default the type to Consultation but keep it non-editable
+                        setAppointmentFor('Consultation');
+                    } else if (data.pet_registered === 'yes') {
+                        setPetRegistered('yes');
+                    }
+                }
+            } catch (e) {
+                console.log('Error reading assessment context:', e);
+            }
+        };
+        loadAssessmentContext();
     }, []);
 
     // Prefill when rescheduling
@@ -513,7 +536,9 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
             Alert.alert('Error', 'Please select appointment type');
             return false;
         }
-        if (!selectedPet) {
+        // When pet is registered, require selecting a pet.
+        // For unregistered feline second opinion (petRegistered === 'no'), pet selection is optional.
+        if (!selectedPet && petRegistered !== 'no') {
             Alert.alert('Error', 'Please select a pet');
             return false;
         }
@@ -554,19 +579,20 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
             setIsScheduling(true);
 
             const appointmentData: AppointmentCreate = {
-                pet_id: selectedPet?.id,
+                // For unregistered pets, don't send pet_id; backend will treat this as a generic consultation
+                pet_id: petRegistered === 'no' ? undefined : selectedPet?.id,
                 type: appointmentFor === 'Vaccination' ? `${appointmentFor} - ${vaccinationType}` : appointmentFor,
                 date: formatDateForAPI(selectedDate!),
                 time: selectedTime,
                 veterinarian: 'Dr. Smith', // Default veterinarian, you can add selection later
                 notes: description,
                 // Pet details
-                pet_name: selectedPet?.name,
-                pet_species: selectedPet?.species,
-                pet_breed: selectedPet?.breed,
-                pet_age: calculateAge(selectedPet?.date_of_birth),
-                pet_gender: selectedPet?.gender,
-                pet_weight: selectedPet?.weight?.toString(),
+                pet_name: petRegistered === 'no' ? (petName || undefined) : selectedPet?.name,
+                pet_species: petRegistered === 'no' ? species : selectedPet?.species,
+                pet_breed: petRegistered === 'no' ? undefined : selectedPet?.breed,
+                pet_age: petRegistered === 'no' ? undefined : calculateAge(selectedPet?.date_of_birth),
+                pet_gender: petRegistered === 'no' ? undefined : selectedPet?.gender,
+                pet_weight: petRegistered === 'no' ? undefined : selectedPet?.weight?.toString(),
                 owner_name: selectedPet?.owner_name
             };
 
@@ -790,17 +816,31 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     <View style={styles.formSection}>
                         <Text style={styles.sectionTitle}>Appointment for</Text>
                         <TouchableOpacity 
-                            style={styles.dropdownContainer}
-                            onPress={() => setShowAppointmentOptions(!showAppointmentOptions)}
+                            style={[
+                                styles.dropdownContainer,
+                                // When coming from Feline Second Opinion with unregistered pet,
+                                // keep this fixed to Consultation and make it look disabled.
+                                petRegistered === 'no' && styles.inputFieldDisabled
+                            ]}
+                            onPress={() => {
+                                if (petRegistered === 'no') return;
+                                setShowAppointmentOptions(!showAppointmentOptions);
+                            }}
+                            disabled={petRegistered === 'no'}
                         >
-                            <Text style={styles.dropdownText}>{appointmentFor}</Text>
+                            <Text style={[
+                                styles.dropdownText,
+                                petRegistered === 'no' && { color: '#666' }
+                            ]}>
+                                {appointmentFor}
+                            </Text>
                             <MaterialIcons 
                                 name={showAppointmentOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color="#666" 
+                                color={petRegistered === 'no' ? "#999" : "#666"} 
                             />
                         </TouchableOpacity>
-                        {showAppointmentOptions && appointmentOptions.map((option) => (
+                        {showAppointmentOptions && petRegistered !== 'no' && appointmentOptions.map((option) => (
                             <TouchableOpacity
                                 key={option}
                                 style={[
@@ -870,73 +910,88 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     )}
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Name of Pet</Text>
-                        <TouchableOpacity 
-                            style={[
-                                styles.dropdownContainer,
-                                (editingAppointmentId || prefilledPet) && styles.inputFieldDisabled
-                            ]}
-                            onPress={() => !editingAppointmentId && !prefilledPet && setShowPetDropdown(!showPetDropdown)}
-                            disabled={!!editingAppointmentId || !!prefilledPet}
-                        >
-                            <Text style={[
-                                styles.dropdownText,
-                                (editingAppointmentId || prefilledPet) && { color: '#666' }
-                            ]}>
-                                {selectedPet ? selectedPet.name : 'Select a pet'}
-                            </Text>
-                            <MaterialIcons 
-                                name={showPetDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
-                                size={24} 
-                                color={(editingAppointmentId || prefilledPet) ? "#999" : "#666"} 
+                        <Text style={styles.sectionTitle}>
+                            {petRegistered === 'no' ? 'Name of Pet (optional)' : 'Name of Pet'}
+                        </Text>
+                        {petRegistered === 'no' ? (
+                            // Unregistered pet: allow free-text name, optional
+                            <TextInput
+                                style={styles.inputField}
+                                placeholder="Enter pet name (optional)"
+                                placeholderTextColor="#999"
+                                value={petName}
+                                onChangeText={setPetName}
                             />
-                        </TouchableOpacity>
-                        
-                        {showPetDropdown && !editingAppointmentId && !prefilledPet && (
-                            <View style={styles.searchableDropdownContainer}>
-                                <TextInput
-                                    style={styles.searchInput}
-                                    placeholder="Search pets by name or ID..."
-                                    placeholderTextColor="#999"
-                                    value={petSearchQuery}
-                                    onChangeText={setPetSearchQuery}
-                                    autoFocus
-                                />
-                                <ScrollView style={{ maxHeight: 150 }}>
-                                    {isLoadingPets ? (
-                                        <View style={styles.petOption}>
-                                            <Text style={styles.petOptionText}>Loading pets...</Text>
-                                        </View>
-                                    ) : filteredPets.length === 0 ? (
-                                        <View style={styles.petOption}>
-                                            <Text style={styles.petOptionText}>
-                                                {petSearchQuery ? 'No pets found' : 'No pets registered'}
-                                            </Text>
-                                        </View>
-                                    ) : (
-                                        filteredPets.map((pet) => (
-                                            <TouchableOpacity
-                                                key={pet.id}
-                                                style={[
-                                                    styles.petOption,
-                                                    selectedPet?.id === pet.id && styles.petOptionSelected
-                                                ]}
-                                                onPress={() => handlePetSelect(pet)}
-                                            >
-                                                <Text style={[
-                                                    styles.petOptionText,
-                                                    selectedPet?.id === pet.id && styles.petOptionTextSelected
-                                                ]}>
-                                                    {pet.name}
-                                                </Text>
-                                                <Text style={styles.petDetailsText}>
-                                                    ID: {pet.pet_id} • {pet.species}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))
-                                    )}
-                                </ScrollView>
-                            </View>
+                        ) : (
+                            <>
+                                <TouchableOpacity 
+                                    style={[
+                                        styles.dropdownContainer,
+                                        (editingAppointmentId || prefilledPet) && styles.inputFieldDisabled
+                                    ]}
+                                    onPress={() => !editingAppointmentId && !prefilledPet && setShowPetDropdown(!showPetDropdown)}
+                                    disabled={!!editingAppointmentId || !!prefilledPet}
+                                >
+                                    <Text style={[
+                                        styles.dropdownText,
+                                        (editingAppointmentId || prefilledPet) && { color: '#666' }
+                                    ]}>
+                                        {selectedPet ? selectedPet.name : 'Select a pet'}
+                                    </Text>
+                                    <MaterialIcons 
+                                        name={showPetDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
+                                        size={24} 
+                                        color={(editingAppointmentId || prefilledPet) ? "#999" : "#666"} 
+                                    />
+                                </TouchableOpacity>
+                                
+                                {showPetDropdown && !editingAppointmentId && !prefilledPet && (
+                                    <View style={styles.searchableDropdownContainer}>
+                                        <TextInput
+                                            style={styles.searchInput}
+                                            placeholder="Search pets by name or ID..."
+                                            placeholderTextColor="#999"
+                                            value={petSearchQuery}
+                                            onChangeText={setPetSearchQuery}
+                                            autoFocus
+                                        />
+                                        <ScrollView style={{ maxHeight: 150 }}>
+                                            {isLoadingPets ? (
+                                                <View style={styles.petOption}>
+                                                    <Text style={styles.petOptionText}>Loading pets...</Text>
+                                                </View>
+                                            ) : filteredPets.length === 0 ? (
+                                                <View style={styles.petOption}>
+                                                    <Text style={styles.petOptionText}>
+                                                        {petSearchQuery ? 'No pets found' : 'No pets registered'}
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                filteredPets.map((pet) => (
+                                                    <TouchableOpacity
+                                                        key={pet.id}
+                                                        style={[
+                                                            styles.petOption,
+                                                            selectedPet?.id === pet.id && styles.petOptionSelected
+                                                        ]}
+                                                        onPress={() => handlePetSelect(pet)}
+                                                    >
+                                                        <Text style={[
+                                                            styles.petOptionText,
+                                                            selectedPet?.id === pet.id && styles.petOptionTextSelected
+                                                        ]}>
+                                                            {pet.name}
+                                                        </Text>
+                                                        <Text style={styles.petDetailsText}>
+                                                            ID: {pet.pet_id} • {pet.species}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                ))
+                                            )}
+                                        </ScrollView>
+                                    </View>
+                                )}
+                            </>
                         )}
                     </View>
 

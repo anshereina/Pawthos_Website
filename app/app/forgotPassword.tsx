@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import * as auth from '../utils/auth.utils';
 
@@ -143,16 +143,8 @@ export default function ForgotPasswordPage({ navigation }) {
             
             if (result.success) {
                 setSuccess(result.message || "Password reset email sent successfully");
-                Alert.alert(
-                    "Email Sent",
-                    "If an account with this email exists, you will receive password reset instructions shortly. Please check your inbox and spam folder.",
-                    [
-                        {
-                            text: "OK",
-                            onPress: () => navigation.navigate('Login')
-                        }
-                    ]
-                );
+                // Navigate to the reset password screen where user can enter the code and new password
+                navigation.navigate('resetPassword', { email: email.trim() });
             } else {
                 setError(result.message || "Failed to send password reset email");
             }
@@ -166,7 +158,7 @@ export default function ForgotPasswordPage({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Login')}>
                 <MaterialIcons name="arrow-back" size={28} color="#fff" />
             </TouchableOpacity>
             
@@ -184,11 +176,14 @@ export default function ForgotPasswordPage({ navigation }) {
             </View>
             
             <Text style={styles.title}>Forgot Password?</Text>
-            <Text style={styles.subtitle}>Enter your email address and we'll send you instructions to reset your password</Text>
+            <Text style={styles.subtitle}>
+                Enter your email address and we'll send you a reset code to change your password.
+            </Text>
             
             <View style={styles.infoBox}>
                 <Text style={styles.infoText}>
-                    💡 Don't worry! We'll send you an email with a link to reset your password. 
+                    💡 We'll send a one-time reset code to your email.{"\n"}
+                    Enter that code on the next screen to set a new password. 
                     Make sure to check your spam folder if you don't see it in your inbox.
                 </Text>
             </View>

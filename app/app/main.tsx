@@ -61,12 +61,6 @@ const MENU_STRUCTURE = [
             { label: 'Health Certificate', icon: 'verified' },
         ]
     },
-    {
-        label: 'Services', icon: 'apps', children: [
-            { label: 'VetHealth', icon: 'health-and-safety' },
-            { label: 'Local Shipment', icon: 'local-shipping' },
-        ]
-    },
 ];
 
 const styles = StyleSheet.create({
@@ -400,10 +394,6 @@ function CollapsibleMenu({ open, onClose, setSelectedMenu, onRequestLogout, addT
         } else if (label === 'Health Certificate') {
             addToHistory('Vet Health Cert');
             setSelectedMenu('Vet Health Cert');
-            onClose();
-        } else if (label === 'Local Shipment') {
-            addToHistory('Local Shipment (Hogs)');
-            setSelectedMenu('Local Shipment (Hogs)');
             onClose();
         } else {
             addToHistory(label);

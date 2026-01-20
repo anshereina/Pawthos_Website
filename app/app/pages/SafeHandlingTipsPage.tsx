@@ -1,20 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 
-interface SafeHandlingTipsPageProps {
-  onBack: () => void;
-}
-
-export default function SafeHandlingTipsPage({ onBack }: SafeHandlingTipsPageProps) {
+export default function SafeHandlingTipsPage() {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Safe Handling Tips</Text>
-      </View>
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Pet Safety Guidelines</Text>
         <Text style={styles.text}>

@@ -1,20 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 
-interface LawOnPetOwnershipPageProps {
-  onBack: () => void;
-}
-
-export default function LawOnPetOwnershipPage({ onBack }: LawOnPetOwnershipPageProps) {
+export default function LawOnPetOwnershipPage() {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Law on Pet Ownership</Text>
-      </View>
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Pet Ownership Regulations</Text>
         <Text style={styles.text}>

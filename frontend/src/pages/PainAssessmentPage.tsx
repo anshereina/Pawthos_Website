@@ -336,74 +336,74 @@ const PainAssessmentPage: React.FC = () => {
             ) : (
               <>
                 <div className="table-scroll-container max-w-full overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                  <table className="w-full min-w-[1200px] table-fixed">
-                    {/* Table Header */}
-                    <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                      <tr>
+              <table className="w-full min-w-[1200px] table-fixed">
+                {/* Table Header */}
+                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                  <tr>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Assessment ID</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Name</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Type</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Assessment Date</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pain Level</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Action</th>
-                      </tr>
-                    </thead>
-                    
-                    {/* Table Body */}
-                    <tbody>
+                  </tr>
+                </thead>
+                
+                {/* Table Body */}
+                <tbody>
                       {currentAssessmentsPage.length > 0 ? (
                         currentAssessmentsPage.map((assessment, i) => (
-                          <tr 
-                            key={assessment.id}
-                            className={`${
-                              i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
-                            } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 cursor-pointer border-b border-gray-100`}
-                            onClick={() => handleRowClick(assessment.id)}
-                          >
+                                          <tr 
+                      key={assessment.id}
+                      className={`${
+                        i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
+                      } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 cursor-pointer border-b border-gray-100`}
+                      onClick={() => handleRowClick(assessment.id)}
+                    >
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48 capitalize">{assessment.pet_type}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">
-                              <div className="flex items-center space-x-2">
-                                <span>{formatAssessmentDate(assessment.assessment_date)}</span>
-                                {assessment.image_url && (
-                                  <div title="Has photo">
-                                    <Camera size={16} className="text-green-600" />
-                                  </div>
-                                )}
+                          <div className="flex items-center space-x-2">
+                            <span>{formatAssessmentDate(assessment.assessment_date)}</span>
+                            {assessment.image_url && (
+                              <div title="Has photo">
+                                <Camera size={16} className="text-green-600" />
                               </div>
-                            </td>
+                            )}
+                          </div>
+                        </td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
                             <td className="px-4 py-3 whitespace-nowrap w-32" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleViewAssessment(assessment.id)}
+                            <button
+                              onClick={() => handleViewAssessment(assessment.id)}
                                   className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
-                                  title="View assessment"
-                                >
+                              title="View assessment"
+                            >
                                   <Eye size={16} className="text-green-600" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteAssessment(assessment.id)}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAssessment(assessment.id)}
                                   className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
-                                  title="Delete assessment"
-                                >
+                              title="Delete assessment"
+                            >
                                   <Trash2 size={16} className="text-red-600" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
                           <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                            No assessments found matching your criteria.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        No assessments found matching your criteria.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
                   <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
