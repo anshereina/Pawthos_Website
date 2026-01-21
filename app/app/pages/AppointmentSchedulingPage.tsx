@@ -274,6 +274,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
     const [showSpeciesOptions, setShowSpeciesOptions] = useState(false);
     const [showVaccinationOptions, setShowVaccinationOptions] = useState(false);
     const [showTimeOptions, setShowTimeOptions] = useState(false);
+    const isEditing = !!editingAppointmentId;
 
     const appointmentOptions = ['Consultation', 'Deworming', 'Vaccination', 'VetHealth'];
     const speciesOptions = ['Canine', 'Feline'];
@@ -818,29 +819,28 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                         <TouchableOpacity 
                             style={[
                                 styles.dropdownContainer,
-                                // When coming from Feline Second Opinion with unregistered pet,
-                                // keep this fixed to Consultation and make it look disabled.
-                                petRegistered === 'no' && styles.inputFieldDisabled
+                                // Lock when unregistered feline flow or when editing an existing appointment
+                                (petRegistered === 'no' || isEditing) && styles.inputFieldDisabled
                             ]}
                             onPress={() => {
-                                if (petRegistered === 'no') return;
+                                if (petRegistered === 'no' || isEditing) return;
                                 setShowAppointmentOptions(!showAppointmentOptions);
                             }}
-                            disabled={petRegistered === 'no'}
+                            disabled={petRegistered === 'no' || isEditing}
                         >
                             <Text style={[
                                 styles.dropdownText,
-                                petRegistered === 'no' && { color: '#666' }
+                                (petRegistered === 'no' || isEditing) && { color: '#666' }
                             ]}>
                                 {appointmentFor}
                             </Text>
                             <MaterialIcons 
                                 name={showAppointmentOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color={petRegistered === 'no' ? "#999" : "#666"} 
+                                color={(petRegistered === 'no' || isEditing) ? "#999" : "#666"} 
                             />
                         </TouchableOpacity>
-                        {showAppointmentOptions && petRegistered !== 'no' && appointmentOptions.map((option) => (
+                        {showAppointmentOptions && petRegistered !== 'no' && !isEditing && appointmentOptions.map((option) => (
                             <TouchableOpacity
                                 key={option}
                                 style={[
@@ -869,24 +869,24 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             <TouchableOpacity 
                                 style={[
                                     styles.dropdownContainer,
-                                    editingAppointmentId && styles.inputFieldDisabled
+                                    (editingAppointmentId || isEditing) && styles.inputFieldDisabled
                                 ]}
-                                onPress={() => !editingAppointmentId && setShowVaccinationOptions(!showVaccinationOptions)}
-                                disabled={!!editingAppointmentId}
+                                onPress={() => !editingAppointmentId && !isEditing && setShowVaccinationOptions(!showVaccinationOptions)}
+                                disabled={!!editingAppointmentId || isEditing}
                             >
                                 <Text style={[
                                     styles.dropdownText,
-                                    editingAppointmentId && { color: '#666' }
+                                    (editingAppointmentId || isEditing) && { color: '#666' }
                                 ]}>
                                     {vaccinationType}
                                 </Text>
                                 <MaterialIcons 
                                     name={showVaccinationOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                     size={24} 
-                                    color={editingAppointmentId ? "#999" : "#666"} 
+                                    color={(editingAppointmentId || isEditing) ? "#999" : "#666"} 
                                 />
                             </TouchableOpacity>
-                            {showVaccinationOptions && !editingAppointmentId && vaccinationOptions.map((option) => (
+                            {showVaccinationOptions && !editingAppointmentId && !isEditing && vaccinationOptions.map((option) => (
                                 <TouchableOpacity
                                     key={option}
                                     style={[
@@ -927,25 +927,25 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 <TouchableOpacity 
                                     style={[
                                         styles.dropdownContainer,
-                                        (editingAppointmentId || prefilledPet) && styles.inputFieldDisabled
+                                        (editingAppointmentId || prefilledPet || isEditing) && styles.inputFieldDisabled
                                     ]}
-                                    onPress={() => !editingAppointmentId && !prefilledPet && setShowPetDropdown(!showPetDropdown)}
-                                    disabled={!!editingAppointmentId || !!prefilledPet}
+                                    onPress={() => !editingAppointmentId && !prefilledPet && !isEditing && setShowPetDropdown(!showPetDropdown)}
+                                    disabled={!!editingAppointmentId || !!prefilledPet || isEditing}
                                 >
                                     <Text style={[
                                         styles.dropdownText,
-                                        (editingAppointmentId || prefilledPet) && { color: '#666' }
+                                        (editingAppointmentId || prefilledPet || isEditing) && { color: '#666' }
                                     ]}>
                                         {selectedPet ? selectedPet.name : 'Select a pet'}
                                     </Text>
                                     <MaterialIcons 
                                         name={showPetDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
                                         size={24} 
-                                        color={(editingAppointmentId || prefilledPet) ? "#999" : "#666"} 
+                                        color={(editingAppointmentId || prefilledPet || isEditing) ? "#999" : "#666"} 
                                     />
                                 </TouchableOpacity>
                                 
-                                {showPetDropdown && !editingAppointmentId && !prefilledPet && (
+                                {showPetDropdown && !editingAppointmentId && !prefilledPet && !isEditing && (
                                     <View style={styles.searchableDropdownContainer}>
                                         <TextInput
                                             style={styles.searchInput}
@@ -1138,20 +1138,24 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
 
                     </View>
 
-                    <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Description</Text>
-                        <TextInput
-                            ref={descriptionInputRef}
-                            style={styles.textArea}
-                            placeholder="e.g vomiting"
-                            placeholderTextColor="#999"
-                            multiline
-                            value={description}
-                            onChangeText={setDescription}
-                            returnKeyType="done"
-                            blurOnSubmit={true}
-                        />
-                    </View>
+        <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <TextInput
+                ref={descriptionInputRef}
+                style={[
+                    styles.textArea,
+                    isEditing && styles.inputFieldDisabled
+                ]}
+                placeholder="e.g vomiting"
+                placeholderTextColor="#999"
+                multiline
+                value={description}
+                onChangeText={setDescription}
+                editable={!isEditing}
+                returnKeyType="done"
+                blurOnSubmit={true}
+            />
+        </View>
                 </View>
 
                 {/* Schedule Button */}

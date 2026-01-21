@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from "expo-router";
 import * as auth from '../utils/auth.utils';
 
 const styles = StyleSheet.create({
@@ -115,7 +116,8 @@ const styles = StyleSheet.create({
     }
 });
 
-export default function ForgotPasswordPage({ navigation }) {
+export default function ForgotPasswordPage() {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -143,8 +145,11 @@ export default function ForgotPasswordPage({ navigation }) {
             
             if (result.success) {
                 setSuccess(result.message || "Password reset email sent successfully");
-                // Navigate to the reset password screen where user can enter the code and new password
-                navigation.navigate('resetPassword', { email: email.trim() });
+                // Go to the reset password screen where the user can enter the code and new password
+                router.push({
+                    pathname: "/resetPassword",
+                    params: { email: email.trim() },
+                } as any);
             } else {
                 setError(result.message || "Failed to send password reset email");
             }
@@ -158,7 +163,7 @@ export default function ForgotPasswordPage({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/login')}>
                 <MaterialIcons name="arrow-back" size={28} color="#fff" />
             </TouchableOpacity>
             
@@ -209,7 +214,7 @@ export default function ForgotPasswordPage({ navigation }) {
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>SEND RESET EMAIL</Text>}
             </Pressable>
             
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity onPress={() => router.replace('/login')}>
                 <Text style={styles.link}>Back to Login</Text>
             </TouchableOpacity>
         </View>

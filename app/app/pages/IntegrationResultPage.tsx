@@ -667,11 +667,12 @@ export default function IntegrationResultPage({
             setErrorGuidance(apiResult.error_guidance || 'Please try again');
             setShowErrorModal(true);
         }
-        // Also check painLevel for backward compatibility
-        else if (painLevel && typeof painLevel === 'object' && painLevel.error_type) {
-            setErrorType(painLevel.error_type);
-            setErrorMessage(painLevel.error_message || 'An error occurred');
-            setErrorGuidance(painLevel.error_guidance || 'Please try again');
+        // Also check painLevel for backward compatibility when it carries error metadata
+        else if (painLevel && typeof (painLevel as any) === 'object' && (painLevel as any).error_type) {
+            const errObj: any = painLevel;
+            setErrorType(errObj.error_type);
+            setErrorMessage(errObj.error_message || 'An error occurred');
+            setErrorGuidance(errObj.error_guidance || 'Please try again');
             setShowErrorModal(true);
         }
     }, [apiResult, painLevel]);
@@ -730,6 +731,22 @@ export default function IntegrationResultPage({
                     // Update the assessment data with final results
                     assessmentData.recommendations = recommendations;
                     assessmentData.pain_level = currentPainLevel;
+                    
+                    // If this pet was marked as registered, store a lightweight snapshot
+                    // so we can prefill the appointment form for Second Opinion later
+                    try {
+                        if (assessmentData.pet_registered === 'yes') {
+                            const petSnapshot = {
+                                pet_id: assessmentData.pet_id,
+                                pet_name: assessmentData.pet_name,
+                                pet_type: assessmentData.pet_type || displayPetType || 'cat',
+                            };
+                            console.log('Saving felineAssessmentPetInfo snapshot:', petSnapshot);
+                            await AsyncStorage.setItem('felineAssessmentPetInfo', JSON.stringify(petSnapshot));
+                        }
+                    } catch (snapshotError) {
+                        console.warn('Failed to store felineAssessmentPetInfo snapshot:', snapshotError);
+                    }
                     
                     // Use capturedImage if available, otherwise use existing image_url
                     const imageToUse = capturedImage || assessmentData?.image_url;
