@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Platform, SafeAreaView } from "react-native";
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import * as auth from '../utils/auth.utils';
@@ -10,6 +10,12 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#045b26",
+        padding: 24,
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: "center",
+        alignItems: "center",
         padding: 24,
     },
     logoRow: {
@@ -123,6 +129,14 @@ export default function ForgotPasswordPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
+    const handleBack = () => {
+        if ((router as any)?.canGoBack?.()) {
+            router.back();
+        } else {
+            router.replace('/login');
+        }
+    };
+
     const handleRequestReset = async () => {
         if (!email.trim()) {
             setError("Please enter your email address");
@@ -162,62 +176,74 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/login')}>
-                <MaterialIcons name="arrow-back" size={28} color="#fff" />
-            </TouchableOpacity>
-            
-            <View style={styles.logoRow}>
-                <Image
-                    source={require("../assets/images/logo_1.png")}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
-                <Image
-                    source={require("../assets/images/logo_2.png")}
-                    style={styles.logo2}
-                    resizeMode="contain"
-                />
-            </View>
-            
-            <Text style={styles.title}>Forgot Password?</Text>
-            <Text style={styles.subtitle}>
-                Enter your email address and we'll send you a reset code to change your password.
-            </Text>
-            
-            <View style={styles.infoBox}>
-                <Text style={styles.infoText}>
-                    💡 We'll send a one-time reset code to your email.{"\n"}
-                    Enter that code on the next screen to set a new password. 
-                    Make sure to check your spam folder if you don't see it in your inbox.
-                </Text>
-            </View>
-            
-            <View style={styles.inputRow}>
-                <FontAwesome name="envelope" size={22} color="#045b26" />
-                <TextInput
-                    placeholder="Enter your email address"
-                    placeholderTextColor="#b2d8c5"
-                    value={email}
-                    onChangeText={setEmail}
-                    style={styles.input}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    autoCorrect={false}
-                />
-            </View>
-            
-            {error && <Text style={styles.error}>{error}</Text>}
-            {success && <Text style={styles.success}>{success}</Text>}
-            
-            <Pressable style={styles.button} onPress={handleRequestReset} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>SEND RESET EMAIL</Text>}
-            </Pressable>
-            
-            <TouchableOpacity onPress={() => router.replace('/login')}>
-                <Text style={styles.link}>Back to Login</Text>
-            </TouchableOpacity>
-        </View>
+        <SafeAreaView style={styles.container}>
+            <KeyboardAvoidingView
+                style={{ flex: 1, width: '100%' }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                        <MaterialIcons name="arrow-back" size={28} color="#fff" />
+                    </TouchableOpacity>
+                    
+                    <View style={styles.logoRow}>
+                        <Image
+                            source={require("../assets/images/logo_1.png")}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                        <Image
+                            source={require("../assets/images/logo_2.png")}
+                            style={styles.logo2}
+                            resizeMode="contain"
+                        />
+                    </View>
+                    
+                    <Text style={styles.title}>Forgot Password?</Text>
+                    <Text style={styles.subtitle}>
+                        Enter your email address and we'll send you a reset code to change your password.
+                    </Text>
+                    
+                    <View style={styles.infoBox}>
+                        <Text style={styles.infoText}>
+                            💡 We'll send a one-time reset code to your email.{"\n"}
+                            Enter that code on the next screen to set a new password. 
+                            Make sure to check your spam folder if you don't see it in your inbox.
+                        </Text>
+                    </View>
+                    
+                    <View style={styles.inputRow}>
+                        <FontAwesome name="envelope" size={22} color="#045b26" />
+                        <TextInput
+                            placeholder="Enter your email address"
+                            placeholderTextColor="#b2d8c5"
+                            value={email}
+                            onChangeText={setEmail}
+                            style={styles.input}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                            autoCorrect={false}
+                            returnKeyType="done"
+                        />
+                    </View>
+                    
+                    {error && <Text style={styles.error}>{error}</Text>}
+                    {success && <Text style={styles.success}>{success}</Text>}
+                    
+                    <Pressable style={styles.button} onPress={handleRequestReset} disabled={loading}>
+                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>SEND RESET EMAIL</Text>}
+                    </Pressable>
+                    
+                    <TouchableOpacity onPress={() => router.replace('/login')}>
+                        <Text style={styles.link}>Back to Login</Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 

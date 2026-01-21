@@ -959,15 +959,22 @@ export default function MainApp() {
                     
                     if (petInfoString) {
                         const petData = JSON.parse(petInfoString);
+                        const petRegisteredFlag = petData?.pet_registered || petData?.petRegistered;
                         console.log('Using felineAssessmentPetInfo for Second Opinion appointment:', petData);
-                        // Store pet data for appointment scheduling
-                        setNavigationData({
-                            prefilledPet: {
-                                pet_id: petData.pet_id,
-                                pet_name: petData.pet_name,
-                                pet_type: petData.pet_type || 'cat'
-                            }
-                        });
+
+                        // Only lock the pet dropdown when the cat is registered.
+                        if (petRegisteredFlag === 'yes') {
+                            setNavigationData({
+                                prefilledPet: {
+                                    pet_id: petData.pet_id,
+                                    pet_name: petData.pet_name,
+                                    pet_type: petData.pet_type || 'cat'
+                                }
+                            });
+                        } else {
+                            // Unregistered cat: ensure the appointment form stays free-text for pet name
+                            setNavigationData((prev) => ({ ...prev, prefilledPet: undefined }));
+                        }
                     } else {
                         console.warn('No felineAssessmentPetInfo or currentAssessmentData found for Second Opinion');
                     }

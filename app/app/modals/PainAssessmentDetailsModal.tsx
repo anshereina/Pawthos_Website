@@ -247,10 +247,15 @@ const getPainLevelColorStyle = (painLevel?: string) => {
 export default function PainAssessmentDetailsModal({ visible, onClose, record }: PainAssessmentDetailsModalProps) {
     const buildImageUrl = (url?: string | null) => {
         if (!url) return null;
-        if (url.startsWith('file://')) return 'local-file';
-        if (url.startsWith('http')) return url;
-        const base = (API_BASE_URL || '').replace(/\/+$/, '');
-        return `${base}${url}`;
+        const trimmed = url.trim();
+        if (trimmed.startsWith('file://')) return trimmed; // use local file path directly
+        if (trimmed.startsWith('http')) return trimmed;
+        // Normalize API base (strip trailing slashes and optional /api) then join with leading slash
+        const base = (API_BASE_URL || '')
+            .replace(/\/+$/, '')
+            .replace(/\/api$/, '');
+        const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+        return `${base}${normalizedPath}`;
     };
     return (
         <Modal

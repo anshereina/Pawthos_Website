@@ -573,6 +573,23 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
         return `${year}-${month}-${day}`; // Local YYYY-MM-DD without timezone shifts
     };
 
+    const normalizeTimeForAPI = (timeString: string) => {
+        if (!timeString) return timeString;
+        const trimmed = timeString.trim();
+        const match = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (!match) {
+            return trimmed;
+        }
+        let [_, hours, minutes, ampm] = match;
+        let hNum = parseInt(hours, 10);
+        if (ampm.toUpperCase() === 'PM' && hNum !== 12) {
+            hNum += 12;
+        } else if (ampm.toUpperCase() === 'AM' && hNum === 12) {
+            hNum = 0;
+        }
+        return `${String(hNum).padStart(2, '0')}:${minutes}`;
+    };
+
     const handleScheduleAppointment = async () => {
         if (!validateForm()) return;
 
@@ -584,7 +601,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                 pet_id: petRegistered === 'no' ? undefined : selectedPet?.id,
                 type: appointmentFor === 'Vaccination' ? `${appointmentFor} - ${vaccinationType}` : appointmentFor,
                 date: formatDateForAPI(selectedDate!),
-                time: selectedTime,
+                time: normalizeTimeForAPI(selectedTime),
                 veterinarian: 'Dr. Smith', // Default veterinarian, you can add selection later
                 notes: description,
                 // Pet details
