@@ -569,7 +569,9 @@ class AppointmentUpdate(BaseModel):
     pet_id: Optional[int] = None
     user_id: Optional[int] = None
     type: Optional[str] = None
-    date: Optional[date] = None
+    # Keep as string for updates to match mobile payloads and DB storage (models.Appointment.date is a string)
+    # Expected format: YYYY-MM-DD
+    date: Optional[str] = None
     time: Optional[str] = None
     veterinarian: Optional[str] = None
     notes: Optional[str] = None
