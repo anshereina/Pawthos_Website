@@ -20,7 +20,7 @@ interface EditPetProfileModalProps {
     visible: boolean;
     onClose: () => void;
     petData: PetData | null;
-    onSave: (updatedPetData: Partial<PetData>) => Promise<void>;
+    onSave: (updatedPetData: Partial<PetData>) => Promise<boolean>;
 }
 
 const styles = StyleSheet.create({
@@ -237,7 +237,7 @@ export default function EditPetProfileModal({
     const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-    const speciesOptions = ['Dog', 'Cat'];
+    const speciesOptions = ['Canine', 'Feline'];
     const genderOptions = ['male', 'female'];
 
     const formatDateForInput = (dateString: string) => {
@@ -333,9 +333,13 @@ export default function EditPetProfileModal({
                 ...(newPhotoUrl ? { photo_url: newPhotoUrl } : {}),
             };
 
-            await onSave(payload);
-            Alert.alert('Success', 'Pet profile updated successfully!');
-            onClose();
+            const saved = await onSave(payload);
+            if (saved) {
+                Alert.alert('Success', 'Pet profile updated successfully!');
+                onClose();
+            } else {
+                Alert.alert('Error', 'Failed to update pet profile. Please try again.');
+            }
         } catch (error) {
             Alert.alert('Error', 'Failed to update pet profile. Please try again.');
         } finally {

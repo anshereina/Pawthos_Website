@@ -355,7 +355,7 @@ export default function PetDetailsPage({
     };
 
     const handleSavePet = async (updatedPetData: Partial<PetData>) => {
-        if (!petId || !petData) return;
+        if (!petId || !petData) return false;
 
         try {
             const result = await updatePet(petId, updatedPetData);
@@ -363,12 +363,12 @@ export default function PetDetailsPage({
             if (result.success && result.data) {
                 setPetData(result.data as PetData);
                 console.log('Pet updated successfully:', result.data);
-            } else {
-                throw new Error(result.message || 'Failed to update pet');
+                return true;
             }
+            throw new Error(result.message || 'Failed to update pet');
         } catch (error) {
             console.error('Update pet error:', error);
-            throw error;
+            return false;
         }
     };
 
