@@ -163,7 +163,20 @@ export async function updateAppointment(appointmentId: number, appointmentData: 
     if (!response.ok) {
       const errorText = await response.text();
       console.log('Update Appointment API error response:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let message = `Failed to update appointment (HTTP ${response.status})`;
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.detail) {
+          message = typeof parsed.detail === 'string'
+            ? parsed.detail
+            : JSON.stringify(parsed.detail);
+        }
+      } catch {
+        if (errorText) {
+          message = errorText;
+        }
+      }
+      return { success: false, message };
     }
 
     const data = await response.json();
