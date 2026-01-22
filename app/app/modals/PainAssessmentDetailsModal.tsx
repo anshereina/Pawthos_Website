@@ -146,7 +146,7 @@ const painAssessmentQuestions = [
     'Stopped grooming completely or certain areas'
 ];
 
-// BEAAP categories (Canine)
+// BEAP categories (Canine) - BluePearl Pet Hospice Pain Scale
 const beaapCategories = [
     'Breathing',
     'Eyes',
@@ -158,7 +158,7 @@ const beaapCategories = [
     'Palpation'
 ];
 
-// BEAAP category descriptions
+// BEAP category descriptions
 const beaapCategoryDescriptions: { [key: number]: string[] } = {
     0: [ // Breathing
         'Breathing calmly at rest',
@@ -329,7 +329,7 @@ export default function PainAssessmentDetailsModal({ visible, onClose, record }:
                                 <Text style={[styles.modalTitle, { marginBottom: 12, fontSize: 18 }]}>Assessment Questions & Answers</Text>
                                 
                                 {(() => {
-                                    // Check if this is a canine assessment with BEAAP answers
+                                    // Check if this is a canine assessment with BEAP answers
                                     const petType = (record.pet_type || '').toLowerCase();
                                     const isCanine = petType === 'dog' || petType === 'canine';
                                     
@@ -342,11 +342,11 @@ export default function PainAssessmentDetailsModal({ visible, onClose, record }:
                                                 beaapAnswers = parsed.beaap_answers;
                                             }
                                         } catch (e) {
-                                            console.log('Error parsing BEAAP answers:', e);
+                                            console.log('Error parsing BEAP answers:', e);
                                         }
                                     }
                                     
-                                    // Display BEAAP categories for canine assessments
+                                    // Display BEAP categories for canine assessments
                                     if (isCanine && beaapAnswers) {
                                         return beaapCategories.map((category, categoryIndex) => {
                                             const selectedIndices = beaapAnswers![categoryIndex] || [];

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { calculateBeapAverageScore, getBeapScoreFromImageIndex } from '../../utils/beapScoring.utils';
 
 export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChange }: { onSelect: (label: string, data?: any) => void, onCategoryChange?: (category: string) => void }) {
   const scrollRef = useRef<ScrollView | null>(null);
@@ -29,94 +30,95 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
     }
   }, [currentCategory, onCategoryChange]);
 
-  // Updated category data with proper scoring system (0-5 scale per category, total 0-40)
+  // BEAP (BluePearl Pet Hospice) Pain Scale category data
+  // Each image maps to BEAP score ranges: 0, 1-2 (1.5), 3-4 (3.5), 5-6 (5.5), 7-8 (7.5), 9-10 (9.5)
   const categoryData = [
     // Breathing
     {
       images: [
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_0_No_Pain.png'), text: 'Breathing calmly at rest', score: 0 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_1-2_Mild_Pain.png'), text: 'Breathing normally during activity', score: 0 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_3-4_Moderate_Pain.jpg'), text: 'May sometimes have trouble catching their breath', score: 1 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_5-6_Moderate_to_Severe_Pain.png'), text: 'Often breathes heavily and may need extra effort to breathe', score: 2 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_7-8_Severe_Pain.jpg'), text: 'Breathing is fast and often looks harder than normal, with frequent panting', score: 3 },
-        { source: require('../../assets/images/caninepictures/breathing/Breathing_9-10_Worst_Pain_Possible.webp'), text: 'Panting with faster and more difficult breathing', score: 4 }
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_0_No_Pain.png'), text: 'Breathing calmly at rest', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_1-2_Mild_Pain.png'), text: 'Breathing normally during activity', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_3-4_Moderate_Pain.jpg'), text: 'May sometimes have trouble catching their breath', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_5-6_Moderate_to_Severe_Pain.png'), text: 'Often breathes heavily and may need extra effort to breathe', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_7-8_Severe_Pain.jpg'), text: 'Breathing is fast and often looks harder than normal, with frequent panting', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/breathing/Breathing_9-10_Worst_Pain_Possible.webp'), text: 'Panting with faster and more difficult breathing', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Eyes
     {
       images: [
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_0_No_Pain.png'), text: 'Eyes bright and alert', score: 0 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_1-2_Mild_Pain.png'), text: 'Eyes bright and alert', score: 0 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_3-4_Moderate_Pain.png'), text: 'Eyes slightly more dull in appearance; can have a slightly furrowed brow', score: 1 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_5-6_Moderate_to_Severe.jpg'), text: 'Dull eyes; worried look', score: 2 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_7-8_Severe_Pain.png'), text: 'Dull eyes; seems distant or unfocused', score: 3 },
-        { source: require('../../assets/images/caninepictures/eyes/Eyes_9-10_Worst_Pain_Possible.jpg'), text: 'Dull eyes; have a pained look', score: 4 }
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_0_No_Pain.png'), text: 'Eyes bright and alert', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_1-2_Mild_Pain.png'), text: 'Eyes bright and alert', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_3-4_Moderate_Pain.png'), text: 'Eyes slightly more dull in appearance; can have a slightly furrowed brow', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_5-6_Moderate_to_Severe.jpg'), text: 'Dull eyes; worried look', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_7-8_Severe_Pain.png'), text: 'Dull eyes; seems distant or unfocused', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/eyes/Eyes_9-10_Worst_Pain_Possible.jpg'), text: 'Dull eyes; have a pained look', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Ambulation
     {
       images: [
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_0_No_Pain.png'), text: 'Moves normally on all four legs with no difficulty or discomfort', score: 0 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_1-2_Mild_Pain.png'), text: 'Walks normally; may show slight discomfort', score: 1 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_3-4_Moderate_Pain.webp'), text: 'Noticeably slower to lie down or rise up; may exhibit "lameness" when walking', score: 2 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Very slow to rise up and lie down; hesitation with movement; difficulty on stairs; reluctant to turn corners; stiff to start out; may be limping', score: 3 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_7-8_Severe_Pain.jpg'), text: 'Obvious difficulty rising up or lying down; will not bear weight on affected leg; avoids stairs; obvious lameness', score: 4 },
-        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_9-10_Worst_Pain_Possible.jpg'), text: 'May refuse to get up; may not be able to or willing to take more than a few steps; will not bear weight on affected limb', score: 5 }
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_0_No_Pain.png'), text: 'Moves normally on all four legs with no difficulty or discomfort', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_1-2_Mild_Pain.png'), text: 'Walks normally; may show slight discomfort', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_3-4_Moderate_Pain.webp'), text: 'Noticeably slower to lie down or rise up; may exhibit "lameness" when walking', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Very slow to rise up and lie down; hesitation with movement; difficulty on stairs; reluctant to turn corners; stiff to start out; may be limping', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_7-8_Severe_Pain.jpg'), text: 'Obvious difficulty rising up or lying down; will not bear weight on affected leg; avoids stairs; obvious lameness', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/ambulation/Ambulation_9-10_Worst_Pain_Possible.jpg'), text: 'May refuse to get up; may not be able to or willing to take more than a few steps; will not bear weight on affected limb', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Activity
     {
       images: [
-        { source: require('../../assets/images/caninepictures/activity/Activity_0_No_Pain.png'), text: 'Engages in play and all normal activities', score: 0 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'May be slightly slower to lie down or get up', score: 1 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'May be a bit restless, having trouble getting comfortable and shifting weight', score: 2 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Do not want to interact but may be in a room with a family member; obvious lameness when walking; may lick painful area', score: 3 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Avoids interaction with family or environment; unwilling to get up or move; may frequently lick a painful area', score: 4 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_9-10_Worst_Pain_Possible.png'), text: 'Difficulty in being distracted from pain, even with gentle touch or something familiar', score: 5 }
+        { source: require('../../assets/images/caninepictures/activity/Activity_0_No_Pain.png'), text: 'Engages in play and all normal activities', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'May be slightly slower to lie down or get up', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'May be a bit restless, having trouble getting comfortable and shifting weight', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Do not want to interact but may be in a room with a family member; obvious lameness when walking; may lick painful area', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Avoids interaction with family or environment; unwilling to get up or move; may frequently lick a painful area', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_9-10_Worst_Pain_Possible.png'), text: 'Difficulty in being distracted from pain, even with gentle touch or something familiar', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Appetite
     {
       images: [
-        { source: require('../../assets/images/caninepictures/activity/Activity_0_No_Pain.png'), text: 'Eating and drinking normally', score: 0 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'Eating and drinking normally', score: 0 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'Picky eater; may only want treats or human food', score: 1 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Frequently not interested in eating', score: 2 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Loss of appetite; may not want to drink', score: 3 },
-        { source: require('../../assets/images/caninepictures/activity/Activity_9-10_Worst_Pain_Possible.png'), text: 'No interest in food or water', score: 4 }
+        { source: require('../../assets/images/caninepictures/activity/Activity_0_No_Pain.png'), text: 'Eating and drinking normally', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_1-2_Mild_Pain.png'), text: 'Eating and drinking normally', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_3-4_Moderate_Pain.png'), text: 'Picky eater; may only want treats or human food', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_5-6_Moderate_to_Severe_Pain.png'), text: 'Frequently not interested in eating', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_7-8_Severe_Pain.png'), text: 'Loss of appetite; may not want to drink', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/activity/Activity_9-10_Worst_Pain_Possible.png'), text: 'No interest in food or water', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Attitude
     {
       images: [
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_0_No_Pain.jpg'), text: 'Happy; interested in surroundings and playing; seeks attention', score: 0 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_1-2_Mild_Pain.png'), text: 'Happy and alert, though sometimes a bit quiet; overall behaves normally', score: 1 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_3-4_Moderate_Pain.png'), text: 'Less lively; doesn\'t initiate play', score: 2 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_5-6_Moderate_to_Severe_Pain.png'), text: 'Feels unsettled and can\'t sleep well', score: 3 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_7-8_Severe_Pain.jpg'), text: 'Scared, anxious, and may act aggressive', score: 4 },
-        { source: require('../../assets/images/caninepictures/attitude/Attitude_9-10_Worst_Pain_Possible.jpg'), text: 'Extremely low energy; lying motionless and clearly in pain', score: 5 }
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_0_No_Pain.jpg'), text: 'Happy; interested in surroundings and playing; seeks attention', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_1-2_Mild_Pain.png'), text: 'Happy and alert, though sometimes a bit quiet; overall behaves normally', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_3-4_Moderate_Pain.png'), text: 'Less lively; doesn\'t initiate play', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_5-6_Moderate_to_Severe_Pain.png'), text: 'Feels unsettled and can\'t sleep well', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_7-8_Severe_Pain.jpg'), text: 'Scared, anxious, and may act aggressive', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/attitude/Attitude_9-10_Worst_Pain_Possible.jpg'), text: 'Extremely low energy; lying motionless and clearly in pain', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Posture
     {
       images: [
-        { source: require('../../assets/images/caninepictures/posture/Posture_0_No_Pain.jpg'), text: 'Comfortable at rest and during play; ears up and wagging tail', score: 0 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_1-2_Mild_Pain.png'), text: 'May show occasional shifting of position; tail may be down just a little more; ears slightly flatter', score: 1 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_3-4_Moderate_Pain.png'), text: 'Difficulty squatting or lifting leg to urinate; subtle changes in position; tail more tucked and ears more flattened', score: 2 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_5-6_Moderate_to_Severe_Pain.png'), text: 'Abnormal weight distribution when standing; difficulty posturing to urinate; arched back; tucked belly; head hanging low; tucked tail', score: 3 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_7-8_Severe_Pain.png'), text: 'Tail tucked; ears flattened or pinned back; abnormal posture when standing; may refuse to move or stand', score: 4 },
-        { source: require('../../assets/images/caninepictures/posture/Posture_9-10_Worst_Pain_Possible.png'), text: 'Refuses to lay down or rest on side at all; pained ears; may prefer to be very tucked up or stretched out', score: 5 }
+        { source: require('../../assets/images/caninepictures/posture/Posture_0_No_Pain.jpg'), text: 'Comfortable at rest and during play; ears up and wagging tail', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/posture/Posture_1-2_Mild_Pain.png'), text: 'May show occasional shifting of position; tail may be down just a little more; ears slightly flatter', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/posture/Posture_3-4_Moderate_Pain.png'), text: 'Difficulty squatting or lifting leg to urinate; subtle changes in position; tail more tucked and ears more flattened', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/posture/Posture_5-6_Moderate_to_Severe_Pain.png'), text: 'Abnormal weight distribution when standing; difficulty posturing to urinate; arched back; tucked belly; head hanging low; tucked tail', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/posture/Posture_7-8_Severe_Pain.png'), text: 'Tail tucked; ears flattened or pinned back; abnormal posture when standing; may refuse to move or stand', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/posture/Posture_9-10_Worst_Pain_Possible.png'), text: 'Refuses to lay down or rest on side at all; pained ears; may prefer to be very tucked up or stretched out', score: getBeapScoreFromImageIndex(5) }
       ]
     },
     // Palpation
     {
       images: [
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_0_No_Pain.jpg'), text: 'Enjoys being touched and petted; no body tension present', score: 0 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_1-2_Mild_Pain.jpg'), text: 'Enjoys being touched and petted; no body tension present', score: 0 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_3-4_Moderate_Pain.png'), text: 'Does not mind touch except on painful area; turns head to look where touched; mild body tension', score: 1 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Withdraws from people; may not want to be touched; Pulls away from a hand when touched; moderate body tension when being touched', score: 2 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_7-8_Severe_Pain.jpg'), text: 'Significant body tension when painful area is touched; may vocalize in pain; guards a painful area by pulling away in a dramatic manner', score: 3 },
-        { source: require('../../assets/images/caninepictures/palpation/Palpation_9-10_Worst_Pain_Possible.jpg'), text: 'Severe body tension when touched; will not tolerate touch of painful area; becomes fearful when other areas that are not painful are touched', score: 4 }
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_0_No_Pain.jpg'), text: 'Enjoys being touched and petted; no body tension present', score: getBeapScoreFromImageIndex(0) },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_1-2_Mild_Pain.jpg'), text: 'Enjoys being touched and petted; no body tension present', score: getBeapScoreFromImageIndex(1) },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_3-4_Moderate_Pain.png'), text: 'Does not mind touch except on painful area; turns head to look where touched; mild body tension', score: getBeapScoreFromImageIndex(2) },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_5-6_Moderate_to_Severe_Pain.jpg'), text: 'Withdraws from people; may not want to be touched; Pulls away from a hand when touched; moderate body tension when being touched', score: getBeapScoreFromImageIndex(3) },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_7-8_Severe_Pain.jpg'), text: 'Significant body tension when painful area is touched; may vocalize in pain; guards a painful area by pulling away in a dramatic manner', score: getBeapScoreFromImageIndex(4) },
+        { source: require('../../assets/images/caninepictures/palpation/Palpation_9-10_Worst_Pain_Possible.jpg'), text: 'Severe body tension when touched; will not tolerate touch of painful area; becomes fearful when other areas that are not painful are touched', score: getBeapScoreFromImageIndex(5) }
       ]
     }
   ];
@@ -148,19 +150,9 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
     if (currentCategory < categories.length - 1) {
       setCurrentCategory(currentCategory + 1);
     } else {
-      // Calculate total score (average score per category if multiple selections)
-      const totalScore = selectedAnswers.reduce((sum, imageIndices, categoryIndex) => {
-        if (!imageIndices || imageIndices.length === 0) return sum;
-        
-        // Calculate average score for this category if multiple selections
-        const categoryTotal = imageIndices.reduce((catSum, imageIndex) => {
-          const score = categoryData[categoryIndex].images[imageIndex]?.score || 0;
-          return catSum + score;
-        }, 0);
-        
-        const averageScore = categoryTotal / imageIndices.length;
-        return sum + averageScore;
-      }, 0);
+      // Calculate BEAP average score (0-10 scale) using proper BEAP scoring
+      // This calculates the average score across all 8 categories
+      const beapAverageScore = calculateBeapAverageScore(selectedAnswers);
 
       // Save assessment data to AsyncStorage for the result page
       try {
@@ -172,16 +164,19 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
         assessmentData = {
           ...assessmentData,
           pet_type: 'dog',
-          assessment_type: 'BEAAP',
+          assessment_type: 'BEAP',
           beaap_answers: selectedAnswers,
-          total_score: totalScore,
+          beap_average_score: beapAverageScore, // Store BEAP average score (0-10)
           timestamp: new Date().toISOString(),
         };
         
         await AsyncStorage.setItem('currentAssessmentData', JSON.stringify(assessmentData));
         
         // Navigate to results page with data
-        onSelect('CanineIntegrationResult', { beaap_answers: selectedAnswers, total_score: totalScore });
+        onSelect('CanineIntegrationResult', { 
+          beaap_answers: selectedAnswers, 
+          beap_average_score: beapAverageScore 
+        });
       } catch (error) {
         console.error('Error saving assessment data:', error);
         Alert.alert('Error', 'Failed to save assessment data. Please try again.');

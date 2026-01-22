@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicat
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createPainAssessment } from '../../utils/painAssessments.utils';
+import { calculateBeapAverageScore, mapBeapScoreToPainLevel } from '../../utils/beapScoring.utils';
 
 const styles = StyleSheet.create({
     container: {
@@ -185,6 +186,7 @@ interface CanineIntegrationResultPageProps {
     severityLevel?: string;
     painLevel?: string;
     selectedAnswers?: number[];
+    beap_average_score?: number; // BEAP average score (0-10 scale)
 }
 
 export default function CanineIntegrationResultPage({ 
@@ -195,95 +197,53 @@ export default function CanineIntegrationResultPage({
     petType = 'dog', 
     severityLevel = 'Unknown',
     painLevel,
-    selectedAnswers = []
+    selectedAnswers = [],
+    beap_average_score
 }: CanineIntegrationResultPageProps) {
     
-    // Calculate pain level based on BEAAP assessment (6-level BEAP mapping)
-    const calculatePainLevel = (answers: number[]) => {
-        if (answers.length === 0) {
-            return 'Unknown';
+    // Calculate pain level based on BEAP (BluePearl Pet Hospice) assessment
+    // BEAP uses average score across 8 categories (0-10 scale)
+    const calculatePainLevel = (): string => {
+        // If BEAP average score is provided, use it directly
+        if (beap_average_score !== undefined && beap_average_score !== null) {
+            return mapBeapScoreToPainLevel(beap_average_score);
         }
         
-        // Use the provided selectedAnswers from props if available
-        // selectedAnswers is an array of arrays: [[imageIndices for category 0], [imageIndices for category 1], ...]
-        if (selectedAnswers && selectedAnswers.length > 0) {
-            // Calculate total score from the nested array structure
-            // Each category can have multiple image selections, so we need to calculate average per category
-            const totalScore = selectedAnswers.reduce((sum, imageIndices, categoryIndex) => {
-                // imageIndices is an array of selected image indices for this category
-                if (!imageIndices || imageIndices.length === 0) return sum;
-                
-                // Calculate the maximum score from selected images in this category (worst pain indicator)
-                // Or average if multiple selections - using max for conservative assessment
-                const categoryScore = Math.max(...imageIndices.map(imageIndex => {
-                    // Map image index to score (0-5 scale per category)
-                    // Image index 0 = score 0, index 1 = score 1, etc.
-                    return imageIndex;
-                }));
-                
-                return sum + categoryScore;
-            }, 0);
-            
-            // Map total score to 6 pain levels (0-40 scale → BEAP)
-            // 0–3: Level 0 (No Pain)
-            // 4–12: Level 1 (Mild Pain)
-            // 13–20: Level 2 (Moderate Pain)
-            // 21–28: Level 3 (Moderate to Severe Pain)
-            // 29–36: Level 4 (Severe Pain)
-            // 37–40: Level 5 (Worst Pain Possible)
-            if (totalScore <= 3) {
-                return 'Level 0 (No Pain)';
-            } else if (totalScore <= 12) {
-                return 'Level 1 (Mild Pain)';
-            } else if (totalScore <= 20) {
-                return 'Level 2 (Moderate Pain)';
-            } else if (totalScore <= 28) {
-                return 'Level 3 (Moderate to Severe Pain)';
-            } else if (totalScore <= 36) {
-                return 'Level 4 (Severe Pain)';
-            } else if (totalScore <= 40) {
-                return 'Level 5 (Worst Pain Possible)';
-            } else {
-                return 'Level 5 (Worst Pain Possible)'; // Cap at worst pain
+        // Otherwise, calculate from selectedAnswers
+        if (selectedAnswers && Array.isArray(selectedAnswers) && selectedAnswers.length > 0) {
+            // Check if selectedAnswers is array of arrays (new format)
+            if (Array.isArray(selectedAnswers[0])) {
+                const averageScore = calculateBeapAverageScore(selectedAnswers as number[][]);
+                return mapBeapScoreToPainLevel(averageScore);
             }
         }
         
-        // Fallback to old calculation method if no stored data
-        const painScores = answers.map(answerIndex => {
-            // Convert image index to pain score based on BEAAP scale
-            if (answerIndex === 0) return 0; // No pain
-            if (answerIndex === 1) return 1.5; // Mild pain (1-2)
-            if (answerIndex === 2) return 3.5; // Moderate pain (3-4)
-            if (answerIndex === 3) return 5.5; // Moderate to severe pain (5-6)
-            if (answerIndex === 4) return 7.5; // Severe pain (7-8)
-            if (answerIndex === 5) return 9.5; // Worst pain possible (9-10)
-            return 0;
-        });
-        
-        const averageScore = painScores.reduce((sum, score) => sum + score, 0) / painScores.length;
-        // Map 0–10 average to 6 levels using midpoints between anchors
-        if (averageScore <= 0.75) {
-            return 'Level 0 (No Pain)';
-        } else if (averageScore <= 2.5) {
-            return 'Level 1 (Mild Pain)';
-        } else if (averageScore <= 4.5) {
-            return 'Level 2 (Moderate Pain)';
-        } else if (averageScore <= 6.5) {
-            return 'Level 3 (Moderate to Severe Pain)';
-        } else if (averageScore <= 8.5) {
-            return 'Level 4 (Severe Pain)';
-        } else {
-            return 'Level 5 (Worst Pain Possible)';
+        return 'Unknown';
+    };
+
+    // Calculate BEAP average score for display
+    const getBeapAverageScore = (): number => {
+        if (beap_average_score !== undefined && beap_average_score !== null) {
+            return beap_average_score;
         }
+        
+        if (selectedAnswers && Array.isArray(selectedAnswers) && selectedAnswers.length > 0) {
+            if (Array.isArray(selectedAnswers[0])) {
+                return calculateBeapAverageScore(selectedAnswers as number[][]);
+            }
+        }
+        
+        return 0;
     };
 
     // Use calculated pain level or provided pain level
-    const currentPainLevel = painLevel || calculatePainLevel(selectedAnswers);
+    const currentPainLevel = painLevel || calculatePainLevel();
+    const beapScore = getBeapAverageScore();
 
     // Define a function to get recommendations based on the pain level
     const getRecommendations = (level: string) => {
         if (level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain') {
-            return 'Your dog appears to be in good health. Continue to monitor their behavior and well-being using the BEAAP assessment regularly.';
+            return 'Your dog appears to be in good health. Continue to monitor their behavior and well-being using the BEAP assessment regularly.';
         } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain') {
             return 'Your dog may be experiencing mild pain. Monitor closely for changes in behavior, appetite, or activity level. Consider consulting with a veterinarian if symptoms persist or worsen.';
         } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain') {
@@ -295,7 +255,7 @@ export default function CanineIntegrationResultPage({
         } else if (level === 'Level 5 (Worst Pain Possible)' || level === 'Level 5' || level === 'Worst Pain Possible') {
             return 'Your dog may be in the worst pain possible. Seek emergency veterinary care immediately.';
         } else if (level === 'Not recognize' || level === 'Not Recognized' || level === 'Unknown') {
-            return 'The assessment could not be properly completed. Please ensure you have answered all BEAAP categories and try the assessment again following the guidelines.';
+            return 'The assessment could not be properly completed. Please ensure you have answered all BEAP categories and try the assessment again following the guidelines.';
         }
         return "Pain assessment result is unknown. Please try again or consult a professional.";
     };
@@ -359,6 +319,8 @@ export default function CanineIntegrationResultPage({
                     assessmentData.recommendations = recommendations;
                     assessmentData.pain_level = currentPainLevel;
                     assessmentData.beaap_answers = selectedAnswers;
+                    assessmentData.beap_average_score = beapScore;
+                    assessmentData.assessment_type = 'BEAP';
                     assessmentData.pet_type = 'dog';
                     
                     // Create the assessment in the database

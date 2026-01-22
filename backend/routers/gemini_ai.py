@@ -48,36 +48,44 @@ else:
     GEMINI_AVAILABLE = False
 
 
-# The expert prompt for Gemini AI - Updated to match existing 3-level system
+# The expert prompt for Gemini AI - Updated to match official Feline Grimace Scale Training Manual
 FELINE_PAIN_ASSESSMENT_PROMPT = """
 You are a veterinary AI specialist with expertise in feline pain assessment using the Feline Grimace Scale (FGS).
 
 Analyze this cat's facial features for signs of pain or discomfort. Use the Feline Grimace Scale which evaluates:
 
 **1. Ear Position**
-- 0 (No Pain): Ears forward, normal position
-- 1 (Mild Pain): Ears slightly apart or slightly rotated
-- 2 (Severe Pain): Ears rotated outward and/or flattened against head
+- 0 (Absent): Ears facing forward
+- 1 (Moderately Present): Ears slightly pulled apart
+- 2 (Markedly Present): Ears rotated outwards
 
-**2. Orbital Tightening (Eye Area)**
-- 0 (No Pain): Eyes wide open, relaxed
-- 1 (Mild Pain): Eyes partially closed, slight squinting
-- 2 (Severe Pain): Eyes tightly closed or squinting
+**2. Orbital Tightening**
+- 0 (Absent): Eyes opened
+- 1 (Moderately Present): Partially closed eyes
+- 2 (Markedly Present): Squinted eyes
 
 **3. Muzzle Tension**
-- 0 (No Pain): Muzzle relaxed, rounded
-- 1 (Mild Pain): Muzzle shows moderate tension
-- 2 (Severe Pain): Muzzle tense, elongated
+- 0 (Absent): Relaxed (round shape)
+- 1 (Moderately Present): Mild tension
+- 2 (Markedly Present): Tense (elliptical shape)
 
-**4. Whisker Position**
-- 0 (No Pain): Whiskers loose and forward
-- 1 (Mild Pain): Whiskers slightly pulled back
-- 2 (Severe Pain): Whiskers pulled back and flat against face
+**4. Whiskers Change**
+CRITICAL: This is "Whiskers Change" not "Whisker Position". The scoring is:
+- 0 (Absent): Loose (relaxed) and curved
+- 1 (Moderately Present): Slightly curved or straight (closer together)
+- 2 (Markedly Present): Straight and moving forward (rostrally, away from the face)
+IMPORTANT: Score 2 means whiskers are STRAIGHT and MOVING FORWARD/ROSTRALLY (away from face), NOT pulled back.
 
 **5. Head Position**
-- 0 (No Pain): Head above shoulder line, alert
-- 1 (Mild Pain): Head level with shoulders
-- 2 (Severe Pain): Head below shoulder line, withdrawn
+- 0 (Absent): Head above the shoulder line OR Head aligned with the shoulder line
+- 1 (Moderately Present): Head aligned with the shoulder line
+- 2 (Markedly Present): Head below the shoulder line or tilted down (chin toward the chest)
+
+**Scoring Guidelines:**
+- 0 = action unit is absent
+- 1 = moderate appearance of the action unit, or uncertainty over its presence or absence
+- 2 = obvious appearance of the action unit
+- If the action unit is not visible, mark as "not possible to score"
 
 **IMPORTANT: Map your assessment to the existing 3-level system:**
 
@@ -97,7 +105,7 @@ Provide your assessment in JSON format:
     "ear_position": {"score": 0-2, "observation": "..."},
     "orbital_tightening": {"score": 0-2, "observation": "..."},
     "muzzle_tension": {"score": 0-2, "observation": "..."},
-    "whisker_position": {"score": 0-2, "observation": "..."},
+    "whiskers_change": {"score": 0-2, "observation": "..."},
     "head_position": {"score": 0-2, "observation": "..."}
   },
   "overall_analysis": "...",

@@ -5,18 +5,19 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 try:
-    import google.generativeai as genai
+    import google.generativeai as _ai_library
     AI_AVAILABLE = True
 except ImportError:
     AI_AVAILABLE = False
     logging.warning("Enhanced AI dependencies not available")
+    _ai_library = None
 
 # Configure Enhanced AI
 AI_API_KEY = os.getenv("AI_API_KEY")
 
 # Model configuration - can be overridden via environment variable
-# Options: 'gemini-3-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+# ELD model variants for different performance profiles
+AI_MODEL = os.getenv("AI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3-flash-preview"))  # Backward compatibility
 
 # No fallback key - must be set in environment variables
 if not AI_API_KEY:
@@ -25,10 +26,10 @@ if not AI_API_KEY:
 
 if AI_AVAILABLE and AI_API_KEY:
     try:
-        genai.configure(api_key=AI_API_KEY)
-        logging.info(f"Enhanced AI processing configured successfully with model: {GEMINI_MODEL}")
+        _ai_library.configure(api_key=AI_API_KEY)
+        logging.info(f"ELD model processing configured successfully with model: {AI_MODEL}")
     except Exception as e:
-        logging.error(f"Failed to configure Enhanced AI: {e}")
+        logging.error(f"Failed to configure ELD model: {e}")
         AI_AVAILABLE = False
 else:
     if not AI_API_KEY:
@@ -40,9 +41,9 @@ else:
 # Debug logging
 logging.info(f"AI_AVAILABLE: {AI_AVAILABLE}")
 logging.info(f"AI_API_KEY present: {bool(AI_API_KEY)}")
-logging.info(f"GEMINI_MODEL: {GEMINI_MODEL}")
+logging.info(f"AI_MODEL: {AI_MODEL}")
 
-# Enhanced Gemini AI prompt with accurate landmark detection
+# ELD model prompt for accurate landmark detection and pain assessment
 ENHANCED_PROCESSING_PROMPT = """
 You are a veterinary AI specialist analyzing a cat's facial expression for pain assessment.
 
@@ -104,7 +105,7 @@ Before ANY analysis, you MUST determine if there is ACTUALLY A CAT (Felis catus)
     "ear_position": {"score": 0-2, "description": "what you observe about the ears"},
     "orbital_tightening": {"score": 0-2, "description": "what you observe about the eyes"},
     "muzzle_tension": {"score": 0-2, "description": "what you observe about the muzzle"},
-    "whisker_position": {"score": 0-2, "description": "what you observe about the whiskers"},
+    "whiskers_change": {"score": 0-2, "description": "what you observe about the whiskers"},
     "head_position": {"score": 0-2, "description": "what you observe about head position"}
   },
   "detailed_explanation": {
@@ -251,6 +252,47 @@ Calculate confidence based on:
 - **Overall Assessment**: Combined factors determine final confidence (0.5-0.95)
 - **DO NOT use fixed confidence values** - calculate based on actual image analysis
 
+**FELINE GRIMACE SCALE (FGS) SCORING INSTRUCTIONS**:
+Use the official Feline Grimace Scale Training Manual guidelines:
+
+**1. Ear Position**
+- 0 (Absent): Ears facing forward
+- 1 (Moderately Present): Ears slightly pulled apart
+- 2 (Markedly Present): Ears rotated outwards
+
+**2. Orbital Tightening**
+- 0 (Absent): Eyes opened
+- 1 (Moderately Present): Partially closed eyes
+- 2 (Markedly Present): Squinted eyes
+
+**3. Muzzle Tension**
+- 0 (Absent): Relaxed (round shape)
+- 1 (Moderately Present): Mild tension
+- 2 (Markedly Present): Tense (elliptical shape)
+
+**4. Whiskers Change** (CRITICAL: This is "Whiskers Change" not "Whisker Position")
+- 0 (Absent): Loose (relaxed) and curved
+- 1 (Moderately Present): Slightly curved or straight (closer together)
+- 2 (Markedly Present): Straight and moving forward (rostrally, away from the face)
+IMPORTANT: Score 2 means whiskers are STRAIGHT and MOVING FORWARD/ROSTRALLY (away from face), NOT pulled back.
+
+**5. Head Position**
+- 0 (Absent): Head above the shoulder line OR Head aligned with the shoulder line
+- 1 (Moderately Present): Head aligned with the shoulder line
+- 2 (Markedly Present): Head below the shoulder line or tilted down (chin toward the chest)
+
+**FGS Scoring Guidelines:**
+- 0 = action unit is absent
+- 1 = moderate appearance of the action unit, or uncertainty over its presence or absence
+- 2 = obvious appearance of the action unit
+- If the action unit is not visible, mark as "not possible to score"
+
+**FGS Total Score Calculation:**
+- Sum all 5 feature scores (each 0-2) = Total FGS score (0-10)
+- Level 0 (No Pain): FGS score 0-2
+- Level 1 (Mild Pain): FGS score 3-5
+- Level 2 (Moderate/Severe Pain): FGS score 6-10
+
 **IMPORTANT**: 
 - Use exact pain levels: "Level 0 (No Pain)", "Level 1 (Mild Pain)", "Level 2 (Moderate/Severe Pain)"
 - Provide real observations based on what you see in the image
@@ -260,6 +302,7 @@ Calculate confidence based on:
 - CRITICAL: Replace the example coordinates in visual_landmarks with actual coordinates you calculate from the image
 - Calculate precise x,y coordinates for each landmark based on the cat's actual facial features
 - Calculate confidence dynamically based on image quality and landmark detection accuracy
+- CRITICAL: Use "whiskers_change" (not "whisker_position") in fgs_breakdown
 
 **RECOMMENDATIONS MUST BE REAL**:
 - Generate specific, actionable veterinary advice based on the pain level assessment
@@ -277,7 +320,7 @@ Calculate confidence based on:
 """
 
 def parse_enhanced_response(text: str) -> Dict[str, Any]:
-    """Parse Gemini AI response - let AI do all the work"""
+    """Parse AI response - let AI do all the work"""
     try:
         # Extract JSON from response
         if "```json" in text:
@@ -293,7 +336,7 @@ def parse_enhanced_response(text: str) -> Dict[str, Any]:
         
         data = json.loads(json_text)
         
-        # Check if Gemini AI detected an error (no cat)
+        # Check if AI detected an error (no cat)
         if data.get("error") and data.get("error_type") == "NO_CAT_DETECTED":
             return {
                 "success": False,
@@ -305,7 +348,7 @@ def parse_enhanced_response(text: str) -> Dict[str, Any]:
                 "raw_response": text
             }
         
-        # Just pass through what Gemini AI gives us for successful analysis
+        # Just pass through what AI gives us for successful analysis
         return {
             "success": True,
             "pain_level": data.get("pain_level", "Level 1 (Mild Pain)"),
@@ -322,20 +365,20 @@ def parse_enhanced_response(text: str) -> Dict[str, Any]:
         }
         
     except Exception as e:
-        logging.error(f"Error parsing Gemini AI response: {e}")
+        logging.error(f"Error parsing AI response: {e}")
         return {
             "success": False,
             "pain_level": "Level 1 (Mild Pain)",
             "pain_score": 5,
             "confidence": 0.3,
-            "analysis": f"Error parsing AI response: {e}",
+            "analysis": "AI assessment temporarily unavailable. Please try again later.",
             "model_type": "ELD",
             "raw_response": text
         }
 
 def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str] = None) -> Dict[str, Any]:
     """
-    Enhanced AI assessment using Gemini AI - let AI do all the work
+    Enhanced AI assessment using ELD model - let AI do all the work
     """
     
     if not AI_AVAILABLE:
@@ -361,12 +404,12 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
         }
     
     # Try primary model first, fallback to alternative models if quota exceeded
-    models_to_try = [GEMINI_MODEL]
+    models_to_try = [AI_MODEL]
     
     # Add fallback models if primary model fails (prefer newer models first)
-    if GEMINI_MODEL == "gemini-3-flash-preview":
+    if AI_MODEL == "gemini-3-flash-preview":
         models_to_try.extend(["gemini-2.0-flash", "gemini-1.5-flash"])
-    elif GEMINI_MODEL == "gemini-2.0-flash":
+    elif AI_MODEL == "gemini-2.0-flash":
         models_to_try.extend(["gemini-1.5-flash", "gemini-1.5-pro"])
     
     last_error = None
@@ -377,13 +420,13 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
             if additional_context:
                 prompt += f"\n\n**Additional Context:** {additional_context}"
             
-            model = genai.GenerativeModel(model_name)
+            model = _ai_library.GenerativeModel(model_name)
             
             import PIL.Image
             import io
             pil_image = PIL.Image.open(io.BytesIO(image_bytes))
             
-            logging.info(f"Using Gemini AI model '{model_name}' for comprehensive pain assessment")
+            logging.info(f"Using ELD model '{model_name}' for comprehensive pain assessment")
             response = model.generate_content([prompt, pil_image])
             
             result = parse_enhanced_response(response.text)
@@ -414,11 +457,11 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
                         "success": False,
                         "error": True,
                         "error_type": "QUOTA_EXCEEDED",
-                        "error_message": f"API quota exceeded. Please check your Google Cloud billing or try again later.",
+                        "error_message": "AI service quota exceeded. Please try again later.",
                         "pain_level": "Level 1 (Mild Pain)",
                         "pain_score": 5,
                         "confidence": 0.2,
-                        "analysis": f"AI assessment failed due to quota limits: {error_str}",
+                        "analysis": "AI assessment temporarily unavailable. Please try again later.",
                         "model_type": "ELD",
                         "raw_response": str(e)
                     }
@@ -433,13 +476,13 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
                     break
     
     # If we get here, all models failed with non-quota errors
-    logging.error(f"Error in Gemini AI assessment with all models: {last_error}")
+    logging.error(f"Error in AI assessment with all models: {last_error}")
     return {
         "success": False,
         "pain_level": "Level 1 (Mild Pain)",
         "pain_score": 5,
         "confidence": 0.2,
-        "analysis": f"AI assessment error: {last_error}",
+        "analysis": "AI assessment temporarily unavailable. Please try again later.",
         "model_type": "ELD",
         "raw_response": str(last_error) if last_error else "Unknown error"
     }

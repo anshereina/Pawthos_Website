@@ -107,11 +107,17 @@ export const createPainAssessment = async (assessmentData: PainAssessmentCreate)
         }
 
         // Normalize payload for backend
+        // Map 6-level BEAP system to backend 3-level system
         const toPainScore = (level?: string): number => {
             const value = (level || '').toLowerCase();
+            // Level 0 → 0 (No pain)
             if (value.includes('level 0') || value.includes('no pain')) return 0;
+            // Level 1-2 → 1 (Mild to moderate pain)
             if (value.includes('level 1') || value.includes('mild')) return 1;
-            if (value.includes('level 2') || value.includes('moderate') || value.includes('severe')) return 2;
+            if (value.includes('level 2') || (value.includes('moderate') && !value.includes('severe'))) return 1;
+            // Level 3-5 → 2 (Moderate to severe pain)
+            if (value.includes('level 3') || value.includes('level 4') || value.includes('level 5') || 
+                value.includes('moderate to severe') || value.includes('severe') || value.includes('worst')) return 2;
             return 0;
         };
 
