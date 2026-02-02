@@ -403,141 +403,228 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   // Determine if modal is editable
   const isEditable = !readOnly || isEditMode;
 
+  // Helper function to parse age string and convert to years and months
+  const parseAgeToYearsMonths = (ageString?: string): { years: number; months: number } => {
+    if (!ageString) return { years: 0, months: 0 };
+    
+    // Try to parse "X years" or "X months" format
+    const yearsMatch = ageString.match(/(\d+)\s*years?/i);
+    const monthsMatch = ageString.match(/(\d+)\s*months?/i);
+    
+    if (yearsMatch) {
+      const years = parseInt(yearsMatch[1]);
+      const months = monthsMatch ? parseInt(monthsMatch[1]) : 0;
+      return { years, months };
+    } else if (monthsMatch) {
+      return { years: 0, months: parseInt(monthsMatch[1]) };
+    }
+    
+    return { years: 0, months: 0 };
+  };
+
+  const formatDateForPDF = (dateString?: string | null) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch {
+      return '';
+    }
+  };
+
   const handleExportPDF = () => {
     if (!event) return;
 
-    // Use portrait orientation
     const doc = new jsPDF('portrait', 'mm', 'a4');
     
-    // Set up colors
-    const primaryColor = [34, 139, 34]; // Green
+    // Header Section - matching the dog registry form exactly
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('EILINONS', 105, 15, { align: 'center' });
+    doc.text('Republic of the Philippines', 105, 20, { align: 'center' });
+    doc.text('Province of Laguna', 105, 25, { align: 'center' });
+    doc.text('City of San Pedro', 105, 30, { align: 'center' });
+    doc.text('CITY VETERINARY OFFICE', 105, 35, { align: 'center' });
+    doc.text('LUNGSOD NG', 105, 40, { align: 'center' });
+    doc.text('SAN PEDRO', 105, 45, { align: 'center' });
+    doc.text('UNA SA LAGUNA', 105, 50, { align: 'center' });
     
-    // Header background
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, 210, 35, 'F');
-    
-    // Add logos to header
-    try {
-      // Add CityVet logo on the left
-      const cityVetLogo = '/images/logos/CityVet.jpg';
-      doc.addImage(cityVetLogo, 'JPEG', 10, 5, 25, 25);
-      
-      // Add SanPedro logo on the right
-      const sanPedroLogo = '/images/logos/SanPedro.png';
-      doc.addImage(sanPedroLogo, 'PNG', 175, 5, 25, 25);
-    } catch (error) {
-      console.warn('Failed to load logos:', error);
-    }
-    
-    // Header text (centered)
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
+    // Title
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Vaccination Drive Report', 105, 20, { align: 'center' });
+    doc.text('DOG REGISTRY DATA BASE FORM', 105, 60, { align: 'center' });
     
-    // Event Information Section
-    let yPosition = 50;
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Event Information', 20, yPosition);
-    yPosition += 10;
-    
-    // Event details
+    // Top fields section
+    let yPos = 70;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
-    const eventInfo = [
-      ['Event Title:', event.event_title || 'N/A'],
-      ['Date:', event.event_date || 'N/A'],
-      ['Barangay:', event.barangay || 'N/A'],
-      ['Service Coordinator:', event.service_coordinator || 'N/A'],
-      ['Vaccine Used:', formData.vaccineUsed || 'N/A'],
-      ['Batch/Lot No.:', formData.batchNoLotNo || 'N/A']
-    ];
+    // Barangay
+    doc.text(`Barangay: ${event.barangay || '___________________________'}`, 20, yPos);
     
-    eventInfo.forEach(([label, value]) => {
-      doc.setFont('helvetica', 'bold');
-      doc.text(label, 20, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.text(value, 70, yPosition);
-      yPosition += 6;
+    // Date
+    const dateStr = formatDateForPDF(event.event_date);
+    doc.text(`Date: ${dateStr || '___________________________'}`, 20, yPos + 5);
+    
+    // Vaccine Used
+    doc.text(`Vaccine Used: ${formData.vaccineUsed || '___________________________'}`, 20, yPos + 10);
+    
+    // Batch/Lot Number
+    doc.text(`Batch/Lot Number: ${formData.batchNoLotNo || '___________________________'}`, 20, yPos + 15);
+    
+    // Table Header
+    yPos = yPos + 25;
+    const tableStartY = yPos;
+    
+    // Prepare table data - matching the form structure exactly
+    const tableData = petRecords.map((record) => {
+      // Parse age to years and months
+      const age = parseAgeToYearsMonths(record.age);
+      
+      // Format species
+      const species = record.species 
+        ? (record.species.toLowerCase() === 'canine' ? 'Canine' : 
+           record.species.toLowerCase() === 'feline' ? 'Feline' : 
+           record.species.charAt(0).toUpperCase() + record.species.slice(1).toLowerCase())
+        : '';
+      
+      // Determine sex and reproductive status checkboxes
+      const isMale = record.sex?.toLowerCase() === 'male';
+      const isFemale = record.sex?.toLowerCase() === 'female';
+      const isCastrated = record.reproductiveStatus?.toLowerCase() === 'castrated';
+      const isSpayed = record.reproductiveStatus?.toLowerCase() === 'spayed';
+      const isIntact = record.reproductiveStatus?.toLowerCase() === 'intact';
+      
+      return [
+        record.ownerName || '',
+        record.petName || '',
+        formatDateForPDF(record.ownerBirthday) || '',
+        record.ownerContact || '',
+        species,
+        '', // Origin - not in our data
+        record.breed || '',
+        record.color || '',
+        age.years > 0 ? age.years.toString() : '', // Age in years
+        age.months > 0 ? age.months.toString() : '', // Age in months
+        isMale ? '✓' : '', // Male checkbox
+        isFemale ? '✓' : '', // Female checkbox
+        isCastrated ? '✓' : '', // Castrated checkbox
+        isIntact && isMale ? '✓' : '', // Male Intact checkbox
+        isSpayed ? '✓' : '', // Spayed checkbox
+        isIntact && isFemale ? '✓' : '', // Female Intact checkbox
+        '' // Signature - empty
+      ];
     });
     
-    yPosition += 10;
-    
-    // Pet Records Section
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Pet Vaccination Records', 20, yPosition);
-    yPosition += 10;
-    
-    // Summary statistics
-    const totalRecords = petRecords.length;
-    const completedRecords = petRecords.filter(r => r.ownerName && r.petName).length;
-    const incompleteRecords = totalRecords - completedRecords;
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Total Records: ${totalRecords}`, 20, yPosition);
-    doc.text(`Completed: ${completedRecords}`, 80, yPosition);
-    doc.text(`Incomplete: ${incompleteRecords}`, 130, yPosition);
-    yPosition += 15;
-    
-    // Prepare table data
-    const tableData = petRecords.map((record, index) => [
-      index + 1,
-      record.ownerName || '',
-      record.petName || '',
-      record.ownerBirthday || '',
-      record.ownerContact || '',
-      record.species || '',
-      record.breed || '',
-      record.color || '',
-      record.age || '',
-      record.sex || '',
-      record.reproductiveStatus || ''
-    ]);
-    
-    // Create table
+    // Create table - matching the form structure exactly
     autoTable(doc, {
-      head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status']],
+      startY: tableStartY,
+      head: [[
+        "Owner's\nName",
+        "Name of\nDog",
+        "Owner's\nBirthday",
+        "Contact\nNumber",
+        "Species\n(Canine/Feline)",
+        "Origin\n(pls. check)",
+        "Breed",
+        "COLOR",
+        "AGE",
+        "",
+        "SEX",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "SIGNATURE"
+      ], [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "YEAR",
+        "MONTH",
+        "MALE",
+        "",
+        "FEMALE",
+        "",
+        "",
+        "",
+        ""
+      ], [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "CASTRATED",
+        "",
+        "INTACT",
+        "SPAYED",
+        "INTACT",
+        ""
+      ]],
       body: tableData,
-      startY: yPosition,
+      theme: 'grid',
       styles: {
-        fontSize: 8,
-        cellPadding: 3,
+        fontSize: 7,
+        cellPadding: 1.5,
+        overflow: 'linebreak',
+        lineWidth: 0.1,
       },
       headStyles: {
-        fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
-        textColor: [255, 255, 255],
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
         fontStyle: 'bold',
+        fontSize: 7,
+        lineWidth: 0.1,
       },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
+      columnStyles: {
+        0: { cellWidth: 28, halign: 'left' }, // Owner's Name
+        1: { cellWidth: 25, halign: 'left' }, // Name of Dog
+        2: { cellWidth: 22, halign: 'left' }, // Owner's Birthday
+        3: { cellWidth: 20, halign: 'left' }, // Contact Number
+        4: { cellWidth: 18, halign: 'left' }, // Species
+        5: { cellWidth: 15, halign: 'center' }, // Origin
+        6: { cellWidth: 15, halign: 'left' }, // Breed
+        7: { cellWidth: 12, halign: 'left' }, // COLOR
+        8: { cellWidth: 8, halign: 'center' },  // YEAR
+        9: { cellWidth: 8, halign: 'center' },  // MONTH
+        10: { cellWidth: 7, halign: 'center' }, // MALE
+        11: { cellWidth: 7, halign: 'center' }, // CASTRATED
+        12: { cellWidth: 7, halign: 'center' }, // FEMALE
+        13: { cellWidth: 7, halign: 'center' }, // INTACT (male)
+        14: { cellWidth: 7, halign: 'center' }, // SPAYED
+        15: { cellWidth: 7, halign: 'center' }, // INTACT (female)
+        16: { cellWidth: 18, halign: 'center' }, // SIGNATURE
       },
-      margin: { left: 20, right: 20 },
-      didDrawPage: (data: any) => {
-        // Footer
-        const pageSize = doc.internal.pageSize;
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text(
-          `Page ${data.pageNumber}`,
-          pageSize.width / 2,
-          pageSize.height - 10,
-          { align: 'center' }
-        );
-        doc.text(
-          `Generated on: ${new Date().toLocaleDateString()}`,
-          20,
-          pageSize.height - 10
-        );
-      }
+      margin: { left: 10, right: 10 },
+      showHead: 'everyPage',
     });
     
+    // Footer section - matching the form
+    const finalY = (doc as any).lastAutoTable.finalY || yPos + 50;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Noted by:', 20, finalY + 15);
+    doc.text('DR. MA. FE V. TEMPLADO', 20, finalY + 20);
+    doc.text('Head, CVO', 20, finalY + 25);
+    doc.text('SLH-007-0', 20, finalY + 30);
+    
+    doc.text('Brgy. Chairman/HOA President', 150, finalY + 30);
+    
     // Save the PDF
-    const fileName = `Vaccination-${event.barangay || 'Unknown'}-${event.event_date || new Date().toISOString().split('T')[0]}.pdf`;
+    const fileName = `Dog-Registry-${event.barangay || 'Unknown'}-${formatDateForPDF(event.event_date) || 'Unknown'}.pdf`;
     doc.save(fileName);
   };
 
