@@ -435,27 +435,37 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const handleExportPDF = () => {
     if (!event) return;
 
-    const doc = new jsPDF('portrait', 'mm', 'a4');
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    
+    // Add logos to header
+    try {
+      // Left logo: City Veterinary Office
+      const cityVetLogo = '/images/logos/logo_1.png';
+      doc.addImage(cityVetLogo, 'PNG', 15, 10, 25, 25);
+      
+      // Right logo: Lungsod ng San Pedro, Una Sa Laguna
+      const sanPedroLogo = '/images/logos/una_sa_laguna.png';
+      doc.addImage(sanPedroLogo, 'PNG', 257, 10, 25, 25);
+    } catch (error) {
+      console.warn('Failed to load logos:', error);
+    }
     
     // Header Section - matching the dog registry form exactly
+    // In landscape: width is 297mm, so center is at 148.5mm
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('EILINONS', 105, 15, { align: 'center' });
-    doc.text('Republic of the Philippines', 105, 20, { align: 'center' });
-    doc.text('Province of Laguna', 105, 25, { align: 'center' });
-    doc.text('City of San Pedro', 105, 30, { align: 'center' });
-    doc.text('CITY VETERINARY OFFICE', 105, 35, { align: 'center' });
-    doc.text('LUNGSOD NG', 105, 40, { align: 'center' });
-    doc.text('SAN PEDRO', 105, 45, { align: 'center' });
-    doc.text('UNA SA LAGUNA', 105, 50, { align: 'center' });
+    doc.text('Republic of the Philippines', 148.5, 15, { align: 'center' });
+    doc.text('Province of Laguna', 148.5, 20, { align: 'center' });
+    doc.text('City of San Pedro', 148.5, 25, { align: 'center' });
+    doc.text('CITY VETERINARY OFFICE', 148.5, 30, { align: 'center' });
     
     // Title
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DOG REGISTRY DATA BASE FORM', 105, 60, { align: 'center' });
+    doc.text('DOG REGISTRY DATA BASE FORM', 148.5, 40, { align: 'center' });
     
     // Top fields section
-    let yPos = 70;
+    let yPos = 50;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
@@ -498,20 +508,18 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       return [
         record.ownerName || '',
         record.petName || '',
+        '', // Origin (pls. check) - not in our data, left blank
         formatDateForPDF(record.ownerBirthday) || '',
         record.ownerContact || '',
         species,
-        '', // Origin - not in our data
         record.breed || '',
         record.color || '',
         age.years > 0 ? age.years.toString() : '', // Age in years
         age.months > 0 ? age.months.toString() : '', // Age in months
-        isMale ? '✓' : '', // Male checkbox
-        isFemale ? '✓' : '', // Female checkbox
-        isCastrated ? '✓' : '', // Castrated checkbox
-        isIntact && isMale ? '✓' : '', // Male Intact checkbox
-        isSpayed ? '✓' : '', // Spayed checkbox
-        isIntact && isFemale ? '✓' : '', // Female Intact checkbox
+        isMale && isCastrated ? '✓' : '', // MALE (Castrated)
+        isMale && isIntact ? '✓' : '', // MALE (Intact)
+        isFemale && isSpayed ? '✓' : '', // FEMALE (Spayed)
+        isFemale && isIntact ? '✓' : '', // FEMALE (Intact)
         '' // Signature - empty
       ];
     });
@@ -522,17 +530,15 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       head: [[
         "Owner's\nName",
         "Name of\nDog",
+        "Origin\n(pls. check)",
         "Owner's\nBirthday",
         "Contact\nNumber",
         "Species\n(Canine/Feline)",
-        "Origin\n(pls. check)",
         "Breed",
         "COLOR",
         "AGE",
         "",
         "SEX",
-        "",
-        "",
         "",
         "",
         "",
@@ -552,8 +558,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         "",
         "FEMALE",
         "",
-        "",
-        "",
         ""
       ], [
         "",
@@ -566,9 +570,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         "",
         "",
         "",
-        "",
         "CASTRATED",
-        "",
         "INTACT",
         "SPAYED",
         "INTACT",
@@ -592,21 +594,19 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       columnStyles: {
         0: { cellWidth: 28, halign: 'left' }, // Owner's Name
         1: { cellWidth: 25, halign: 'left' }, // Name of Dog
-        2: { cellWidth: 22, halign: 'left' }, // Owner's Birthday
-        3: { cellWidth: 20, halign: 'left' }, // Contact Number
-        4: { cellWidth: 18, halign: 'left' }, // Species
-        5: { cellWidth: 15, halign: 'center' }, // Origin
+        2: { cellWidth: 15, halign: 'center' }, // Origin (pls. check)
+        3: { cellWidth: 22, halign: 'left' }, // Owner's Birthday
+        4: { cellWidth: 20, halign: 'left' }, // Contact Number
+        5: { cellWidth: 18, halign: 'left' }, // Species (Canine/Feline)
         6: { cellWidth: 15, halign: 'left' }, // Breed
         7: { cellWidth: 12, halign: 'left' }, // COLOR
         8: { cellWidth: 8, halign: 'center' },  // YEAR
         9: { cellWidth: 8, halign: 'center' },  // MONTH
-        10: { cellWidth: 7, halign: 'center' }, // MALE
-        11: { cellWidth: 7, halign: 'center' }, // CASTRATED
-        12: { cellWidth: 7, halign: 'center' }, // FEMALE
-        13: { cellWidth: 7, halign: 'center' }, // INTACT (male)
-        14: { cellWidth: 7, halign: 'center' }, // SPAYED
-        15: { cellWidth: 7, halign: 'center' }, // INTACT (female)
-        16: { cellWidth: 18, halign: 'center' }, // SIGNATURE
+        10: { cellWidth: 7, halign: 'center' }, // MALE (Castrated)
+        11: { cellWidth: 7, halign: 'center' }, // MALE (Intact)
+        12: { cellWidth: 7, halign: 'center' }, // FEMALE (Spayed)
+        13: { cellWidth: 7, halign: 'center' }, // FEMALE (Intact)
+        14: { cellWidth: 18, halign: 'center' }, // SIGNATURE
       },
       margin: { left: 10, right: 10 },
       showHead: 'everyPage',
