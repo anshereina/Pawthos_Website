@@ -19,6 +19,14 @@ export interface VaccinationRecord {
 export interface VaccinationRecordWithPet extends VaccinationRecord {
   pet_name?: string;
   pet_species?: string;
+  pet_breed?: string;
+  pet_color?: string;
+  pet_gender?: string;
+  pet_date_of_birth?: string;
+  pet_owner_name?: string;
+  pet_owner_birthday?: string;
+  pet_owner_contact?: string;
+  pet_reproductive_status?: string;
 }
 
 export interface CreateVaccinationRecordData {

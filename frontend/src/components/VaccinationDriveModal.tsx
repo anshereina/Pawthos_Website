@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, Calendar, MapPin, Syringe, Hash, User, PawPrint, Plus, Edit, Trash2, Save, HelpCircle, FileText, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { vaccinationDriveService, VaccinationDriveData } from '../services/vaccinationDriveService';
 import { petService, Pet } from '../services/petService';
-import OtherServiceModal from './OtherServiceModal';
 import OwnerDropdown from './OwnerDropdown';
 import PetDropdown from './PetDropdown';
 import { OwnerSearchResult } from '../services/shippingPermitRecordService';
@@ -68,10 +67,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Other Service Modal state
-  const [isOtherServiceModalOpen, setIsOtherServiceModalOpen] = useState(false);
-  const [currentRecordId, setCurrentRecordId] = useState<number | null>(null);
-  
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   
@@ -277,26 +272,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
   const deletePetRecord = (id: number) => {
     setPetRecords(prev => prev.filter(record => record.id !== id));
-  };
-
-  const addOtherService = (recordId: number, service: string) => {
-    if (service.trim()) {
-      updatePetRecord(recordId, 'otherServices', [...petRecords.find(r => r.id === recordId)?.otherServices || [], service.trim()]);
-    }
-  };
-
-  const handleAddOtherService = (recordId: number) => {
-    setCurrentRecordId(recordId);
-    setIsOtherServiceModalOpen(true);
-  };
-
-  const handleOtherServiceSubmit = (serviceData: any) => {
-    if (currentRecordId) {
-      // Create a formatted service string with vaccine and expiry information
-      const serviceString = `Vaccine: ${serviceData.vaccineUsed}, Expiry: ${serviceData.dateExpiration}`;
-      addOtherService(currentRecordId, serviceString);
-    }
-    setCurrentRecordId(null);
   };
 
   const toggleRowExpansion = (recordId: number) => {
@@ -521,13 +496,12 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       record.color || '',
       record.age || '',
       record.sex || '',
-      record.reproductiveStatus || '',
-      record.otherServices.join(', ') || ''
+      record.reproductiveStatus || ''
     ]);
     
     // Create table
     autoTable(doc, {
-      head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status', 'Other Services']],
+      head: [['#', 'Owner Name', 'Pet Name', "Owner's Birthday", 'Contact', 'Species', 'Breed', 'Color', 'Age', 'Sex', 'Reproductive Status']],
       body: tableData,
       startY: yPosition,
       styles: {
@@ -1100,33 +1074,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
                                       )}
                                     </div>
 
-                                    {/* Other Services */}
-                                    <div className="md:col-span-2">
-                                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                                        Other Services
-                                      </label>
-                                      <div className="flex flex-wrap gap-2 p-2 bg-white rounded-lg border border-green-200 min-h-[42px]">
-                                        {record.otherServices.length > 0 ? (
-                                          record.otherServices.map((service, serviceIndex) => (
-                                            <span key={serviceIndex} className="inline-flex items-center text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                                              {service}
-                                            </span>
-                                          ))
-                                        ) : (
-                                          <span className="text-xs text-gray-400 py-1">No other services</span>
-                                        )}
-                                        {isEditable && (
-                                          <button
-                                            onClick={() => handleAddOtherService(record.id)}
-                                            className="inline-flex items-center text-xs text-green-600 hover:text-green-800 px-3 py-1 rounded-full border border-green-300 hover:bg-green-50 transition-colors"
-                                            title="Add service"
-                                          >
-                                            <Plus size={12} className="mr-1" />
-                                            Add Service
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
                                   </div>
                                 </div>
                               </td>
@@ -1264,16 +1211,6 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Other Service Modal */}
-      <OtherServiceModal
-        isOpen={isOtherServiceModalOpen}
-        onClose={() => {
-          setIsOtherServiceModalOpen(false);
-          setCurrentRecordId(null);
-        }}
-        onSubmit={handleOtherServiceSubmit}
-      />
     </div>
   );
 };

@@ -241,6 +241,14 @@ def get_vaccination_records_with_pets(db: Session = Depends(get_db)):
             pet = db.query(Pet).filter(Pet.id == record.pet_id).first()
             print(f"  Pet found: {pet.name if pet else 'None'}")
             
+            # Get user information for owner contact
+            user = None
+            owner_contact = None
+            if pet and pet.user_id:
+                user = db.query(User).filter(User.id == pet.user_id).first()
+                if user:
+                    owner_contact = user.phone_number
+            
             record_data = {
                 'id': record.id,
                 'pet_id': record.pet_id,
@@ -257,7 +265,11 @@ def get_vaccination_records_with_pets(db: Session = Depends(get_db)):
                 'pet_breed': pet.breed if pet else '',
                 'pet_color': pet.color if pet else '',
                 'pet_gender': pet.gender if pet else '',
-                'pet_owner_name': pet.owner_name if pet else 'Unknown Owner'
+                'pet_date_of_birth': pet.date_of_birth if pet else None,
+                'pet_owner_name': pet.owner_name if pet else 'Unknown Owner',
+                'pet_owner_birthday': pet.owner_birthday if pet else None,
+                'pet_owner_contact': owner_contact,
+                'pet_reproductive_status': pet.reproductive_status if pet else None
             }
             
             result.append(record_data)
