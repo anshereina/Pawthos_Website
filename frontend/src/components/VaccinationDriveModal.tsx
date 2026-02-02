@@ -437,50 +437,50 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
 
     const doc = new jsPDF('landscape', 'mm', 'a4');
     
-    // Add logos to header
+    // Add logos to header - matching header.png
     try {
-      // Left logo: City Veterinary Office
+      // Left logo: City Veterinary Office (larger size to match header.png)
       const cityVetLogo = '/images/logos/logo_1.png';
-      doc.addImage(cityVetLogo, 'PNG', 15, 10, 25, 25);
+      doc.addImage(cityVetLogo, 'PNG', 10, 5, 30, 30);
       
-      // Right logo: Lungsod ng San Pedro, Una Sa Laguna
+      // Right logo: Lungsod ng San Pedro, Una Sa Laguna (larger size to match header.png)
       const sanPedroLogo = '/images/logos/una_sa_laguna.png';
-      doc.addImage(sanPedroLogo, 'PNG', 257, 10, 25, 25);
+      doc.addImage(sanPedroLogo, 'PNG', 257, 5, 30, 30);
     } catch (error) {
       console.warn('Failed to load logos:', error);
     }
     
-    // Header Section - matching the dog registry form exactly
+    // Header Section - matching header.png exactly
     // In landscape: width is 297mm, so center is at 148.5mm
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Republic of the Philippines', 148.5, 15, { align: 'center' });
-    doc.text('Province of Laguna', 148.5, 20, { align: 'center' });
-    doc.text('City of San Pedro', 148.5, 25, { align: 'center' });
-    doc.text('CITY VETERINARY OFFICE', 148.5, 30, { align: 'center' });
+    doc.text('Republic of the Philippines', 148.5, 12, { align: 'center' });
+    doc.text('Province of Laguna', 148.5, 17, { align: 'center' });
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('City of San Pedro', 148.5, 22, { align: 'center' });
+    doc.text('CITY VETERINARY OFFICE', 148.5, 27, { align: 'center' });
     
     // Title
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DOG REGISTRY DATA BASE FORM', 148.5, 40, { align: 'center' });
+    doc.text('DOG REGISTRY DATA BASE FORM', 148.5, 35, { align: 'center' });
     
-    // Top fields section
-    let yPos = 50;
+    // Top fields section - matching header.png layout
+    // Left side: Barangay and Date
+    // Right side: Vaccine Used and Batch/Lot Number
+    let yPos = 45;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
-    // Barangay
+    // Left side fields
     doc.text(`Barangay: ${event.barangay || '___________________________'}`, 20, yPos);
-    
-    // Date
     const dateStr = formatDateForPDF(event.event_date);
     doc.text(`Date: ${dateStr || '___________________________'}`, 20, yPos + 5);
     
-    // Vaccine Used
-    doc.text(`Vaccine Used: ${formData.vaccineUsed || '___________________________'}`, 20, yPos + 10);
-    
-    // Batch/Lot Number
-    doc.text(`Batch/Lot Number: ${formData.batchNoLotNo || '___________________________'}`, 20, yPos + 15);
+    // Right side fields
+    doc.text(`Vaccine Used: ${formData.vaccineUsed || '___________________________'}`, 150, yPos);
+    doc.text(`Batch/Lot Number: ${formData.batchNoLotNo || '___________________________'}`, 150, yPos + 5);
     
     // Table Header
     yPos = yPos + 25;
@@ -515,10 +515,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         record.color || '', // COLOR
         age.years > 0 ? age.years.toString() : '', // YEAR
         age.months > 0 ? age.months.toString() : '', // MONTH
-        isMale && isCastrated ? '✓' : '', // MALE - CASTRATED
-        isMale && isIntact ? '✓' : '', // MALE - INTACT
-        isFemale && isSpayed ? '✓' : '', // FEMALE - SPAYED
-        isFemale && isIntact ? '✓' : '' // FEMALE - INTACT
+        isMale && isCastrated ? '☑' : '', // MALE - CASTRATED (using checkbox symbol)
+        isMale && isIntact ? '☑' : '', // MALE - INTACT (using checkbox symbol)
+        isFemale && isSpayed ? '☑' : '', // FEMALE - SPAYED (using checkbox symbol)
+        isFemale && isIntact ? '☑' : '' // FEMALE - INTACT (using checkbox symbol)
       ];
     });
     
@@ -603,10 +603,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         6: { cellWidth: 24, halign: 'left' }, // COLOR
         7: { cellWidth: 8.5, halign: 'center' },  // YEAR
         8: { cellWidth: 11, halign: 'center' },  // MONTH (increased from 8.5)
-        9: { cellWidth: 11, halign: 'center' }, // MALE - CASTRATED (increased from 8.5)
-        10: { cellWidth: 11, halign: 'center' }, // MALE - INTACT (increased from 8.5)
-        11: { cellWidth: 11, halign: 'center' }, // FEMALE - SPAYED (increased from 8.5)
-        12: { cellWidth: 11, halign: 'center' }, // FEMALE - INTACT (increased from 8.5)
+        9: { cellWidth: 11, halign: 'center', fontSize: 10, fontStyle: 'bold' }, // MALE - CASTRATED (larger, bold checkmarks)
+        10: { cellWidth: 11, halign: 'center', fontSize: 10, fontStyle: 'bold' }, // MALE - INTACT (larger, bold checkmarks)
+        11: { cellWidth: 11, halign: 'center', fontSize: 10, fontStyle: 'bold' }, // FEMALE - SPAYED (larger, bold checkmarks)
+        12: { cellWidth: 11, halign: 'center', fontSize: 10, fontStyle: 'bold' }, // FEMALE - INTACT (larger, bold checkmarks)
       },
       margin: { left: 13.5, right: 13.5 },
       showHead: 'everyPage',
