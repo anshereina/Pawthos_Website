@@ -508,10 +508,9 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       return [
         record.ownerName || '',
         record.petName || '',
-        '', // Origin (pls. check) - not in our data, left blank
-        formatDateForPDF(record.ownerBirthday) || '',
-        record.ownerContact || '',
-        species, // Species (Canine/Feline)
+        formatDateForPDF(record.ownerBirthday) || '', // Owner's Birthday (under Origin)
+        record.ownerContact || '', // Contact Number (under Origin)
+        species, // Species (Canine/Feline) (under Origin)
         record.breed || '', // Breed
         record.color || '', // COLOR
         age.years > 0 ? age.years.toString() : '', // YEAR
@@ -519,14 +518,15 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         isMale && isCastrated ? '✓' : '', // MALE - CASTRATED
         isMale && isIntact ? '✓' : '', // MALE - INTACT
         isFemale && isSpayed ? '✓' : '', // FEMALE - SPAYED
-        isFemale && isIntact ? '✓' : '', // FEMALE - INTACT
-        '' // SIGNATURE - empty
+        isFemale && isIntact ? '✓' : '' // FEMALE - INTACT
       ];
     });
     
-    // Create table - matching the hierarchical form structure exactly
-    // Level 1 headers: 15 columns total
-    // Using tableWidth to ensure it fits exactly within page boundaries
+    // Create table - matching the table.png structure exactly
+    // Structure: Owner's Name, Name of Dog, Origin(pls. check), Breed, COLOR, AGE, SEX
+    // Under Origin: Owner's Birthday, Contact Number, Species
+    // Under AGE: YEAR, MONTH
+    // Under SEX: MALE (CASTRATED, INTACT), FEMALE (SPAYED, INTACT)
     autoTable(doc, {
       startY: tableStartY,
       tableWidth: 270, // Total table width in mm (297mm page - 27mm margins)
@@ -534,35 +534,29 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         "Owner's\nName",
         "Name of\nDog",
         "Origin\n(pls. check)",
-        "Owner's\nBirthday",
-        "Contact\nNumber",
-        "DOG'S PROFILE",
         "",
         "",
-        "",
-        "",
-        "",
-        "SEX",
-        "",
-        "",
-        "",
-        "SIGNATURE"
-      ], [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Species\n(Canine/Feline)",
         "Breed\n(Please Indicate)",
         "COLOR",
         "AGE",
         "",
+        "SEX",
         "",
+        "",
+        ""
+      ], [
+        "",
+        "",
+        "Owner's\nBirthday",
+        "Contact\nNumber",
+        "Species\n(Canine/Feline)",
+        "",
+        "",
+        "YEAR",
+        "MONTH",
         "MALE",
         "",
         "FEMALE",
-        "",
         ""
       ], [
         "",
@@ -573,14 +567,11 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         "",
         "",
         "",
-        "YEAR",
-        "MONTH",
         "",
         "CASTRATED",
         "INTACT",
         "SPAYED",
-        "INTACT",
-        ""
+        "INTACT"
       ]],
       body: tableData,
       theme: 'grid',
@@ -598,24 +589,22 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         lineWidth: 0.1,
         cellPadding: 0.5,
       },
-      // Column widths matching exact proportions from dog registry form PDF
-      // Total: 270mm distributed across 15 columns based on form specifications
+      // Column widths matching table.png structure (13 columns without Signature)
+      // Total: 270mm distributed across 13 columns
       columnStyles: {
-        0: { cellWidth: 40.5, halign: 'left' }, // Owner's Name (15% of 270 = 40.5)
-        1: { cellWidth: 27, halign: 'left' }, // Name of Dog (10% of 270 = 27)
-        2: { cellWidth: 13.5, halign: 'center' }, // Origin (pls. check) (5% of 270 = 13.5)
-        3: { cellWidth: 27, halign: 'left' }, // Owner's Birthday (10% of 270 = 27)
-        4: { cellWidth: 27, halign: 'left' }, // Contact Number (10% of 270 = 27)
-        5: { cellWidth: 13.5, halign: 'left' }, // Species (Canine/Feline) - 5% of DOG'S PROFILE 35%
-        6: { cellWidth: 27, halign: 'left' }, // Breed - 10% of DOG'S PROFILE 35%
-        7: { cellWidth: 21.6, halign: 'left' }, // COLOR - 8% of DOG'S PROFILE 35%
-        8: { cellWidth: 8.1, halign: 'center' },  // YEAR - 3% of 270 = 8.1
-        9: { cellWidth: 8.1, halign: 'center' },  // MONTH - 3% of 270 = 8.1
-        10: { cellWidth: 8.1, halign: 'center' }, // MALE - CASTRATED - 3% of 270 = 8.1
-        11: { cellWidth: 8.1, halign: 'center' }, // MALE - INTACT - 3% of 270 = 8.1
-        12: { cellWidth: 8.1, halign: 'center' }, // FEMALE - SPAYED - 3% of 270 = 8.1
-        13: { cellWidth: 8.1, halign: 'center' }, // FEMALE - INTACT - 3% of 270 = 8.1
-        14: { cellWidth: 35.1, halign: 'center' }, // SIGNATURE (13% of 270 = 35.1)
+        0: { cellWidth: 44, halign: 'left' }, // Owner's Name
+        1: { cellWidth: 34, halign: 'left' }, // Name of Dog
+        2: { cellWidth: 27, halign: 'left' }, // Owner's Birthday (under Origin)
+        3: { cellWidth: 27, halign: 'left' }, // Contact Number (under Origin)
+        4: { cellWidth: 23, halign: 'left' }, // Species (Canine/Feline) (under Origin)
+        5: { cellWidth: 34, halign: 'left' }, // Breed (Please Indicate)
+        6: { cellWidth: 24, halign: 'left' }, // COLOR
+        7: { cellWidth: 8.5, halign: 'center' },  // YEAR
+        8: { cellWidth: 8.5, halign: 'center' },  // MONTH
+        9: { cellWidth: 8.5, halign: 'center' }, // MALE - CASTRATED
+        10: { cellWidth: 8.5, halign: 'center' }, // MALE - INTACT
+        11: { cellWidth: 8.5, halign: 'center' }, // FEMALE - SPAYED
+        12: { cellWidth: 8.5, halign: 'center' }, // FEMALE - INTACT
       },
       margin: { left: 13.5, right: 13.5 },
       showHead: 'everyPage',
