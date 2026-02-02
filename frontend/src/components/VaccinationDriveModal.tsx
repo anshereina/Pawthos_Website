@@ -526,8 +526,10 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
     
     // Create table - matching the hierarchical form structure exactly
     // Level 1 headers: 15 columns total
+    // Using tableWidth to ensure it fits exactly within page boundaries
     autoTable(doc, {
       startY: tableStartY,
+      tableWidth: 270, // Total table width in mm (297mm page - 27mm margins)
       head: [[
         "Owner's\nName",
         "Name of\nDog",
@@ -584,7 +586,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       theme: 'grid',
       styles: {
         fontSize: 7,
-        cellPadding: 1,
+        cellPadding: 0.5,
         overflow: 'linebreak',
         lineWidth: 0.1,
       },
@@ -594,26 +596,26 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         fontStyle: 'bold',
         fontSize: 7,
         lineWidth: 0.1,
+        cellPadding: 0.5,
       },
-      // Column widths optimized for landscape A4 (297mm width)
-      // Total usable width: 270mm (leaving 13.5mm margins on each side)
-      // Adjusted widths to fit exactly within page boundaries - total: 250mm
+      // Column widths matching exact proportions from dog registry form PDF
+      // Total: 270mm distributed across 15 columns based on form specifications
       columnStyles: {
-        0: { cellWidth: 36, halign: 'left' }, // Owner's Name (15%)
-        1: { cellWidth: 24, halign: 'left' }, // Name of Dog (10%)
-        2: { cellWidth: 11, halign: 'center' }, // Origin (pls. check) (5%)
-        3: { cellWidth: 24, halign: 'left' }, // Owner's Birthday (10%)
-        4: { cellWidth: 24, halign: 'left' }, // Contact Number (10%)
-        5: { cellWidth: 11, halign: 'left' }, // Species (Canine/Feline)
-        6: { cellWidth: 18, halign: 'left' }, // Breed
-        7: { cellWidth: 16, halign: 'left' }, // COLOR
-        8: { cellWidth: 6, halign: 'center' },  // YEAR
-        9: { cellWidth: 6, halign: 'center' },  // MONTH
-        10: { cellWidth: 6, halign: 'center' }, // MALE - CASTRATED
-        11: { cellWidth: 6, halign: 'center' }, // MALE - INTACT
-        12: { cellWidth: 6, halign: 'center' }, // FEMALE - SPAYED
-        13: { cellWidth: 6, halign: 'center' }, // FEMALE - INTACT
-        14: { cellWidth: 30, halign: 'center' }, // SIGNATURE (13%)
+        0: { cellWidth: 40.5, halign: 'left' }, // Owner's Name (15% of 270 = 40.5)
+        1: { cellWidth: 27, halign: 'left' }, // Name of Dog (10% of 270 = 27)
+        2: { cellWidth: 13.5, halign: 'center' }, // Origin (pls. check) (5% of 270 = 13.5)
+        3: { cellWidth: 27, halign: 'left' }, // Owner's Birthday (10% of 270 = 27)
+        4: { cellWidth: 27, halign: 'left' }, // Contact Number (10% of 270 = 27)
+        5: { cellWidth: 13.5, halign: 'left' }, // Species (Canine/Feline) - 5% of DOG'S PROFILE 35%
+        6: { cellWidth: 27, halign: 'left' }, // Breed - 10% of DOG'S PROFILE 35%
+        7: { cellWidth: 21.6, halign: 'left' }, // COLOR - 8% of DOG'S PROFILE 35%
+        8: { cellWidth: 8.1, halign: 'center' },  // YEAR - 3% of 270 = 8.1
+        9: { cellWidth: 8.1, halign: 'center' },  // MONTH - 3% of 270 = 8.1
+        10: { cellWidth: 8.1, halign: 'center' }, // MALE - CASTRATED - 3% of 270 = 8.1
+        11: { cellWidth: 8.1, halign: 'center' }, // MALE - INTACT - 3% of 270 = 8.1
+        12: { cellWidth: 8.1, halign: 'center' }, // FEMALE - SPAYED - 3% of 270 = 8.1
+        13: { cellWidth: 8.1, halign: 'center' }, // FEMALE - INTACT - 3% of 270 = 8.1
+        14: { cellWidth: 35.1, halign: 'center' }, // SIGNATURE (13% of 270 = 35.1)
       },
       margin: { left: 13.5, right: 13.5 },
       showHead: 'everyPage',
