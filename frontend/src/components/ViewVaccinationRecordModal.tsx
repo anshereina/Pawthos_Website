@@ -108,19 +108,6 @@ const ViewVaccinationRecordModal: React.FC<ViewVaccinationRecordModalProps> = ({
          record.pet_species.charAt(0).toUpperCase() + record.pet_species.slice(1).toLowerCase())
       : '';
     
-    // Format sex
-    const sex = record.pet_gender 
-      ? (record.pet_gender.toLowerCase() === 'male' ? 'MALE' : 'FEMALE')
-      : '';
-    
-    // Format reproductive status
-    const reproductiveStatus = record.pet_reproductive_status
-      ? (record.pet_reproductive_status.toLowerCase() === 'castrated' ? 'CASTRATED' :
-         record.pet_reproductive_status.toLowerCase() === 'spayed' ? 'SPAYED' :
-         record.pet_reproductive_status.toLowerCase() === 'intact' ? 'INTACT' :
-         record.pet_reproductive_status.toUpperCase())
-      : '';
-    
     // Determine sex and reproductive status checkboxes
     const isMale = record.pet_gender?.toLowerCase() === 'male';
     const isFemale = record.pet_gender?.toLowerCase() === 'female';
