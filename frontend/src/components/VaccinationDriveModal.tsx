@@ -588,38 +588,61 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         fontSize: 7,
         lineWidth: 0.1,
         cellPadding: 0.5,
+        halign: 'center', // Center all header text
       },
       // Column widths matching table.png structure (13 columns without Signature)
       // Total: 270mm distributed across 13 columns
+      // Adjusted widths: reduced Name of Dog, increased MONTH and SEX status columns
       columnStyles: {
-        0: { cellWidth: 44, halign: 'left' }, // Owner's Name
-        1: { cellWidth: 34, halign: 'left' }, // Name of Dog
+        0: { cellWidth: 43.5, halign: 'left' }, // Owner's Name
+        1: { cellWidth: 27.5, halign: 'left' }, // Name of Dog (reduced from 34)
         2: { cellWidth: 27, halign: 'left' }, // Owner's Birthday (under Origin)
         3: { cellWidth: 27, halign: 'left' }, // Contact Number (under Origin)
         4: { cellWidth: 23, halign: 'left' }, // Species (Canine/Feline) (under Origin)
         5: { cellWidth: 34, halign: 'left' }, // Breed (Please Indicate)
         6: { cellWidth: 24, halign: 'left' }, // COLOR
         7: { cellWidth: 8.5, halign: 'center' },  // YEAR
-        8: { cellWidth: 8.5, halign: 'center' },  // MONTH
-        9: { cellWidth: 8.5, halign: 'center' }, // MALE - CASTRATED
-        10: { cellWidth: 8.5, halign: 'center' }, // MALE - INTACT
-        11: { cellWidth: 8.5, halign: 'center' }, // FEMALE - SPAYED
-        12: { cellWidth: 8.5, halign: 'center' }, // FEMALE - INTACT
+        8: { cellWidth: 11, halign: 'center' },  // MONTH (increased from 8.5)
+        9: { cellWidth: 11, halign: 'center' }, // MALE - CASTRATED (increased from 8.5)
+        10: { cellWidth: 11, halign: 'center' }, // MALE - INTACT (increased from 8.5)
+        11: { cellWidth: 11, halign: 'center' }, // FEMALE - SPAYED (increased from 8.5)
+        12: { cellWidth: 11, halign: 'center' }, // FEMALE - INTACT (increased from 8.5)
       },
       margin: { left: 13.5, right: 13.5 },
       showHead: 'everyPage',
     });
     
-    // Footer section - matching the form
+    // Footer section - matching footer.png exactly
     const finalY = (doc as any).lastAutoTable.finalY || yPos + 50;
+    const footerStartY = finalY + 15;
+    
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Noted by:', 20, finalY + 15);
-    doc.text('DR. MA. FE V. TEMPLADO', 20, finalY + 20);
-    doc.text('Head, CVO', 20, finalY + 25);
-    doc.text('SLH-007-0', 20, finalY + 30);
     
-    doc.text('Brgy. Chairman/HOA President', 150, finalY + 30);
+    // Left side - "Noted by:" text
+    doc.text('Noted by:', 20, footerStartY);
+    
+    // Left side - Signature line above name
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(128, 128, 128); // Gray color for signature line
+    doc.line(20, footerStartY + 5, 80, footerStartY + 5);
+    
+    // Left side - Name and titles
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('DR. MA. FE V. TEMPLADO', 20, footerStartY + 10);
+    doc.text('Head, CVO', 20, footerStartY + 15);
+    doc.text('SLH-007-0', 20, footerStartY + 20);
+    
+    // Right side - Signature line
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(128, 128, 128); // Gray color for signature line
+    doc.line(200, footerStartY + 5, 280, footerStartY + 5);
+    
+    // Right side - Title below signature line
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Brgy. Chairman/HOA President', 200, footerStartY + 10);
     
     // Save the PDF
     const fileName = `Dog-Registry-${event.barangay || 'Unknown'}-${formatDateForPDF(event.event_date) || 'Unknown'}.pdf`;
