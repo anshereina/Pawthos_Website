@@ -245,6 +245,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#045b26',
     borderRadius: 4,
   },
+  uploadSubtitle: {
+    color: '#4a7c59',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 16,
+  },
+  progressText: {
+    marginTop: 8,
+    textAlign: 'center',
+    color: '#045b26',
+    fontWeight: '600',
+    fontSize: 12,
+  },
   scanTitle: {
     color: '#045b26',
     fontSize: 16,
@@ -424,7 +438,7 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: uploadProgress,
-      duration: 300,
+      duration: 220,
       useNativeDriver: false
     }).start();
   }, [uploadProgress]);
@@ -437,18 +451,10 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
       setIsCheckingImage(true);
       setUploadProgress(0);
       
-      // Simulate realistic upload progress
-      setTimeout(() => {
-        setUploadProgress(15);
-      }, 500);
-      
-      setTimeout(() => {
-        setUploadProgress(35);
-      }, 1200);
-      
-      setTimeout(() => {
-        setUploadProgress(60);
-      }, 2000);
+      // Fast progress (avoid long artificial delays)
+      setUploadProgress(10);
+      setTimeout(() => setUploadProgress(35), 150);
+      setTimeout(() => setUploadProgress(60), 300);
       
       const token = await getAuthToken();
       console.log('🔑 Auth token retrieved:', token ? 'Present' : 'Missing');
@@ -460,9 +466,7 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
         return;
       }
 
-      setTimeout(() => {
-        setUploadProgress(80);
-      }, 3000);
+      setTimeout(() => setUploadProgress(80), 450);
 
       const formData = new FormData();
       formData.append('file', {
@@ -473,9 +477,7 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
 
       console.log('📤 FormData created, making API call to:', `${API_BASE_URL}/predict-eld`);
 
-      setTimeout(() => {
-        setUploadProgress(95);
-      }, 4000);
+      setTimeout(() => setUploadProgress(95), 650);
 
       const response = await fetch(`${API_BASE_URL}/predict-eld`, {
         method: 'POST',
@@ -581,7 +583,7 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
       setTimeout(() => {
         setIsCheckingImage(false);
         onStartScan(imageUri);
-      }, 800);
+      }, 120);
       
     } catch (error) {
       // Hide technical error details from user
@@ -731,7 +733,10 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
             </Animated.View>
             
             {/* Upload Title */}
-            <Text style={styles.uploadTitle}>Uploading to Server</Text>
+            <Text style={styles.uploadTitle}>Analyzing Cat Photo</Text>
+            <Text style={styles.uploadSubtitle}>
+              Please keep the app open. This usually takes a few seconds.
+            </Text>
             
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
@@ -741,6 +746,7 @@ export default function IntegrationPicturePage({ onResult, onStartScan, onBack }
                   outputRange: ['0%', '100%']
                 }) }]} />
               </View>
+              <Text style={styles.progressText}>{Math.round(uploadProgress)}%</Text>
             </View>
           </View>
         </View>

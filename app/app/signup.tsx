@@ -202,6 +202,21 @@ export default function SignupPage() {
 
     if (!fontsLoaded) return null;
 
+    const isStrongPassword = (pw: string) => {
+        // Strong password requirements:
+        // - at least 8 characters
+        // - at least 1 uppercase, 1 lowercase, 1 number, 1 special character
+        // - no spaces
+        const value = pw || '';
+        if (/\s/.test(value)) return false;
+        if (value.length < 8) return false;
+        const hasUpper = /[A-Z]/.test(value);
+        const hasLower = /[a-z]/.test(value);
+        const hasNumber = /\d/.test(value);
+        const hasSpecial = /[^A-Za-z0-9]/.test(value);
+        return hasUpper && hasLower && hasNumber && hasSpecial;
+    };
+
     const handleSignup = async () => {
         setLoading(true);
         setError(null);
@@ -219,8 +234,9 @@ export default function SignupPage() {
             return;
         }
 
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters");
+        // Match Forgot/Reset password strength requirements
+        if (!isStrongPassword(password)) {
+            setError("Password must be at least 8 characters and include uppercase, lowercase, number, and special character (no spaces).");
             setLoading(false);
             return;
         }
@@ -313,7 +329,7 @@ export default function SignupPage() {
                     <View style={styles.inputRow}>
                         <MaterialIcons name="person" size={20} color="#4a7c59" />
                         <TextInput
-                            placeholder="Full Name * (First Name first then Last Name)"
+                            placeholder="Full Name (First Name, Last Name)"
                             placeholderTextColor="#999"
                             value={name}
                             onChangeText={setName}

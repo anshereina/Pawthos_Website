@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+// NOTE: We intentionally avoid relying on FileSystem.documentDirectory here because
+// some environments/devices can report it as unavailable. We share the generated
+// PDF directly from expo-print's returned URI instead.
 import MedicalVisitDetailsModal from '../modals/MedicalVisitDetailsModal';
 import { medicalRecordsAPI, MedicalRecord, MedicalVisitData } from '../../utils/medicalRecords.utils';
 import { getPetById } from '../../utils/pets.utils';
@@ -493,42 +495,14 @@ export default function PetMedRecordsPage({ onNavigate, petId }: { onNavigate: (
                 throw new Error('PDF generation failed: No URI returned');
             }
 
-            const { uri } = printResult;
-            console.log('PDF generated at:', uri);
+            const pdfUri = printResult.uri;
+            console.log('PDF generated at:', pdfUri);
 
-            // Create a clean filename
-            const sanitizedPetName = (petName || 'Pet').replace(/[^a-z0-9_-]/gi, '_').replace(/_+/g, '_');
-            const timestamp = Date.now();
-            const fileName = `Medical_Records_${sanitizedPetName}_${timestamp}.pdf`;
-            
-            // Get the document directory
-            const documentDir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
-            if (!documentDir) {
-                throw new Error('Document directory not available');
-            }
-            
-            const dest = `${documentDir}${fileName}`;
-            console.log('Moving PDF to:', dest);
-            
-            // Check if destination file exists and delete it first
-            try {
-                const fileInfo = await FileSystem.getInfoAsync(dest);
-                if (fileInfo.exists) {
-                    await FileSystem.deleteAsync(dest, { idempotent: true });
-                }
-            } catch (checkError) {
-                console.log('File check error (non-critical):', checkError);
-            }
-            
-            // Copy the file instead of moving (more reliable)
-            await FileSystem.copyAsync({ from: uri, to: dest });
-            console.log('PDF copied successfully');
-
-            // Share/download the PDF
+            // Share the generated PDF directly (avoids FileSystem.documentDirectory issues)
             if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(dest, { 
+                await Sharing.shareAsync(pdfUri, { 
                     mimeType: 'application/pdf', 
-                    dialogTitle: 'Download Medical Records PDF',
+                    dialogTitle: 'Share Medical Records PDF',
                     UTI: 'com.adobe.pdf'
                 });
                 Alert.alert(
@@ -538,8 +512,8 @@ export default function PetMedRecordsPage({ onNavigate, petId }: { onNavigate: (
                 );
             } else {
                 Alert.alert(
-                    'PDF Exported', 
-                    `PDF has been saved successfully.`,
+                    'PDF Generated', 
+                    `PDF created at:\n${pdfUri}`,
                     [{ text: 'OK' }]
                 );
             }
