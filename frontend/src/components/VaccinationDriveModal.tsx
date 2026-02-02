@@ -584,7 +584,7 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
       theme: 'grid',
       styles: {
         fontSize: 7,
-        cellPadding: 1.5,
+        cellPadding: 1,
         overflow: 'linebreak',
         lineWidth: 0.1,
       },
@@ -596,26 +596,26 @@ const VaccinationDriveModal: React.FC<VaccinationDriveModalProps> = ({
         lineWidth: 0.1,
       },
       // Column widths optimized for landscape A4 (297mm width)
-      // Total usable width: ~277mm (leaving 10mm margins on each side)
-      // Percentages based on specification, converted to mm
+      // Total usable width: 270mm (leaving 13.5mm margins on each side)
+      // Adjusted widths to fit exactly within page boundaries - total: 250mm
       columnStyles: {
-        0: { cellWidth: 41.55, halign: 'left' }, // Owner's Name (15%)
-        1: { cellWidth: 27.7, halign: 'left' }, // Name of Dog (10%)
-        2: { cellWidth: 13.85, halign: 'center' }, // Origin (pls. check) (5%)
-        3: { cellWidth: 27.7, halign: 'left' }, // Owner's Birthday (10%)
-        4: { cellWidth: 27.7, halign: 'left' }, // Contact Number (10%)
-        5: { cellWidth: 13.85, halign: 'left' }, // Species (Canine/Feline) - part of DOG'S PROFILE (5% of 35%)
-        6: { cellWidth: 27.7, halign: 'left' }, // Breed - part of DOG'S PROFILE (10% of 35%)
-        7: { cellWidth: 22.16, halign: 'left' }, // COLOR - part of DOG'S PROFILE (8% of 35%)
-        8: { cellWidth: 8.31, halign: 'center' },  // YEAR - part of AGE in DOG'S PROFILE (3%)
-        9: { cellWidth: 8.31, halign: 'center' },  // MONTH - part of AGE in DOG'S PROFILE (3%)
-        10: { cellWidth: 8.31, halign: 'center' }, // MALE - CASTRATED (3%)
-        11: { cellWidth: 8.31, halign: 'center' }, // MALE - INTACT (3%)
-        12: { cellWidth: 8.31, halign: 'center' }, // FEMALE - SPAYED (3%)
-        13: { cellWidth: 8.31, halign: 'center' }, // FEMALE - INTACT (3%)
-        14: { cellWidth: 36.01, halign: 'center' }, // SIGNATURE (13%)
+        0: { cellWidth: 36, halign: 'left' }, // Owner's Name (15%)
+        1: { cellWidth: 24, halign: 'left' }, // Name of Dog (10%)
+        2: { cellWidth: 11, halign: 'center' }, // Origin (pls. check) (5%)
+        3: { cellWidth: 24, halign: 'left' }, // Owner's Birthday (10%)
+        4: { cellWidth: 24, halign: 'left' }, // Contact Number (10%)
+        5: { cellWidth: 11, halign: 'left' }, // Species (Canine/Feline)
+        6: { cellWidth: 18, halign: 'left' }, // Breed
+        7: { cellWidth: 16, halign: 'left' }, // COLOR
+        8: { cellWidth: 6, halign: 'center' },  // YEAR
+        9: { cellWidth: 6, halign: 'center' },  // MONTH
+        10: { cellWidth: 6, halign: 'center' }, // MALE - CASTRATED
+        11: { cellWidth: 6, halign: 'center' }, // MALE - INTACT
+        12: { cellWidth: 6, halign: 'center' }, // FEMALE - SPAYED
+        13: { cellWidth: 6, halign: 'center' }, // FEMALE - INTACT
+        14: { cellWidth: 30, halign: 'center' }, // SIGNATURE (13%)
       },
-      margin: { left: 10, right: 10 },
+      margin: { left: 13.5, right: 13.5 },
       showHead: 'everyPage',
     });
     
