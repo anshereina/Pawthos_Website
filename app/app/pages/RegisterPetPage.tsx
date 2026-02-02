@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView, Modal, TouchableWithoutFeedback, Pressable, Image, Alert, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView, Modal, TouchableWithoutFeedback, Pressable, Image, Alert, ActivityIndicator, Animated, InteractionManager } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { createPet, uploadPetPhoto } from '../../utils/pets.utils';
@@ -266,6 +266,17 @@ const styles = StyleSheet.create({
         position: 'relative',
         borderRadius: 12,
         overflow: 'hidden',
+        backgroundColor: '#f0f0f0',
+    },
+    imageLoadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
     },
     removePhotoButton: {
         position: 'absolute',
@@ -319,6 +330,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
     const [showGenderDropdown, setShowGenderDropdown] = useState(false);
     const [reproductiveStatus, setReproductiveStatus] = useState<'Intact' | 'Castrated/Spayed' | null>(null);
     const [petPhoto, setPetPhoto] = useState<string | null>(null);
+    const [imageLoading, setImageLoading] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     
     // Form validation states
@@ -398,7 +410,8 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
     };
 
     const handleColorChange = (text: string) => {
-        const filtered = filterTextInput(text);
+        // Allow letters, spaces, hyphens, slashes, and commas for color field
+        const filtered = text.replace(/[^A-Za-z\s\-\/,]/g, '');
         setColor(filtered);
         
         if (fieldErrors.color) {
@@ -432,12 +445,27 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         const cleaned = normalized.replace(/[^0-9/]/g, '');
         const digits = cleaned.replace(/\//g, '');
         // Format as DD/MM/YYYY progressively
+        // Limit month to 2 digits (12 max)
         if (digits.length <= 2) {
             return digits;
         } else if (digits.length <= 4) {
-            return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+            // Ensure month is max 2 digits
+            const day = digits.slice(0, 2);
+            const month = digits.slice(2, 4);
+            // If month starts with 1 and has more than 1 digit, limit to 12
+            if (month.length === 2 && parseInt(month) > 12) {
+                return `${day}/12`;
+            }
+            return `${day}/${month}`;
         } else {
-            return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+            const day = digits.slice(0, 2);
+            const month = digits.slice(2, 4);
+            const year = digits.slice(4, 8);
+            // Ensure month is max 2 digits and valid (1-12)
+            if (month.length === 2 && parseInt(month) > 12) {
+                return `${day}/12/${year}`;
+            }
+            return `${day}/${month}/${year}`;
         }
     };
 
@@ -555,11 +583,15 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.8,
+            quality: 0.7,
+            exif: false,
         });
 
         if (!result.canceled && result.assets[0]) {
-            setPetPhoto(result.assets[0].uri);
+            // Use InteractionManager to defer image state update until interactions are complete
+            InteractionManager.runAfterInteractions(() => {
+                setPetPhoto(result.assets[0].uri);
+            });
         }
     };
 
@@ -582,11 +614,15 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.8,
+            quality: 0.7,
+            exif: false,
         });
 
         if (!result.canceled && result.assets[0]) {
-            setPetPhoto(result.assets[0].uri);
+            // Use InteractionManager to defer image state update until interactions are complete
+            InteractionManager.runAfterInteractions(() => {
+                setPetPhoto(result.assets[0].uri);
+            });
         }
     };
 
@@ -648,10 +684,8 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
             return false;
         }
 
-        // Validate color if provided
-        if (color.trim() && !validateTextInput(color.trim(), 'Color')) {
-            return false;
-        }
+        // Color field allows special characters '/ , -' for multiple colors
+        // No validation needed for color field
 
         if (gender === 'Please Select') {
             Alert.alert('Validation Error', 'Please select pet gender');
@@ -792,7 +826,12 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         <SafeAreaView style={styles.container}>
             <TouchableWithoutFeedback onPress={() => { setShowSpeciesDropdown(false); setShowGenderDropdown(false); }}>
                 <Animated.View style={{ flex: 1, opacity: enterOpacity, transform: [{ translateY: enterTranslateY }] }}>
-                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    <ScrollView 
+                        style={styles.content} 
+                        showsVerticalScrollIndicator={false}
+                        removeClippedSubviews={true}
+                        keyboardShouldPersistTaps="handled"
+                    >
                         <View style={styles.header}>
                             <Text style={styles.title}>Register Your Pet</Text>
                             <Text style={styles.subtitle}>Complete the form to add your pet to your profile</Text>
@@ -902,13 +941,18 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                                 value={breed}
                                 onChangeText={handleBreedChange}
                             />
-                            <TextInput
-                                style={[styles.inputField, styles.halfWidthField]}
-                                placeholder="Color"
-                                placeholderTextColor="#999"
-                                value={color}
-                                onChangeText={handleColorChange}
-                            />
+                            <View style={styles.halfWidthField}>
+                                <TextInput
+                                    style={styles.inputField}
+                                    placeholder="Color"
+                                    placeholderTextColor="#999"
+                                    value={color}
+                                    onChangeText={handleColorChange}
+                                />
+                                <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
+                                    Note: Use '/ , -' for multiple colors
+                                </Text>
+                            </View>
                         </View>
                     </View>
 
@@ -1027,7 +1071,22 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                         {petPhoto ? (
                             <View>
                                 <View style={styles.imageContainer}>
-                                    <Image source={{ uri: petPhoto }} style={styles.petImage} />
+                                    <Image 
+                                        source={{ uri: petPhoto }} 
+                                        style={styles.petImage}
+                                        resizeMode="cover"
+                                        onLoadStart={() => setImageLoading(true)}
+                                        onLoadEnd={() => setImageLoading(false)}
+                                        onError={() => {
+                                            setImageLoading(false);
+                                            Alert.alert('Error', 'Failed to load image');
+                                        }}
+                                    />
+                                    {imageLoading && (
+                                        <View style={styles.imageLoadingOverlay}>
+                                            <ActivityIndicator size="small" color="#045b26" />
+                                        </View>
+                                    )}
                                     <TouchableOpacity 
                                         style={styles.removePhotoButton}
                                         onPress={removePhoto}

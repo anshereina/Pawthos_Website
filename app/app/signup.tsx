@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from "react-native";
 import { useFonts } from 'expo-font';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
@@ -183,6 +183,22 @@ export default function SignupPage() {
     const [otpCode, setOtpCode] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [captchaAnswer, setCaptchaAnswer] = useState("");
+    const [captchaQuestion, setCaptchaQuestion] = useState("");
+    const [captchaValue, setCaptchaValue] = useState(0);
+
+    // Generate captcha on component mount
+    useEffect(() => {
+        generateCaptcha();
+    }, []);
+
+    const generateCaptcha = () => {
+        const num1 = Math.floor(Math.random() * 10) + 1;
+        const num2 = Math.floor(Math.random() * 10) + 1;
+        setCaptchaValue(num1 + num2);
+        setCaptchaQuestion(`${num1} + ${num2} = ?`);
+        setCaptchaAnswer(""); // Clear previous answer
+    };
 
     if (!fontsLoaded) return null;
 
@@ -205,6 +221,14 @@ export default function SignupPage() {
 
         if (password.length < 6) {
             setError("Password must be at least 6 characters");
+            setLoading(false);
+            return;
+        }
+
+        // Validate captcha
+        if (parseInt(captchaAnswer) !== captchaValue) {
+            setError("Incorrect captcha answer. Please try again.");
+            generateCaptcha(); // Generate new captcha
             setLoading(false);
             return;
         }
@@ -289,7 +313,7 @@ export default function SignupPage() {
                     <View style={styles.inputRow}>
                         <MaterialIcons name="person" size={20} color="#4a7c59" />
                         <TextInput
-                            placeholder="Full Name *"
+                            placeholder="Full Name * (First Name first then Last Name)"
                             placeholderTextColor="#999"
                             value={name}
                             onChangeText={setName}
@@ -348,7 +372,7 @@ export default function SignupPage() {
                             placeholder="Password *"
                             placeholderTextColor="#999"
                             value={password}
-                            onChangeText={setPassword}
+                            onChangeText={(text) => setPassword(text.replace(/\s/g, ''))}
                             style={styles.input}
                             secureTextEntry={!showPassword}
                         />
@@ -368,7 +392,7 @@ export default function SignupPage() {
                             placeholder="Confirm Password *"
                             placeholderTextColor="#999"
                             value={confirmPassword}
-                            onChangeText={setConfirmPassword}
+                            onChangeText={(text) => setConfirmPassword(text.replace(/\s/g, ''))}
                             style={styles.input}
                             secureTextEntry={!showConfirmPassword}
                         />
@@ -378,6 +402,27 @@ export default function SignupPage() {
                                 size={20} 
                                 color="#999" 
                             />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Captcha */}
+                    <View style={styles.inputRow}>
+                        <MaterialIcons name="security" size={20} color="#4a7c59" />
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                                {captchaQuestion}
+                            </Text>
+                            <TextInput
+                                placeholder="Enter answer"
+                                placeholderTextColor="#999"
+                                value={captchaAnswer}
+                                onChangeText={setCaptchaAnswer}
+                                style={styles.input}
+                                keyboardType="number-pad"
+                            />
+                        </View>
+                        <TouchableOpacity onPress={generateCaptcha} style={{ marginLeft: 8 }}>
+                            <MaterialIcons name="refresh" size={20} color="#4a7c59" />
                         </TouchableOpacity>
                     </View>
 

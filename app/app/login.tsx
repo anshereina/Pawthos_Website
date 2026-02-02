@@ -162,11 +162,23 @@ export default function LoginPage() {
     const [remember, setRemember] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null);
+    const [captchaAnswer, setCaptchaAnswer] = useState("");
+    const [captchaQuestion, setCaptchaQuestion] = useState("");
+    const [captchaValue, setCaptchaValue] = useState(0);
 
     // Load saved credentials on component mount (but don't auto-fill)
     useEffect(() => {
         loadSavedCredentials();
+        generateCaptcha();
     }, []);
+
+    const generateCaptcha = () => {
+        const num1 = Math.floor(Math.random() * 10) + 1;
+        const num2 = Math.floor(Math.random() * 10) + 1;
+        setCaptchaValue(num1 + num2);
+        setCaptchaQuestion(`${num1} + ${num2} = ?`);
+        setCaptchaAnswer(""); // Clear previous answer
+    };
 
     const loadSavedCredentials = async () => {
         try {
@@ -202,6 +214,13 @@ export default function LoginPage() {
     const handleLogin = async () => {
         if (!username.trim() || !password.trim()) {
             setError("Please enter both email and password");
+            return;
+        }
+
+        // Validate captcha
+        if (parseInt(captchaAnswer) !== captchaValue) {
+            setError("Incorrect captcha answer. Please try again.");
+            generateCaptcha(); // Generate new captcha
             return;
         }
 
@@ -292,6 +311,26 @@ export default function LoginPage() {
                         />
                         <TouchableOpacity onPress={() => setShowPassword(prev => !prev)} accessibilityLabel={showPassword ? "Hide password" : "Show password"}>
                             <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={20} color="#4a7c59" />
+                        </TouchableOpacity>
+                    </View>
+                    {/* Captcha */}
+                    <View style={styles.inputRow}>
+                        <MaterialIcons name="security" size={20} color="#4a7c59" />
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                                {captchaQuestion}
+                            </Text>
+                            <TextInput
+                                placeholder="Enter answer"
+                                placeholderTextColor="#999"
+                                value={captchaAnswer}
+                                onChangeText={setCaptchaAnswer}
+                                style={styles.input}
+                                keyboardType="number-pad"
+                            />
+                        </View>
+                        <TouchableOpacity onPress={generateCaptcha} style={{ marginLeft: 8 }}>
+                            <MaterialIcons name="refresh" size={20} color="#4a7c59" />
                         </TouchableOpacity>
                     </View>
                     {error && <Text style={styles.error}>{error}</Text>}

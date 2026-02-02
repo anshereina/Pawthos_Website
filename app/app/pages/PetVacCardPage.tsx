@@ -356,6 +356,17 @@ export default function PetVacCardPage({ onNavigate, petId }: { onNavigate: (pag
         fetchVaccinationData();
     };
 
+    // Helper function to escape HTML
+    const escapeHtml = (text: string | null | undefined): string => {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
     const handleExportPdf = async () => {
         if (exporting) return; // Prevent multiple simultaneous exports
         
@@ -384,11 +395,11 @@ export default function PetVacCardPage({ onNavigate, petId }: { onNavigate: (pag
             // Enhanced table with better formatting
             const rowsHtml = (vaccinationRecords || []).map((r, index) => `
                 <tr style="${index % 2 === 0 ? 'background:#FFFFFF;' : 'background:#F8FFF8;'}">
-                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${formatDate(r.vaccination_date)}</td>
-                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;">${r.vaccine_name || 'N/A'}</td>
-                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${r.batch_lot_no || 'N/A'}</td>
-                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${formatDate(r.expiration_date)}</td>
-                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${r.veterinarian || 'N/A'}</td>
+                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${escapeHtml(formatDate(r.vaccination_date))}</td>
+                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;">${escapeHtml(r.vaccine_name) || 'N/A'}</td>
+                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${escapeHtml(r.batch_lot_no) || 'N/A'}</td>
+                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${escapeHtml(formatDate(r.expiration_date))}</td>
+                    <td style="padding:12px;border:1px solid #e0e0e0;word-wrap:break-word;text-align:center;">${escapeHtml(r.veterinarian) || 'N/A'}</td>
                 </tr>
             `).join('');
 
@@ -442,24 +453,48 @@ export default function PetVacCardPage({ onNavigate, petId }: { onNavigate: (pag
             `;
 
             // Generate PDF
-            const { uri } = await Print.printToFileAsync({ 
+            console.log('Generating PDF...');
+            const printResult = await Print.printToFileAsync({ 
                 html,
                 base64: false,
                 width: 612, // US Letter width in points
                 height: 792, // US Letter height in points
             });
 
+            if (!printResult || !printResult.uri) {
+                throw new Error('PDF generation failed: No URI returned');
+            }
+
+            const { uri } = printResult;
+            console.log('PDF generated at:', uri);
+
             // Create a clean filename
-            const sanitizedPetName = petName.replace(/[^a-z0-9_-]/gi, '_').replace(/_+/g, '_');
+            const sanitizedPetName = (petName || 'Pet').replace(/[^a-z0-9_-]/gi, '_').replace(/_+/g, '_');
             const timestamp = Date.now();
             const fileName = `Vaccination_Card_${sanitizedPetName}_${timestamp}.pdf`;
             
             // Get the document directory
-            const documentDir = FileSystem.documentDirectory || FileSystem.cacheDirectory || '';
-            const dest = `${documentDir}${fileName}`;
+            const documentDir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+            if (!documentDir) {
+                throw new Error('Document directory not available');
+            }
             
-            // Move the file to the final destination
-            await FileSystem.moveAsync({ from: uri, to: dest });
+            const dest = `${documentDir}${fileName}`;
+            console.log('Moving PDF to:', dest);
+            
+            // Check if destination file exists and delete it first
+            try {
+                const fileInfo = await FileSystem.getInfoAsync(dest);
+                if (fileInfo.exists) {
+                    await FileSystem.deleteAsync(dest, { idempotent: true });
+                }
+            } catch (checkError) {
+                console.log('File check error (non-critical):', checkError);
+            }
+            
+            // Copy the file instead of moving (more reliable)
+            await FileSystem.copyAsync({ from: uri, to: dest });
+            console.log('PDF copied successfully');
 
             // Share/download the PDF
             if (await Sharing.isAvailableAsync()) {
@@ -476,15 +511,16 @@ export default function PetVacCardPage({ onNavigate, petId }: { onNavigate: (pag
             } else {
                 Alert.alert(
                     'PDF Exported', 
-                    `PDF has been saved to:\n${dest}\n\nYou can find it in your app's documents folder.`,
+                    `PDF has been saved successfully.`,
                     [{ text: 'OK' }]
                 );
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error('Export PDF error:', e);
+            const errorMessage = e?.message || 'Unknown error occurred';
             Alert.alert(
                 'Export Failed', 
-                'Could not export vaccination card to PDF. Please try again.',
+                `Could not export vaccination card to PDF.\n\nError: ${errorMessage}\n\nPlease try again.`,
                 [{ text: 'OK' }]
             );
         } finally {

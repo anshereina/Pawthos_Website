@@ -281,6 +281,9 @@ const AddPetModal: React.FC<AddPetModalProps> = ({ isOpen, onClose, onSubmit, lo
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Color
               </label>
+              <p className="text-xs text-gray-500 mb-1">
+                Note: Use special characters '/ , -' if there's more than one color.
+              </p>
               <input
                 type="text"
                 name="color"

@@ -293,14 +293,13 @@ export default function EditPetProfileModal({
             newErrors.date_of_birth = 'Date of birth is required';
         }
 
-        // Validate breed and color if they have values
+        // Validate breed if it has values
         if (formData.breed && !validateTextInput(formData.breed, 'Breed')) {
             newErrors.breed = 'Breed contains invalid characters';
         }
 
-        if (formData.color && !validateTextInput(formData.color, 'Color')) {
-            newErrors.color = 'Color contains invalid characters';
-        }
+        // Color field allows special characters '/ , -' for multiple colors
+        // No validation needed for color field
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -330,7 +329,7 @@ export default function EditPetProfileModal({
 
             const payload: Partial<PetData> = {
                 ...formData,
-                ...(newPhotoUrl ? { photo_url: newPhotoUrl } : {}),
+                ...(newPhotoUrl ? { photo_url: newPhotoUrl } : formData.photo_url === null ? { photo_url: null } : {}),
             };
 
             const saved = await onSave(payload);
@@ -379,8 +378,13 @@ export default function EditPetProfileModal({
 
     const handleInputChange = (field: keyof PetData, value: string) => {
         // Apply text filtering for specific fields
-        if (field === 'name' || field === 'breed' || field === 'color') {
+        // Color field allows special characters '/ , -' for multiple colors
+        if (field === 'name' || field === 'breed') {
             const filteredValue = filterTextInput(value);
+            setFormData(prev => ({ ...prev, [field]: filteredValue }));
+        } else if (field === 'color') {
+            // Allow letters, spaces, hyphens, slashes, commas for color field
+            const filteredValue = value.replace(/[^A-Za-z\s\-\/,]/g, '');
             setFormData(prev => ({ ...prev, [field]: filteredValue }));
         } else if (field === 'date_of_birth' || field === 'owner_birthday') {
             // Format date input to YYYY-MM-DD
@@ -482,7 +486,8 @@ export default function EditPetProfileModal({
                     style: 'destructive',
                     onPress: () => {
                         setLocalPhotoUri(null);
-                        // Removing photo on backend is optional; leave existing server photo_url unchanged here.
+                        // Set a flag to remove photo_url when saving
+                        setFormData(prev => ({ ...prev, photo_url: null }));
                     },
                 },
             ]

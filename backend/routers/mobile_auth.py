@@ -217,8 +217,8 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
             # Don't reveal if user exists or not for security
             return {"message": "If an account with this email exists, you will receive password reset instructions shortly."}
         
-        # Generate reset token
-        reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        # Generate reset token (8 characters for shorter token)
+        reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         reset_token_expiry = datetime.now(timezone.utc) + timedelta(hours=1)  # 1 hour expiry
         
         # Store reset token in database
