@@ -134,9 +134,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
         // Create admin account and send OTP for first login
         await createAdminWithOTP();
         console.log('✅ Admin created successfully');
+        
+        // Show OTP modal after successful admin creation
+        setCreatedUserEmail(formData.email);
+        setShowOTPModal(true);
         setOtpSent(true);
-        onSuccess();
-        handleClose();
       } catch (err: any) {
         console.error('❌ Admin creation error:', err);
         console.error('❌ Error response:', err.response);
@@ -215,14 +217,28 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     setOtpError(null);
 
     try {
-      await axios.post(
-        `${API_BASE_URL}/api/verify-otp`,
-        {
-          contactInfo: createdUserEmail,
-          otp_code: otpCode,
-          otpMethod: 'email'
-        }
-      );
+      // Use different endpoint for admin vs user
+      if (userType === 'admin') {
+        await axios.post(
+          `${API_BASE_URL}/users/admins/verify-otp-code`,
+          {
+            email: createdUserEmail,
+            otp_code: otpCode
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+      } else {
+        await axios.post(
+          `${API_BASE_URL}/api/verify-otp`,
+          {
+            contactInfo: createdUserEmail,
+            otp_code: otpCode,
+            otpMethod: 'email'
+          }
+        );
+      }
 
       // OTP verified successfully
       setShowOTPModal(false);

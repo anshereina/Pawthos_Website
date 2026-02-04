@@ -364,6 +364,44 @@ def verify_otp_and_create_admin(
 
     return db_admin
 
+class AdminOTPVerify(BaseModel):
+    email: str
+    otp_code: str
+
+@router.post("/admins/verify-otp-code")
+def verify_admin_otp(
+    otp_data: AdminOTPVerify,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Verify OTP code for a newly created admin"""
+    email = otp_data.email
+    otp_code = otp_data.otp_code
+    
+    admin = auth.get_admin(db, email=email)
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin not found")
+    
+    if not admin.otp_code or admin.otp_code != otp_code:
+        raise HTTPException(status_code=400, detail="Invalid OTP code")
+    
+    if admin.otp_expires_at:
+        expires_raw = admin.otp_expires_at
+        now_utc = datetime.now(timezone.utc)
+        if expires_raw.tzinfo is None:
+            expires_utc = expires_raw.replace(tzinfo=timezone.utc)
+        else:
+            expires_utc = expires_raw.astimezone(timezone.utc)
+        if expires_utc < now_utc:
+            raise HTTPException(status_code=400, detail="OTP expired")
+    
+    # Clear OTP after successful verification
+    admin.otp_code = None
+    admin.otp_expires_at = None
+    db.commit()
+    
+    return {"message": "OTP verified successfully"}
+
 @router.post("/admins", response_model=schemas.Admin)
 def create_admin(
     admin_create: schemas.AdminCreate,
