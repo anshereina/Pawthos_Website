@@ -9,6 +9,76 @@ interface PainAssessmentDetailsModalProps {
   assessment: PainAssessment | null;
 }
 
+// BEAAP categories for canine assessments
+const beaapCategories = [
+  'Breathing',
+  'Eyes', 
+  'Ambulation',
+  'Activity',
+  'Appetite',
+  'Attitude',
+  'Posture'
+];
+
+const beaapCategoryDescriptions: { [key: number]: string[] } = {
+  0: [ // Breathing
+    'Breathing calmly at rest',
+    'Breathing normally during activity',
+    'May sometimes have trouble catching their breath',
+    'Often breathes heavily and may need extra effort to breathe',
+    'Breathing is fast and often looks harder than normal, with frequent panting',
+    'Panting with faster and more difficult breathing'
+  ],
+  1: [ // Eyes
+    'Eyes bright and alert',
+    'Eyes bright and alert',
+    'Eyes slightly more dull in appearance; can have a slightly furrowed brow',
+    'Dull eyes; worried look',
+    'Dull eyes; seems distant or unfocused',
+    'Dull eyes; have a pained look'
+  ],
+  2: [ // Ambulation
+    'Moves normally on all four legs with no difficulty or discomfort',
+    'Walks normally; may show slight discomfort',
+    'Noticeably slower to lie down or rise up; may exhibit "lameness" when walking',
+    'Very slow to rise up and lie down; hesitation with movement; difficulty on stairs; reluctant to turn corners; stiff to start out; may be limping',
+    'Obvious difficulty rising up or lying down; will not bear weight on affected leg; avoids stairs; obvious lameness',
+    'May refuse to get up; may not be able to or willing to take more than a few steps; will not bear weight on affected limb'
+  ],
+  3: [ // Activity
+    'Engages in play and all normal activities',
+    'May be slightly slower to lie down or get up',
+    'May be a bit restless, having trouble getting comfortable and shifting weight',
+    'Do not want to interact but may be in a room with a family member; obvious lameness when walking; may lick painful area',
+    'Avoids interaction with family or environment; unwilling to get up or move; may frequently lick a painful area',
+    'Difficulty in being distracted from pain, even with gentle touch or something familiar'
+  ],
+  4: [ // Appetite
+    'Eating and drinking normally',
+    'Eating and drinking normally',
+    'Picky eater; may only want treats or human food',
+    'Frequently not interested in eating',
+    'Loss of appetite; may not want to drink',
+    'No interest in food or water'
+  ],
+  5: [ // Attitude
+    'Happy; interested in surroundings and playing; seeks attention',
+    'Happy and alert, though sometimes a bit quiet; overall behaves normally',
+    'Less lively; doesn\'t initiate play',
+    'Feels unsettled and can\'t sleep well',
+    'Scared, anxious, and may act aggressive',
+    'Extremely low energy; lying motionless and clearly in pain'
+  ],
+  6: [ // Posture
+    'Comfortable at rest and during play; ears up and wagging tail',
+    'May show occasional shifting of position; tail may be down just a little more; ears slightly flatter',
+    'May shift weight or favor one leg; tail may be down more often',
+    'Obvious weight shifting; tail down; ears back; may be hunched',
+    'Hunched posture; tail tucked; ears pinned back; obvious discomfort',
+    'Extremely hunched or rigid posture; tail completely tucked; ears flat; clearly in severe pain'
+  ]
+};
+
 const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
   isOpen,
   onClose,
@@ -178,7 +248,51 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
               <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-4">
                 {(() => {
                   try {
-                    const answers = JSON.parse(assessment.assessment_answers);
+                    const parsed = JSON.parse(assessment.assessment_answers);
+                    const isCanine = (assessment.pet_type || '').toLowerCase().includes('dog') || 
+                                    (assessment.pet_type || '').toLowerCase().includes('canine');
+                    
+                    // Check if it's BEAAP format for dogs
+                    if (isCanine && parsed.beaap_answers && parsed.assessment_type === 'BEAAP') {
+                      const beaapAnswers = parsed.beaap_answers;
+                      
+                      return beaapCategories.map((category, categoryIndex) => {
+                        const selectedIndices = beaapAnswers[categoryIndex] || [];
+                        
+                        return (
+                          <div key={categoryIndex} className="border-b border-gray-200 pb-3 last:border-b-0">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-2">{category}</h4>
+                            {selectedIndices.length > 0 ? (
+                              selectedIndices.map((imageIndex: number, idx: number) => (
+                                <div key={idx} className="ml-4 mb-2">
+                                  <div className="flex items-start space-x-2">
+                                    <div className="flex-shrink-0 mt-1">
+                                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                                    </div>
+                                    <p className="text-gray-700 text-sm">
+                                      {beaapCategoryDescriptions[categoryIndex]?.[imageIndex] || `Image ${imageIndex + 1}`}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-gray-500 text-sm ml-4 italic">No selections made</p>
+                            )}
+                          </div>
+                        );
+                      });
+                    }
+                    
+                    // For cats or non-BEAAP format, show cat questions
+                    const answers = Array.isArray(parsed) ? parsed : (parsed.beaap_answers ? null : parsed);
+                    if (!answers) {
+                      return (
+                        <div className="bg-white border border-gray-200 rounded-lg p-3">
+                          <p className="text-gray-500 text-sm">No assessment data available</p>
+                        </div>
+                      );
+                    }
+                    
                     const questions = [
                       "Reluctance to jump onto counters or furniture (does it less)",
                       "Difficulty jumping up or down from counters or furniture (falls or seems clumsy)",
