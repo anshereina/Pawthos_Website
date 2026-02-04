@@ -491,7 +491,7 @@ def create_user(
     db: Session = Depends(get_db),
     current_admin: models.Admin = Depends(auth.get_current_admin)
 ):
-    """Create a new user"""
+    """Create a new user with OTP verification"""
     existing_user = auth.get_user(db, email=user_create.email)
     if existing_user:
         raise HTTPException(
@@ -501,18 +501,38 @@ def create_user(
     
     hashed_password = auth.get_password_hash(user_create.password)
     
+    # Generate OTP for email verification
+    otp_code = auth.generate_otp()
+    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+    
     db_user = models.User(
         name=user_create.name,
         email=user_create.email,
         password_hash=hashed_password,
         address=user_create.address,
         phone_number=user_create.phone_number,
-        is_confirmed=1
+        otp_code=otp_code,
+        otp_expires_at=otp_expires_at,
+        is_confirmed=0  # User must verify email with OTP
     )
     
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
+    # Send OTP via email
+    if user_create.email:
+        try:
+            email_sent = auth.send_email_otp(user_create.email, otp_code)
+            if email_sent:
+                print(f"✅ OTP email sent to {user_create.email} for admin-created user")
+            else:
+                print(f"⚠️ Failed to send OTP email to {user_create.email}")
+                raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
+        except Exception as e:
+            print(f"⚠️ Failed to send OTP email: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
+    
     return db_user
 
 # Mobile-specific endpoints

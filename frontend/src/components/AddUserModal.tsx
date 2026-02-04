@@ -40,6 +40,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [createdUserEmail, setCreatedUserEmail] = useState<string>('');
 
   const token = localStorage.getItem('access_token');
 
@@ -166,8 +171,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      onSuccess();
-      handleClose();
+      // Show OTP modal after successful user creation
+      setCreatedUserEmail(formData.email);
+      setShowOTPModal(true);
+      setOtpSent(true);
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 
                           (typeof err.response?.data === 'string' ? err.response.data : 'Failed to create user');
@@ -191,7 +198,43 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     setSubmitError(null);
     setOtpSent(false);
     setIsSendingOtp(false);
+    setShowOTPModal(false);
+    setOtpCode('');
+    setOtpError(null);
+    setCreatedUserEmail('');
     onClose();
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      setOtpError('Please enter a valid 6-digit code');
+      return;
+    }
+
+    setIsVerifyingOTP(true);
+    setOtpError(null);
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/verify-otp`,
+        {
+          contactInfo: createdUserEmail,
+          otp_code: otpCode,
+          otpMethod: 'email'
+        }
+      );
+
+      // OTP verified successfully
+      setShowOTPModal(false);
+      onSuccess();
+      handleClose();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 
+                          (typeof err.response?.data === 'string' ? err.response.data : 'OTP verification failed');
+      setOtpError(errorMessage);
+    } finally {
+      setIsVerifyingOTP(false);
+    }
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -202,6 +245,77 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  // OTP Verification Modal
+  if (showOTPModal) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-md p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Email Verification</h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-500 hover:text-gray-700"
+              disabled={isVerifyingOTP}
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Enter the 6-digit code sent to <span className="font-semibold">{createdUserEmail}</span>
+            </p>
+
+            {otpError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {otpError}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                OTP Code *
+              </label>
+              <input
+                type="text"
+                value={otpCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setOtpCode(value);
+                  if (otpError) setOtpError(null);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-center text-2xl tracking-widest"
+                placeholder="000000"
+                maxLength={6}
+                disabled={isVerifyingOTP}
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isVerifyingOTP}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyOTP}
+                disabled={isVerifyingOTP || otpCode.length !== 6}
+                className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {isVerifyingOTP ? 'Verifying...' : 'Verify'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

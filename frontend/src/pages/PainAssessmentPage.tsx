@@ -9,6 +9,7 @@ import { usePainAssessments } from '../hooks/usePainAssessments';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PainAssessmentDetailsModal from '../components/PainAssessmentDetailsModal';
 import DeletePainAssessmentModal from '../components/DeletePainAssessmentModal';
+import PainAssessmentExportModal from '../components/PainAssessmentExportModal';
 import { PainAssessment } from '../services/painAssessmentService';
 
 // Function to format assessment date to show only date or shorter time
@@ -73,6 +74,7 @@ const PainAssessmentPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [assessmentToDelete, setAssessmentToDelete] = useState<PainAssessment | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { assessments, loading, error, deleteAssessment, getAssessment } = usePainAssessments();
 
   // Add custom styles for table scrolling
@@ -271,7 +273,10 @@ const PainAssessmentPage: React.FC = () => {
                   />
                 </div>
                 {/* Export Button */}
-                <button className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg">
+                <button 
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                >
                   <Upload size={20} />
                   <span className="font-semibold">Export</span>
                 </button>
@@ -479,6 +484,14 @@ const PainAssessmentPage: React.FC = () => {
         onSuccess={handleDeleteSuccess}
         assessment={assessmentToDelete}
         onDelete={handleDeleteConfirm}
+      />
+
+      {/* Export Pain Assessment Modal */}
+      <PainAssessmentExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        assessments={assessments}
+        filteredAssessments={filteredAssessments}
       />
     </div>
   );
