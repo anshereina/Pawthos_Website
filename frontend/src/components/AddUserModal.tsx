@@ -215,7 +215,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     setOtpError(null);
 
     try {
-      const response = await axios.post(
+      await axios.post(
         `${API_BASE_URL}/api/verify-otp`,
         {
           contactInfo: createdUserEmail,
