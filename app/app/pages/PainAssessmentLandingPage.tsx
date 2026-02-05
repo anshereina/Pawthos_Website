@@ -253,7 +253,7 @@ export default function PainAssessmentLandingPage({
                 >
                   <Text style={styles.stepNumberText}>2</Text>
                 </LinearGradient>
-                <Text style={styles.stepLabel}>Answer Pre-Assessment</Text>
+                <Text style={styles.stepLabel}>Pre-Assessment</Text>
               </View>
               <View style={styles.connectorLine}>
                 <View style={styles.line} />
@@ -265,7 +265,7 @@ export default function PainAssessmentLandingPage({
                 >
                   <Text style={styles.stepNumberText}>3</Text>
                 </LinearGradient>
-                <Text style={styles.stepLabel}>Scan Image/Answer BEAP Assessment</Text>
+                <Text style={styles.stepLabel}>Scan Image/BEAP Assessment</Text>
               </View>
               <View style={styles.connectorLine}>
                 <View style={styles.line} />
@@ -574,7 +574,10 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontFamily: 'Flink',
     textAlign: 'center',
-    marginBottom: 30
+    marginBottom: 30,
+    maxWidth: 120,
+    alignSelf: 'center',
+    lineHeight: 14,
   },
   checkboxContainer: {
     flexDirection: 'row',

@@ -312,6 +312,15 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Back Button */}
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => onSelect('Pain Assessment')}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="#045b26" />
+        </TouchableOpacity>
+      </View>
       <LinearGradient 
         colors={['#f8fffe', '#f0fdf4', '#e8f5e8']} 
         style={StyleSheet.absoluteFillObject}
@@ -484,10 +493,6 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
                   <Text style={styles.cardSubtitle}>Canine Pain Assessment</Text>
                   <View style={styles.cardFeatures}>
                     <View style={styles.feature}>
-                      <Ionicons name="camera" size={11} color="#065f46" />
-                      <Text style={styles.featureText}>Photo Analysis</Text>
-                    </View>
-                    <View style={styles.feature}>
                       <MaterialCommunityIcons name="clipboard-check" size={11} color="#065f46" />
                       <Text style={styles.featureText}>Behavioral Assessment</Text>
                     </View>
@@ -553,10 +558,6 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
                     <View style={styles.feature}>
                       <Ionicons name="camera" size={11} color="#047857" />
                       <Text style={styles.featureText}>Photo Analysis</Text>
-                    </View>
-                    <View style={styles.feature}>
-                      <MaterialCommunityIcons name="clipboard-check" size={11} color="#047857" />
-                      <Text style={styles.featureText}>Behavioral Assessment</Text>
                     </View>
                   </View>
                 </View>
@@ -697,6 +698,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 10,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
   
   // Background Elements
   backgroundElement1: {
@@ -716,8 +733,8 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderRadius: 24,
-    marginTop: 56,
-    marginBottom: 12,
+    marginTop: 72,
+    marginBottom: 16,
     elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
