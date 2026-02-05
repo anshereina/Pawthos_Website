@@ -354,6 +354,21 @@ export default function PetDetailsPage({
         }
     };
 
+    const formatSpecies = (value: string | undefined) => {
+        if (!value) return 'Unknown';
+        const lower = value.toLowerCase();
+        if (lower.includes('feline') || lower.includes('cat')) return 'Feline';
+        if (lower.includes('canine') || lower.includes('dog')) return 'Canine';
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
+
+    const formatReproductiveStatus = (value: string | undefined) => {
+        if (!value) return 'Unknown';
+        const lower = value.toLowerCase();
+        if (lower === 'intact') return 'Intact';
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
+
     const handleSavePet = async (updatedPetData: Partial<PetData>) => {
         if (!petId || !petData) return false;
 
@@ -481,7 +496,7 @@ export default function PetDetailsPage({
                                 <MaterialCommunityIcons name="paw" size={20} color="#045b26" />
                             </View>
                             <Text style={styles.statLabel}>Species</Text>
-                            <Text style={styles.statValue}>{petData.species}</Text>
+                                <Text style={styles.statValue}>{formatSpecies(petData.species)}</Text>
                         </View>
                         <View style={styles.statItem}>
                             <View style={styles.statIcon}>
@@ -540,7 +555,7 @@ export default function PetDetailsPage({
                                     <MaterialCommunityIcons name="heart" size={24} color="#045b26" />
                                 </View>
                                 <Text style={styles.infoCardLabel}>Status</Text>
-                                <Text style={styles.infoCardValue}>{petData.reproductive_status || 'Unknown'}</Text>
+                                <Text style={styles.infoCardValue}>{formatReproductiveStatus(petData.reproductive_status)}</Text>
                             </View>
                         </View>
                     </View>

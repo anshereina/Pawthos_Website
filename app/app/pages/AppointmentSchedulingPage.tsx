@@ -283,6 +283,72 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
         '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM'
     ];
 
+    const isSameDayDate = (first: Date | null, second: Date | null) => {
+        if (!first || !second) return false;
+        return (
+            first.getDate() === second.getDate() &&
+            first.getMonth() === second.getMonth() &&
+            first.getFullYear() === second.getFullYear()
+        );
+    };
+
+    const isTimeInPastForSelectedDate = (timeLabel: string) => {
+        if (!selectedDate) return false;
+        const trimmed = (timeLabel || '').trim();
+
+        // Accept both "01:00 PM" and "13:00" formats to avoid edge cases when editing/rescheduling
+        const match12h = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        const match24h = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+
+        let hours24: number | null = null;
+        let minutes: number | null = null;
+
+        if (match12h) {
+            const hours = parseInt(match12h[1], 10);
+            minutes = parseInt(match12h[2], 10);
+            const ampm = match12h[3].toUpperCase();
+
+            hours24 = hours % 12;
+            if (ampm === 'PM') {
+                hours24 += 12;
+            }
+        } else if (match24h) {
+            hours24 = parseInt(match24h[1], 10);
+            minutes = parseInt(match24h[2], 10);
+        } else {
+            return false;
+        }
+
+        if (hours24 === null || minutes === null) return false;
+        if (hours24 < 0 || hours24 > 23) return false;
+        if (minutes < 0 || minutes > 59) return false;
+
+        const candidate = new Date(
+            selectedDate.getFullYear(),
+            selectedDate.getMonth(),
+            selectedDate.getDate(),
+            hours24,
+            minutes,
+            0,
+            0
+        );
+
+        const now = new Date();
+        if (!isSameDayDate(candidate, now)) {
+            return false;
+        }
+
+        return candidate.getTime() <= now.getTime();
+    };
+
+    const availableTimeOptions = timeOptions.filter(option => !isTimeInPastForSelectedDate(option));
+
+    useEffect(() => {
+        if (selectedTime !== 'Please Select' && isTimeInPastForSelectedDate(selectedTime)) {
+            setSelectedTime('Please Select');
+        }
+    }, [selectedDate, selectedTime]);
+
     // Fetch user's pets on component mount
     useEffect(() => {
         fetchUserPets();
@@ -559,6 +625,10 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
             Alert.alert('Error', 'Please select a time');
             return false;
         }
+        if (isTimeInPastForSelectedDate(selectedTime)) {
+            Alert.alert('Invalid time', 'Selected time has already passed today. Please choose a later slot.');
+            return false;
+        }
         if (appointmentFor === 'Vaccination' && vaccinationType === 'Please Select') {
             Alert.alert('Error', 'Please select vaccination type');
             return false;
@@ -809,26 +879,36 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 color="#666" 
                             />
                         </TouchableOpacity>
-                        {showTimeOptions && timeOptions.map((option) => (
-                            <TouchableOpacity
-                                key={option}
-                                style={[
-                                    styles.dropdownOption,
-                                    selectedTime === option && styles.dropdownOptionSelected
-                                ]}
-                                onPress={() => {
-                                    setSelectedTime(option);
-                                    setShowTimeOptions(false);
-                                }}
-                            >
-                                <Text style={[
-                                    styles.dropdownOptionText,
-                                    selectedTime === option && styles.dropdownOptionTextSelected
-                                ]}>
-                                    {option}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                        {showTimeOptions && (
+                            availableTimeOptions.length > 0 ? (
+                                availableTimeOptions.map((option) => (
+                                    <TouchableOpacity
+                                        key={option}
+                                        style={[
+                                            styles.dropdownOption,
+                                            selectedTime === option && styles.dropdownOptionSelected
+                                        ]}
+                                        onPress={() => {
+                                            setSelectedTime(option);
+                                            setShowTimeOptions(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.dropdownOptionText,
+                                            selectedTime === option && styles.dropdownOptionTextSelected
+                                        ]}>
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))
+                            ) : (
+                                <View style={styles.dropdownOption}>
+                                    <Text style={styles.dropdownOptionText}>
+                                        No time slots left today. Please pick another date.
+                                    </Text>
+                                </View>
+                            )
+                        )}
                     </View>
 
                     <View style={styles.formSection}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Dimensions, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Dimensions, SafeAreaView, Modal, TextInput } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { getUserProfile, getCurrentUser, updateStoredUser, isAuthenticated, updateUserProfile } from '../../utils/auth.utils';
+import { getUserProfile, getCurrentUser, updateStoredUser, isAuthenticated, updateUserProfile, changePassword } from '../../utils/auth.utils';
 import EditProfileModal from '../modals/EditProfileModal';
 import { API_BASE_URL } from '../../utils/config';
 
@@ -240,6 +240,63 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontFamily: 'Jumper',
     },
+    // Password modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    modalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#045b26',
+        marginBottom: 12,
+        fontFamily: 'Jumper',
+    },
+    modalInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        fontSize: 14,
+        marginBottom: 10,
+    },
+    modalActionsRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 8,
+    },
+    modalButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 18,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalPrimaryButton: {
+        backgroundColor: '#045b26',
+    },
+    modalSecondaryButton: {
+        backgroundColor: '#e6f3ea',
+    },
+    modalButtonText: {
+        color: '#045b26',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Jumper',
+    },
+    modalPrimaryButtonText: {
+        color: '#fff',
+    },
 });
 
 interface MyAccountPageProps {
@@ -252,6 +309,11 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
     const [error, setError] = useState<string | null>(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [updating, setUpdating] = useState(false);
+    const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+    const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+    const [newPasswordInput, setNewPasswordInput] = useState('');
+    const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+    const [changingPassword, setChangingPassword] = useState(false);
 
     const loadUserProfile = async () => {
         try {
@@ -365,12 +427,51 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
         }
     };
 
+    const resetPasswordModal = () => {
+        setCurrentPasswordInput('');
+        setNewPasswordInput('');
+        setConfirmPasswordInput('');
+    };
+
     const handleChangePassword = () => {
-        Alert.alert(
-            'Change Password',
-            'Password change feature is coming soon!',
-            [{ text: 'OK' }]
-        );
+        resetPasswordModal();
+        setPasswordModalVisible(true);
+    };
+
+    const handleSubmitPasswordChange = async () => {
+        if (!currentPasswordInput.trim()) {
+            Alert.alert('Error', 'Please enter your current password.');
+            return;
+        }
+        if (!newPasswordInput.trim()) {
+            Alert.alert('Error', 'Please enter a new password.');
+            return;
+        }
+        if (newPasswordInput.trim().length < 6) {
+            Alert.alert('Error', 'New password must be at least 6 characters.');
+            return;
+        }
+        if (newPasswordInput.trim() !== confirmPasswordInput.trim()) {
+            Alert.alert('Error', 'New password and confirmation do not match.');
+            return;
+        }
+
+        try {
+            setChangingPassword(true);
+            const result = await changePassword(currentPasswordInput.trim(), newPasswordInput.trim());
+            if (result.success) {
+                Alert.alert('Success', result.message || 'Password updated successfully.');
+                setPasswordModalVisible(false);
+                resetPasswordModal();
+            } else {
+                Alert.alert('Error', result.message || 'Failed to change password.');
+            }
+        } catch (err) {
+            console.error('Change password error:', err);
+            Alert.alert('Error', 'Failed to change password. Please try again.');
+        } finally {
+            setChangingPassword(false);
+        }
     };
 
     const handleNotifications = () => {
@@ -518,7 +619,73 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-            
+
+            {/* Change Password Modal */}
+            <Modal
+                transparent
+                animationType="fade"
+                visible={passwordModalVisible}
+                onRequestClose={() => {
+                    setPasswordModalVisible(false);
+                    resetPasswordModal();
+                }}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Change Password</Text>
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Current password"
+                            placeholderTextColor="#777"
+                            value={currentPasswordInput}
+                            onChangeText={setCurrentPasswordInput}
+                            secureTextEntry
+                        />
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="New password"
+                            placeholderTextColor="#777"
+                            value={newPasswordInput}
+                            onChangeText={setNewPasswordInput}
+                            secureTextEntry
+                        />
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Confirm new password"
+                            placeholderTextColor="#777"
+                            value={confirmPasswordInput}
+                            onChangeText={setConfirmPasswordInput}
+                            secureTextEntry
+                        />
+                        <View style={styles.modalActionsRow}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.modalSecondaryButton, { marginRight: 8 }]}
+                                onPress={() => {
+                                    setPasswordModalVisible(false);
+                                    resetPasswordModal();
+                                }}
+                                disabled={changingPassword}
+                            >
+                                <Text style={styles.modalButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalButton,
+                                    styles.modalPrimaryButton,
+                                    changingPassword && { opacity: 0.7 }
+                                ]}
+                                onPress={handleSubmitPasswordChange}
+                                disabled={changingPassword}
+                            >
+                                <Text style={[styles.modalButtonText, styles.modalPrimaryButtonText]}>
+                                    {changingPassword ? 'Updating...' : 'Update'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             <EditProfileModal
                 visible={editModalVisible}
                 onClose={() => setEditModalVisible(false)}
@@ -529,3 +696,5 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
         </SafeAreaView>
     );
 }
+
+// Styles for password modal are appended below existing styles

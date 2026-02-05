@@ -446,6 +446,14 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
         }
     };
 
+    const formatSpeciesLabel = (species: string | undefined) => {
+        if (!species) return 'Unknown';
+        const lower = species.toLowerCase();
+        if (lower.includes('feline') || lower.includes('cat')) return 'Feline';
+        if (lower.includes('canine') || lower.includes('dog')) return 'Canine';
+        return species.charAt(0).toUpperCase() + species.slice(1);
+    };
+
     // Helper function to construct full photo URL
     const getPhotoUrl = (photoUrl: string | undefined) => {
         if (!photoUrl) return null;
@@ -710,7 +718,7 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                             </View>
                                             <View style={styles.petInfoContainer}>
                                                 <Text style={styles.petName}>{pet.name}</Text>
-                                                <Text style={styles.petInfo}>{pet.species} • {formatPetAge(pet.date_of_birth)}</Text>
+                                                <Text style={styles.petInfo}>{formatSpeciesLabel(pet.species)} • {formatPetAge(pet.date_of_birth)}</Text>
                                                 <Text style={styles.petId}>ID: {pet.pet_id}</Text>
                                             </View>
                                         </TouchableOpacity>

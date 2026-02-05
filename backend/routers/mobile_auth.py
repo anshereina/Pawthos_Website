@@ -39,6 +39,27 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
+
+@router.post("/change-password")
+def change_password_mobile(
+    payload: schemas.ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_mobile_user),
+):
+    """
+    Mobile app change password endpoint.
+    Matches app expectation: POST /api/change-password with { current_password, new_password }.
+    """
+    if not payload.new_password or len(payload.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    if not payload.current_password or not auth.verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    current_user.password_hash = auth.get_password_hash(payload.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}
+
 @router.post("/register", response_model=schemas.User)
 async def register(user: UserCreate, db: Session = Depends(get_db)):
     """Mobile app user registration endpoint with placeholder account claiming"""

@@ -7,7 +7,7 @@ import { calculateBeapAverageScore, getBeapScoreFromImageIndex } from '../../uti
 export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChange }: { onSelect: (label: string, data?: any) => void, onCategoryChange?: (category: string) => void }) {
   const scrollRef = useRef<ScrollView | null>(null);
   const [currentCategory, setCurrentCategory] = useState(0);
-  // Changed to allow multiple selections per category (array of arrays)
+  // Single selection per category (array of arrays for compatibility)
   const [selectedAnswers, setSelectedAnswers] = useState<number[][]>(Array(8).fill(null).map(() => []));
 
   const categories = [
@@ -129,15 +129,15 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
 
   const handleImageSelect = (imageIndex: number) => {
     const newAnswers = [...selectedAnswers];
-    const currentSelections = newAnswers[currentCategory] || [];
-    
-    // Toggle selection - if already selected, remove it; otherwise add it
-    if (currentSelections.includes(imageIndex)) {
-      newAnswers[currentCategory] = currentSelections.filter(idx => idx !== imageIndex);
+    const currentSelection = newAnswers[currentCategory]?.[0];
+
+    // Enforce single choice per category; tap again to unselect
+    if (currentSelection === imageIndex) {
+      newAnswers[currentCategory] = [];
     } else {
-      newAnswers[currentCategory] = [...currentSelections, imageIndex];
+      newAnswers[currentCategory] = [imageIndex];
     }
-    
+
     setSelectedAnswers(newAnswers);
   };
 
@@ -224,10 +224,10 @@ export default function CanineIntegrationQuestionPage({ onSelect, onCategoryChan
           {/* Category Description */}
           <View style={styles.categoryContainer}>
             <Text style={styles.categoryTitle}>
-              Select one or more images that represent your dog's {categories[currentCategory].toLowerCase()}:
+              Select one image that best represents your dog's {categories[currentCategory].toLowerCase()}:
             </Text>
             <Text style={styles.categorySubtitle}>
-              💡 Tip: You can select multiple behaviors if your dog shows different symptoms
+              💡 Tip: Choose the closest match for your dog right now
             </Text>
           </View>
 

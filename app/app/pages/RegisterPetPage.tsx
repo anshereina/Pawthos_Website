@@ -516,11 +516,45 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         setDateOfBirth(formatted);
         const calculatedAge = calculateAge(formatted);
         setAge(calculatedAge);
+
+        // Proactively block future years as user types (e.g., 2030 when current year is 2026)
+        if (formatted.length === 10) {
+            const normalized = formatted.replace(/-/g, '/');
+            const parts = normalized.split('/');
+            const year = parts.length === 3 ? parseInt(parts[2], 10) : NaN;
+            const currentYear = new Date().getFullYear();
+            if (!isNaN(year) && year > currentYear) {
+                setFieldErrors(prev => ({ ...prev, dateOfBirth: `Year cannot be greater than ${currentYear}.` }));
+            } else {
+                setFieldErrors(prev => {
+                    const next = { ...prev };
+                    if (next.dateOfBirth) delete next.dateOfBirth;
+                    return next;
+                });
+            }
+        }
     };
 
     const handleOwnerBirthdayChange = (text: string) => {
         const formatted = formatDateInput(text);
         setOwnerBirthday(formatted);
+
+        // Proactively block future years as user types
+        if (formatted.length === 10) {
+            const normalized = formatted.replace(/-/g, '/');
+            const parts = normalized.split('/');
+            const year = parts.length === 3 ? parseInt(parts[2], 10) : NaN;
+            const currentYear = new Date().getFullYear();
+            if (!isNaN(year) && year > currentYear) {
+                setFieldErrors(prev => ({ ...prev, ownerBirthday: `Year cannot be greater than ${currentYear}.` }));
+            } else {
+                setFieldErrors(prev => {
+                    const next = { ...prev };
+                    if (next.ownerBirthday) delete next.ownerBirthday;
+                    return next;
+                });
+            }
+        }
     };
 
     const requestPermissions = async () => {
@@ -662,6 +696,21 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         return true;
     };
 
+    const parseDateFromInput = (value: string) => {
+        if (!value || value.length < 8) return null;
+        const normalized = value.replace(/-/g, '/');
+        const parts = normalized.split('/');
+        if (parts.length !== 3) return null;
+        const [dayStr, monthStr, yearStr] = parts;
+        const day = parseInt(dayStr, 10);
+        const month = parseInt(monthStr, 10) - 1;
+        const year = parseInt(yearStr, 10);
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+        const date = new Date(year, month, day);
+        if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
+        return date;
+    };
+
     const validateForm = () => {
         // Check required fields
         if (!petName.trim()) {
@@ -695,6 +744,19 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         if (!reproductiveStatus) {
             Alert.alert('Validation Error', 'Please select reproductive status');
             return false;
+        }
+
+        if (dateOfBirth) {
+            const parsedDob = parseDateFromInput(dateOfBirth);
+            if (!parsedDob) {
+                Alert.alert('Validation Error', 'Please enter a valid pet birthday in DD/MM/YYYY format.');
+                return false;
+            }
+            const today = new Date();
+            if (parsedDob > today) {
+                Alert.alert('Validation Error', 'Pet birthday cannot be in the future.');
+                return false;
+            }
         }
 
         return true;
@@ -967,6 +1029,9 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                             keyboardType="numeric"
                             maxLength={10}
                         />
+                        {fieldErrors.ownerBirthday ? (
+                            <Text style={styles.inputErrorText}>{fieldErrors.ownerBirthday}</Text>
+                        ) : null}
                     </View>
 
                     {/* Date of Birth and Age */}
@@ -990,6 +1055,9 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                                 editable={false}
                             />
                         </View>
+                        {fieldErrors.dateOfBirth ? (
+                            <Text style={styles.inputErrorText}>{fieldErrors.dateOfBirth}</Text>
+                        ) : null}
                     </View>
 
                     {/* Gender */}

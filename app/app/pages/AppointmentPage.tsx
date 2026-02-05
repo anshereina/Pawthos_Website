@@ -326,6 +326,8 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentData | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [actionModalVisible, setActionModalVisible] = useState(false);
+    const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
+    const [appointmentToCancel, setAppointmentToCancel] = useState<AppointmentData | null>(null);
     // Super fast entrance animation
     const enterOpacity = useRef(new Animated.Value(0)).current;
     const enterTranslateY = useRef(new Animated.Value(8)).current;
@@ -613,8 +615,9 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                                 </TouchableOpacity>
                                                 <TouchableOpacity
                                                     style={[styles.actionButton, styles.dangerButton]}
-                                                    onPress={async () => {
-                                                        await handleStatusUpdate(item.id, 'cancelled');
+                                                    onPress={() => {
+                                                        setAppointmentToCancel(item);
+                                                        setCancelConfirmVisible(true);
                                                     }}
                                                 >
                                                     <Text style={[styles.buttonText, styles.dangerButtonText]}>
@@ -643,6 +646,48 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                     appointmentData={selectedAppointment}
                 />
             )}
+
+            {/* Cancel confirmation modal */}
+            <Modal
+                transparent
+                animationType="fade"
+                visible={cancelConfirmVisible}
+                onRequestClose={() => {
+                    setCancelConfirmVisible(false);
+                    setAppointmentToCancel(null);
+                }}
+            >
+                <View style={styles.actionModalOverlay}>
+                    <View style={styles.actionModalContainer}>
+                        <Text style={styles.actionModalTitle}>Cancel Appointment</Text>
+                        <Text style={[styles.modalFieldValue, { textAlign: 'center', marginBottom: 12 }]}>
+                            Are you sure you want to cancel this appointment?
+                        </Text>
+                        <TouchableOpacity
+                            style={[styles.actionModalButton, styles.dangerButton]}
+                            onPress={async () => {
+                                if (appointmentToCancel) {
+                                    await handleStatusUpdate(appointmentToCancel.id, 'cancelled');
+                                    setActiveFilter('Lists');
+                                }
+                                setCancelConfirmVisible(false);
+                                setAppointmentToCancel(null);
+                            }}
+                        >
+                            <Text style={[styles.actionModalButtonText, styles.dangerButtonText]}>Yes, Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionModalButton, styles.actionModalCancelButton]}
+                            onPress={() => {
+                                setCancelConfirmVisible(false);
+                                setAppointmentToCancel(null);
+                            }}
+                        >
+                            <Text style={[styles.actionModalButtonText, { color: '#045b26' }]}>No, Keep</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Action Modal: Reschedule or Cancel */}
             {selectedAppointment && (
@@ -674,11 +719,11 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
 
                                     <TouchableOpacity
                                         style={[styles.actionModalButton, { backgroundColor: '#dc3545' }]}
-                                        onPress={async () => {
+                                        onPress={() => {
                                             setActionModalVisible(false);
                                             if (selectedAppointment) {
-                                                await handleStatusUpdate(selectedAppointment.id, 'cancelled');
-                                                setActiveFilter('Lists');
+                                                setAppointmentToCancel(selectedAppointment);
+                                                setCancelConfirmVisible(true);
                                             }
                                         }}
                                     >

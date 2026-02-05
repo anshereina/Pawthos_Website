@@ -553,6 +553,17 @@ export async function getCurrentUser(): Promise<any> {
 
 export async function updateStoredUser(userData: any): Promise<void> {
   try {
+    // Preserve existing photo_url if backend returns it missing/empty (common during partial updates)
+    try {
+      const existingStr = await AsyncStorage.getItem('user');
+      const existing = existingStr ? JSON.parse(existingStr) : null;
+      if (existing && existing.photo_url && (!userData?.photo_url || String(userData.photo_url).trim() === '')) {
+        userData = { ...userData, photo_url: existing.photo_url };
+      }
+    } catch {
+      // ignore merge issues; still write userData below
+    }
+
     await AsyncStorage.setItem('user', JSON.stringify(userData));
   } catch (error) {
     console.error('Error updating stored user:', error);
@@ -758,6 +769,60 @@ export const updateUserProfile = async (userData: any): Promise<AuthResult> => {
     return { 
       success: false, 
       message: "Network error. Please check your connection and try again." 
+    };
+  }
+};
+
+// Change password (current + new) for logged-in user
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<AuthResult> => {
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, message: 'New password must be at least 6 characters' };
+  }
+
+  const token = await getAuthToken();
+  if (!token) {
+    return { success: false, message: 'No authentication token found' };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/change-password`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        current_password: currentPassword || undefined,
+        new_password: newPassword,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const detail = (data as any)?.detail || (data as any)?.message;
+      return { success: false, message: detail || 'Failed to change password' };
+    }
+
+    // Attempt to keep Remember Me credentials in sync when email is known
+    try {
+      const storedUser = await getCurrentUser();
+      if (storedUser?.email) {
+        await updateRememberMeCredentials(storedUser.email, newPassword);
+      }
+    } catch (err) {
+      console.warn('Failed to sync remember-me credentials after password change:', err);
+    }
+
+    return { success: true, message: (data as any)?.message || 'Password updated successfully' };
+  } catch (error) {
+    console.error('Change password error:', error);
+    return {
+      success: false,
+      message: 'Network error. Please check your connection and try again.'
     };
   }
 };
