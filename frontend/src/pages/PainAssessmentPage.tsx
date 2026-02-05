@@ -83,12 +83,13 @@ const PainAssessmentPage: React.FC = () => {
     style.textContent = `
       .table-scroll-container {
         overflow-x: auto;
-        overflow-y: hidden;
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
         scrollbar-color: #d1d5db #f3f4f6;
       }
       .table-scroll-container::-webkit-scrollbar {
+        width: 8px;
         height: 8px;
       }
       .table-scroll-container::-webkit-scrollbar-track {
@@ -198,28 +199,45 @@ const PainAssessmentPage: React.FC = () => {
     setAssessmentToDelete(null);
   };
 
-  // Filter assessments based on search and filter
-  const filteredAssessments = assessments.filter(assessment => {
-    // Filter by pet type
-    if (filter !== 'all') {
-      const petTypeLower = (assessment.pet_type || '').toLowerCase();
-      if (filter === 'feline' && !petTypeLower.includes('cat') && !petTypeLower.includes('feline')) {
-        return false;
+  // Filter and sort assessments based on search and filter
+  const filteredAssessments = assessments
+    .filter(assessment => {
+      // Filter by pet type
+      if (filter !== 'all') {
+        const petTypeLower = (assessment.pet_type || '').toLowerCase();
+        if (filter === 'feline' && !petTypeLower.includes('cat') && !petTypeLower.includes('feline')) {
+          return false;
+        }
+        if (filter === 'canine' && !petTypeLower.includes('dog') && !petTypeLower.includes('canine')) {
+          return false;
+        }
       }
-      if (filter === 'canine' && !petTypeLower.includes('dog') && !petTypeLower.includes('canine')) {
-        return false;
+      
+      // Filter by search term
+      const searchLower = search.toLowerCase();
+      return (
+        assessment.pet_name?.toLowerCase().includes(searchLower) ||
+        assessment.pet_type?.toLowerCase().includes(searchLower) ||
+        assessment.pain_level?.toLowerCase().includes(searchLower) ||
+        assessment.id.toString().includes(searchLower)
+      );
+    })
+    .sort((a, b) => {
+      // Sort by date (newest first)
+      // Try created_at first, then assessment_date, then id as fallback
+      const dateA = a.created_at || a.assessment_date || '';
+      const dateB = b.created_at || b.assessment_date || '';
+      
+      if (dateA && dateB) {
+        const timeA = new Date(dateA).getTime();
+        const timeB = new Date(dateB).getTime();
+        // Return negative if A is newer (should come first)
+        return timeB - timeA;
       }
-    }
-    
-    // Filter by search term
-    const searchLower = search.toLowerCase();
-    return (
-      assessment.pet_name?.toLowerCase().includes(searchLower) ||
-      assessment.pet_type?.toLowerCase().includes(searchLower) ||
-      assessment.pain_level?.toLowerCase().includes(searchLower) ||
-      assessment.id.toString().includes(searchLower)
-    );
-  });
+      
+      // Fallback to ID (higher ID = newer, so should come first)
+      return (b.id || 0) - (a.id || 0);
+    });
 
   // Pagination calculations
   const totalItems = filteredAssessments.length;
@@ -341,7 +359,7 @@ const PainAssessmentPage: React.FC = () => {
               <div className="p-6 text-center text-red-600">{error}</div>
             ) : (
               <>
-                <div className="table-scroll-container max-w-full overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                <div className="table-scroll-container max-w-full max-h-[calc(100vh-400px)]">
               <table className="w-full min-w-[1200px] table-fixed">
                 {/* Table Header */}
                 <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
