@@ -195,7 +195,6 @@ export const painAssessmentExportService = {
 
     // Header with logos
     const logoHeight = 25;
-    const logoSpacing = 10;
     
     if (unaLogoBase64) {
       try {
