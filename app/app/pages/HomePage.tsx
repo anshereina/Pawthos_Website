@@ -634,7 +634,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                             </Text>
                         </TouchableOpacity>
 
-                        {/* Add Pet */}
+                        {/* FAQs */}
                         <TouchableOpacity style={{
                             width: '48%',
                             backgroundColor: '#045b26',
@@ -647,8 +647,8 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.1,
                             shadowRadius: 4,
-                        }} onPress={() => onSelect('Register Pet')}>
-                            <MaterialCommunityIcons name="plus-circle" size={32} color="white" />
+                        }} onPress={() => onSelect('FAQs')}>
+                            <MaterialCommunityIcons name="help-circle" size={32} color="white" />
                             <Text style={{
                                 color: 'white',
                                 fontWeight: 'bold',
@@ -657,7 +657,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                 fontFamily: 'Jumper',
                                 marginTop: 8,
                             }}>
-                                Add Pet
+                                FAQ's
                             </Text>
                         </TouchableOpacity>
 

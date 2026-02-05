@@ -395,14 +395,26 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
 
     const getFilteredAppointments = () => {
         if (activeFilter === 'Upcoming') {
-            return filterUpcomingAppointments(appointments);
-        } else {
-            // Exclude pending from Lists tab; show only non-pending
-            const nonPending = appointments.filter(
-                (a) => (a.status || '').toLowerCase() !== 'pending'
+            // Upcoming tab: only show scheduled appointments (displayed as "To be Approved")
+            const scheduled = appointments.filter(
+                (a) => (a.status || '').toLowerCase() === 'scheduled'
             );
-            return getAllAppointments(nonPending);
+            return filterUpcomingAppointments(scheduled);
+        } else {
+            // All Appointments tab: show history only (exclude "scheduled" / to-be-approved)
+            const history = appointments.filter(
+                (a) => (a.status || '').toLowerCase() !== 'scheduled'
+            );
+            return getAllAppointments(history);
         }
+    };
+
+    const formatSpecies = (value: string | undefined | null) => {
+        if (!value) return 'Unknown';
+        const lower = value.toLowerCase();
+        if (lower.includes('feline') || lower.includes('cat')) return 'Feline';
+        if (lower.includes('canine') || lower.includes('dog')) return 'Canine';
+        return value.charAt(0).toUpperCase() + value.slice(1);
     };
 
     const getStatusColor = (status: string) => {
@@ -571,7 +583,7 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                         </Text>
                                         {item.pet_species && (
                                             <Text style={styles.appointmentPet}>
-                                                Species: {item.pet_species}
+                                                Species: {formatSpecies(item.pet_species)}
                                             </Text>
                                         )}
                                         {item.pet_breed && (

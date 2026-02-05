@@ -165,6 +165,37 @@ export default function AppointmentDetailsModal({
         return `${ageInYears} years`;
     };
 
+    const formatSpecies = (value: string | undefined | null) => {
+        if (!value) return 'Unknown';
+        const lower = value.toLowerCase();
+        if (lower.includes('feline') || lower.includes('cat')) return 'Feline';
+        if (lower.includes('canine') || lower.includes('dog')) return 'Canine';
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
+
+    const formatGender = (value: string | undefined | null) => {
+        if (!value) return 'Not specified';
+        const lower = value.toLowerCase();
+        if (lower === 'female' || lower === 'f') return 'Female';
+        if (lower === 'male' || lower === 'm') return 'Male';
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
+
+    const formatReproductiveStatus = (value: string | undefined | null) => {
+        if (!value) return 'Not specified';
+        const lower = value.toLowerCase();
+        if (lower === 'intact' || lower === 'not neutered' || lower === 'not spayed') return 'Intact';
+        if (
+            lower === 'castrated' ||
+            lower === 'spayed' ||
+            lower === 'neutered' ||
+            lower === 'castrated/spayed'
+        ) {
+            return 'Castrated/Spayed';
+        }
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
+
     return (
         <Modal
             animationType="slide"
@@ -249,7 +280,7 @@ export default function AppointmentDetailsModal({
                                 
                                 <View style={styles.modalField}>
                                     <Text style={styles.modalFieldLabel}>Species:</Text>
-                                    <Text style={styles.modalFieldValue}>{petData.species}</Text>
+                                    <Text style={styles.modalFieldValue}>{formatSpecies(petData.species)}</Text>
                                 </View>
                                 
                                 <View style={styles.modalField}>
@@ -266,12 +297,12 @@ export default function AppointmentDetailsModal({
                                 
                                 <View style={styles.modalField}>
                                     <Text style={styles.modalFieldLabel}>Gender:</Text>
-                                    <Text style={styles.modalFieldValue}>{petData.gender || 'Not specified'}</Text>
+                                    <Text style={styles.modalFieldValue}>{formatGender(petData.gender)}</Text>
                                 </View>
                                 
                                 <View style={styles.modalField}>
                                     <Text style={styles.modalFieldLabel}>Reproductive Status:</Text>
-                                    <Text style={styles.modalFieldValue}>{petData.reproductive_status || 'Not specified'}</Text>
+                                    <Text style={styles.modalFieldValue}>{formatReproductiveStatus(petData.reproductive_status)}</Text>
                                 </View>
                                 
                                 {petData.breed && (

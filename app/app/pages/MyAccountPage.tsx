@@ -270,6 +270,22 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 10,
     },
+    modalInputWrapper: {
+        position: 'relative',
+        marginBottom: 10,
+    },
+    modalInputWithIcon: {
+        paddingRight: 40,
+        marginBottom: 0,
+    },
+    modalEyeButton: {
+        position: 'absolute',
+        right: 10,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     modalActionsRow: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
@@ -314,6 +330,9 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
     const [newPasswordInput, setNewPasswordInput] = useState('');
     const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
     const [changingPassword, setChangingPassword] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const loadUserProfile = async () => {
         try {
@@ -474,14 +493,6 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
         }
     };
 
-    const handleNotifications = () => {
-        Alert.alert(
-            'Notifications',
-            'Notification settings feature is coming soon!',
-            [{ text: 'OK' }]
-        );
-    };
-
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
@@ -609,14 +620,6 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                         <Text style={styles.settingsItemText}>Change Password</Text>
                         <MaterialIcons name="chevron-right" size={16} color="#045b26" style={styles.settingsItemArrow} />
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.settingsItem} onPress={handleNotifications}>
-                        <View style={styles.settingsItemIcon}>
-                            <MaterialIcons name="notifications" size={16} color="#045b26" />
-                        </View>
-                        <Text style={styles.settingsItemText}>Notifications</Text>
-                        <MaterialIcons name="chevron-right" size={16} color="#045b26" style={styles.settingsItemArrow} />
-                    </TouchableOpacity>
                 </View>
             </ScrollView>
 
@@ -633,30 +636,66 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
                         <Text style={styles.modalTitle}>Change Password</Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="Current password"
-                            placeholderTextColor="#777"
-                            value={currentPasswordInput}
-                            onChangeText={setCurrentPasswordInput}
-                            secureTextEntry
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="New password"
-                            placeholderTextColor="#777"
-                            value={newPasswordInput}
-                            onChangeText={setNewPasswordInput}
-                            secureTextEntry
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="Confirm new password"
-                            placeholderTextColor="#777"
-                            value={confirmPasswordInput}
-                            onChangeText={setConfirmPasswordInput}
-                            secureTextEntry
-                        />
+                        <View style={styles.modalInputWrapper}>
+                            <TextInput
+                                style={[styles.modalInput, styles.modalInputWithIcon]}
+                                placeholder="Current password"
+                                placeholderTextColor="#777"
+                                value={currentPasswordInput}
+                                onChangeText={setCurrentPasswordInput}
+                                secureTextEntry={!showCurrentPassword}
+                            />
+                            <TouchableOpacity
+                                style={styles.modalEyeButton}
+                                onPress={() => setShowCurrentPassword((prev) => !prev)}
+                            >
+                                <MaterialIcons
+                                    name={showCurrentPassword ? 'visibility-off' : 'visibility'}
+                                    size={20}
+                                    color="#777"
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.modalInputWrapper}>
+                            <TextInput
+                                style={[styles.modalInput, styles.modalInputWithIcon]}
+                                placeholder="New password"
+                                placeholderTextColor="#777"
+                                value={newPasswordInput}
+                                onChangeText={setNewPasswordInput}
+                                secureTextEntry={!showNewPassword}
+                            />
+                            <TouchableOpacity
+                                style={styles.modalEyeButton}
+                                onPress={() => setShowNewPassword((prev) => !prev)}
+                            >
+                                <MaterialIcons
+                                    name={showNewPassword ? 'visibility-off' : 'visibility'}
+                                    size={20}
+                                    color="#777"
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.modalInputWrapper}>
+                            <TextInput
+                                style={[styles.modalInput, styles.modalInputWithIcon]}
+                                placeholder="Confirm new password"
+                                placeholderTextColor="#777"
+                                value={confirmPasswordInput}
+                                onChangeText={setConfirmPasswordInput}
+                                secureTextEntry={!showConfirmPassword}
+                            />
+                            <TouchableOpacity
+                                style={styles.modalEyeButton}
+                                onPress={() => setShowConfirmPassword((prev) => !prev)}
+                            >
+                                <MaterialIcons
+                                    name={showConfirmPassword ? 'visibility-off' : 'visibility'}
+                                    size={20}
+                                    color="#777"
+                                />
+                            </TouchableOpacity>
+                        </View>
                         <View style={styles.modalActionsRow}>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.modalSecondaryButton, { marginRight: 8 }]}

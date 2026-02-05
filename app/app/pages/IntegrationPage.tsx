@@ -33,9 +33,14 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
     console.log('fetchRegisteredPets called');
     try {
       setLoadingPets(true);
-      
+      setRegisteredPets([]);
       // Get auth token from storage
       const token = await AsyncStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        setRegisteredPets([]);
+        return;
+      }
       if (!token) {
         console.error('No auth token found');
         setRegisteredPets([]);
@@ -715,7 +720,8 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderRadius: 24,
-    marginBottom: 12,
+    marginTop: 32,
+    marginBottom: 16,
     elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },

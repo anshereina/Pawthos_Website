@@ -812,7 +812,6 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                 reproductive_status: reproductiveStatus?.toLowerCase(),
             };
 
-            console.log('Registering pet with data:', petData);
 
             // Create pet first
             const result = await createPet(petData);
@@ -823,11 +822,9 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                 
                 // If there's a photo, upload it after pet creation
                 if (petPhoto) {
-                    console.log('Uploading pet photo for pet ID:', petId, 'Photo URI:', petPhoto);
                     const photoResult = await uploadPetPhoto(petId, petPhoto);
                     
                     if (photoResult.success) {
-                        console.log('Photo uploaded successfully:', photoResult.photo_url);
                     } else {
                         console.warn('Photo upload failed:', photoResult.message);
                         // Don't fail the entire registration if photo upload fails
@@ -891,7 +888,6 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                     <ScrollView 
                         style={styles.content} 
                         showsVerticalScrollIndicator={false}
-                        removeClippedSubviews={true}
                         keyboardShouldPersistTaps="handled"
                     >
                         <View style={styles.header}>
@@ -996,13 +992,15 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                     <View style={styles.formSection}>
                         <Text style={styles.sectionTitle}>Breed and Color</Text>
                         <View style={styles.rowContainer}>
-                            <TextInput
-                                style={[styles.inputField, styles.halfWidthField]}
-                                placeholder="Breed"
-                                placeholderTextColor="#999"
-                                value={breed}
-                                onChangeText={handleBreedChange}
-                            />
+                            <View style={styles.halfWidthField}>
+                                <TextInput
+                                    style={styles.inputField}
+                                    placeholder="Breed"
+                                    placeholderTextColor="#999"
+                                    value={breed}
+                                    onChangeText={handleBreedChange}
+                                />
+                            </View>
                             <View style={styles.halfWidthField}>
                                 <TextInput
                                     style={styles.inputField}
