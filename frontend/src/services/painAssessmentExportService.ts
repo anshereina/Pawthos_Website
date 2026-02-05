@@ -193,12 +193,14 @@ export const painAssessmentExportService = {
     const margin = 20;
     let yPos = margin;
 
-    // Header with logos
-    const logoHeight = 25;
+    // Header with logos (smaller and tighter spacing to avoid stretching)
+    const logoHeight = 18;
+    const unaLogoWidth = 26;
+    const cityLogoWidth = 26;
     
     if (unaLogoBase64) {
       try {
-        doc.addImage(unaLogoBase64, 'PNG', margin, yPos, 40, logoHeight);
+        doc.addImage(unaLogoBase64, 'PNG', margin, yPos, unaLogoWidth, logoHeight);
       } catch (error) {
         console.warn('Could not add una logo:', error);
       }
@@ -206,13 +208,13 @@ export const painAssessmentExportService = {
     
     if (cityVetLogoBase64) {
       try {
-        doc.addImage(cityVetLogoBase64, 'JPG', pageWidth - margin - 40, yPos, 40, logoHeight);
+        doc.addImage(cityVetLogoBase64, 'JPG', pageWidth - margin - cityLogoWidth, yPos, cityLogoWidth, logoHeight);
       } catch (error) {
         console.warn('Could not add city vet logo:', error);
       }
     }
 
-    yPos += logoHeight + 15;
+    yPos += logoHeight + 8;
 
     // Title
     doc.setFontSize(18);
