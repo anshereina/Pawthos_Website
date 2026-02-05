@@ -183,18 +183,6 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  assessment.questions_completed 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {assessment.questions_completed ? 'Completed' : 'Pending Review'}
-                </span>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Created At
                 </label>
                 <p className="text-gray-900 font-medium">
@@ -213,7 +201,13 @@ const PainAssessmentDetailsModal: React.FC<PainAssessmentDetailsModalProps> = ({
               </h3>
               <div className="bg-white border border-gray-200 rounded-lg p-3">
                 <img
-                  src={assessment.image_url.startsWith('http') ? assessment.image_url : `${API_BASE_URL}${assessment.image_url}`}
+                  src={
+                    assessment.image_url?.startsWith('http') 
+                      ? assessment.image_url 
+                      : assessment.image_url?.startsWith('/')
+                      ? `${API_BASE_URL}${assessment.image_url}`
+                      : `${API_BASE_URL}/${assessment.image_url}`
+                  }
                   alt="Pain assessment"
                   className="w-full max-w-md mx-auto rounded-lg shadow-sm"
                   onError={(e) => {

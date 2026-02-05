@@ -251,8 +251,6 @@ export const painAssessmentExportService = {
     yPos += 7;
     doc.text(`Pain Level: ${assessment.pain_level || 'N/A'}`, margin, yPos);
     yPos += 7;
-    doc.text(`Status: ${assessment.questions_completed ? 'Completed' : 'Pending Review'}`, margin, yPos);
-    yPos += 7;
     if (assessment.created_at) {
       doc.text(`Created At: ${formatDateTime(assessment.created_at)}`, margin, yPos);
       yPos += 7;
@@ -263,7 +261,9 @@ export const painAssessmentExportService = {
     if (assessment.image_url) {
       const imageUrl = assessment.image_url.startsWith('http') 
         ? assessment.image_url 
-        : `${API_BASE_URL}${assessment.image_url}`;
+        : assessment.image_url.startsWith('/')
+        ? `${API_BASE_URL}${assessment.image_url}`
+        : `${API_BASE_URL}/${assessment.image_url}`;
       
       try {
         const imageBase64 = await loadImageAsBase64(imageUrl);
