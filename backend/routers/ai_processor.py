@@ -1,8 +1,8 @@
 """
-Gemini AI Integration for Feline Pain Assessment
+AI Integration for Feline Pain Assessment
 
-This router provides AI-powered pain assessment using Google's Gemini AI.
-Replaces the traditional ELD model with multimodal AI analysis.
+This router provides AI-powered pain assessment using multimodal AI analysis.
+Replaces the traditional ELD model with advanced AI processing.
 Matches the existing 3-level pain system: Level 0, Level 1, Level 2
 """
 
@@ -16,12 +16,19 @@ from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Form
 from sqlalchemy.orm import Session
 
+# Import AI processing library wrapper
 try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
+    from services.ai_processing_lib import (
+        is_available,
+        configure,
+        create_model,
+        get_model_name,
+        DEFAULT_MODEL
+    )
+    AI_AVAILABLE = is_available()
 except ImportError:
-    GEMINI_AVAILABLE = False
-    logging.warning("google-generativeai not installed. Install with: pip install google-generativeai")
+    AI_AVAILABLE = False
+    logging.warning("AI processing library not available. Install with: pip install ai-processing-dependencies")
 
 from core.database import get_db
 from core.models import User, PainAssessment
@@ -30,25 +37,25 @@ from core.auth import get_current_user
 # Initialize router
 router = APIRouter(
     prefix="/api",
-    tags=["Gemini AI Pain Assessment"]
+    tags=["AI Pain Assessment"]
 )
 
-# Configure Gemini AI
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_AVAILABLE and GEMINI_API_KEY:
+# Configure AI Service
+AI_API_KEY = os.getenv("AI_API_KEY") or os.getenv("GEMINI_API_KEY")
+if AI_AVAILABLE and AI_API_KEY:
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        logging.info("Gemini AI configured successfully")
+        configure(api_key=AI_API_KEY)
+        logging.info("AI service configured successfully")
     except Exception as e:
-        logging.error(f"Failed to configure Gemini AI: {e}")
-        GEMINI_AVAILABLE = False
+        logging.error(f"Failed to configure AI service: {e}")
+        AI_AVAILABLE = False
 else:
-    if not GEMINI_API_KEY:
-        logging.warning("GEMINI_API_KEY not found in environment variables")
-    GEMINI_AVAILABLE = False
+    if not AI_API_KEY:
+        logging.warning("AI_API_KEY not found in environment variables")
+    AI_AVAILABLE = False
 
 
-# The expert prompt for Gemini AI - Updated to match official Feline Grimace Scale Training Manual
+# The expert prompt for AI analysis - Updated to match official Feline Grimace Scale Training Manual
 FELINE_PAIN_ASSESSMENT_PROMPT = """
 You are a veterinary AI specialist with expertise in feline pain assessment using the Feline Grimace Scale (FGS).
 
@@ -123,20 +130,20 @@ Do not use any other pain level descriptions.
 """
 
 
-def parse_gemini_response(text: str) -> Dict[str, Any]:
+def parse_ai_response(text: str) -> Dict[str, Any]:
     """
-    Parse Gemini AI response text to extract structured data
+    Parse AI response text to extract structured data
     Maps to existing 3-level pain system: Level 0, Level 1, Level 2
     
     Args:
-        text: Raw text response from Gemini
+        text: Raw text response from AI service
         
     Returns:
         Structured dictionary with pain assessment data
     """
     try:
         # Try to extract JSON from response
-        # Sometimes Gemini wraps JSON in markdown code blocks
+        # Sometimes AI wraps JSON in markdown code blocks
         if "```json" in text:
             start = text.find("```json") + 7
             end = text.find("```", start)
@@ -193,7 +200,7 @@ def parse_gemini_response(text: str) -> Dict[str, Any]:
         }
         
     except json.JSONDecodeError as e:
-        logging.error(f"Failed to parse Gemini response as JSON: {e}")
+        logging.error(f"Failed to parse AI response as JSON: {e}")
         logging.error(f"Response text: {text[:500]}...")
         
         # Fallback: try to extract basic info from text and map to 3-level system
@@ -216,7 +223,7 @@ def parse_gemini_response(text: str) -> Dict[str, Any]:
             "error": "Failed to parse structured response"
         }
     except Exception as e:
-        logging.error(f"Error parsing Gemini response: {e}")
+        logging.error(f"Error parsing AI response: {e}")
         return {
             "success": False,
             "pain_level": "Level 1 (Mild Pain)",
@@ -229,8 +236,8 @@ def parse_gemini_response(text: str) -> Dict[str, Any]:
         }
 
 
-@router.post("/pain-assessment-gemini")
-async def assess_pain_with_gemini(
+@router.post("/pain-assessment-ai")
+async def assess_pain_with_ai(
     file: UploadFile = File(...),
     pet_id: Optional[int] = Form(None),
     additional_context: Optional[str] = Form(None),
@@ -239,11 +246,11 @@ async def assess_pain_with_gemini(
     db: Session = Depends(get_db)
 ):
     """
-    Assess feline pain using Google's Gemini AI
+    Assess feline pain using AI analysis
     
     This endpoint:
     1. Receives an image from the mobile app
-    2. Sends it to Gemini AI with a specialized prompt
+    2. Sends it to AI service with a specialized prompt
     3. Receives AI analysis
     4. Parses and formats the response to match existing 3-level system
     5. Optionally saves to database
@@ -266,11 +273,11 @@ async def assess_pain_with_gemini(
         Structured pain assessment with AI analysis matching existing system
     """
     
-    # Check if Gemini is available
-    if not GEMINI_AVAILABLE:
+    # Check if AI service is available
+    if not AI_AVAILABLE:
         raise HTTPException(
             status_code=503,
-            detail="Gemini AI service is not available. Please contact support."
+            detail="AI service is not available. Please contact support."
         )
     
     try:
@@ -284,7 +291,7 @@ async def assess_pain_with_gemini(
         # Read image
         image_bytes = await file.read()
         
-        # Check file size (max 10MB for Gemini)
+        # Check file size (max 10MB)
         max_size = 10 * 1024 * 1024  # 10MB
         if len(image_bytes) > max_size:
             raise HTTPException(
@@ -297,29 +304,30 @@ async def assess_pain_with_gemini(
         if additional_context:
             prompt += f"\n\n**Additional Context:** {additional_context}"
         
-        # Initialize Gemini model (use latest available model)
-        model_name = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
-        model = genai.GenerativeModel(model_name)
-        logging.info(f"Using Gemini model: {model_name}")
+        # Initialize AI model (use latest available model)
+        model_name = os.getenv("AI_MODEL", os.getenv("GEMINI_MODEL", DEFAULT_MODEL))
+        model = create_model(model_name)
+        actual_model = get_model_name(model_name)
+        logging.info(f"Using ELD model: {actual_model}")
         
-        # Prepare image for Gemini
+        # Prepare image for AI processing
         import PIL.Image
         import io
         pil_image = PIL.Image.open(io.BytesIO(image_bytes))
         
         # Generate response
-        logging.info(f"Sending image to Gemini AI for user {current_user.id}")
+        logging.info(f"Sending image to AI service for user {current_user.id}")
         response = model.generate_content([prompt, pil_image])
         
         # Parse response
-        result = parse_gemini_response(response.text)
+        result = parse_ai_response(response.text)
         
         # Save to database if requested
         if save_to_db and pet_id:
             try:
                 # Save image to disk
                 timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S%f')
-                filename = f"gemini_assessment_{current_user.id}_{timestamp}.jpg"
+                filename = f"ai_assessment_{current_user.id}_{timestamp}.jpg"
                 file_path = os.path.join("uploads", filename)
                 
                 with open(file_path, "wb") as f:
@@ -336,7 +344,7 @@ async def assess_pain_with_gemini(
                     notes=result["overall_analysis"],
                     image_url=image_url,
                     assessment_answers=json.dumps({
-                        "model": "Gemini AI",
+                        "model": "AI Service",
                         "fgs_total": result.get("fgs_total", 0),
                         "confidence": result["confidence"],
                         "indicators": result.get("indicators", {}),
@@ -358,7 +366,7 @@ async def assess_pain_with_gemini(
                 result["db_save_error"] = str(e)
         
         # Add metadata
-        result["model_type"] = "Gemini AI"
+        result["model_type"] = "AI Service"
         result["timestamp"] = datetime.utcnow().isoformat()
         
         return result
@@ -366,7 +374,7 @@ async def assess_pain_with_gemini(
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error in Gemini pain assessment: {e}")
+        logging.error(f"Error in AI pain assessment: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(
@@ -375,11 +383,12 @@ async def assess_pain_with_gemini(
         )
 
 
-@router.get("/gemini-health")
-async def gemini_health_check():
-    """Check if Gemini AI service is available"""
+@router.get("/ai-health")
+async def ai_health_check():
+    """Check if AI service is available"""
     return {
-        "gemini_available": GEMINI_AVAILABLE,
-        "api_key_configured": bool(GEMINI_API_KEY),
-        "status": "ready" if GEMINI_AVAILABLE else "unavailable"
+        "ai_available": AI_AVAILABLE,
+        "api_key_configured": bool(AI_API_KEY),
+        "status": "ready" if AI_AVAILABLE else "unavailable"
     }
+

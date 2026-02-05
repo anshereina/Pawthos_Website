@@ -10,6 +10,22 @@ from pathlib import Path
 
 router = APIRouter(prefix="/pain-assessments", tags=["Pain Assessments"])
 
+def normalize_pet_type(pet_type: Optional[str]) -> Optional[str]:
+    """Normalize pet type to standard format: 'Feline' or 'Canine'"""
+    if not pet_type:
+        return None
+    
+    normalized = pet_type.strip().lower()
+    
+    # Normalize to Feline or Canine
+    if normalized in ('cat', 'feline') or 'cat' in normalized or 'feline' in normalized:
+        return 'Feline'
+    if normalized in ('dog', 'canine') or 'dog' in normalized or 'canine' in normalized:
+        return 'Canine'
+    
+    # Return as-is if it doesn't match (fallback)
+    return pet_type
+
 @router.post("", response_model=schemas.PainAssessment, status_code=status.HTTP_201_CREATED)
 def create_pain_assessment(assessment: schemas.PainAssessmentCreate, current_user: models.User = Depends(auth.get_current_mobile_user), db: Session = Depends(get_db)):
     """Create a new pain assessment"""
@@ -25,13 +41,13 @@ def create_pain_assessment(assessment: schemas.PainAssessmentCreate, current_use
     
     try:
         # Match old backend behavior: don't validate pet/user existence, just create the assessment
-        # Store pet_type as-is without normalization (like old backend)
+        # Normalize pet_type to ensure consistency (Feline or Canine)
         
         db_assessment = models.PainAssessment(
             pet_id=assessment.pet_id,
             user_id=current_user.id,  # Use authenticated user's ID
             pet_name=assessment.pet_name or "Pet",
-            pet_type=assessment.pet_type,  # Store as-is without normalization
+            pet_type=normalize_pet_type(assessment.pet_type),  # Normalize to Feline or Canine
             pain_level=assessment.pain_level,
             pain_score=assessment.pain_score,
             assessment_date=assessment.assessment_date,
@@ -137,7 +153,7 @@ async def create_pain_assessment_with_image(
             pet_id=pet_id,
             user_id=current_user.id,  # Use authenticated user's ID
             pet_name=pet_name,
-            pet_type=pet_type,  # Store as-is without normalization
+            pet_type=normalize_pet_type(pet_type),  # Normalize to Feline or Canine
             pain_level=pain_level,
             pain_score=pain_score,
             assessment_date=assessment_date,

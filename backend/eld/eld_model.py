@@ -9,7 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import joblib
 import os
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Any
 import logging
 
 # Configure logging
@@ -20,28 +20,28 @@ class FelineFaceDetector:
     """Step 1: Face Detection - Finds the general location of the cat's face"""
     
     def __init__(self):
-        # Load cat face cascade classifier with robust path resolution
-        import os
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # Preferred new location
-        cascade_candidates = [
-            os.path.join(base_dir, "models", "haarcascade_frontalcatface_extended.xml"),
-            # Legacy location (backward compatibility)
-            os.path.join(base_dir, "haarcascade_frontalcatface_extended.xml"),
-        ]
-        cascade_path = next((p for p in cascade_candidates if os.path.exists(p)), None)
-        if not cascade_path:
-            logger.error("Cat face cascade XML not found in expected locations: %s", cascade_candidates)
-            raise FileNotFoundError("haarcascade_frontalcatface_extended.xml not found. Place it under backend-python/models or backend-python.")
-        self.cat_cascade = cv2.CascadeClassifier(cascade_path)
-        if self.cat_cascade.empty():
-            logger.error("Failed to load cat cascade from %s (classifier is empty)", cascade_path)
-            raise RuntimeError(f"Failed to load Haar cascade from {cascade_path}")
-        logger.info("Loaded cat face cascade from: %s", cascade_path)
+            # Load cat face cascade classifier with robust path resolution
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            # Preferred new location
+            cascade_candidates = [
+                os.path.join(base_dir, "models", "haarcascade_frontalcatface_extended.xml"),
+                # Legacy location (backward compatibility)
+                os.path.join(base_dir, "haarcascade_frontalcatface_extended.xml"),
+            ]
+            cascade_path = next((p for p in cascade_candidates if os.path.exists(p)), None)
+            if not cascade_path:
+                logger.error("Cat face cascade XML not found in expected locations: %s", cascade_candidates)
+                raise FileNotFoundError("haarcascade_frontalcatface_extended.xml not found. Place it under backend-python/models or backend-python.")
+            self.cat_cascade = cv2.CascadeClassifier(cascade_path)
+            if self.cat_cascade.empty():
+                logger.error("Failed to load cat cascade from %s (classifier is empty)", cascade_path)
+                raise RuntimeError(f"Failed to load Haar cascade from {cascade_path}")
+            logger.info("Loaded cat face cascade from: %s", cascade_path)
+            
+            # Alternative: Use general face cascade as fallback
+            self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
-        # Alternative: Use general face cascade as fallback
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    
     def detect_face(self, image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
         """Detect cat face and return bounding box (x, y, w, h) with tuned params and multi-scale retries"""
         try:
@@ -687,11 +687,14 @@ class FelinePainAssessmentELD:
             
             if len(landmarks) < 10:
                 return {
-                    'pain_level': 'Unknown',
+                    'success': False,
+                    'pain_level': 'Level 1 (Mild Pain)',
+                    'pain_score': 5,
                     'confidence': 0.0,
-                    'features': {},
                     'error': 'Insufficient landmarks detected',
-                    'landmarks_detected': len(landmarks)
+                    'landmarks_detected': len(landmarks),
+                    'expected_landmarks': self.expected_landmarks,
+                    'model_type': 'ELD (48 Landmarks)'
                 }
             
             # Extract pain features
@@ -722,27 +725,50 @@ class FelinePainAssessmentELD:
                     prediction = self.classifier.predict([feature_vector])[0]
                     confidence = 0.5  # Default confidence
             
-            # Map prediction to pain level
+            # Map prediction to pain level (matching Gemini format)
             pain_level = self._map_prediction_to_pain_level(prediction)
             
+            # Calculate pain score
+            pain_score = self._calculate_pain_score(prediction, features)
+            
+            # Convert landmarks to percentage coordinates
+            visual_landmarks = self._convert_landmarks_to_percentage(landmarks, image.shape)
+            
+            # Generate FGS breakdown
+            fgs_breakdown = self._generate_fgs_breakdown(features, prediction)
+            
+            # Generate detailed explanation
+            detailed_explanation = self._generate_detailed_explanation(features, prediction)
+            
+            # Generate actionable advice
+            actionable_advice = self._generate_actionable_advice(prediction)
+            
+            # Return in same format as Gemini
             return {
+                'success': True,
                 'pain_level': pain_level,
+                'pain_score': pain_score,
                 'confidence': float(confidence),
-                'features': features,
                 'landmarks_detected': len(landmarks),
                 'expected_landmarks': self.expected_landmarks,
-                'prediction_raw': int(prediction),
-                'model_type': 'ELD with 48 Landmarks'
+                'fgs_breakdown': fgs_breakdown,
+                'detailed_explanation': detailed_explanation,
+                'actionable_advice': actionable_advice,
+                'visual_landmarks': visual_landmarks,
+                'model_type': 'ELD (48 Landmarks)'
             }
             
         except Exception as e:
             logger.error(f"Error in pain assessment: {e}")
             return {
-                'pain_level': 'Error',
+                'success': False,
+                'pain_level': 'Level 1 (Mild Pain)',
+                'pain_score': 5,
                 'confidence': 0.0,
-                'features': {},
                 'error': str(e),
-                'landmarks_detected': 0
+                'landmarks_detected': 0,
+                'expected_landmarks': self.expected_landmarks,
+                'model_type': 'ELD (48 Landmarks)'
             }
     
     def _prepare_feature_vector(self, features: Dict[str, float]) -> List[float]:
@@ -766,14 +792,199 @@ class FelinePainAssessmentELD:
         return feature_vector
     
     def _map_prediction_to_pain_level(self, prediction: int) -> str:
-        """Map numerical prediction to pain level"""
+        """Map numerical prediction to pain level - matching Gemini format"""
         pain_levels = {
-            0: "No Pain",
-            1: "Mild Pain", 
-            2: "Moderate Pain",
-            3: "Severe Pain"
+            0: "Level 0 (No Pain)",
+            1: "Level 1 (Mild Pain)", 
+            2: "Level 2 (Moderate/Severe Pain)",
+            3: "Level 2 (Moderate/Severe Pain)"  # Map 3 to Level 2
         }
-        return pain_levels.get(prediction, "Unknown")
+        return pain_levels.get(prediction, "Level 1 (Mild Pain)")
+    
+    def _calculate_pain_score(self, prediction: int, features: Dict[str, float]) -> int:
+        """Calculate pain score (0-10) from prediction and features"""
+        # Map prediction to score range
+        base_scores = {
+            0: 1,   # Level 0: 0-2 range, use 1
+            1: 4,   # Level 1: 3-5 range, use 4
+            2: 7,   # Level 2: 6-10 range, use 7
+            3: 9    # Severe: 6-10 range, use 9
+        }
+        return base_scores.get(prediction, 5)
+    
+    def _convert_landmarks_to_percentage(self, landmarks: List[Tuple[int, int]], image_shape: Tuple[int, int]) -> Dict[str, List[Dict[str, Any]]]:
+        """Convert pixel coordinates to percentage coordinates (0-100) matching Gemini format"""
+        if len(landmarks) < 48:
+            return {}
+        
+        h, w = image_shape[:2]
+        
+        # Divide landmarks into regions (matching the 48-landmark structure)
+        # First 16: Eye regions (8 each)
+        # Next 16: Ear regions (8 each)
+        # Last 16: Nose/whisker region
+        
+        visual_landmarks = {
+            "left_eye_landmarks": [],
+            "right_eye_landmarks": [],
+            "left_ear_landmarks": [],
+            "right_ear_landmarks": [],
+            "nose_whisker_landmarks": []
+        }
+        
+        # Left eye (landmarks 0-7)
+        for i in range(8):
+            if i < len(landmarks):
+                x, y = landmarks[i]
+                visual_landmarks["left_eye_landmarks"].append({
+                    "x": round((x / w) * 100, 2),
+                    "y": round((y / h) * 100, 2),
+                    "type": f"left_eye_{i+1}"
+                })
+        
+        # Right eye (landmarks 8-15)
+        for i in range(8, 16):
+            if i < len(landmarks):
+                x, y = landmarks[i]
+                visual_landmarks["right_eye_landmarks"].append({
+                    "x": round((x / w) * 100, 2),
+                    "y": round((y / h) * 100, 2),
+                    "type": f"right_eye_{i-7}"
+                })
+        
+        # Left ear (landmarks 16-23)
+        for i in range(16, 24):
+            if i < len(landmarks):
+                x, y = landmarks[i]
+                visual_landmarks["left_ear_landmarks"].append({
+                    "x": round((x / w) * 100, 2),
+                    "y": round((y / h) * 100, 2),
+                    "type": f"left_ear_{i-15}"
+                })
+        
+        # Right ear (landmarks 24-31)
+        for i in range(24, 32):
+            if i < len(landmarks):
+                x, y = landmarks[i]
+                visual_landmarks["right_ear_landmarks"].append({
+                    "x": round((x / w) * 100, 2),
+                    "y": round((y / h) * 100, 2),
+                    "type": f"right_ear_{i-23}"
+                })
+        
+        # Nose/whisker (landmarks 32-47)
+        for i in range(32, 48):
+            if i < len(landmarks):
+                x, y = landmarks[i]
+                landmark_type = "nose" if i < 37 else ("whisker" if i < 43 else "mouth")
+                type_num = (i - 32) + 1
+                visual_landmarks["nose_whisker_landmarks"].append({
+                    "x": round((x / w) * 100, 2),
+                    "y": round((y / h) * 100, 2),
+                    "type": f"{landmark_type}_{type_num}"
+                })
+        
+        return visual_landmarks
+    
+    def _generate_fgs_breakdown(self, features: Dict[str, float], prediction: int) -> Dict[str, Dict[str, Any]]:
+        """Generate FGS breakdown structure matching Gemini format"""
+        # Estimate FGS scores from features
+        eye_opening = features.get('eye_opening', 0.0)
+        ear_variation = features.get('ear_height_variation', 0.0)
+        whisker_spread = features.get('whisker_spread', 0.0)
+        
+        # Map features to FGS scores (0-2)
+        orbital_score = 0 if eye_opening > 8 else (1 if eye_opening > 5 else 2)
+        ear_score = 0 if ear_variation < 2 else (1 if ear_variation < 5 else 2)
+        whisker_score = 0 if whisker_spread > 10 else (1 if whisker_spread > 5 else 2)
+        
+        return {
+            "ear_position": {
+                "score": ear_score,
+                "description": "Ears positioned normally" if ear_score == 0 else "Ears showing slight rotation" if ear_score == 1 else "Ears rotated outwards"
+            },
+            "orbital_tightening": {
+                "score": orbital_score,
+                "description": "Eyes fully open" if orbital_score == 0 else "Eyes partially closed" if orbital_score == 1 else "Eyes squinted"
+            },
+            "muzzle_tension": {
+                "score": 0,  # Default, can be enhanced with muzzle features
+                "description": "Muzzle relaxed"
+            },
+            "whiskers_change": {
+                "score": whisker_score,
+                "description": "Whiskers relaxed and curved" if whisker_score == 0 else "Whiskers slightly straight" if whisker_score == 1 else "Whiskers straight and forward"
+            },
+            "head_position": {
+                "score": 0,  # Default, can be enhanced with head position detection
+                "description": "Head position normal"
+            }
+        }
+    
+    def _generate_detailed_explanation(self, features: Dict[str, float], prediction: int) -> Dict[str, str]:
+        """Generate detailed explanation matching Gemini format"""
+        pain_level_text = {
+            0: "no signs of pain",
+            1: "mild to moderate discomfort",
+            2: "moderate to severe pain",
+            3: "severe pain"
+        }.get(prediction, "mild discomfort")
+        
+        return {
+            "eyes": f"The cat's eyes show {pain_level_text} based on orbital tightening analysis.",
+            "ears": f"Ear position indicates {pain_level_text}.",
+            "muzzle_mouth": "Muzzle appears relaxed with normal tension.",
+            "whiskers": f"Whisker position suggests {pain_level_text}.",
+            "overall_expression": f"Overall facial expression indicates {pain_level_text}."
+        }
+    
+    def _generate_actionable_advice(self, prediction: int) -> Dict[str, Any]:
+        """Generate actionable advice matching Gemini format"""
+        if prediction == 0:
+            return {
+                "immediate_actions": [
+                    "Continue monitoring the cat's behavior",
+                    "Ensure comfortable environment",
+                    "Maintain regular routine"
+                ],
+                "monitoring_guidelines": "Monitor for any changes in behavior or signs of discomfort.",
+                "when_to_contact_vet": "Contact veterinarian if any signs of pain or discomfort appear.",
+                "home_care_tips": [
+                    "Provide comfortable resting area",
+                    "Ensure access to food and water",
+                    "Monitor eating and drinking habits"
+                ]
+            }
+        elif prediction == 1:
+            return {
+                "immediate_actions": [
+                    "Monitor closely for worsening signs",
+                    "Ensure cat has comfortable resting area",
+                    "Limit physical activity"
+                ],
+                "monitoring_guidelines": "Monitor every few hours for changes. Watch for decreased appetite or increased discomfort.",
+                "when_to_contact_vet": "Contact veterinarian within 24 hours if symptoms persist or worsen.",
+                "home_care_tips": [
+                    "Provide soft, comfortable bedding",
+                    "Ensure easy access to food and water",
+                    "Minimize stress and handling"
+                ]
+            }
+        else:  # prediction 2 or 3
+            return {
+                "immediate_actions": [
+                    "Contact veterinarian as soon as possible",
+                    "Keep cat in quiet, comfortable area",
+                    "Do not give any medications without veterinary guidance"
+                ],
+                "monitoring_guidelines": "Monitor closely. Seek immediate veterinary attention if condition worsens.",
+                "when_to_contact_vet": "Contact veterinarian immediately or visit emergency clinic.",
+                "home_care_tips": [
+                    "Keep cat in quiet, stress-free environment",
+                    "Ensure easy access to food and water",
+                    "Avoid unnecessary handling or movement"
+                ]
+            }
 
 # Usage example
 if __name__ == "__main__":

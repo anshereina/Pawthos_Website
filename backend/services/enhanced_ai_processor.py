@@ -4,20 +4,28 @@ import json
 from typing import Optional, Dict, Any
 from datetime import datetime
 
+# Import AI processing library wrapper
 try:
-    import google.generativeai as _ai_library
-    AI_AVAILABLE = True
+    from services.ai_processing_lib import (
+        is_available,
+        configure,
+        create_model,
+        get_model_name,
+        get_fallback_models,
+        DEFAULT_MODEL
+    )
+    AI_AVAILABLE = is_available()
 except ImportError:
     AI_AVAILABLE = False
-    logging.warning("Enhanced AI dependencies not available")
-    _ai_library = None
+    logging.warning("AI processing library not available. Install with: pip install ai-processing-dependencies")
 
 # Configure Enhanced AI
 AI_API_KEY = os.getenv("AI_API_KEY")
 
 # Model configuration - can be overridden via environment variable
 # ELD model variants for different performance profiles
-AI_MODEL = os.getenv("AI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3-flash-preview"))  # Backward compatibility
+# Use generic model names that map to actual models internally
+AI_MODEL = os.getenv("AI_MODEL", os.getenv("GEMINI_MODEL", DEFAULT_MODEL))  # Backward compatibility
 
 # No fallback key - must be set in environment variables
 if not AI_API_KEY:
@@ -26,8 +34,9 @@ if not AI_API_KEY:
 
 if AI_AVAILABLE and AI_API_KEY:
     try:
-        _ai_library.configure(api_key=AI_API_KEY)
-        logging.info(f"ELD model processing configured successfully with model: {AI_MODEL}")
+        configure(api_key=AI_API_KEY)
+        actual_model = get_model_name(AI_MODEL)
+        logging.info(f"ELD model processing configured successfully with model: {actual_model}")
     except Exception as e:
         logging.error(f"Failed to configure ELD model: {e}")
         AI_AVAILABLE = False
@@ -41,7 +50,7 @@ else:
 # Debug logging
 logging.info(f"AI_AVAILABLE: {AI_AVAILABLE}")
 logging.info(f"AI_API_KEY present: {bool(AI_API_KEY)}")
-logging.info(f"AI_MODEL: {AI_MODEL}")
+logging.info(f"AI_MODEL: {get_model_name(AI_MODEL) if AI_AVAILABLE else AI_MODEL}")
 
 # ELD model prompt for accurate landmark detection and pain assessment
 ENHANCED_PROCESSING_PROMPT = """
@@ -406,11 +415,9 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
     # Try primary model first, fallback to alternative models if quota exceeded
     models_to_try = [AI_MODEL]
     
-    # Add fallback models if primary model fails (prefer newer models first)
-    if AI_MODEL == "gemini-3-flash-preview":
-        models_to_try.extend(["gemini-2.0-flash", "gemini-1.5-flash"])
-    elif AI_MODEL == "gemini-2.0-flash":
-        models_to_try.extend(["gemini-1.5-flash", "gemini-1.5-pro"])
+    # Add fallback models if primary model fails
+    fallback_models = get_fallback_models(AI_MODEL)
+    models_to_try.extend(fallback_models)
     
     last_error = None
     
@@ -420,13 +427,15 @@ def enhanced_ai_assessment(image_bytes: bytes, additional_context: Optional[str]
             if additional_context:
                 prompt += f"\n\n**Additional Context:** {additional_context}"
             
-            model = _ai_library.GenerativeModel(model_name)
+            # Use wrapper to create model (handles generic name mapping internally)
+            model = create_model(model_name)
             
             import PIL.Image
             import io
             pil_image = PIL.Image.open(io.BytesIO(image_bytes))
             
-            logging.info(f"Using ELD model '{model_name}' for comprehensive pain assessment")
+            actual_model_used = get_model_name(model_name)
+            logging.info(f"Using ELD model '{actual_model_used}' for comprehensive pain assessment")
             response = model.generate_content([prompt, pil_image])
             
             result = parse_enhanced_response(response.text)

@@ -93,3 +93,6 @@ web-build/
 # Temporary files
 *.tmp
 *.temp
+
+# Local development files with sensitive data
+backend/run.txt

@@ -1,6 +1,26 @@
 import { API_BASE_URL } from './config';
 import { getAuthToken } from './auth.utils';
 
+/**
+ * Normalize pet type to standard format: 'Feline' or 'Canine'
+ */
+const normalizePetType = (petType: string | undefined | null): string => {
+  if (!petType) return 'Feline'; // Default to Feline if not provided
+  
+  const normalized = petType.toString().trim().toLowerCase();
+  
+  // Normalize to Feline or Canine
+  if (normalized === 'cat' || normalized === 'feline' || normalized.includes('cat') || normalized.includes('feline')) {
+    return 'Feline';
+  }
+  if (normalized === 'dog' || normalized === 'canine' || normalized.includes('dog') || normalized.includes('canine')) {
+    return 'Canine';
+  }
+  
+  // Return as-is if it doesn't match (fallback)
+  return petType;
+};
+
 export interface PainAssessmentRecord {
     id: number;
     pet_id: number;
@@ -155,7 +175,7 @@ export const createPainAssessment = async (assessmentData: PainAssessmentCreate)
             pet_id: assessmentData.pet_id,
             user_id: userId,  // Add required user_id
             pet_name: assessmentData.pet_name,
-            pet_type: assessmentData.pet_type,
+            pet_type: normalizePetType(assessmentData.pet_type),  // Normalize pet type
             pain_level: assessmentData.pain_level,
             assessment_date: new Date().toISOString().split('T')[0],  // Add required assessment_date
             image_url: assessmentData.image_url,
@@ -283,7 +303,7 @@ export const createPainAssessmentWithImage = async (
         if (assessmentData.pain_level) form.append('pain_level', assessmentData.pain_level);
         if (assessmentData.notes) form.append('notes', assessmentData.notes);
         if (assessmentData.pet_name) form.append('pet_name', assessmentData.pet_name);
-        if (assessmentData.pet_type) form.append('pet_type', assessmentData.pet_type);
+        if (assessmentData.pet_type) form.append('pet_type', normalizePetType(assessmentData.pet_type));  // Normalize pet type
         if (assessmentData.basic_answers) form.append('basic_answers', assessmentData.basic_answers);
         if (assessmentData.assessment_answers) form.append('assessment_answers', assessmentData.assessment_answers);
 

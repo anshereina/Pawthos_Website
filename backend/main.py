@@ -31,7 +31,7 @@ ai_key = os.getenv("AI_API_KEY")
 if ai_key:
     print(f"✅ AI_API_KEY loaded: {ai_key[:10]}...")
 else:
-    print("❌ AI_API_KEY not found in environment variables")
+    print("⚠️ AI_API_KEY not found in environment variables (AI features may be disabled)")
 
 # Debug: Check DATABASE_URL
 db_url = os.getenv("DATABASE_URL")

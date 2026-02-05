@@ -321,7 +321,7 @@ export default function CanineIntegrationResultPage({
                     assessmentData.beaap_answers = selectedAnswers;
                     assessmentData.beap_average_score = beapScore;
                     assessmentData.assessment_type = 'BEAP';
-                    assessmentData.pet_type = 'dog';
+                    assessmentData.pet_type = 'Canine';  // Normalize to Canine
                     
                     // Create the assessment in the database
                     const result = await createPainAssessment(assessmentData);

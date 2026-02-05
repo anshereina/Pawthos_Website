@@ -7,8 +7,7 @@ cd ..\app
 npx --yes expo@54.0.21 start --clear
 
 
-railway
-SECRET_KEY=sYIjB_9LQSAWKqs-70Dxhk2ASS3Rq1rf3L4wdMbpGRw
-REACT_APP_API_URL=https://pawthoswebsite-production.up.railway.app
-DATABASE_URL=postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@postgres.railway.internal:5432/railway
-AI_API_KEY=AIzaSyB3XDsEqilYW6BefX4SzOWYgC_dKyputmk
+# Railway environment variables - set these in Railway dashboard or .env file
+# SECRET_KEY=sYIjB_9LQSAWKqs-70Dxhk2ASS3Rq1rf3L4wdMbpGRw
+# REACT_APP_API_URL= //pawthoswebsite-production.up.railway.app
+# DATABASE_URL=postgresql://postgres:QxUrGJVknLmgjmaAtXDPfZwSiMFrJNEu@postgres.railway.internal:5432/railway

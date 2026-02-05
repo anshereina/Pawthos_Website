@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getAuthToken } from '../../utils/auth.utils';
 import { API_BASE_URL } from '../../utils/config';
@@ -13,6 +13,26 @@ interface IntegrationScanningPageProps {
 export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: IntegrationScanningPageProps) {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Preparing image...');
+  const scanAnimation = useState(new Animated.Value(0))[0];
+
+  // Scanning animation effect
+  useEffect(() => {
+    const animate = () => {
+      Animated.sequence([
+        Animated.timing(scanAnimation, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scanAnimation, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ]).start(() => animate());
+    };
+    animate();
+  }, []);
 
   useEffect(() => {
     if (imageUri) {
@@ -132,6 +152,12 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
     }
   };
 
+  // Scanning line animation
+  const scanLineTranslateY = scanAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 300], // Adjust based on your image height
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -140,40 +166,276 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
         </TouchableOpacity>
         <Text style={styles.title}>Analyzing</Text>
       </View>
+      
       <View style={styles.content}>
-        <ActivityIndicator size="large" color="#045b26" />
-        <Text style={styles.text}>{statusText}</Text>
-        <View style={styles.progressBarContainer}>
-          <View style={[styles.progressBar, { width: `${progress}%` }]} />
-        </View>
-        <Text style={styles.progressText}>{progress}%</Text>
+        {/* Image with Scanning Box */}
+        {imageUri && (
+          <View style={styles.scanningContainer}>
+            <View style={styles.imageContainer}>
+              <Image 
+                source={{ uri: imageUri }} 
+                style={styles.catImage}
+                resizeMode="contain"
+              />
+              
+              {/* Scanning overlay effect */}
+              <View style={styles.scanningOverlay}>
+                <Animated.View 
+                  style={[
+                    styles.scanLine,
+                    {
+                      transform: [{ translateY: scanLineTranslateY }],
+                    }
+                  ]}
+                />
+              </View>
+              
+              {/* Scanning border animation */}
+              <View style={styles.scanningBorder}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
+              </View>
+            </View>
+            
+            {/* Status Messages */}
+            <View style={styles.statusContainer}>
+              <View style={styles.statusItem}>
+                <MaterialIcons 
+                  name={statusText === 'Preparing image...' ? 'radio-button-checked' : 'radio-button-unchecked'} 
+                  size={16} 
+                  color={statusText === 'Preparing image...' ? '#045b26' : '#ccc'} 
+                />
+                <Text style={[
+                  styles.statusText,
+                  statusText === 'Preparing image...' && styles.activeStatus
+                ]}>
+                  Preparing image...
+                </Text>
+              </View>
+              
+              <View style={styles.statusItem}>
+                <MaterialIcons 
+                  name={statusText === 'Uploading image...' ? 'radio-button-checked' : 'radio-button-unchecked'} 
+                  size={16} 
+                  color={statusText === 'Uploading image...' ? '#045b26' : '#ccc'} 
+                />
+                <Text style={[
+                  styles.statusText,
+                  statusText === 'Uploading image...' && styles.activeStatus
+                ]}>
+                  Uploading image...
+                </Text>
+              </View>
+              
+              <View style={styles.statusItem}>
+                <MaterialIcons 
+                  name={statusText === 'Analyzing cat features...' ? 'radio-button-checked' : 'radio-button-unchecked'} 
+                  size={16} 
+                  color={statusText === 'Analyzing cat features...' ? '#045b26' : '#ccc'} 
+                />
+                <Text style={[
+                  styles.statusText,
+                  statusText === 'Analyzing cat features...' && styles.activeStatus
+                ]}>
+                  Analyzing cat features...
+                </Text>
+              </View>
+              
+              <View style={styles.statusItem}>
+                <MaterialIcons 
+                  name={statusText === 'Processing results...' ? 'radio-button-checked' : 'radio-button-unchecked'} 
+                  size={16} 
+                  color={statusText === 'Processing results...' ? '#045b26' : '#ccc'} 
+                />
+                <Text style={[
+                  styles.statusText,
+                  statusText === 'Processing results...' && styles.activeStatus
+                ]}>
+                  Processing results...
+                </Text>
+              </View>
+              
+              <View style={styles.statusItem}>
+                <MaterialIcons 
+                  name={statusText === 'Analysis complete!' ? 'check-circle' : 'radio-button-unchecked'} 
+                  size={16} 
+                  color={statusText === 'Analysis complete!' ? '#4CAF50' : '#ccc'} 
+                />
+                <Text style={[
+                  styles.statusText,
+                  statusText === 'Analysis complete!' && styles.activeStatus
+                ]}>
+                  Analysis complete!
+                </Text>
+              </View>
+            </View>
+            
+            {/* Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              </View>
+              <Text style={styles.progressText}>{progress}%</Text>
+            </View>
+          </View>
+        )}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f7f7f7' 
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    backgroundColor: '#fff',
   },
-  backButton: { marginRight: 16 },
-  title: { fontSize: 20, fontWeight: 'bold' },
-  content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  text: { fontSize: 16, color: '#666', marginTop: 20, marginBottom: 30 },
+  backButton: { 
+    marginRight: 16 
+  },
+  title: { 
+    fontSize: 20, 
+    fontWeight: 'bold' 
+  },
+  content: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 20 
+  },
+  scanningContainer: {
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  imageContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    position: 'relative',
+    marginBottom: 24,
+  },
+  catImage: {
+    width: '100%',
+    height: '100%',
+  },
+  scanningOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  scanLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: '#045b26',
+    opacity: 0.8,
+    shadowColor: '#045b26',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+  scanningBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  corner: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderColor: '#045b26',
+  },
+  topLeft: {
+    top: 0,
+    left: 0,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
+    borderTopLeftRadius: 16,
+  },
+  topRight: {
+    top: 0,
+    right: 0,
+    borderTopWidth: 3,
+    borderRightWidth: 3,
+    borderTopRightRadius: 16,
+  },
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    borderBottomLeftRadius: 16,
+  },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    borderBottomRightRadius: 16,
+  },
+  statusContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#999',
+    marginLeft: 12,
+    fontFamily: 'System',
+  },
+  activeStatus: {
+    color: '#045b26',
+    fontWeight: '600',
+  },
   progressBarContainer: {
-    width: '80%',
+    width: '100%',
+    marginTop: 8,
+  },
+  progressBar: {
+    width: '100%',
     height: 8,
     backgroundColor: '#e0e0e0',
     borderRadius: 4,
     overflow: 'hidden',
-    marginTop: 10,
+    marginBottom: 8,
   },
-  progressBar: {
+  progressFill: {
     height: '100%',
     backgroundColor: '#045b26',
     borderRadius: 4,
@@ -181,20 +443,7 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 14,
     color: '#045b26',
-    marginTop: 10,
+    textAlign: 'center',
     fontWeight: 'bold',
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -102,11 +102,23 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
   const handlePetSelect = async (pet: string) => {
     setSelectedPet(pet);
     
+    // Normalize pet type: CAT -> Feline, DOG -> Canine
+    const normalizePetType = (petType: string): string => {
+      const normalized = petType.toUpperCase();
+      if (normalized === 'CAT' || normalized.includes('CAT') || normalized.includes('FELINE')) {
+        return 'Feline';
+      }
+      if (normalized === 'DOG' || normalized.includes('DOG') || normalized.includes('CANINE')) {
+        return 'Canine';
+      }
+      return petType;
+    };
+    
     // Store assessment data locally instead of creating in database
     const assessmentData = {
       pet_id: 1, // Default pet ID - will be updated when user selects specific pet
       pet_name: "Pet", // Default name - will be updated when user selects specific pet
-      pet_type: pet,
+      pet_type: normalizePetType(pet),  // Normalize to Feline or Canine
       pain_level: "Pending Assessment",
       assessment_date: new Date().toISOString().split('T')[0],
       recommendations: "Assessment in progress...",
