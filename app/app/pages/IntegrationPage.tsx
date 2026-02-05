@@ -29,18 +29,13 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
   const [loadingPets, setLoadingPets] = useState(false);
   
   // Function to fetch registered pets from API
-  const fetchRegisteredPets = async () => {
+  const fetchRegisteredPets = async (petTypeOverride?: 'DOG' | 'CAT' | null) => {
     console.log('fetchRegisteredPets called');
     try {
       setLoadingPets(true);
       setRegisteredPets([]);
       // Get auth token from storage
       const token = await AsyncStorage.getItem('authToken');
-      if (!token) {
-        console.error('No auth token found');
-        setRegisteredPets([]);
-        return;
-      }
       if (!token) {
         console.error('No auth token found');
         setRegisteredPets([]);
@@ -62,18 +57,19 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
         console.log('Selected pet type:', selectedPet);
         
         // Filter pets based on selected pet type (cat/dog)
+        const effectiveType = petTypeOverride || selectedPet;
         const filteredPets = pets.filter((pet: any) => {
           const petSpecies = (pet.species || '').toLowerCase();
           console.log(`Checking pet ${pet.name}: species="${pet.species}" (lowercase: "${petSpecies}"), selectedPet="${selectedPet}"`);
           
-          if (selectedPet === 'DOG') {
+          if (effectiveType === 'DOG') {
             // Show dogs - check for "dog", "canine", "puppy", etc.
             // Also exclude cats explicitly
             const isDog = (petSpecies.includes('dog') || petSpecies.includes('canine') || petSpecies.includes('puppy')) 
                          && !petSpecies.includes('cat') && !petSpecies.includes('feline') && !petSpecies.includes('kitten');
             console.log(`  Is dog? ${isDog}`);
             return isDog;
-          } else if (selectedPet === 'CAT') {
+          } else if (effectiveType === 'CAT') {
             // Show cats - check for "cat", "feline", "kitten", etc.
             // Also exclude dogs explicitly
             const isCat = (petSpecies.includes('cat') || petSpecies.includes('feline') || petSpecies.includes('kitten'))
@@ -149,7 +145,7 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
         console.log('Failed to mark pet_registered=yes for DOG:', e);
       }
       try {
-        await fetchRegisteredPets();
+        await fetchRegisteredPets('DOG');
       } catch (e) {
         console.log('Failed to prefetch registered pets:', e);
       }
@@ -199,7 +195,7 @@ export default function IntegrationPage({ onSelect }: { onSelect: (label: string
       }
       // Fetch registered pets when "Yes" is clicked
       console.log('Fetching registered pets...');
-      await fetchRegisteredPets();
+      await fetchRegisteredPets(selectedPet === 'DOG' ? 'DOG' : 'CAT');
       console.log('Setting showSecondModal to true');
       console.log('Current showSecondModal state before setTimeout:', showSecondModal);
       setTimeout(() => {
@@ -698,8 +694,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingHorizontal: 32,
-    paddingVertical: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   
   // Background Elements
@@ -720,8 +716,8 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderRadius: 24,
-    marginTop: 32,
-    marginBottom: 16,
+    marginTop: 56,
+    marginBottom: 12,
     elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -838,8 +834,8 @@ const styles = StyleSheet.create({
 
   // Enhanced Selection Cards
   cardsContainer: {
-    flex: 1,
-    marginTop: 8,
+    marginTop: 16,
+    marginBottom: 8,
   },
   selectionPrompt: {
     fontSize: 15,

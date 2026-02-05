@@ -887,6 +887,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                 <Animated.View style={{ flex: 1, opacity: enterOpacity, transform: [{ translateY: enterTranslateY }] }}>
                     <ScrollView 
                         style={styles.content} 
+                        contentContainerStyle={{ paddingBottom: 32 }}
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >

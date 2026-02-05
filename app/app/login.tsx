@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Modal } from "react-native";
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import * as auth from '../utils/auth.utils';
@@ -165,6 +165,8 @@ export default function LoginPage() {
     const [captchaAnswer, setCaptchaAnswer] = useState("");
     const [captchaQuestion, setCaptchaQuestion] = useState("");
     const [captchaValue, setCaptchaValue] = useState(0);
+    const [captchaModalVisible, setCaptchaModalVisible] = useState(false);
+    const [captchaError, setCaptchaError] = useState<string | null>(null);
 
     // Load saved credentials on component mount (but don't auto-fill)
     useEffect(() => {
@@ -211,19 +213,7 @@ export default function LoginPage() {
         }
     };
 
-    const handleLogin = async () => {
-        if (!username.trim() || !password.trim()) {
-            setError("Please enter both email and password");
-            return;
-        }
-
-        // Validate captcha
-        if (parseInt(captchaAnswer) !== captchaValue) {
-            setError("Incorrect captcha answer. Please try again.");
-            generateCaptcha(); // Generate new captcha
-            return;
-        }
-
+    const attemptLogin = async () => {
         setLoading(true);
         setError(null);
         
@@ -244,6 +234,31 @@ export default function LoginPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleLogin = async () => {
+        if (!username.trim() || !password.trim()) {
+            setError("Please enter both email and password");
+            return;
+        }
+
+        // Always require captcha before each login attempt
+        setCaptchaError(null);
+        setCaptchaAnswer("");
+        generateCaptcha();
+        setCaptchaModalVisible(true);
+    };
+
+    const handleCaptchaSubmit = async () => {
+        if (parseInt(captchaAnswer) !== captchaValue) {
+            setCaptchaError("Incorrect answer. Please try again.");
+            generateCaptcha();
+            setCaptchaAnswer("");
+            return;
+        }
+        setCaptchaModalVisible(false);
+        setCaptchaError(null);
+        await attemptLogin();
     };
 
     const handleForgotPassword = () => {
@@ -314,25 +329,6 @@ export default function LoginPage() {
                         </TouchableOpacity>
                     </View>
                     {/* Captcha */}
-                    <View style={styles.inputRow}>
-                        <MaterialIcons name="security" size={20} color="#4a7c59" />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
-                                {captchaQuestion}
-                            </Text>
-                            <TextInput
-                                placeholder="Enter answer"
-                                placeholderTextColor="#999"
-                                value={captchaAnswer}
-                                onChangeText={setCaptchaAnswer}
-                                style={styles.input}
-                                keyboardType="number-pad"
-                            />
-                        </View>
-                        <TouchableOpacity onPress={generateCaptcha} style={{ marginLeft: 8 }}>
-                            <MaterialIcons name="refresh" size={20} color="#4a7c59" />
-                        </TouchableOpacity>
-                    </View>
                     {error && <Text style={styles.error}>{error}</Text>}
                     <View style={styles.row}>
                         <TouchableOpacity style={[styles.checkbox, remember && styles.checkboxChecked]} onPress={() => setRemember(!remember)}>
@@ -353,6 +349,73 @@ export default function LoginPage() {
                 </Pressable>
 
             </ScrollView>
+
+            {/* Captcha Modal */}
+            <Modal
+                visible={captchaModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setCaptchaModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Security Check</Text>
+                        <Text style={styles.modalSubtitle}>
+                            Please solve this simple math question to continue.
+                        </Text>
+                        <View style={[styles.inputRow, { marginBottom: 8 }]}>
+                            <MaterialIcons name="security" size={20} color="#4a7c59" />
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                                    {captchaQuestion}
+                                </Text>
+                                <TextInput
+                                    placeholder="Enter answer"
+                                    placeholderTextColor="#999"
+                                    value={captchaAnswer}
+                                    onChangeText={setCaptchaAnswer}
+                                    style={styles.input}
+                                    keyboardType="number-pad"
+                                />
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    generateCaptcha();
+                                    setCaptchaAnswer("");
+                                    setCaptchaError(null);
+                                }}
+                                style={{ marginLeft: 8 }}
+                            >
+                                <MaterialIcons name="refresh" size={20} color="#4a7c59" />
+                            </TouchableOpacity>
+                        </View>
+                        {captchaError && (
+                            <Text style={[styles.error, { marginBottom: 4 }]}>{captchaError}</Text>
+                        )}
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                            <TouchableOpacity
+                                style={[styles.button, { backgroundColor: '#f3f4f6', marginBottom: 0, marginRight: 8 }]}
+                                onPress={() => {
+                                    setCaptchaModalVisible(false);
+                                    setCaptchaAnswer("");
+                                    setCaptchaError(null);
+                                }}
+                            >
+                                <Text style={[styles.buttonText, { color: '#374151' }]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.button, { marginBottom: 0 }]}
+                                onPress={handleCaptchaSubmit}
+                                disabled={loading}
+                            >
+                                {loading
+                                    ? <ActivityIndicator color="#fff" />
+                                    : <Text style={styles.buttonText}>Confirm</Text>}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }

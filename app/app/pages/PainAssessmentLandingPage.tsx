@@ -253,7 +253,7 @@ export default function PainAssessmentLandingPage({
                 >
                   <Text style={styles.stepNumberText}>2</Text>
                 </LinearGradient>
-                <Text style={styles.stepLabel}>Scan Image</Text>
+                <Text style={styles.stepLabel}>Answer Pre-Assessment</Text>
               </View>
               <View style={styles.connectorLine}>
                 <View style={styles.line} />
@@ -265,7 +265,7 @@ export default function PainAssessmentLandingPage({
                 >
                   <Text style={styles.stepNumberText}>3</Text>
                 </LinearGradient>
-                <Text style={styles.stepLabel}>Answer</Text>
+                <Text style={styles.stepLabel}>Scan Image/Answer BEAP Assessment</Text>
               </View>
               <View style={styles.connectorLine}>
                 <View style={styles.line} />
