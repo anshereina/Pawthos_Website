@@ -75,7 +75,7 @@ const PainAssessmentExportModal: React.FC<PainAssessmentExportModalProps> = ({
     setLoading(true);
     try {
       const selectedAssessments = assessments.filter(assessment => selectedIds.has(assessment.id));
-      painAssessmentExportService.exportToCSV(selectedAssessments);
+      await painAssessmentExportService.exportToPDF(selectedAssessments);
       onClose();
     } catch (error) {
       console.error('Export failed:', error);
@@ -199,7 +199,7 @@ const PainAssessmentExportModal: React.FC<PainAssessmentExportModalProps> = ({
               <strong>Selected:</strong> {selectedIds.size} assessment{selectedIds.size !== 1 ? 's' : ''}
             </p>
             <p className="text-xs text-blue-600 mt-1">
-              File will be downloaded as CSV format
+              Each assessment will be downloaded as a separate PDF file
             </p>
           </div>
         </div>
