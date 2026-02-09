@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
-import { Cat, Dog, LineChart, Bell, AlertTriangle, FileText } from 'lucide-react';
+import { Cat, Dog, LineChart, Bell, AlertTriangle, FileText, Menu } from 'lucide-react';
 import { useRouter } from '@tanstack/react-router';
 import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -814,6 +814,15 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-green-600 text-white p-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
+        aria-label="Toggle menu"
+      >
+        <Menu size={24} />
+      </button>
+
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -823,7 +832,7 @@ const DashboardPage: React.FC = () => {
       />
       <div 
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
         <PageHeader 
@@ -833,7 +842,7 @@ const DashboardPage: React.FC = () => {
           onDateChange={setSelectedDate}
         />
         {/* Dashboard Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto">
           {(vaccinationLoading || catchLoading) ? (
             <div className="flex items-center justify-center h-full">
               <LoadingSpinner />

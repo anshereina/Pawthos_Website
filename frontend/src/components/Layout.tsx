@@ -31,10 +31,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Main Content Area */}
         <div 
           className={`flex-1 transition-all duration-300 ease-in-out ${
-            isExpanded ? 'ml-64' : 'ml-16'
+            // Remove margin on mobile, add on larger screens
+            isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
           }`}
         >
-          <main className="h-full overflow-auto p-6">
+          <main className="h-full overflow-auto p-3 md:p-6">
             {children}
           </main>
         </div>

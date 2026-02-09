@@ -260,13 +260,13 @@ const ReportsAlertsPage: React.FC = () => {
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
-                {/* Generate Report Button */}
+                {/* Add New Report Button */}
                 <button 
                   className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg"
                   onClick={() => setIsAddReportModalOpen(true)}
                 >
                   <FileText size={20} />
-                  <span className="font-semibold">Generate Report</span>
+                  <span className="font-semibold">Add New Report</span>
                 </button>
                 {/* Send New Alert Button */}
                 <button 

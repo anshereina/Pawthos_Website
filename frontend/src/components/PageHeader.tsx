@@ -37,9 +37,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
   }, []);
 
   return (
-    <header className="bg-gradient-to-r from-white via-gray-50 to-white border-b border-gray-200 px-6 py-5 flex justify-between items-center backdrop-blur-sm relative z-40 overflow-visible">
-      <div className="flex items-center space-x-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{title}</h1>
+    <header className="bg-gradient-to-r from-white via-gray-50 to-white border-b border-gray-200 px-3 md:px-6 py-4 md:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 backdrop-blur-sm relative z-40 overflow-visible">
+      <div className="flex items-center space-x-3 md:space-x-6 w-full sm:w-auto">
+        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{title}</h1>
         {showDatePicker && (
           <div className="flex items-center space-x-3 bg-white rounded-xl px-4 py-2 shadow-sm border border-gray-200">
             <Calendar size={18} className="text-green-600" />

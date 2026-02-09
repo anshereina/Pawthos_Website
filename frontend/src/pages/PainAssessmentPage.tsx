@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Upload, Eye, Trash2, Camera } from 'lucide-react';
+import { Search, Upload, Eye, Trash2, Camera, Menu } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../components/useSidebar';
 import { useAuth } from '../features/auth/AuthContext';
@@ -145,7 +145,7 @@ const PainAssessmentPage: React.FC = () => {
           onToggleExpand={toggleSidebar}
         />
         <div className={`flex-1 flex items-center justify-center transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}>
           <LoadingSpinner />
         </div>
@@ -252,6 +252,15 @@ const PainAssessmentPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-green-600 text-white p-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
+        aria-label="Toggle menu"
+      >
+        <Menu size={24} />
+      </button>
+
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -261,13 +270,13 @@ const PainAssessmentPage: React.FC = () => {
       />
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
         <PageHeader title="Pain Assessment" />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto">
           {/* Error Display */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -277,24 +286,24 @@ const PainAssessmentPage: React.FC = () => {
           
           {/* Top Control Panel */}
           <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 mb-4 hover:shadow-md transition-shadow duration-300">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
+            <div className="flex flex-col md:flex-row md:justify-end md:items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                 {/* Search Bar */}
-                <div className="relative">
+                <div className="relative sm:w-64">
                   <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500" />
                   <input
                     type="text"
                     placeholder="Search here"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 hover:border-green-300"
                   />
                 </div>
                 {/* Export Button */}
                 <button 
                   type="button"
                   onClick={() => setIsExportModalOpen(true)}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg relative z-10"
+                  className="flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-md hover:shadow-lg relative z-10"
                 >
                   <Upload size={20} />
                   <span className="font-semibold">Export</span>
@@ -310,8 +319,9 @@ const PainAssessmentPage: React.FC = () => {
 
           {/* Filter Buttons */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <span className="text-sm font-medium text-gray-700">Filter by:</span>
+              <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setFilter('all')}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
@@ -348,6 +358,7 @@ const PainAssessmentPage: React.FC = () => {
                   return petType.includes('dog') || petType.includes('canine');
                 }).length})
               </button>
+              </div>
             </div>
           </div>
 
@@ -359,75 +370,144 @@ const PainAssessmentPage: React.FC = () => {
               <div className="p-6 text-center text-red-600">{error}</div>
             ) : (
               <>
-                <div className="table-scroll-container max-w-full max-h-[calc(100vh-400px)]">
-              <table className="w-full min-w-[1200px] table-fixed">
-                {/* Table Header */}
-                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                  <tr>
+                {/* Desktop Table View */}
+                <div className="hidden md:block table-scroll-container max-w-full max-h-[calc(100vh-400px)]">
+                  <table className="w-full min-w-[800px] table-fixed">
+                    {/* Table Header */}
+                    <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                      <tr>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Assessment ID</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Name</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pet Type</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Assessment Date</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-48">Pain Level</th>
                         <th className="px-4 py-3 text-left font-semibold text-sm whitespace-nowrap w-32">Action</th>
-                  </tr>
-                </thead>
-                
-                {/* Table Body */}
-                <tbody>
+                      </tr>
+                    </thead>
+                    
+                    {/* Table Body */}
+                    <tbody>
                       {currentAssessmentsPage.length > 0 ? (
                         currentAssessmentsPage.map((assessment, i) => (
-                                          <tr 
-                      key={assessment.id}
-                      className={`${
-                        i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
-                      } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 cursor-pointer border-b border-gray-100`}
-                      onClick={() => handleRowClick(assessment.id)}
-                    >
+                          <tr 
+                            key={assessment.id}
+                            className={`${
+                              i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'
+                            } hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 cursor-pointer border-b border-gray-100`}
+                            onClick={() => handleRowClick(assessment.id)}
+                          >
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-32">{assessment.id}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pet_name}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48 capitalize">{assessment.pet_type}</td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">
-                          <div className="flex items-center space-x-2">
-                            <span>{formatAssessmentDate(assessment.assessment_date)}</span>
-                            {assessment.image_url && (
-                              <div title="Has photo">
-                                <Camera size={16} className="text-green-600" />
+                              <div className="flex items-center space-x-2">
+                                <span>{formatAssessmentDate(assessment.assessment_date)}</span>
+                                {assessment.image_url && (
+                                  <div title="Has photo">
+                                    <Camera size={16} className="text-green-600" />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </td>
+                            </td>
                             <td className="px-4 py-3 text-gray-900 whitespace-nowrap w-48">{assessment.pain_level}</td>
                             <td className="px-4 py-3 whitespace-nowrap w-32" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleViewAssessment(assessment.id)}
+                                <button
+                                  onClick={() => handleViewAssessment(assessment.id)}
                                   className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
+                                  title="View assessment"
+                                >
+                                  <Eye size={16} className="text-green-600" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAssessment(assessment.id)}
+                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
+                                  title="Delete assessment"
+                                >
+                                  <Trash2 size={16} className="text-red-600" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                            No assessments found matching your criteria.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4 p-4">
+                  {currentAssessmentsPage.length > 0 ? (
+                    currentAssessmentsPage.map((assessment) => (
+                      <div
+                        key={assessment.id}
+                        onClick={() => handleRowClick(assessment.id)}
+                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-xs text-gray-500">Assessment ID</p>
+                              <p className="font-semibold text-gray-900">{assessment.id}</p>
+                            </div>
+                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
+                              {assessment.pain_level}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Pet Name</p>
+                            <p className="font-medium text-gray-900">{assessment.pet_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Pet Type</p>
+                            <p className="text-gray-900 capitalize">{assessment.pet_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Assessment Date</p>
+                            <div className="flex items-center space-x-2">
+                              <p className="text-gray-900">{formatAssessmentDate(assessment.assessment_date)}</p>
+                              {assessment.image_url && (
+                                <Camera size={16} className="text-green-600" title="Has photo" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewAssessment(assessment.id);
+                              }}
+                              className="p-2 rounded-lg hover:bg-green-50 transition-colors"
                               title="View assessment"
                             >
-                                  <Eye size={16} className="text-green-600" />
+                              <Eye size={16} className="text-green-600" />
                             </button>
                             <button
-                              onClick={() => handleDeleteAssessment(assessment.id)}
-                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAssessment(assessment.id);
+                              }}
+                              className="p-2 rounded-lg hover:bg-red-50 transition-colors"
                               title="Delete assessment"
                             >
-                                  <Trash2 size={16} className="text-red-600" />
+                              <Trash2 size={16} className="text-red-600" />
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))
                   ) : (
-                    <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                        No assessments found matching your criteria.
-                      </td>
-                    </tr>
+                    <div className="p-8 text-center text-gray-500">
+                      No assessments found matching your criteria.
+                    </div>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </div>
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
                   <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">

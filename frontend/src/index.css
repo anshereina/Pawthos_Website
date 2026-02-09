@@ -9,11 +9,16 @@ html, body, #root {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevents unwanted scrollbars if content overflows slightly */
-  box-sizing: border-box; /* Add this line */
+  overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+  box-sizing: border-box;
+}
 
+* {
+  box-sizing: border-box;
 }
 
 body {
   font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

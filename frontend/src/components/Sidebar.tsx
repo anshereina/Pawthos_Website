@@ -54,10 +54,20 @@ const Sidebar: React.FC<SidebarProps> = ({
 
 	return (
 		<>
+			{/* Mobile overlay */}
+			{isExpanded && (
+				<div 
+					className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+					onClick={onToggleExpand}
+				/>
+			)}
 			<aside 
 				ref={sidebarRef}
 				className={`fixed left-0 top-0 h-full bg-gradient-to-b from-green-800 via-green-900 to-green-950 text-white transition-all duration-300 ease-in-out z-50 shadow-2xl border-r border-green-700/30 ${
 					isExpanded ? 'w-64' : 'w-16'
+				} ${
+					// Hide sidebar on mobile when collapsed, show as overlay when expanded
+					isExpanded ? '' : '-translate-x-full lg:translate-x-0'
 				} flex flex-col justify-between`}
 			>
 				<div>
