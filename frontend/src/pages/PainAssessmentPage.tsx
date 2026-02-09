@@ -473,7 +473,9 @@ const PainAssessmentPage: React.FC = () => {
                             <div className="flex items-center space-x-2">
                               <p className="text-gray-900">{formatAssessmentDate(assessment.assessment_date)}</p>
                               {assessment.image_url && (
-                                <Camera size={16} className="text-green-600" title="Has photo" />
+                                <div title="Has photo">
+                                  <Camera size={16} className="text-green-600" />
+                                </div>
                               )}
                             </div>
                           </div>
