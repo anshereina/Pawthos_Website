@@ -17,7 +17,8 @@ const beaapCategories = [
   'Activity',
   'Appetite',
   'Attitude',
-  'Posture'
+  'Posture',
+  'Palpation'
 ];
 
 const beaapCategoryDescriptions: { [key: number]: string[] } = {
@@ -72,10 +73,18 @@ const beaapCategoryDescriptions: { [key: number]: string[] } = {
   6: [ // Posture
     'Comfortable at rest and during play; ears up and wagging tail',
     'May show occasional shifting of position; tail may be down just a little more; ears slightly flatter',
-    'May shift weight or favor one leg; tail may be down more often',
-    'Obvious weight shifting; tail down; ears back; may be hunched',
-    'Hunched posture; tail tucked; ears pinned back; obvious discomfort',
-    'Extremely hunched or rigid posture; tail completely tucked; ears flat; clearly in severe pain'
+    'Difficulty squatting or lifting leg to urinate; subtle changes in position; tail more tucked and ears more flattened',
+    'Abnormal weight distribution when standing; difficulty posturing to urinate; arched back; tucked belly; head hanging low; tucked tail',
+    'Tail tucked; ears flattened or pinned back; abnormal posture when standing; may refuse to move or stand',
+    'Refuses to lay down or rest on side at all; pained ears; may prefer to be very tucked up or stretched out'
+  ],
+  7: [ // Palpation
+    'Enjoys being touched and petted; no body tension present',
+    'Enjoys being touched and petted; no body tension present',
+    'Does not mind touch except on painful area; turns head to look where touched; mild body tension',
+    'Withdraws from people; may not want to be touched; Pulls away from a hand when touched; moderate body tension when being touched',
+    'Significant body tension when painful area is touched; may vocalize in pain; guards a painful area by pulling away in a dramatic manner',
+    'Severe body tension when touched; will not tolerate touch of painful area; becomes fearful when other areas that are not painful are touched'
   ]
 };
 
