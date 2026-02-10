@@ -357,7 +357,7 @@ const VaccinationRecordsPage: React.FC = () => {
           isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
-        <PageHeader title="Vaccination Records" />
+        <PageHeader title="Vaccination Records" onToggleSidebar={toggleSidebar} />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
@@ -469,8 +469,8 @@ const VaccinationRecordsPage: React.FC = () => {
                 <div className="p-6 text-center text-red-600">{error}</div>
               ) : (
                 <>
-                <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                <table className="w-full">
+                <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                <table className="min-w-max w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINE_RECORDS_COLUMNS.map(col => (
@@ -604,8 +604,8 @@ const VaccinationRecordsPage: React.FC = () => {
                 <div className="p-6 text-center text-red-600">{currentError}</div>
               ) : (
                 <>
-                <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                <table className="w-full">
+                <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                <table className="min-w-max w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                     <tr>
                       {VACCINATION_EVENTS_COLUMNS.map(col => (

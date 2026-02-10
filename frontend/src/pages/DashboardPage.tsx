@@ -814,15 +814,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white font-sans w-full">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-green-600 text-white p-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
-        aria-label="Toggle menu"
-      >
-        <Menu size={24} />
-      </button>
-
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -837,6 +828,7 @@ const DashboardPage: React.FC = () => {
       >
         <PageHeader 
           title="Dashboard"
+          onToggleSidebar={toggleSidebar}
           showDatePicker
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}

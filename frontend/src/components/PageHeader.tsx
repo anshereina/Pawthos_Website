@@ -1,6 +1,6 @@
 // src/components/PageHeader.tsx
 import React from 'react';
-import { Calendar, UserCircle, ChevronDown, User, Settings, LogOut } from 'lucide-react';
+import { Calendar, UserCircle, ChevronDown, User, Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
 import LogoutConfirmationModal from './LogoutConfirmationModal';
@@ -10,9 +10,10 @@ interface PageHeaderProps {
   showDatePicker?: boolean;
   selectedDate?: string;
   onDateChange?: (value: string) => void;
+  onToggleSidebar?: () => void;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, selectedDate, onDateChange }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, selectedDate, onDateChange, onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -39,6 +40,17 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showDatePicker = false, 
   return (
     <header className="bg-gradient-to-r from-white via-gray-50 to-white border-b border-gray-200 px-3 md:px-6 py-4 md:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 backdrop-blur-sm relative z-40 overflow-visible">
       <div className="flex items-center space-x-3 md:space-x-6 w-full sm:w-auto">
+        {/* Mobile Menu Button */}
+        {onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="lg:hidden inline-flex items-center justify-center bg-green-600 text-white p-2 rounded-lg shadow-md hover:bg-green-700 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <Menu size={22} />
+          </button>
+        )}
         <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{title}</h1>
         {showDatePicker && (
           <div className="flex items-center space-x-3 bg-white rounded-xl px-4 py-2 shadow-sm border border-gray-200">

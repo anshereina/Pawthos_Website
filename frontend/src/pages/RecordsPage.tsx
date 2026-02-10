@@ -155,7 +155,7 @@ const RecordsPage: React.FC = () => {
           isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
-        <PageHeader title="Records Management" />
+        <PageHeader title="Records Management" onToggleSidebar={toggleSidebar} />
         {/* Main Content */}
         <main className="flex-1 p-6 pb-4 overflow-y-auto">
           <div className="max-w-7xl mx-auto">

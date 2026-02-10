@@ -273,7 +273,7 @@ const PainAssessmentPage: React.FC = () => {
           isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
-        <PageHeader title="Pain Assessment" />
+        <PageHeader title="Pain Assessment" onToggleSidebar={toggleSidebar} />
 
         {/* Main Content */}
         <main className="flex-1 p-3 md:p-6 overflow-y-auto">

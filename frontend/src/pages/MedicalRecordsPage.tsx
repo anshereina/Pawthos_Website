@@ -315,7 +315,7 @@ const MedicalRecordsPage: React.FC = () => {
           isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
-        <PageHeader title="Medical Records" />
+        <PageHeader title="Medical Records" onToggleSidebar={toggleSidebar} />
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
@@ -385,8 +385,8 @@ const MedicalRecordsPage: React.FC = () => {
           {/* Data Table */}
           {!isLoading && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
-              <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                <table className="w-full">
+              <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                <table className="min-w-max w-full">
                 <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                   <tr>
                     {columns.map(col => (
