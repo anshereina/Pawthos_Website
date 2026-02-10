@@ -415,9 +415,9 @@ const AppointmentsPage: React.FC = () => {
             </div>
           )}
 
-          {/* Appointments & Requests Table */}
+          {/* Appointments & Requests Table - desktop/tablet */}
           {!isLoading && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
               <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
                 <table className="min-w-max w-full">
                   <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
@@ -702,6 +702,96 @@ const AppointmentsPage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Mobile card list */}
+          {!isLoading && currentData.length > 0 && (
+            <div className="md:hidden space-y-3 mb-4">
+              {currentData.map((item: any) => {
+                if (activeTab === 'appointments') {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleRowClick(item, 'appointment')}
+                      className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-500">
+                          ID {item.id}
+                        </span>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                          {item.status || 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {item.client_name || item.user?.name || item.pet?.owner_name || '-'}
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {item.pet_name || item.pet?.name || '-'} • {item.type}
+                      </div>
+                      <div className="mt-1 text-[11px] text-gray-500">
+                        {item.date} {item.time}
+                      </div>
+                    </button>
+                  );
+                }
+
+                if (activeTab === 'walkin') {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleRowClick(item, 'walkin')}
+                      className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-500">
+                          Walk-in #{item.id}
+                        </span>
+                        <span className="text-[11px] text-green-700">
+                          {item.date}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {item.client_name || '-'}
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {item.pet_name || '-'} • {item.service_type || 'Service'}
+                      </div>
+                    </button>
+                  );
+                }
+
+                // history or request tabs
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleRowClick(item, item.request_id ? 'request' : 'appointment')}
+                    className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-semibold text-gray-500">
+                        ID {item.id}
+                      </span>
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                        {item.status}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 truncate">
+                      {item.pet?.owner_name || item.client_name || '-'}
+                    </div>
+                    <div className="text-xs text-gray-600 truncate">
+                      {item.type || item.requested_services || '-'}
+                    </div>
+                    <div className="mt-1 text-[11px] text-gray-500">
+                      {item.date || item.preferred_date || '-'}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </main>

@@ -292,8 +292,8 @@ const ReportsAlertsPage: React.FC = () => {
             </div>
           )}
 
-          {/* Reports & Alerts Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
+          {/* Reports & Alerts Table - desktop/tablet */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
             <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
               <table className="min-w-max w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
@@ -584,6 +584,98 @@ const ReportsAlertsPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Mobile card list */}
+          {!isLoading && currentDataPage.length > 0 && (
+            <div className="md:hidden space-y-3 mb-4">
+              {currentDataPage.map((item, i) => {
+                if (activeTab === 'reports') {
+                  const report: any = item;
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-500">
+                          Report {report.report_id}
+                        </span>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                          {report.status}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {report.title}
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        From: {report.submitted_by}
+                      </div>
+                      {report.recipient && (
+                        <div className="mt-1 text-[11px] text-blue-700">
+                          To: {report.recipient}
+                        </div>
+                      )}
+                      <div className="mt-2 flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEditReport(report)}
+                          className="px-3 py-1 text-xs rounded-lg bg-green-50 text-green-700 border border-green-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReport(report)}
+                          className="px-3 py-1 text-xs rounded-lg bg-red-50 text-red-600 border border-red-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                const alert: any = item;
+                return (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-semibold text-gray-500">
+                        Alert {alert.alert_id}
+                      </span>
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                        {alert.priority}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 truncate">
+                      {alert.title}
+                    </div>
+                    <div className="text-xs text-gray-600 truncate">
+                      From: {alert.submitted_by}
+                    </div>
+                    <div className="mt-2 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditAlert(alert)}
+                        className="px-3 py-1 text-xs rounded-lg bg-green-50 text-green-700 border border-green-100"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAlert(alert)}
+                        className="px-3 py-1 text-xs rounded-lg bg-red-50 text-red-600 border border-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </main>
       </div>
 

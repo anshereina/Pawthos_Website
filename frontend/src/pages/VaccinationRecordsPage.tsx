@@ -461,8 +461,8 @@ const VaccinationRecordsPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Records Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+              {/* Records Table - desktop/tablet */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
               {loading ? (
                 <div className="p-6 text-center">Loading...</div>
               ) : error ? (
@@ -596,8 +596,52 @@ const VaccinationRecordsPage: React.FC = () => {
               )}
             </div>
             </div>
+
+            {/* Mobile card list */}
+            {!loading && currentRecordsPage.length > 0 && (
+              <div className="md:hidden space-y-3 mb-4">
+                {currentRecordsPage.map((record) => {
+                  const vaccinationDate = record.date_given || record.vaccination_date;
+                  const nextDueDate = record.next_due_date || record.expiration_date;
+                  const formatDate = (dateString?: string | null) => {
+                    if (!dateString) return '-';
+                    try {
+                      return new Date(dateString).toLocaleDateString();
+                    } catch {
+                      return '-';
+                    }
+                  };
+                  return (
+                    <button
+                      key={record.id}
+                      type="button"
+                      onClick={() => handleViewVaccinationRecord(record)}
+                      className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-500">
+                          {record.pet_species || 'Unknown'}
+                        </span>
+                        <span className="text-[11px] text-green-700 font-medium">
+                          {formatDate(vaccinationDate)}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {record.pet_name || 'Unknown pet'}
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {record.vaccine_name}
+                      </div>
+                      <div className="mt-1 text-[11px] text-gray-500">
+                        Next due: {formatDate(nextDueDate)} • Vet: {record.veterinarian}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           ) : (activeTab === 'upcoming' || activeTab === 'all') ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
               {isLoading ? (
                 <div className="p-6 text-center">Loading...</div>
               ) : currentError ? (
@@ -730,6 +774,35 @@ const VaccinationRecordsPage: React.FC = () => {
                 </>
               )}
             </div>
+
+            {/* Mobile card list for events */}
+            {!isLoading && currentEventsPage.length > 0 && (
+              <div className="md:hidden space-y-3 mb-4">
+                {currentEventsPage.map((event) => (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => handleRowClick(event)}
+                    className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-semibold text-gray-500">
+                        {event.event_date}
+                      </span>
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                        {event.status}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 truncate">
+                      {event.event_title}
+                    </div>
+                    <div className="text-xs text-gray-600 truncate">
+                      {event.barangay} • {event.service_coordinator}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           ) : null}
         </main>
       </div>

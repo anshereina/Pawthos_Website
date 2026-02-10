@@ -1331,8 +1331,8 @@ const PetRecordsPage: React.FC = () => {
             Note: You can view the Pets Profile by clicking the Pet ID.
           </div>
 
-          {/* Pet Records Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+          {/* Pet Records Table - desktop/tablet */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
             <table className="min-w-max w-full">
               <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
@@ -1494,6 +1494,58 @@ const PetRecordsPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Mobile card list */}
+          {!loading && pets.length > 0 && (
+            <div className="md:hidden space-y-3 mb-4">
+              {currentPets.map((pet) => (
+                <div
+                  key={pet.id}
+                  className="rounded-2xl border border-gray-200 bg-white shadow-sm p-3"
+                >
+                  <button
+                    type="button"
+                    className="w-full text-left"
+                    onClick={() => handlePetIdClick(pet.pet_id)}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-semibold text-gray-500">
+                        Pet ID {pet.pet_id}
+                      </span>
+                      <span className="text-[11px] text-green-700 font-medium capitalize">
+                        {pet.species}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 truncate">
+                      {pet.name}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      Owner: {pet.owner_name}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {calculateAge(pet.date_of_birth)} • {pet.breed || 'Unknown breed'}
+                    </div>
+                  </button>
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(pet)}
+                      className="px-3 py-1 text-xs rounded-lg bg-green-50 text-green-700 border border-green-100"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openDeleteModal(pet)}
+                      className="px-3 py-1 text-xs rounded-lg bg-red-50 text-red-600 border border-red-100"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </main>
       </div>
 
