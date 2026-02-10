@@ -536,7 +536,6 @@ export default function IntegrationResultPage({
         if (/^level\s*2/i.test(normalized) || /^level\s*3/i.test(normalized)) return 'Level 2 - Severe Pain';
 
         // Handle legacy plain labels
-        const lower = normalized.toLowerCase();
         if (lower.includes('no pain')) return 'Level 0 - No Pain';
         if (lower.includes('mild')) return 'Level 1 - Moderate Pain';
         if (lower.includes('moderate')) return 'Level 1 - Moderate Pain';
