@@ -82,6 +82,15 @@ const VaccinationRecordsPage: React.FC = () => {
   const [isViewRecordModalOpen, setIsViewRecordModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<VaccinationRecordWithPet | null>(null);
 
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return '-';
+    }
+  };
+
   // Memoize fetch functions to prevent infinite re-renders
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -492,15 +501,6 @@ const VaccinationRecordsPage: React.FC = () => {
                           const vaccinationDate = record.date_given || record.vaccination_date;
                           const nextDueDate = record.next_due_date || record.expiration_date;
                           
-                          const formatDate = (dateString?: string | null) => {
-                            if (!dateString) return '-';
-                            try {
-                              return new Date(dateString).toLocaleDateString();
-                            } catch {
-                              return '-';
-                            }
-                          };
-                          
                           return (
                             <tr 
                               key={record.id} 
@@ -603,14 +603,6 @@ const VaccinationRecordsPage: React.FC = () => {
                 {currentRecordsPage.map((record) => {
                   const vaccinationDate = record.date_given || record.vaccination_date;
                   const nextDueDate = record.next_due_date || record.expiration_date;
-                  const formatDate = (dateString) => {
-                    if (!dateString) return '-';
-                    try {
-                      return new Date(dateString).toLocaleDateString();
-                    } catch {
-                      return '-';
-                    }
-                  };
                   return (
                     <button
                       key={record.id}
