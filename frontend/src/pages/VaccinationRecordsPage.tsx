@@ -431,7 +431,7 @@ const VaccinationRecordsPage: React.FC = () => {
           </div>
 
           {/* Tab Content */}
-          {activeTab === 'vaccine-records' ? (
+          {activeTab === 'vaccine-records' && (
             <div className="space-y-4">
               {/* Filter Buttons */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -469,333 +469,337 @@ const VaccinationRecordsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-              
+
               {/* Records Table - desktop/tablet */}
-            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
-              {loading ? (
-                <div className="p-6 text-center">Loading...</div>
-              ) : error ? (
-                <div className="p-6 text-center text-red-600">{error}</div>
-              ) : (
-                <>
-                <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                <table className="min-w-max w-full">
-                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                    <tr>
-                      {VACCINE_RECORDS_COLUMNS.map(col => (
-                        <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading records...</td></tr>
-                    ) : error ? (
-                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-red-600">{error}</td></tr>
-                    ) : currentRecordsPage.length === 0 ? (
-                      <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">No vaccine records found.</td></tr>
-                    ) : (
-                      currentRecordsPage
-                        .map((record: VaccinationRecordWithPet, i: number) => {
-                          // Get date values (handle both field name variants)
-                          const vaccinationDate = record.date_given || record.vaccination_date;
-                          const nextDueDate = record.next_due_date || record.expiration_date;
-                          
-                          return (
-                            <tr 
-                              key={record.id} 
-                              onClick={() => handleViewVaccinationRecord(record)}
-                              className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
-                            >
-                              <td className="px-4 py-3">{record.pet_name || 'Unknown'}</td>
-                              <td className="px-4 py-3 capitalize">{record.pet_species || 'Unknown'}</td>
-                              <td className="px-4 py-3">{record.vaccine_name}</td>
-                              <td className="px-4 py-3">{formatDate(vaccinationDate)}</td>
-                              <td className="px-4 py-3">{formatDate(nextDueDate)}</td>
-                              <td className="px-4 py-3">{record.veterinarian}</td>
-                              <td className="px-4 py-3">{record.batch_lot_no || '-'}</td>
-                              <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                <button 
-                                  onClick={() => handleEditVaccinationRecord(record)}
-                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
-                                  title="Edit"
-                                >
-                                  <Edit size={16} className="text-green-600" />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteVaccinationRecord(record)}
-                                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
-                                  title="Delete"
-                                >
-                                  <Trash2 size={16} className="text-red-600" />
-                                </button>
-                            </td>
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+                {loading ? (
+                  <div className="p-6 text-center">Loading...</div>
+                ) : error ? (
+                  <div className="p-6 text-center text-red-600">{error}</div>
+                ) : (
+                  <>
+                    <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                      <table className="min-w-max w-full">
+                        <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                          <tr>
+                            {VACCINE_RECORDS_COLUMNS.map(col => (
+                              <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                            ))}
                           </tr>
-                          );
-                        })
-                    )}
-                  </tbody>
-                </table>
-                </div>
-                {/* Pagination Controls */}
-                {activeTab === 'vaccine-records' && totalPages > 1 && (
-                  <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-700">
-                      <span>
-                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
-                      </span>
+                        </thead>
+                        <tbody>
+                          {loading ? (
+                            <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading records...</td></tr>
+                          ) : error ? (
+                            <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-red-600">{error}</td></tr>
+                          ) : currentRecordsPage.length === 0 ? (
+                            <tr><td colSpan={VACCINE_RECORDS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">No vaccine records found.</td></tr>
+                          ) : (
+                            currentRecordsPage
+                              .map((record: VaccinationRecordWithPet, i: number) => {
+                                // Get date values (handle both field name variants)
+                                const vaccinationDate = record.date_given || record.vaccination_date;
+                                const nextDueDate = record.next_due_date || record.expiration_date;
+
+                                return (
+                                  <tr
+                                    key={record.id}
+                                    onClick={() => handleViewVaccinationRecord(record)}
+                                    className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                                  >
+                                    <td className="px-4 py-3">{record.pet_name || 'Unknown'}</td>
+                                    <td className="px-4 py-3 capitalize">{record.pet_species || 'Unknown'}</td>
+                                    <td className="px-4 py-3">{record.vaccine_name}</td>
+                                    <td className="px-4 py-3">{formatDate(vaccinationDate)}</td>
+                                    <td className="px-4 py-3">{formatDate(nextDueDate)}</td>
+                                    <td className="px-4 py-3">{record.veterinarian}</td>
+                                    <td className="px-4 py-3">{record.batch_lot_no || '-'}</td>
+                                    <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                      <button
+                                        onClick={() => handleEditVaccinationRecord(record)}
+                                        className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
+                                        title="Edit"
+                                      >
+                                        <Edit size={16} className="text-green-600" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteVaccinationRecord(record)}
+                                        className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
+                                        title="Delete"
+                                      >
+                                        <Trash2 size={16} className="text-red-600" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                          )}
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handlePreviousPage()}
-                        disabled={currentPage === 1}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === 1
-                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                        }`}
-                      >
-                        Previous
-                      </button>
-                      <div className="flex space-x-1">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                          const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                          if (!shouldShow) {
-                            if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
-                            if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
-                            return null;
-                          }
-                          return (
-                            <button
-                              key={page}
-                              onClick={() => handlePageChange(page)}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        })}
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <div className="flex items-center text-sm text-gray-700">
+                          <span>
+                            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handlePreviousPage()}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === 1
+                                ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                                : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                            }`}
+                          >
+                            Previous
+                          </button>
+                          <div className="flex space-x-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                              const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                              if (!shouldShow) {
+                                if (page === 2 && currentPage > 4) return (<span key="ellipsis-start" className="px-3 py-2 text-gray-400">...</span>);
+                                if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key="ellipsis-end" className="px-3 py-2 text-gray-400">...</span>);
+                                return null;
+                              }
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => handlePageChange(page)}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => handleNextPage()}
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === totalPages
+                                ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                                : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                            }`}
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleNextPage()}
-                        disabled={currentPage === totalPages}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === totalPages
-                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                        }`}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
+                    )}
+                  </>
                 )}
-                </>
+              </div>
+
+              {/* Mobile card list */}
+              {!loading && currentRecordsPage.length > 0 && (
+                <div className="md:hidden space-y-3 mb-4">
+                  {currentRecordsPage.map((record) => {
+                    const vaccinationDate = record.date_given || record.vaccination_date;
+                    const nextDueDate = record.next_due_date || record.expiration_date;
+                    return (
+                      <button
+                        key={record.id}
+                        type="button"
+                        onClick={() => handleViewVaccinationRecord(record)}
+                        className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-semibold text-gray-500">
+                            {record.pet_species || 'Unknown'}
+                          </span>
+                          <span className="text-[11px] text-green-700 font-medium">
+                            {formatDate(vaccinationDate)}
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-900 truncate">
+                          {record.pet_name || 'Unknown pet'}
+                        </div>
+                        <div className="text-xs text-gray-600 truncate">
+                          {record.vaccine_name}
+                        </div>
+                        <div className="mt-1 text-[11px] text-gray-500">
+                          Next due: {formatDate(nextDueDate)} • Vet: {record.veterinarian}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
-            </div>
+          )}
 
-            {/* Mobile card list */}
-            {!loading && currentRecordsPage.length > 0 && (
-              <div className="md:hidden space-y-3 mb-4">
-                {currentRecordsPage.map((record) => {
-                  const vaccinationDate = record.date_given || record.vaccination_date;
-                  const nextDueDate = record.next_due_date || record.expiration_date;
-                  return (
+          {(activeTab === 'upcoming' || activeTab === 'all') && (
+            <>
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+                {isLoading ? (
+                  <div className="p-6 text-center">Loading...</div>
+                ) : currentError ? (
+                  <div className="p-6 text-center text-red-600">{currentError}</div>
+                ) : (
+                  <>
+                    <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                      <table className="min-w-max w-full">
+                        <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                          <tr>
+                            {VACCINATION_EVENTS_COLUMNS.map(col => (
+                              <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {isLoading ? (
+                            <tr>
+                              <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading events...</td>
+                            </tr>
+                          ) : currentError ? (
+                            <tr>
+                              <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-red-600">{currentError}</td>
+                            </tr>
+                          ) : eventsFiltered.length === 0 ? (
+                            <tr>
+                              <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">
+                                {activeTab === 'upcoming' ? 'No Upcoming Vaccination Events' : 'No Vaccination Events Found'}
+                              </td>
+                            </tr>
+                          ) : (
+                            currentEventsPage
+                              .map((event: VaccinationEvent, i: number) => (
+                                <tr
+                                  key={event.id}
+                                  className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                                  onClick={() => handleRowClick(event)}
+                                >
+                                  <td className="px-4 py-3">{event.event_date}</td>
+                                  <td className="px-4 py-3">{event.barangay}</td>
+                                  <td className="px-4 py-3">{event.service_coordinator}</td>
+                                  <td className="px-4 py-3">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      event.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
+                                      event.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
+                                      event.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                      'bg-red-100 text-red-800'
+                                    }`}>
+                                      {event.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3">{event.event_title}</td>
+                                  <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => handleEditClick(event)}
+                                      className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
+                                      title="Edit"
+                                    >
+                                      <Edit size={16} className="text-green-600" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteClick(event)}
+                                      className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={16} className="text-red-600" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <div className="flex items-center text-sm text-gray-700">
+                          <span>
+                            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handlePreviousPage()}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === 1
+                                ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                                : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                            }`}
+                          >
+                            Previous
+                          </button>
+                          <div className="flex space-x-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                              const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                              if (!shouldShow) {
+                                if (page === 2 && currentPage > 4) return (<span key="events-ellipsis-start" className="px-3 py-2 text-gray-400">...</span>);
+                                if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key="events-ellipsis-end" className="px-3 py-2 text-gray-400">...</span>);
+                                return null;
+                              }
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => handlePageChange(page)}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => handleNextPage()}
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === totalPages
+                                ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                                : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                            }`}
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Mobile card list for events */}
+              {!isLoading && currentEventsPage.length > 0 && (
+                <div className="md:hidden space-y-3 mb-4">
+                  {currentEventsPage.map((event) => (
                     <button
-                      key={record.id}
+                      key={event.id}
                       type="button"
-                      onClick={() => handleViewVaccinationRecord(record)}
+                      onClick={() => handleRowClick(event)}
                       className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
                     >
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-xs font-semibold text-gray-500">
-                          {record.pet_species || 'Unknown'}
+                          {event.event_date}
                         </span>
-                        <span className="text-[11px] text-green-700 font-medium">
-                          {formatDate(vaccinationDate)}
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                          {event.status}
                         </span>
                       </div>
                       <div className="text-sm font-semibold text-gray-900 truncate">
-                        {record.pet_name || 'Unknown pet'}
+                        {event.event_title}
                       </div>
                       <div className="text-xs text-gray-600 truncate">
-                        {record.vaccine_name}
-                      </div>
-                      <div className="mt-1 text-[11px] text-gray-500">
-                        Next due: {formatDate(nextDueDate)} • Vet: {record.veterinarian}
+                        {event.barangay} • {event.service_coordinator}
                       </div>
                     </button>
-                  );
-                })}
-              </div>
-            )}
-          ) : (activeTab === 'upcoming' || activeTab === 'all') ? (
-            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
-              {isLoading ? (
-                <div className="p-6 text-center">Loading...</div>
-              ) : currentError ? (
-                <div className="p-6 text-center text-red-600">{currentError}</div>
-              ) : (
-                <>
-                <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                <table className="min-w-max w-full">
-                  <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                    <tr>
-                      {VACCINATION_EVENTS_COLUMNS.map(col => (
-                        <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading events...</td>
-                      </tr>
-                    ) : currentError ? (
-                      <tr>
-                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-red-600">{currentError}</td>
-                      </tr>
-                    ) : eventsFiltered.length === 0 ? (
-                      <tr>
-                        <td colSpan={VACCINATION_EVENTS_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">
-                          {activeTab === 'upcoming' ? 'No Upcoming Vaccination Events' : 'No Vaccination Events Found'}
-                        </td>
-                      </tr>
-                    ) : (
-                      currentEventsPage
-                        .map((event: VaccinationEvent, i: number) => (
-                        <tr 
-                          key={event.id} 
-                          className={`${i % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
-                          onClick={() => handleRowClick(event)}
-                        >
-                          <td className="px-4 py-3">{event.event_date}</td>
-                          <td className="px-4 py-3">{event.barangay}</td>
-                          <td className="px-4 py-3">{event.service_coordinator}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              event.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                              event.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
-                              event.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {event.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">{event.event_title}</td>
-                          <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <button 
-                              onClick={() => handleEditClick(event)}
-                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300"
-                              title="Edit"
-                            >
-                              <Edit size={16} className="text-green-600" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteClick(event)}
-                              className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} className="text-red-600" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                  ))}
                 </div>
-                {/* Pagination Controls */}
-                {(activeTab === 'upcoming' || activeTab === 'all') && totalPages > 1 && (
-                  <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-700">
-                      <span>
-                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handlePreviousPage()}
-                        disabled={currentPage === 1}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === 1
-                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                        }`}
-                      >
-                        Previous
-                      </button>
-                      <div className="flex space-x-1">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                          const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                          if (!shouldShow) {
-                            if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
-                            if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
-                            return null;
-                          }
-                          return (
-                            <button
-                              key={page}
-                              onClick={() => handlePageChange(page)}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button
-                        onClick={() => handleNextPage()}
-                        disabled={currentPage === totalPages}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === totalPages
-                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                        }`}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                )}
-                </>
               )}
-            </div>
-
-            {/* Mobile card list for events */}
-            {!isLoading && currentEventsPage.length > 0 && (
-              <div className="md:hidden space-y-3 mb-4">
-                {currentEventsPage.map((event) => (
-                  <button
-                    key={event.id}
-                    type="button"
-                    onClick={() => handleRowClick(event)}
-                    className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-semibold text-gray-500">
-                        {event.event_date}
-                      </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
-                        {event.status}
-                      </span>
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900 truncate">
-                      {event.event_title}
-                    </div>
-                    <div className="text-xs text-gray-600 truncate">
-                      {event.barangay} • {event.service_coordinator}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          ) : null}
+            </>
+          )}
         </main>
       </div>
 
