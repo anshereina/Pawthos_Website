@@ -603,7 +603,7 @@ const VaccinationRecordsPage: React.FC = () => {
                 {currentRecordsPage.map((record) => {
                   const vaccinationDate = record.date_given || record.vaccination_date;
                   const nextDueDate = record.next_due_date || record.expiration_date;
-                  const formatDate = (dateString?: string | null) => {
+                  const formatDate = (dateString) => {
                     if (!dateString) return '-';
                     try {
                       return new Date(dateString).toLocaleDateString();
