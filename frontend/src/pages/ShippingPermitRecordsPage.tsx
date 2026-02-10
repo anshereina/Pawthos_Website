@@ -141,7 +141,7 @@ const VetHealthRecordsPage: React.FC = () => {
   const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
 
   return (
-    <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen">
+    <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen overflow-x-hidden">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -151,7 +151,7 @@ const VetHealthRecordsPage: React.FC = () => {
       />
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
         <PageHeader title="Vet Health Records" />

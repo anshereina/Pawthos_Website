@@ -145,7 +145,7 @@ const AccountSettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 font-inter w-full overflow-hidden">
+    <div className="flex min-h-screen bg-gray-100 font-inter w-full overflow-x-hidden">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -155,7 +155,7 @@ const AccountSettingsPage: React.FC = () => {
       />
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
         {/* Header */}

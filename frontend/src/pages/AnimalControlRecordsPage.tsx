@@ -130,7 +130,7 @@ const AnimalControlRecordsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gray-100 font-inter w-full">
+      <div className="flex min-h-screen bg-gray-100 font-inter w-full overflow-x-hidden">
         <Sidebar
           items={navigationItems}
           activeItem={activeItem}
@@ -139,7 +139,7 @@ const AnimalControlRecordsPage: React.FC = () => {
           onToggleExpand={toggleSidebar}
         />
         <div className={`flex-1 flex items-center justify-center transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}>
           <LoadingSpinner />
         </div>
@@ -148,7 +148,7 @@ const AnimalControlRecordsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen">
+    <div className="flex bg-gradient-to-br from-gray-50 to-white font-sans w-full min-h-screen overflow-x-hidden">
       <Sidebar
         items={navigationItems}
         activeItem={activeItem}
@@ -158,7 +158,7 @@ const AnimalControlRecordsPage: React.FC = () => {
       />
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          isExpanded ? 'ml-64' : 'ml-16'
+          isExpanded ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
         }`}
       >
         <PageHeader title="Animal Control Records" />
