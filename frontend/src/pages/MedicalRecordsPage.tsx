@@ -382,19 +382,20 @@ const MedicalRecordsPage: React.FC = () => {
             </div>
           )}
 
-          {/* Data Table */}
+          {/* Data Table - desktop/tablet */}
           {!isLoading && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
-              <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-                <table className="min-w-max w-full">
-                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                  <tr>
-                    {columns.map(col => (
-                      <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+            <>
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 mb-4">
+                <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
+                  <table className="min-w-max w-full">
+                    <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                      <tr>
+                        {columns.map(col => (
+                          <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
                   {activeTab === 'upcoming' && currentItems.length === 0 && (
                     <tr>
                       <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
@@ -410,7 +411,7 @@ const MedicalRecordsPage: React.FC = () => {
                     </tr>
                   )}
                   
-                  {/* Upcoming Appointments Tab */}
+                    {/* Upcoming Appointments Tab */}
                   {activeTab === 'upcoming' && currentItems.map((appointment: any, i: number) => (
                     <tr
                       key={appointment.id}
@@ -459,7 +460,7 @@ const MedicalRecordsPage: React.FC = () => {
                     </tr>
                   ))}
 
-                  {/* Medical History Tab */}
+                    {/* Medical History Tab */}
                   {activeTab === 'history' && currentItems.map((record: any, i: number) => (
                     <tr
                       key={record.id}
@@ -493,14 +494,14 @@ const MedicalRecordsPage: React.FC = () => {
                           </button>
                         </div>
                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </div>
 
-              {/* Status Dropdown Menu - Rendered outside table to avoid z-index issues */}
-              {statusDropdownOpen !== null && (() => {
+                {/* Status Dropdown Menu - Rendered outside table to avoid z-index issues */}
+                {statusDropdownOpen !== null && (() => {
                 const buttonElement = document.getElementById(`status-btn-${statusDropdownOpen}`);
                 if (!buttonElement) {
                   console.log('Button element not found for dropdown');
@@ -549,61 +550,119 @@ const MedicalRecordsPage: React.FC = () => {
                 );
               })()}
 
-              {totalPages > 1 && (
-                <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span>
-                      Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === 1
-                          ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                          : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                      }`}
-                    >
-                      Previous
-                    </button>
-                    <div className="flex space-x-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                        if (!shouldShow) {
-                          if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
-                          if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
-                          return null;
-                        }
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                              currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      })}
+                {totalPages > 1 && (
+                  <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-700">
+                      <span>
+                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                      </span>
                     </div>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === totalPages
-                          ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                          : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
-                      }`}
-                    >
-                      Next
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Previous
+                      </button>
+                      <div className="flex space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                          if (!shouldShow) {
+                            if (page === 2 && currentPage > 4) return (<span key="ellipsis-start" className="px-3 py-2 text-gray-400">...</span>);
+                            if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key="ellipsis-end" className="px-3 py-2 text-gray-400">...</span>);
+                            return null;
+                          }
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentPage === page ? 'bg-green-600 text-white' : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-green-700 bg-white border border-green-300 hover:bg-green-50'
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+
+              {/* Mobile list */}
+              <div className="md:hidden space-y-3 mb-4">
+                {currentItems.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
+                    {activeTab === 'upcoming' ? 'No upcoming appointments found.' : 'No medical records found.'}
+                  </div>
+                ) : activeTab === 'upcoming' ? (
+                  currentItems.map((appointment: any) => (
+                    <button
+                      key={appointment.id}
+                      type="button"
+                      onClick={() => handleAppointmentRowClick(appointment)}
+                      className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-500">
+                          {new Date(appointment.date).toLocaleDateString()}
+                        </span>
+                        <span className="text-[11px] font-medium text-green-700">
+                          {appointment.status || 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {appointment.pet?.name || '-'}
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {appointment.type} • {appointment.pet?.species || '-'}
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  currentItems.map((record: any) => (
+                    <button
+                      key={record.id}
+                      type="button"
+                      onClick={() => handleViewClick(record)}
+                      className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-500">
+                          {new Date(record.date_visited).toLocaleDateString()}
+                        </span>
+                        <span className="text-[11px] text-gray-500">
+                          {record.pet?.species || '-'}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {record.pet?.name || '-'}
+                      </div>
+                      <div className="text-xs text-gray-600 line-clamp-2">
+                        {record.reason_for_visit}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
           )}
         </main>
       </div>

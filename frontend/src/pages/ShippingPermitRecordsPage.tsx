@@ -206,71 +206,71 @@ const VetHealthRecordsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Records Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+          {/* Records Table - desktop/tablet */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-            <table className="min-w-max w-full">
-              <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                <tr>
-                  {TABLE_COLUMNS.map(col => (
-                    <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+              <table className="min-w-max w-full">
+                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                   <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center">
-                      <LoadingSpinner />
-                    </td>
+                    {TABLE_COLUMNS.map(col => (
+                      <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                    ))}
                   </tr>
-                ) : totalItems === 0 ? (
-                  <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">
-                      No vet health records found
-                    </td>
-                  </tr>
-                ) : (
-                  currentRows.map((record, index) => (
-                    <tr
-                      key={record.id}
-                      onClick={() => openViewModal(record)}
-                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
-                    >
-                      <td className="px-4 py-3 font-medium">{record.owner_name}</td>
-                      <td className="px-4 py-3">{record.contact_number || '-'}</td>
-                      <td className="px-4 py-3">{record.pet_name}</td>
-                      <td className="px-4 py-3 capitalize">{record.pet_species || '-'}</td>
-                      <td className="px-4 py-3">{record.purpose || '-'}</td>
-                      <td className="px-4 py-3">{formatDate(record.issue_date)}</td>
-                      <td className="px-4 py-3">{record.destination || '-'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status || 'Active')}`}>
-                          {record.status || 'Active'}
-                        </span>
-                      </td>
-                      {/* Action icons */}
-                      <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button 
-                          onClick={() => openEditModal(record)}
-                          className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                          title="Edit record"
-                        >
-                          <Edit size={18} className="text-green-800" />
-                        </button>
-                        <button 
-                          onClick={() => openDeleteModal(record)}
-                          className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                          title="Delete record"
-                        >
-                          <Trash2 size={18} className="text-red-600" />
-                        </button>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center">
+                        <LoadingSpinner />
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : totalItems === 0 ? (
+                    <tr>
+                      <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">
+                        No vet health records found
+                      </td>
+                    </tr>
+                  ) : (
+                    currentRows.map((record, index) => (
+                      <tr
+                        key={record.id}
+                        onClick={() => openViewModal(record)}
+                        className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                      >
+                        <td className="px-4 py-3 font-medium">{record.owner_name}</td>
+                        <td className="px-4 py-3">{record.contact_number || '-'}</td>
+                        <td className="px-4 py-3">{record.pet_name}</td>
+                        <td className="px-4 py-3 capitalize">{record.pet_species || '-'}</td>
+                        <td className="px-4 py-3">{record.purpose || '-'}</td>
+                        <td className="px-4 py-3">{formatDate(record.issue_date)}</td>
+                        <td className="px-4 py-3">{record.destination || '-'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status || 'Active')}`}>
+                            {record.status || 'Active'}
+                          </span>
+                        </td>
+                        {/* Action icons */}
+                        <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <button 
+                            onClick={() => openEditModal(record)}
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                            title="Edit record"
+                          >
+                            <Edit size={18} className="text-green-800" />
+                          </button>
+                          <button 
+                            onClick={() => openDeleteModal(record)}
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                            title="Delete record"
+                          >
+                            <Trash2 size={18} className="text-red-600" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
             {/* Pagination Controls */}
             {totalItems > 0 && totalPages > 1 && (
@@ -297,8 +297,8 @@ const VetHealthRecordsPage: React.FC = () => {
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                       const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
                       if (!shouldShow) {
-                        if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
-                        if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                        if (page === 2 && currentPage > 4) return (<span key="ellipsis-start" className="px-3 py-2 text-gray-400">...</span>);
+                        if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key="ellipsis-end" className="px-3 py-2 text-gray-400">...</span>);
                         return null;
                       }
                       return (
@@ -327,6 +327,48 @@ const VetHealthRecordsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-3 mb-4">
+            {loading ? (
+              <div className="p-4 flex justify-center">
+                <LoadingSpinner />
+              </div>
+            ) : totalItems === 0 ? (
+              <div className="p-4 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
+                No vet health records found
+              </div>
+            ) : (
+              currentRows.map((record) => (
+                <button
+                  key={record.id}
+                  type="button"
+                  onClick={() => openViewModal(record)}
+                  className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {record.pet_name}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      {formatDate(record.issue_date)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    {record.owner_name} • {record.contact_number || '-'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {record.purpose || '-'} • {record.destination || '-'}
+                  </div>
+                  <div className="mt-1 text-[11px]">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(record.status || 'Active')}`}>
+                      {record.status || 'Active'}
+                    </span>
+                  </div>
+                </button>
+              ))
             )}
           </div>
         </main>

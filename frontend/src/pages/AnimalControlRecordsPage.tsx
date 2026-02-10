@@ -230,76 +230,76 @@ const AnimalControlRecordsPage: React.FC = () => {
             Note: You can view the details by clicking the row.
           </div>
 
-          {/* Animal Control Records Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+          {/* Animal Control Records Table - desktop/tablet */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-            <table className="min-w-max w-full">
-              <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                <tr>
-                  {getColumns().map(col => (
-                    <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {currentRows.length === 0 ? (
+              <table className="min-w-max w-full">
+                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                   <tr>
-                    <td colSpan={getColumns().length} className="px-4 py-8 text-center text-gray-500">
-                      No {activeTab} records found
-                    </td>
+                    {getColumns().map(col => (
+                      <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                    ))}
                   </tr>
-                ) : (
-                  currentRows.map((record, index) => (
-                    <tr
-                      key={record.id}
-                      onClick={() => openEditModal(record)}
-                      className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
-                    >
-                      <td className="px-4 py-3">
-                        {record.image_url ? (
-                          <img
-                            src={resolveImageUrl(record.image_url)}
-                            alt="Animal"
-                            className="w-12 h-12 object-cover rounded-lg border border-gray-200"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
-                            <span className="text-gray-400 text-xs">No photo</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-medium">{record.owner_name}</td>
-                      <td className="px-4 py-3">{record.contact_number || '-'}</td>
-                      <td className="px-4 py-3">{record.address || '-'}</td>
-                      <td className="px-4 py-3">{record.breed || '-'}</td>
-                      {activeTab === 'surrendered' && (
-                        <td className="px-4 py-3">{record.detail || '-'}</td>
-                      )}
-                      <td className="px-4 py-3">{formatDate(record.date)}</td>
-                      <td className="px-4 py-3 flex items-center gap-2">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); openEditModal(record); }}
-                          className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                          title="Edit record"
-                        >
-                          <Edit size={18} className="text-green-800" />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); openDeleteModal(record); }}
-                          className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                          title="Delete record"
-                        >
-                          <Trash2 size={18} className="text-red-600" />
-                        </button>
+                </thead>
+                <tbody>
+                  {currentRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={getColumns().length} className="px-4 py-8 text-center text-gray-500">
+                        No {activeTab} records found
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    currentRows.map((record, index) => (
+                      <tr
+                        key={record.id}
+                        onClick={() => openEditModal(record)}
+                        className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                      >
+                        <td className="px-4 py-3">
+                          {record.image_url ? (
+                            <img
+                              src={resolveImageUrl(record.image_url)}
+                              alt="Animal"
+                              className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                              <span className="text-gray-400 text-xs">No photo</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-medium">{record.owner_name}</td>
+                        <td className="px-4 py-3">{record.contact_number || '-'}</td>
+                        <td className="px-4 py-3">{record.address || '-'}</td>
+                        <td className="px-4 py-3">{record.breed || '-'}</td>
+                        {activeTab === 'surrendered' && (
+                          <td className="px-4 py-3">{record.detail || '-'}</td>
+                        )}
+                        <td className="px-4 py-3">{formatDate(record.date)}</td>
+                        <td className="px-4 py-3 flex items-center gap-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); openEditModal(record); }}
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                            title="Edit record"
+                          >
+                            <Edit size={18} className="text-green-800" />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); openDeleteModal(record); }}
+                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                            title="Delete record"
+                          >
+                            <Trash2 size={18} className="text-red-600" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -326,8 +326,8 @@ const AnimalControlRecordsPage: React.FC = () => {
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                       const shouldShow = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
                       if (!shouldShow) {
-                        if (page === 2 && currentPage > 4) return (<span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">...</span>);
-                        if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">...</span>);
+                        if (page === 2 && currentPage > 4) return (<span key="ellipsis-start" className="px-3 py-2 text-gray-400">...</span>);
+                        if (page === totalPages - 1 && currentPage < totalPages - 3) return (<span key="ellipsis-end" className="px-3 py-2 text-gray-400">...</span>);
                         return null;
                       }
                       return (
@@ -356,6 +356,39 @@ const AnimalControlRecordsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-3 mb-4">
+            {currentRows.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
+                No {activeTab} records found
+              </div>
+            ) : (
+              currentRows.map((record) => (
+                <button
+                  key={record.id}
+                  type="button"
+                  onClick={() => openEditModal(record)}
+                  className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {record.owner_name}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      {formatDate(record.date)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    {record.address || '-'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {record.breed || '-'}{activeTab === 'surrendered' && record.detail ? ` • ${record.detail}` : ''}
+                  </div>
+                </button>
+              ))
             )}
           </div>
         </main>

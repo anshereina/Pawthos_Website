@@ -270,68 +270,68 @@ const ReproductiveRecordsPage: React.FC = () => {
             Note: You can view the details by clicking the row.
           </div>
 
-          {/* Records Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
+          {/* Records Table - desktop/tablet */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
             <div className="table-scroll-container whitespace-nowrap overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-            <table className="min-w-max w-full">
-              <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
-                <tr>
-                  {TABLE_COLUMNS.map(col => (
-                    <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+              <table className="min-w-max w-full">
+                <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
                   <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading...</td>
+                    {TABLE_COLUMNS.map(col => (
+                      <th key={col} className="px-4 py-3 text-left font-semibold text-sm">{col}</th>
+                    ))}
                   </tr>
-                ) : filteredPets.length === 0 ? (
-                  <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">No records found</td>
-                  </tr>
-                ) : (
-                  currentPetsPage
-                    .map((pet, index) => (
-                      <tr
-                        key={pet.id}
-                        onClick={() => openViewModal(pet)}
-                        className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
-                      >
-                        <td className="px-4 py-3 font-medium text-gray-800">{pet.name}</td>
-                        <td className="px-4 py-3">{pet.owner_name || '-'}</td>
-                        <td className="px-4 py-3">{pet.contact_number || '-'}</td>
-                        <td className="px-4 py-3">{formatDate(pet.owner_birthday)}</td>
-                        <td className="px-4 py-3 capitalize">{pet.species}</td>
-                        <td className="px-4 py-3">{formatDate(pet.date)}</td>
-                        <td className="px-4 py-3">{formatDate(pet.date_of_birth)}</td>
-                        <td className="px-4 py-3">{pet.color || '-'}</td>
-                        <td className="px-4 py-3">{pet.breed || '-'}</td>
-                        <td className="px-4 py-3 capitalize">{pet.gender || '-'}</td>
-                        <td className="px-4 py-3 capitalize">{pet.reproductive_status || '-'}</td>
-                        <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
-                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
-                            title="Edit record"
-                          >
-                            <Edit size={18} className="text-green-600" />
-                          </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
-                            className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
-                            title="Delete record"
-                          >
-                            <Trash2 size={18} className="text-red-600" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">Loading...</td>
+                    </tr>
+                  ) : filteredPets.length === 0 ? (
+                    <tr>
+                      <td colSpan={TABLE_COLUMNS.length} className="px-4 py-8 text-center text-gray-500">No records found</td>
+                    </tr>
+                  ) : (
+                    currentPetsPage
+                      .map((pet, index) => (
+                        <tr
+                          key={pet.id}
+                          onClick={() => openViewModal(pet)}
+                          className={`${index % 2 === 0 ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-white'} hover:bg-gradient-to-r hover:from-green-100 hover:to-green-50 transition-all duration-300 border-b border-gray-100 cursor-pointer`}
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-800">{pet.name}</td>
+                          <td className="px-4 py-3">{pet.owner_name || '-'}</td>
+                          <td className="px-4 py-3">{pet.contact_number || '-'}</td>
+                          <td className="px-4 py-3">{formatDate(pet.owner_birthday)}</td>
+                          <td className="px-4 py-3 capitalize">{pet.species}</td>
+                          <td className="px-4 py-3">{formatDate(pet.date)}</td>
+                          <td className="px-4 py-3">{formatDate(pet.date_of_birth)}</td>
+                          <td className="px-4 py-3">{pet.color || '-'}</td>
+                          <td className="px-4 py-3">{pet.breed || '-'}</td>
+                          <td className="px-4 py-3 capitalize">{pet.gender || '-'}</td>
+                          <td className="px-4 py-3 capitalize">{pet.reproductive_status || '-'}</td>
+                          <td className="px-4 py-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsEditModalOpen(true); }}
+                              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100 transition-all duration-300 hover:shadow-sm"
+                              title="Edit record"
+                            >
+                              <Edit size={18} className="text-green-600" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setSelectedPet(pet); setIsDeleteModalOpen(true); }}
+                              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-sm"
+                              title="Delete record"
+                            >
+                              <Trash2 size={18} className="text-red-600" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
             </div>
-
+          
             {/* Pagination Controls */}
             {filteredPets.length > 0 && totalPages > 1 && (
               <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between">
@@ -352,7 +352,7 @@ const ReproductiveRecordsPage: React.FC = () => {
                   >
                     Previous
                   </button>
-
+          
                   {/* Page Numbers */}
                   <div className="flex space-x-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
@@ -364,14 +364,14 @@ const ReproductiveRecordsPage: React.FC = () => {
                       if (!shouldShow) {
                         if (page === 2 && currentPage > 4) {
                           return (
-                            <span key={`ellipsis-start`} className="px-3 py-2 text-gray-400">
+                            <span key="ellipsis-start" className="px-3 py-2 text-gray-400">
                               ...
                             </span>
                           );
                         }
                         if (page === totalPages - 1 && currentPage < totalPages - 3) {
                           return (
-                            <span key={`ellipsis-end`} className="px-3 py-2 text-gray-400">
+                            <span key="ellipsis-end" className="px-3 py-2 text-gray-400">
                               ...
                             </span>
                           );
@@ -394,7 +394,7 @@ const ReproductiveRecordsPage: React.FC = () => {
                       );
                     })}
                   </div>
-
+          
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
@@ -408,6 +408,46 @@ const ReproductiveRecordsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-3 mb-4">
+            {loading ? (
+              <div className="p-4 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
+                Loading...
+              </div>
+            ) : filteredPets.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
+                No records found
+              </div>
+            ) : (
+              currentPetsPage.map((pet) => (
+                <button
+                  key={pet.id}
+                  type="button"
+                  onClick={() => openViewModal(pet)}
+                  className="w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 active:bg-gray-50"
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-semibold text-gray-900 truncate">
+                      {pet.name}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      {formatDate(pet.date)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    {pet.owner_name || '-'} • {pet.contact_number || '-'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {pet.breed || '-'} • {pet.color || '-'}
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-500">
+                    {pet.species} • {pet.gender || '-'} • {pet.reproductive_status || '-'}
+                  </div>
+                </button>
+              ))
             )}
           </div>
         </main>
