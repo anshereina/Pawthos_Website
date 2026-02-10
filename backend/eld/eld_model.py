@@ -725,7 +725,7 @@ class FelinePainAssessmentELD:
                     prediction = self.classifier.predict([feature_vector])[0]
                     confidence = 0.5  # Default confidence
             
-            # Map prediction to pain level (matching Gemini format)
+            # Map prediction to pain level 
             pain_level = self._map_prediction_to_pain_level(prediction)
             
             # Calculate pain score
@@ -733,17 +733,10 @@ class FelinePainAssessmentELD:
             
             # Convert landmarks to percentage coordinates
             visual_landmarks = self._convert_landmarks_to_percentage(landmarks, image.shape)
-            
-            # Generate FGS breakdown
             fgs_breakdown = self._generate_fgs_breakdown(features, prediction)
-            
-            # Generate detailed explanation
             detailed_explanation = self._generate_detailed_explanation(features, prediction)
-            
-            # Generate actionable advice
             actionable_advice = self._generate_actionable_advice(prediction)
             
-            # Return in same format as Gemini
             return {
                 'success': True,
                 'pain_level': pain_level,
@@ -792,14 +785,19 @@ class FelinePainAssessmentELD:
         return feature_vector
     
     def _map_prediction_to_pain_level(self, prediction: int) -> str:
-        """Map numerical prediction to pain level - matching Gemini format"""
+        """Map numerical prediction to feline pain level (3-level scale)
+
+        Level 0 - No Pain
+        Level 1 - Moderate Pain
+        Level 2 - Severe Pain
+        """
         pain_levels = {
-            0: "Level 0 (No Pain)",
-            1: "Level 1 (Mild Pain)", 
-            2: "Level 2 (Moderate/Severe Pain)",
-            3: "Level 2 (Moderate/Severe Pain)"  # Map 3 to Level 2
+            0: "Level 0 - No Pain",
+            1: "Level 1 - Moderate Pain",
+            2: "Level 2 - Severe Pain",
+            3: "Level 2 - Severe Pain",  # Map higher outputs to Level 2
         }
-        return pain_levels.get(prediction, "Level 1 (Mild Pain)")
+        return pain_levels.get(prediction, "Level 1 - Moderate Pain")
     
     def _calculate_pain_score(self, prediction: int, features: Dict[str, float]) -> int:
         """Calculate pain score (0-10) from prediction and features"""
@@ -813,7 +811,7 @@ class FelinePainAssessmentELD:
         return base_scores.get(prediction, 5)
     
     def _convert_landmarks_to_percentage(self, landmarks: List[Tuple[int, int]], image_shape: Tuple[int, int]) -> Dict[str, List[Dict[str, Any]]]:
-        """Convert pixel coordinates to percentage coordinates (0-100) matching Gemini format"""
+        """Convert pixel coordinates to percentage coordinates (0-100)"""
         if len(landmarks) < 48:
             return {}
         
@@ -887,7 +885,7 @@ class FelinePainAssessmentELD:
         return visual_landmarks
     
     def _generate_fgs_breakdown(self, features: Dict[str, float], prediction: int) -> Dict[str, Dict[str, Any]]:
-        """Generate FGS breakdown structure matching Gemini format"""
+        """Generate FGS breakdown structure """
         # Estimate FGS scores from features
         eye_opening = features.get('eye_opening', 0.0)
         ear_variation = features.get('ear_height_variation', 0.0)
@@ -922,7 +920,7 @@ class FelinePainAssessmentELD:
         }
     
     def _generate_detailed_explanation(self, features: Dict[str, float], prediction: int) -> Dict[str, str]:
-        """Generate detailed explanation matching Gemini format"""
+        """Generate detailed explanation"""
         pain_level_text = {
             0: "no signs of pain",
             1: "mild to moderate discomfort",
@@ -939,7 +937,7 @@ class FelinePainAssessmentELD:
         }
     
     def _generate_actionable_advice(self, prediction: int) -> Dict[str, Any]:
-        """Generate actionable advice matching Gemini format"""
+        """Generate actionable advice """
         if prediction == 0:
             return {
                 "immediate_actions": [
