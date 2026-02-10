@@ -666,12 +666,11 @@ export default function EditPetProfileModal({
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Pet's Date of Birth</Text>
                             <TextInput
-                                style={[styles.input, styles.dateInput, errors.date_of_birth && styles.inputError]}
+                                style={[styles.input, styles.dateInput, styles.inputDisabled]}
                                 value={formData.date_of_birth}
-                                onChangeText={(value) => handleInputChange('date_of_birth', value)}
+                                editable={false}
                                 placeholder="YYYY-MM-DD"
                                 placeholderTextColor="#999"
-                                keyboardType="numeric"
                             />
                             {errors.date_of_birth && <Text style={styles.errorText}>{errors.date_of_birth}</Text>}
                         </View>
@@ -679,12 +678,11 @@ export default function EditPetProfileModal({
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Owner's Birthday</Text>
                             <TextInput
-                                style={[styles.input, styles.dateInput]}
+                                style={[styles.input, styles.dateInput, styles.inputDisabled]}
                                 value={formData.owner_birthday as string}
-                                onChangeText={(value) => handleInputChange('owner_birthday', value)}
+                                editable={false}
                                 placeholder="YYYY-MM-DD"
                                 placeholderTextColor="#999"
-                                keyboardType="numeric"
                             />
                         </View>
                     </ScrollView>

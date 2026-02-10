@@ -197,6 +197,54 @@ export async function updatePet(petId: number, petData: Partial<PetData>): Promi
   }
 }
 
+// Delete pet by ID
+export async function deletePet(petId: number): Promise<PetResult> {
+  try {
+    const token = await getAuthToken();
+    if (!token) {
+      return { success: false, message: "No authentication token found" };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      let message = 'Failed to delete pet';
+      try {
+        const errorData = JSON.parse(text);
+        message = errorData.detail || errorData.message || message;
+      } catch {
+        if (text) message = text;
+      }
+      return { success: false, message };
+    }
+
+    let message = 'Pet deleted successfully';
+    try {
+      const data = JSON.parse(text);
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch {
+      // text was not JSON, ignore
+    }
+
+    return { success: true, message };
+  } catch (error) {
+    console.error('Delete pet error:', error);
+    return {
+      success: false,
+      message: "Network error. Please check your connection and try again."
+    };
+  }
+}
+
 // Upload pet photo
 export async function uploadPetPhoto(petId: number, photoUri: string): Promise<{ success: boolean; photo_url?: string; message?: string }> {
   try {

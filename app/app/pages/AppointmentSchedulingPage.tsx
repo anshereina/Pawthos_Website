@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
         borderColor: '#ddd',
         borderRadius: 8,
         backgroundColor: '#fff',
-        maxHeight: 200,
+        maxHeight: 300,
         zIndex: 1000,
     },
     searchInput: {
@@ -1052,7 +1052,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                             onChangeText={setPetSearchQuery}
                                             autoFocus
                                         />
-                                        <ScrollView style={{ maxHeight: 150 }}>
+                                        <ScrollView style={{ maxHeight: 250 }} nestedScrollEnabled>
                                             {isLoadingPets ? (
                                                 <View style={styles.petOption}>
                                                     <Text style={styles.petOptionText}>Loading pets...</Text>

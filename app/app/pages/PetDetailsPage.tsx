@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getPetById, updatePet, PetData } from '../../utils/pets.utils';
+import { getPetById, updatePet, deletePet, PetData } from '../../utils/pets.utils';
 import { isAuthenticated } from '../../utils/auth.utils';
 import { API_BASE_URL } from '../../utils/config';
 import EditPetProfileModal from '../modals/EditPetProfileModal';
@@ -29,6 +29,18 @@ const styles = StyleSheet.create({
     editButton: {
         position: 'absolute',
         top: 50, // Adjusted for full-screen - moved higher
+        right: 20,
+        zIndex: 10,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    deleteButton: {
+        position: 'absolute',
+        top: 100,
         right: 20,
         zIndex: 10,
         width: 40,
@@ -255,6 +267,7 @@ export default function PetDetailsPage({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     
     // Animation references removed for cleaner experience
 
@@ -444,6 +457,45 @@ export default function PetDetailsPage({
                 onPress={() => setEditModalVisible(true)}
             >
                 <MaterialIcons name="edit" size={24} color="#045b26" />
+            </TouchableOpacity>
+
+            {/* Delete Button - Fixed Position */}
+            <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={async () => {
+                    if (!petData || deleting) return;
+                    Alert.alert(
+                        'Remove Pet',
+                        `Are you sure you want to remove ${petData.name}? This will also remove related records (appointments, medical, vaccination, and pain assessments).`,
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                                text: 'Remove',
+                                style: 'destructive',
+                                onPress: async () => {
+                                    try {
+                                        setDeleting(true);
+                                        const result = await deletePet(petData.id);
+                                        if (!result.success) {
+                                            Alert.alert('Error', result.message || 'Failed to delete pet.');
+                                            setDeleting(false);
+                                            return;
+                                        }
+                                        Alert.alert('Removed', result.message || 'Pet removed successfully.', [
+                                            { text: 'OK', onPress: () => onNavigate('Pet profile') },
+                                        ]);
+                                    } catch (err) {
+                                        console.error('Delete pet error:', err);
+                                        Alert.alert('Error', 'Failed to delete pet. Please try again.');
+                                        setDeleting(false);
+                                    }
+                                },
+                            },
+                        ]
+                    );
+                }}
+            >
+                <MaterialIcons name="delete" size={24} color="#DC3545" />
             </TouchableOpacity>
 
             <ScrollView showsVerticalScrollIndicator={false}>

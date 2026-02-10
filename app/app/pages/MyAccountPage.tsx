@@ -458,26 +458,35 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
     };
 
     const handleSubmitPasswordChange = async () => {
-        if (!currentPasswordInput.trim()) {
+        const current = currentPasswordInput.trim();
+        const next = newPasswordInput.trim();
+        const confirmNext = confirmPasswordInput.trim();
+
+        if (!current) {
             Alert.alert('Error', 'Please enter your current password.');
             return;
         }
-        if (!newPasswordInput.trim()) {
+        if (!next) {
             Alert.alert('Error', 'Please enter a new password.');
             return;
         }
-        if (newPasswordInput.trim().length < 6) {
-            Alert.alert('Error', 'New password must be at least 6 characters.');
+        // Match signup strong password requirements
+        const strongPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])(?!.*\s).{8,}$/;
+        if (!strongPattern.test(next)) {
+            Alert.alert(
+                'Error',
+                'New password must be at least 8 characters and include uppercase, lowercase, number, and special character (no spaces).'
+            );
             return;
         }
-        if (newPasswordInput.trim() !== confirmPasswordInput.trim()) {
+        if (next !== confirmNext) {
             Alert.alert('Error', 'New password and confirmation do not match.');
             return;
         }
 
         try {
             setChangingPassword(true);
-            const result = await changePassword(currentPasswordInput.trim(), newPasswordInput.trim());
+            const result = await changePassword(current, next);
             if (result.success) {
                 Alert.alert('Success', result.message || 'Password updated successfully.');
                 setPasswordModalVisible(false);

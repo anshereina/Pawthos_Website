@@ -524,26 +524,23 @@ export default function IntegrationResultPage({
     // Use painLevel if provided, otherwise fall back to severityLevel
     const currentPainLevel = painLevel || severityLevel;
 
-    // Normalize various backend/result strings to a consistent 6-level BEAP set
+    // Normalize various backend/result strings to the new 3-level feline scale
     const normalizePainLevel = (level: string): string => {
         if (!level) return 'Unknown';
         const normalized = String(level).trim();
-        // Prefer numeric level if present
-        if (/^level\s*0/i.test(normalized)) return 'Level 0 (No Pain)';
-        if (/^level\s*1/i.test(normalized)) return 'Level 1 (Mild Pain)';
-        if (/^level\s*2/i.test(normalized)) return 'Level 2 (Moderate Pain)';
-        if (/^level\s*3/i.test(normalized)) return 'Level 3 (Moderate to Severe Pain)';
-        if (/^level\s*4/i.test(normalized)) return 'Level 4 (Severe Pain)';
-        if (/^level\s*5/i.test(normalized)) return 'Level 5 (Worst Pain Possible)';
-
-        // Handle plain labels
         const lower = normalized.toLowerCase();
-        if (lower.includes('no pain')) return 'Level 0 (No Pain)';
-        if (lower.includes('mild')) return 'Level 1 (Mild Pain)';
-        if (lower.includes('moderate to severe')) return 'Level 3 (Moderate to Severe Pain)';
-        if (lower.includes('moderate')) return 'Level 2 (Moderate Pain)';
-        if (lower.includes('worst')) return 'Level 5 (Worst Pain Possible)';
-        if (lower.includes('severe')) return 'Level 4 (Severe Pain)';
+
+        // Numeric level patterns
+        if (/^level\s*0/i.test(normalized)) return 'Level 0 - No Pain';
+        if (/^level\s*1/i.test(normalized)) return 'Level 1 - Moderate Pain';
+        if (/^level\s*2/i.test(normalized) || /^level\s*3/i.test(normalized)) return 'Level 2 - Severe Pain';
+
+        // Handle legacy plain labels
+        const lower = normalized.toLowerCase();
+        if (lower.includes('no pain')) return 'Level 0 - No Pain';
+        if (lower.includes('mild')) return 'Level 1 - Moderate Pain';
+        if (lower.includes('moderate')) return 'Level 1 - Moderate Pain';
+        if (lower.includes('severe')) return 'Level 2 - Severe Pain';
         if (lower.includes('unknown') || lower.includes('not recognize') || lower.includes('not recognized')) return 'Unknown';
         return 'Unknown';
     };
@@ -574,18 +571,12 @@ export default function IntegrationResultPage({
         const petName = type === 'cat' ? 'cat' : 'dog';
         const petPronoun = type === 'cat' ? 'its' : 'their';
         
-        if (level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain') {
+        if (level === 'Level 0 - No Pain') {
             return `Your ${petName} appears to be in good health. Continue to monitor ${petPronoun} behavior and well-being.`;
-        } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain') {
-            return `Your ${petName} may be experiencing mild pain. Monitor closely for changes in behavior or appetite. Consider consulting with a veterinarian if symptoms persist.`;
-        } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain') {
-            return `Your ${petName} is experiencing moderate pain. Please schedule a veterinary appointment soon to address the underlying cause and ensure your pet's comfort.`;
-        } else if (level === 'Level 3 (Moderate to Severe Pain)' || level === 'Level 3' || level === 'Moderate to Severe Pain') {
-            return `Your ${petName} is experiencing moderate to severe pain. Seek prompt veterinary attention to manage pain and evaluate potential causes.`;
-        } else if (level === 'Level 4 (Severe Pain)' || level === 'Level 4' || level === 'Severe Pain') {
-            return `Your ${petName} is experiencing severe pain. Immediate veterinary attention is strongly recommended to ensure comfort and address serious concerns.`;
-        } else if (level === 'Level 5 (Worst Pain Possible)' || level === 'Level 5' || level === 'Worst Pain Possible') {
-            return `Your ${petName} may be in the worst pain possible. Seek emergency veterinary care immediately.`;
+        } else if (level === 'Level 1 - Moderate Pain') {
+            return `Your ${petName} may be experiencing moderate pain. Monitor closely for changes in behavior or appetite and consider consulting with a veterinarian soon.`;
+        } else if (level === 'Level 2 - Severe Pain') {
+            return `Your ${petName} is likely experiencing severe pain. Please seek veterinary attention as soon as possible to ensure comfort and address any serious concerns.`;
         } else if (level === 'Not recognize' || level === 'Not Recognized' || level === 'Unknown') {
             return `The image could not be properly analyzed. Please ensure your ${petName}'s face is clearly visible and well-lit. Try taking another photo following the guidelines above.`;
         }

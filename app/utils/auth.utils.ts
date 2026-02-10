@@ -778,8 +778,13 @@ export const changePassword = async (
   currentPassword: string,
   newPassword: string
 ): Promise<AuthResult> => {
-  if (!newPassword || newPassword.length < 6) {
-    return { success: false, message: 'New password must be at least 6 characters' };
+  // Enforce strong password rules (aligned with signup)
+  const strongPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])(?!.*\s).{8,}$/;
+  if (!newPassword || !strongPattern.test(newPassword)) {
+    return {
+      success: false,
+      message: 'New password must be at least 8 characters and include uppercase, lowercase, number, and special character (no spaces).',
+    };
   }
 
   const token = await getAuthToken();

@@ -535,27 +535,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         }
     };
 
-    const handleOwnerBirthdayChange = (text: string) => {
-        const formatted = formatDateInput(text);
-        setOwnerBirthday(formatted);
-
-        // Proactively block future years as user types
-        if (formatted.length === 10) {
-            const normalized = formatted.replace(/-/g, '/');
-            const parts = normalized.split('/');
-            const year = parts.length === 3 ? parseInt(parts[2], 10) : NaN;
-            const currentYear = new Date().getFullYear();
-            if (!isNaN(year) && year > currentYear) {
-                setFieldErrors(prev => ({ ...prev, ownerBirthday: `Year cannot be greater than ${currentYear}.` }));
-            } else {
-                setFieldErrors(prev => {
-                    const next = { ...prev };
-                    if (next.ownerBirthday) delete next.ownerBirthday;
-                    return next;
-                });
-            }
-        }
-    };
+    // Owner's birthday is now auto-filled from user profile and not editable
 
     const requestPermissions = async () => {
         // Check permission first, only request if needed
@@ -775,7 +755,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
             // Always generate a new pet ID for registration
             const finalPetId = generatePetId();
 
-            // Get current user info for owner name
+            // Get current user info for owner name and birthday
             const currentUser = await getCurrentUser();
             const ownerName = currentUser?.name || 'Pet Owner';
 
@@ -790,14 +770,8 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                 }
             }
 
-            let formattedOwnerBirthday = undefined;
-            if (ownerBirthday && ownerBirthday.length === 10) {
-                const normalized = ownerBirthday.replace(/-/g, '/');
-                const parts = normalized.split('/');
-                if (parts.length === 3) {
-                    formattedOwnerBirthday = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                }
-            }
+            // Owner birthday is stored as-is in backend for now (already in YYYY-MM-DD format if present)
+            const formattedOwnerBirthday = ownerBirthday || undefined;
 
             const petData = {
                 pet_id: finalPetId,

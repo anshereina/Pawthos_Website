@@ -137,10 +137,10 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
       setProgress(100);
       setStatusText('Analysis complete!');
 
-      // Wait a moment to show completion
+      // Short pause to show completion before navigating
       setTimeout(() => {
         onDone(result, imageUri);
-      }, 500);
+      }, 200);
 
     } catch (error: any) {
       console.error('Error analyzing cat image:', error);

@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     },
 });
 
-function CollapsibleMenu({ open, onClose, setSelectedMenu, onRequestLogout, addToHistory }: { open: boolean, onClose: () => void, setSelectedMenu: (label: string) => void, onRequestLogout: () => void, addToHistory: (page: string, data?: any) => void }) {
+function CollapsibleMenu({ open, onClose, setSelectedMenu, onRequestLogout, addToHistory, isDarkMode, onToggleDarkMode }: { open: boolean, onClose: () => void, setSelectedMenu: (label: string) => void, onRequestLogout: () => void, addToHistory: (page: string, data?: any) => void, isDarkMode: boolean, onToggleDarkMode: () => void }) {
     const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
     const [isVisible, setIsVisible] = useState(false);
     const [hasAnimated, setHasAnimated] = useState(false);
@@ -419,7 +419,8 @@ function CollapsibleMenu({ open, onClose, setSelectedMenu, onRequestLogout, addT
                 <Animated.View style={[
                     styles.drawer, 
                     { 
-                        transform: [{ translateX: slideAnim }] 
+                        transform: [{ translateX: slideAnim }],
+                        backgroundColor: isDarkMode ? '#121212' : '#FFFFFF'
                     }
                 ]}> 
                 {/* Modern Header */}
@@ -490,6 +491,27 @@ function CollapsibleMenu({ open, onClose, setSelectedMenu, onRequestLogout, addT
                             {idx < MENU_STRUCTURE.length - 1 && <View style={styles.divider} />}
                         </View>
                     ))}
+                    {/* Dark Mode toggle under Profile/Account */}
+                    <View style={styles.menuSection}>
+                        <View style={styles.menuCard}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={onToggleDarkMode}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.menuIconContainer}>
+                                    <MaterialIcons
+                                        name={isDarkMode ? 'dark-mode' : 'light-mode'}
+                                        size={20}
+                                        color={isDarkMode ? '#FFD54F' : '#045b26'}
+                                    />
+                                </View>
+                                <Text style={styles.menuText}>
+                                    Dark Mode {isDarkMode ? '(On)' : '(Off)'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </ScrollView>
                 
                 {/* Modern Logout Section */}
@@ -533,6 +555,31 @@ export default function MainApp() {
     const [currentQuestionCategory, setCurrentQuestionCategory] = useState<string>('');
     const [navigationHistory, setNavigationHistory] = useState<{page: string, data?: any}[]>([{page: 'Home'}]);
     const [notificationCount, setNotificationCount] = useState<number>(0);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    // Load saved theme on mount
+    React.useEffect(() => {
+        const loadTheme = async () => {
+            try {
+                const saved = await AsyncStorage.getItem('@theme');
+                if (saved === 'dark') {
+                    setIsDarkMode(true);
+                }
+            } catch (e) {
+                console.log('Error loading theme', e);
+            }
+        };
+        loadTheme();
+    }, []);
+
+    // Persist theme changes
+    React.useEffect(() => {
+        AsyncStorage.setItem('@theme', isDarkMode ? 'dark' : 'light').catch(() => {});
+    }, [isDarkMode]);
+
+    const handleToggleDarkMode = () => {
+        setIsDarkMode(prev => !prev);
+    };
     
     // Simplified sidebar - no animations needed
 
@@ -998,12 +1045,12 @@ export default function MainApp() {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : '#ffffff' }]}>
             {/* Hide navbar for Pet Details and Integration pages to enable full-screen experience */}
             {selectedMenu !== 'Pet Details' && 
              !selectedMenu.includes('Integration') && 
              !selectedMenu.includes('Canine') && (
-                <View style={styles.navbar}>
+                <View style={[styles.navbar, { backgroundColor: isDarkMode ? '#121212' : '#ffffff' }]}>
                     {(selectedMenu === 'Home' || selectedMenu === 'Appointment' || selectedMenu === 'Pain Assessment' || selectedMenu === 'Pet profile' || selectedMenu === 'My account') ? (
                         // Base pages layout (Home, Appointment, Pain Assessment, Pet profile, My account, Integration)
                         <>
@@ -1072,6 +1119,8 @@ export default function MainApp() {
                 setSelectedMenu={setSelectedMenu}
                 onRequestLogout={requestLogout}
                 addToHistory={addToHistory}
+                isDarkMode={isDarkMode}
+                onToggleDarkMode={handleToggleDarkMode}
             />
             <View style={styles.contentContainer}>
                 {content}

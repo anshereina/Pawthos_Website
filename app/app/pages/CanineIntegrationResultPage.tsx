@@ -201,44 +201,31 @@ export default function CanineIntegrationResultPage({
     beap_average_score
 }: CanineIntegrationResultPageProps) {
     
-    // Calculate pain level based on BEAP (BluePearl Pet Hospice) assessment
-    // BEAP uses average score across 8 categories (0-10 scale)
-    const calculatePainLevel = (): string => {
-        // If BEAP average score is provided, use it directly
-        if (beap_average_score !== undefined && beap_average_score !== null) {
-            return mapBeapScoreToPainLevel(beap_average_score);
-        }
-        
-        // Otherwise, calculate from selectedAnswers
+    // Calculate total BEAP-derived score on 0–40 scale (8 categories x 0–5)
+    const calculateTotalScore = (): number => {
         if (selectedAnswers && Array.isArray(selectedAnswers) && selectedAnswers.length > 0) {
-            // Check if selectedAnswers is array of arrays (new format)
-            if (Array.isArray(selectedAnswers[0])) {
-                const averageScore = calculateBeapAverageScore(selectedAnswers as number[][]);
-                return mapBeapScoreToPainLevel(averageScore);
-            }
+            return selectedAnswers.reduce((sum, imageIndices) => {
+                if (!imageIndices || imageIndices.length === 0) return sum;
+                const categoryScore = Math.max(...imageIndices.map(index => index));
+                return sum + categoryScore;
+            }, 0);
         }
-        
-        return 'Unknown';
-    };
-
-    // Calculate BEAP average score for display
-    const getBeapAverageScore = (): number => {
-        if (beap_average_score !== undefined && beap_average_score !== null) {
-            return beap_average_score;
-        }
-        
-        if (selectedAnswers && Array.isArray(selectedAnswers) && selectedAnswers.length > 0) {
-            if (Array.isArray(selectedAnswers[0])) {
-                return calculateBeapAverageScore(selectedAnswers as number[][]);
-            }
-        }
-        
         return 0;
     };
 
-    // Use calculated pain level or provided pain level
-    const currentPainLevel = painLevel || calculatePainLevel();
-    const beapScore = getBeapAverageScore();
+    // Map total score (0–40) to new 0–4 canine levels
+    const mapTotalScoreToLevel = (total: number): string => {
+        if (total <= 8) return 'Level 0 (No Pain)';
+        if (total <= 16) return 'Level 1 (Mild Pain)';
+        if (total <= 24) return 'Level 2 (Moderate Pain)';
+        if (total <= 32) return 'Level 3 (Moderate to Severe Pain)';
+        return 'Level 4 (Severe Pain)';
+    };
+
+    const totalScore = calculateTotalScore();
+
+    // Use explicit mapping based on total 0–40 score; fall back to provided painLevel if present
+    const currentPainLevel = painLevel || mapTotalScoreToLevel(totalScore);
 
     // Define a function to get recommendations based on the pain level
     const getRecommendations = (level: string) => {
@@ -421,35 +408,24 @@ export default function CanineIntegrationResultPage({
                                 Total Score
                             </Text>
                             <Text style={[styles.resultText, { fontSize: 18, color: '#045b26', marginBottom: 12 }]}>
-                                {selectedAnswers.reduce((sum, imageIndices) => {
-                                    if (!imageIndices || imageIndices.length === 0) return sum;
-                                    // Use max score from selected images in this category
-                                    const categoryScore = Math.max(...imageIndices.map(imageIndex => imageIndex));
-                                    return sum + categoryScore;
-                                }, 0)} / 40
+                                {totalScore} / 40
                             </Text>
                             
                             {/* Scoring Explanation */}
                             <View style={styles.scoringExplanation}>
                                 <Text style={styles.scoringTitle}>📊 How Scoring Works</Text>
-                                <Text style={styles.scoringText}>
-                                    We assessed 8 areas of your dog's behavior: breathing, eyes, walking, activity, appetite, attitude, posture, and touch response. Each area is scored 0-5 points based on pain indicators.
-                                    {'\n\n'}
-                                    <Text style={{ fontWeight: 'bold' }}>Your dog's total: </Text>
-                                    {selectedAnswers.reduce((sum, imageIndices) => {
-                                        if (!imageIndices || imageIndices.length === 0) return sum;
-                                        // Use max score from selected images in this category
-                                        const categoryScore = Math.max(...imageIndices.map(imageIndex => imageIndex));
-                                        return sum + categoryScore;
-                                    }, 0)} points out of 40 possible
-                                    {'\n\n'}
-                                    • 0-4: Minimal or no pain{'\n'}
-                                    • 5-11: Mild pain{'\n'}
-                                    • 12-19: Moderate pain{'\n'}
-                                    • 20-26: Moderate to severe pain{'\n'}
-                                    • 27-33: Severe pain{'\n'}
-                                    • 34-40: Worst possible pain
-                                </Text>
+                                    <Text style={styles.scoringText}>
+                                        We assessed 8 areas of your dog's behavior: breathing, eyes, walking, activity, appetite, attitude, posture, and touch response. Each area is scored 0–5 points based on pain indicators.
+                                        {'\n\n'}
+                                        <Text style={{ fontWeight: 'bold' }}>Your dog's total: </Text>
+                                        {totalScore} points out of 40 possible
+                                        {'\n\n'}
+                                        • 0–8 points: Level 0 (No Pain){'\n'}
+                                        • 9–16 points: Level 1 (Mild Pain){'\n'}
+                                        • 17–24 points: Level 2 (Moderate Pain){'\n'}
+                                        • 25–32 points: Level 3 (Moderate to Severe Pain){'\n'}
+                                        • 33–40 points: Level 4 (Severe Pain)
+                                    </Text>
                             </View>
                         </>
                     )}
