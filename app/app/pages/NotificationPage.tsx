@@ -19,7 +19,7 @@ interface Notification {
 const READ_NOTIFICATIONS_KEY = '@read_notifications';
 const CLEARED_NOTIFICATIONS_KEY = '@cleared_notifications';
 
-export default function NotificationPage() {
+export default function NotificationPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,20 +205,25 @@ export default function NotificationPage() {
   };
 
   const hasUnreadNotifications = notifications.some(notification => !notification.isRead);
+  const backgroundColor = isDarkMode ? '#121212' : '#f7f7f7';
+  const iconColor = isDarkMode ? '#4CAF50' : '#4CAF50';
+  const textColor = isDarkMode ? '#e0e0e0' : '#fff';
+  const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#e0e0e0';
+  const disabledColor = isDarkMode ? '#666' : '#ccc';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={styles.titleContainer}>
           <View style={styles.actionButtons}>
             <TouchableOpacity onPress={markAllAsRead} disabled={!hasUnreadNotifications}>
-              <Text style={[styles.markAll, !hasUnreadNotifications && styles.disabledText]}>
+              <Text style={[styles.markAll, { color: !hasUnreadNotifications ? disabledColor : (isDarkMode ? iconColor : '#D37F52') }]}>
                 Mark all as read
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={clearNotifications} disabled={notifications.length === 0}>
-              <Text style={[styles.clearAll, notifications.length === 0 && styles.disabledText]}>
+              <Text style={[styles.clearAll, { color: notifications.length === 0 ? disabledColor : (isDarkMode ? iconColor : '#D37F52') }]}>
                 Clear notifications
               </Text>
             </TouchableOpacity>
@@ -231,28 +236,28 @@ export default function NotificationPage() {
         style={styles.feed} 
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4CAF50']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[iconColor]} />
         }
       >
         {loading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#4CAF50" />
-            <Text style={styles.loadingText}>Loading notifications...</Text>
+            <ActivityIndicator size="large" color={iconColor} />
+            <Text style={[styles.loadingText, { color: iconColor }]}>Loading notifications...</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContainer}>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={fetchAlerts} style={styles.retryButton}>
+            <TouchableOpacity onPress={fetchAlerts} style={[styles.retryButton, { backgroundColor: iconColor }]}>
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>
         ) : notifications.length === 0 ? (
-          <Text style={styles.emptyText}>No notifications.</Text>
+          <Text style={[styles.emptyText, { color: isDarkMode ? secondaryTextColor : '#999' }]}>No notifications.</Text>
         ) : (
           notifications.map((n) => (
             <TouchableOpacity 
               key={n.id} 
-              style={[styles.notificationBox, n.isRead && { opacity: 0.5 }]}
+              style={[styles.notificationBox, { backgroundColor: iconColor }, n.isRead && { opacity: 0.5 }]}
               onPress={() => markAsRead(n.id)}
               activeOpacity={0.7}
             > 
@@ -260,7 +265,7 @@ export default function NotificationPage() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.notificationTitle}>{n.title}</Text>
                 <Text style={styles.notificationContent}>{n.content}</Text>
-                <Text style={styles.notificationDate}>{n.date}</Text>
+                <Text style={[styles.notificationDate, { color: secondaryTextColor }]}>{n.date}</Text>
                 {!n.isRead && (
                   <View style={styles.unreadBadge}>
                     <Text style={styles.unreadBadgeText}>NEW</Text>

@@ -258,10 +258,12 @@ const styles = StyleSheet.create({
 
 export default function PetDetailsPage({ 
     onNavigate, 
-    petId 
+    petId,
+    isDarkMode = false
 }: { 
     onNavigate: (page: string) => void;
     petId?: number;
+    isDarkMode?: boolean;
 }) {
     const [petData, setPetData] = useState<PetData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -441,11 +443,19 @@ export default function PetDetailsPage({
         );
     }
 
+    const backgroundColor = isDarkMode ? '#121212' : '#FFFFFF';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#FFFFFF';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const lightBackground = isDarkMode ? '#2d2d2d' : '#F8FFF8';
+    const buttonBackground = isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor }]}>
             {/* Back Button - Fixed Position */}
             <TouchableOpacity 
-                style={styles.backButton}
+                style={[styles.backButton, { backgroundColor: buttonBackground }]}
                 onPress={() => {
                     try {
                         onNavigate('Pet profile');
@@ -454,20 +464,20 @@ export default function PetDetailsPage({
                     }
                 }}
             >
-                <MaterialIcons name="arrow-back" size={24} color="#045b26" />
+                <MaterialIcons name="arrow-back" size={24} color={iconColor} />
             </TouchableOpacity>
 
             {/* Edit Button - Fixed Position */}
             <TouchableOpacity 
-                style={styles.editButton}
+                style={[styles.editButton, { backgroundColor: buttonBackground }]}
                 onPress={() => setEditModalVisible(true)}
             >
-                <MaterialIcons name="edit" size={24} color="#045b26" />
+                <MaterialIcons name="edit" size={24} color={iconColor} />
             </TouchableOpacity>
 
             {/* Delete Button - Fixed Position */}
             <TouchableOpacity
-                style={styles.deleteButton}
+                style={[styles.deleteButton, { backgroundColor: buttonBackground }]}
                 onPress={async () => {
                     if (!petData || deleting) return;
                     Alert.alert(
@@ -523,8 +533,8 @@ export default function PetDetailsPage({
                             }}
                         />
                     ) : (
-                        <View style={styles.imagePlaceholder}>
-                            <MaterialCommunityIcons name="camera-off" size={64} color="#999" />
+                        <View style={[styles.imagePlaceholder, { backgroundColor: isDarkMode ? '#1e1e1e' : '#F0F8F0' }]}>
+                            <MaterialCommunityIcons name="camera-off" size={64} color={secondaryTextColor} />
                         </View>
                     )}
                     
@@ -539,36 +549,36 @@ export default function PetDetailsPage({
                 </View>
 
                 {/* Content Section */}
-                <View style={styles.contentSection}>
+                <View style={[styles.contentSection, { backgroundColor }]}>
                     {/* Quick Stats Bar */}
-                    <View style={styles.quickStatsBar}>
+                    <View style={[styles.quickStatsBar, { backgroundColor: lightBackground }]}>
                         <View style={styles.statItem}>
-                            <View style={styles.statIcon}>
-                                <MaterialCommunityIcons name="calendar" size={20} color="#045b26" />
+                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1e1e1e' : '#E8F5E8' }]}>
+                                <MaterialCommunityIcons name="calendar" size={20} color={iconColor} />
                             </View>
-                            <Text style={styles.statLabel}>Age</Text>
-                            <Text style={styles.statValue}>{formatPetAge(petData.date_of_birth)}</Text>
+                            <Text style={[styles.statLabel, { color: secondaryTextColor }]}>Age</Text>
+                            <Text style={[styles.statValue, { color: textColor }]}>{formatPetAge(petData.date_of_birth)}</Text>
                         </View>
                         <View style={styles.statItem}>
-                            <View style={styles.statIcon}>
-                                <MaterialCommunityIcons name="paw" size={20} color="#045b26" />
+                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1e1e1e' : '#E8F5E8' }]}>
+                                <MaterialCommunityIcons name="paw" size={20} color={iconColor} />
                             </View>
-                            <Text style={styles.statLabel}>Species</Text>
-                                <Text style={styles.statValue}>{formatSpecies(petData.species)}</Text>
+                            <Text style={[styles.statLabel, { color: secondaryTextColor }]}>Species</Text>
+                                <Text style={[styles.statValue, { color: textColor }]}>{formatSpecies(petData.species)}</Text>
                         </View>
                         <View style={styles.statItem}>
-                            <View style={styles.statIcon}>
-                                <MaterialCommunityIcons name="gender-male-female" size={20} color="#045b26" />
+                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1e1e1e' : '#E8F5E8' }]}>
+                                <MaterialCommunityIcons name="gender-male-female" size={20} color={iconColor} />
                             </View>
-                            <Text style={styles.statLabel}>Gender</Text>
-                            <Text style={styles.statValue}>{petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1) : 'Unknown'}</Text>
+                            <Text style={[styles.statLabel, { color: secondaryTextColor }]}>Gender</Text>
+                            <Text style={[styles.statValue, { color: textColor }]}>{petData.gender ? petData.gender.charAt(0).toUpperCase() + petData.gender.slice(1) : 'Unknown'}</Text>
                         </View>
                     </View>
 
                     {/* Action Buttons */}
                     <View style={styles.actionButtonsContainer}>
                         <TouchableOpacity 
-                            style={styles.actionButton}
+                            style={[styles.actionButton, { backgroundColor: iconColor }]}
                             onPress={() => {
                                 try {
                                     onNavigate('Pet MedRecords');
@@ -581,7 +591,7 @@ export default function PetDetailsPage({
                             <Text style={styles.actionButtonText}>Medical History</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
-                            style={[styles.actionButton, styles.actionButtonSecondary]}
+                            style={[styles.actionButton, styles.actionButtonSecondary, { backgroundColor: lightBackground, borderColor }]}
                             onPress={() => {
                                 try {
                                     onNavigate('Pet VacCard');
@@ -590,42 +600,42 @@ export default function PetDetailsPage({
                                 }
                             }}
                         >
-                            <MaterialCommunityIcons name="shield-check" size={24} color="#045b26" style={styles.actionButtonIcon} />
-                            <Text style={[styles.actionButtonText, styles.actionButtonTextSecondary]}>Vaccination Records</Text>
+                            <MaterialCommunityIcons name="shield-check" size={24} color={iconColor} style={styles.actionButtonIcon} />
+                            <Text style={[styles.actionButtonText, styles.actionButtonTextSecondary, { color: iconColor }]}>Vaccination Records</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Pet Information Cards */}
                     <View style={styles.infoCardsContainer}>
-                        <Text style={styles.sectionTitle}>Pet Information</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Pet Information</Text>
                         <View style={styles.infoGrid}>
-                            <View style={styles.infoCard}>
-                                <View style={styles.infoCardIcon}>
-                                    <MaterialCommunityIcons name="cake-variant" size={24} color="#045b26" />
+                            <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                    <MaterialCommunityIcons name="cake-variant" size={24} color={iconColor} />
                                 </View>
-                                <Text style={styles.infoCardLabel}>Birthday</Text>
-                                <Text style={styles.infoCardValue}>{formatDate(petData.date_of_birth)}</Text>
+                                <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Birthday</Text>
+                                <Text style={[styles.infoCardValue, { color: textColor }]}>{formatDate(petData.date_of_birth)}</Text>
                             </View>
-                            <View style={styles.infoCard}>
-                                <View style={styles.infoCardIcon}>
-                                    <MaterialCommunityIcons name="palette" size={24} color="#045b26" />
+                            <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                    <MaterialCommunityIcons name="palette" size={24} color={iconColor} />
                                 </View>
-                                <Text style={styles.infoCardLabel}>Color</Text>
-                                <Text style={styles.infoCardValue}>{petData.color || 'Unknown'}</Text>
+                                <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Color</Text>
+                                <Text style={[styles.infoCardValue, { color: textColor }]}>{petData.color || 'Unknown'}</Text>
                             </View>
-                            <View style={styles.infoCard}>
-                                <View style={styles.infoCardIcon}>
-                                    <MaterialCommunityIcons name="dna" size={24} color="#045b26" />
+                            <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                    <MaterialCommunityIcons name="dna" size={24} color={iconColor} />
                                 </View>
-                                <Text style={styles.infoCardLabel}>Breed</Text>
-                                <Text style={styles.infoCardValue}>{petData.breed || 'Mixed Breed'}</Text>
+                                <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Breed</Text>
+                                <Text style={[styles.infoCardValue, { color: textColor }]}>{petData.breed || 'Mixed Breed'}</Text>
                             </View>
-                            <View style={styles.infoCard}>
-                                <View style={styles.infoCardIcon}>
-                                    <MaterialCommunityIcons name="heart" size={24} color="#045b26" />
+                            <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                    <MaterialCommunityIcons name="heart" size={24} color={iconColor} />
                                 </View>
-                                <Text style={styles.infoCardLabel}>Status</Text>
-                                <Text style={styles.infoCardValue}>{formatReproductiveStatus(petData.reproductive_status)}</Text>
+                                <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Status</Text>
+                                <Text style={[styles.infoCardValue, { color: textColor }]}>{formatReproductiveStatus(petData.reproductive_status)}</Text>
                             </View>
                         </View>
                     </View>

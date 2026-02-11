@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function AppointmentSchedulingPage({ initialAppointmentType, onBack, onNavigate, appointmentToEdit, prefilledPet }: { initialAppointmentType?: string, onBack?: () => void, onNavigate?: (page: string) => void, appointmentToEdit?: any, prefilledPet?: { pet_id: number, pet_name: string, pet_type: string } }) {
+export default function AppointmentSchedulingPage({ initialAppointmentType, onBack, onNavigate, appointmentToEdit, prefilledPet, isDarkMode = false }: { initialAppointmentType?: string, onBack?: () => void, onNavigate?: (page: string) => void, appointmentToEdit?: any, prefilledPet?: { pet_id: number, pet_name: string, pet_type: string }, isDarkMode?: boolean }) {
     const [editingAppointmentId, setEditingAppointmentId] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [appointmentFor, setAppointmentFor] = useState(initialAppointmentType || 'Please Select');
@@ -824,15 +824,24 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
         return days;
     };
 
+    const backgroundColor = isDarkMode ? '#121212' : '#f7f7f7';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#fff';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const borderColor = isDarkMode ? '#333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const calendarBg = isDarkMode ? '#2d2d2d' : '#045b26';
+    const inputBackground = isDarkMode ? '#2d2d2d' : '#FFFFFF';
+    
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <ScrollView 
-                    style={styles.content}
+                    style={[styles.content, { backgroundColor }]}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
@@ -840,7 +849,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                 </View>
 
                 {/* Calendar Component */}
-                <View style={styles.calendarContainer}>
+                <View style={[styles.calendarContainer, { backgroundColor: calendarBg }]}>
                     <View style={styles.calendarHeader}>
                         <Text style={styles.monthYear}>{formatMonthYear(currentDate)}</Text>
                         <View style={styles.navigationArrows}>
@@ -865,18 +874,18 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                 </View>
 
                 {/* Appointment Form */}
-                <View style={styles.formContainer}>
+                <View style={[styles.formContainer, { backgroundColor: cardBackground }]}>
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Time</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Time</Text>
                         <TouchableOpacity 
-                            style={styles.dropdownContainer}
+                            style={[styles.dropdownContainer, { backgroundColor: inputBackground, borderColor }]}
                             onPress={() => setShowTimeOptions(!showTimeOptions)}
                         >
-                            <Text style={styles.dropdownText}>{selectedTime}</Text>
+                            <Text style={[styles.dropdownText, { color: selectedTime === 'Please Select' ? secondaryTextColor : textColor }]}>{selectedTime}</Text>
                             <MaterialIcons 
                                 name={showTimeOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color="#666" 
+                                color={secondaryTextColor} 
                             />
                         </TouchableOpacity>
                         {showTimeOptions && (
@@ -886,7 +895,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                         key={option}
                                         style={[
                                             styles.dropdownOption,
-                                            selectedTime === option && styles.dropdownOptionSelected
+                                            { backgroundColor: selectedTime === option ? (isDarkMode ? '#2d2d2d' : '#E8F5E8') : cardBackground }
                                         ]}
                                         onPress={() => {
                                             setSelectedTime(option);
@@ -895,15 +904,15 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                     >
                                         <Text style={[
                                             styles.dropdownOptionText,
-                                            selectedTime === option && styles.dropdownOptionTextSelected
+                                            { color: selectedTime === option ? iconColor : textColor }
                                         ]}>
                                             {option}
                                         </Text>
                                     </TouchableOpacity>
                                 ))
                             ) : (
-                                <View style={styles.dropdownOption}>
-                                    <Text style={styles.dropdownOptionText}>
+                                <View style={[styles.dropdownOption, { backgroundColor: cardBackground }]}>
+                                    <Text style={[styles.dropdownOptionText, { color: textColor }]}>
                                         No time slots left today. Please pick another date.
                                     </Text>
                                 </View>
@@ -912,10 +921,11 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Appointment for</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Appointment for</Text>
                         <TouchableOpacity 
                             style={[
                                 styles.dropdownContainer,
+                                { backgroundColor: inputBackground, borderColor },
                                 // Lock when unregistered feline flow or when editing an existing appointment
                                 (petRegistered === 'no' || isEditing) && styles.inputFieldDisabled
                             ]}
@@ -927,14 +937,14 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                         >
                             <Text style={[
                                 styles.dropdownText,
-                                (petRegistered === 'no' || isEditing) && { color: '#666' }
+                                { color: (petRegistered === 'no' || isEditing || appointmentFor === 'Please Select') ? secondaryTextColor : textColor }
                             ]}>
                                 {appointmentFor}
                             </Text>
                             <MaterialIcons 
                                 name={showAppointmentOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color={(petRegistered === 'no' || isEditing) ? "#999" : "#666"} 
+                                color={secondaryTextColor} 
                             />
                         </TouchableOpacity>
                         {showAppointmentOptions && petRegistered !== 'no' && !isEditing && appointmentOptions.map((option) => (
@@ -942,7 +952,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 key={option}
                                 style={[
                                     styles.dropdownOption,
-                                    appointmentFor === option && styles.dropdownOptionSelected
+                                    { backgroundColor: appointmentFor === option ? (isDarkMode ? '#2d2d2d' : '#E8F5E8') : cardBackground }
                                 ]}
                                 onPress={() => {
                                     setAppointmentFor(option);
@@ -951,7 +961,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <Text style={[
                                     styles.dropdownOptionText,
-                                    appointmentFor === option && styles.dropdownOptionTextSelected
+                                    { color: appointmentFor === option ? iconColor : textColor }
                                 ]}>
                                     {option}
                                 </Text>
@@ -962,10 +972,11 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     {/* Conditional Vaccination Type Form */}
                     {appointmentFor === 'Vaccination' && (
                         <View style={styles.formSection}>
-                            <Text style={styles.sectionTitle}>Type of Vaccination</Text>
+                            <Text style={[styles.sectionTitle, { color: textColor }]}>Type of Vaccination</Text>
                             <TouchableOpacity 
                                 style={[
                                     styles.dropdownContainer,
+                                    { backgroundColor: inputBackground, borderColor },
                                     (editingAppointmentId || isEditing) && styles.inputFieldDisabled
                                 ]}
                                 onPress={() => !editingAppointmentId && !isEditing && setShowVaccinationOptions(!showVaccinationOptions)}
@@ -973,14 +984,14 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <Text style={[
                                     styles.dropdownText,
-                                    (editingAppointmentId || isEditing) && { color: '#666' }
+                                    { color: (editingAppointmentId || isEditing || vaccinationType === 'Please Select') ? secondaryTextColor : textColor }
                                 ]}>
                                     {vaccinationType}
                                 </Text>
                                 <MaterialIcons 
                                     name={showVaccinationOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                     size={24} 
-                                    color={(editingAppointmentId || isEditing) ? "#999" : "#666"} 
+                                    color={(editingAppointmentId || isEditing) ? secondaryTextColor : secondaryTextColor} 
                                 />
                             </TouchableOpacity>
                             {showVaccinationOptions && !editingAppointmentId && !isEditing && vaccinationOptions.map((option) => (
@@ -988,7 +999,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                     key={option}
                                     style={[
                                         styles.dropdownOption,
-                                        vaccinationType === option && styles.dropdownOptionSelected
+                                        { backgroundColor: vaccinationType === option ? (isDarkMode ? '#2d2d2d' : '#E8F5E8') : cardBackground }
                                     ]}
                                     onPress={() => {
                                         setVaccinationType(option);
@@ -997,7 +1008,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 >
                                     <Text style={[
                                         styles.dropdownOptionText,
-                                        vaccinationType === option && styles.dropdownOptionTextSelected
+                                        { color: vaccinationType === option ? iconColor : textColor }
                                     ]}>
                                         {option}
                                     </Text>
@@ -1007,15 +1018,15 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     )}
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>
                             {petRegistered === 'no' ? 'Name of Pet (optional)' : 'Name of Pet'}
                         </Text>
                         {petRegistered === 'no' ? (
                             // Unregistered pet: allow free-text name, optional
                             <TextInput
-                                style={styles.inputField}
+                                style={[styles.inputField, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                 placeholder="Enter pet name (optional)"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={secondaryTextColor}
                                 value={petName}
                                 onChangeText={setPetName}
                             />
@@ -1024,6 +1035,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 <TouchableOpacity 
                                     style={[
                                         styles.dropdownContainer,
+                                        { backgroundColor: inputBackground, borderColor },
                                         (editingAppointmentId || prefilledPet || isEditing) && styles.inputFieldDisabled
                                     ]}
                                     onPress={() => !editingAppointmentId && !prefilledPet && !isEditing && setShowPetDropdown(!showPetDropdown)}
@@ -1031,23 +1043,23 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 >
                                     <Text style={[
                                         styles.dropdownText,
-                                        (editingAppointmentId || prefilledPet || isEditing) && { color: '#666' }
+                                        { color: (editingAppointmentId || prefilledPet || isEditing || !selectedPet) ? secondaryTextColor : textColor }
                                     ]}>
                                         {selectedPet ? selectedPet.name : 'Select a pet'}
                                     </Text>
                                     <MaterialIcons 
                                         name={showPetDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
                                         size={24} 
-                                        color={(editingAppointmentId || prefilledPet || isEditing) ? "#999" : "#666"} 
+                                        color={(editingAppointmentId || prefilledPet || isEditing) ? secondaryTextColor : secondaryTextColor} 
                                     />
                                 </TouchableOpacity>
                                 
                                 {showPetDropdown && !editingAppointmentId && !prefilledPet && !isEditing && (
-                                    <View style={styles.searchableDropdownContainer}>
+                                    <View style={[styles.searchableDropdownContainer, { backgroundColor: cardBackground, borderColor }]}>
                                         <TextInput
-                                            style={styles.searchInput}
+                                            style={[styles.searchInput, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                             placeholder="Search pets by name or ID..."
-                                            placeholderTextColor="#999"
+                                            placeholderTextColor={secondaryTextColor}
                                             value={petSearchQuery}
                                             onChangeText={setPetSearchQuery}
                                             autoFocus
@@ -1055,11 +1067,11 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                         <ScrollView style={{ maxHeight: 250 }} nestedScrollEnabled>
                                             {isLoadingPets ? (
                                                 <View style={styles.petOption}>
-                                                    <Text style={styles.petOptionText}>Loading pets...</Text>
+                                                    <Text style={[styles.petOptionText, { color: textColor }]}>Loading pets...</Text>
                                                 </View>
                                             ) : filteredPets.length === 0 ? (
                                                 <View style={styles.petOption}>
-                                                    <Text style={styles.petOptionText}>
+                                                    <Text style={[styles.petOptionText, { color: textColor }]}>
                                                         {petSearchQuery ? 'No pets found' : 'No pets registered'}
                                                     </Text>
                                                 </View>
@@ -1069,17 +1081,17 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                                         key={pet.id}
                                                         style={[
                                                             styles.petOption,
-                                                            selectedPet?.id === pet.id && styles.petOptionSelected
+                                                            { backgroundColor: selectedPet?.id === pet.id ? (isDarkMode ? '#2d2d2d' : '#E8F5E8') : cardBackground }
                                                         ]}
                                                         onPress={() => handlePetSelect(pet)}
                                                     >
                                                         <Text style={[
                                                             styles.petOptionText,
-                                                            selectedPet?.id === pet.id && styles.petOptionTextSelected
+                                                            { color: selectedPet?.id === pet.id ? iconColor : textColor }
                                                         ]}>
                                                             {pet.name}
                                                         </Text>
-                                                        <Text style={styles.petDetailsText}>
+                                                        <Text style={[styles.petDetailsText, { color: secondaryTextColor }]}>
                                                             ID: {pet.pet_id} • {pet.species}
                                                         </Text>
                                                     </TouchableOpacity>
@@ -1093,10 +1105,11 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Type of Species</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Type of Species</Text>
                         <TouchableOpacity 
                             style={[
                                 styles.dropdownContainer,
+                                { backgroundColor: inputBackground, borderColor },
                                 selectedPet && styles.inputFieldDisabled
                             ]}
                             onPress={() => !selectedPet && setShowSpeciesOptions(!showSpeciesOptions)}
@@ -1104,14 +1117,14 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                         >
                             <Text style={[
                                 styles.dropdownText,
-                                selectedPet && { color: '#666' }
+                                { color: (selectedPet || species === 'Please Select') ? secondaryTextColor : textColor }
                             ]}>
                                 {species}
                             </Text>
                             <MaterialIcons 
                                 name={showSpeciesOptions ? "arrow-drop-up" : "arrow-drop-down"} 
                                 size={24} 
-                                color={selectedPet ? "#999" : "#666"} 
+                                color={selectedPet ? secondaryTextColor : secondaryTextColor} 
                             />
                         </TouchableOpacity>
                         {showSpeciesOptions && !selectedPet && speciesOptions.map((option) => (
@@ -1119,7 +1132,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                                 key={option}
                                 style={[
                                     styles.dropdownOption,
-                                    species === option && styles.dropdownOptionSelected
+                                    { backgroundColor: species === option ? (isDarkMode ? '#2d2d2d' : '#E8F5E8') : cardBackground }
                                 ]}
                                 onPress={() => {
                                     setSpecies(option);
@@ -1128,7 +1141,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <Text style={[
                                     styles.dropdownOptionText,
-                                    species === option && styles.dropdownOptionTextSelected
+                                    { color: species === option ? iconColor : textColor }
                                 ]}>
                                     {option}
                                 </Text>
@@ -1137,40 +1150,40 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Pet ID</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Pet ID</Text>
                         <TextInput
-                            style={[styles.inputField, styles.inputFieldDisabled]}
+                            style={[styles.inputField, styles.inputFieldDisabled, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f5f5f5', borderColor, color: secondaryTextColor }]}
                             placeholder="Enter pet ID"
-                            placeholderTextColor="#999"
+                            placeholderTextColor={secondaryTextColor}
                             value={petId}
                             editable={false}
                         />
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Age</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Age</Text>
                         <TextInput
-                            style={[styles.inputField, styles.inputFieldDisabled]}
+                            style={[styles.inputField, styles.inputFieldDisabled, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f5f5f5', borderColor, color: secondaryTextColor }]}
                             placeholder="Enter age"
-                            placeholderTextColor="#999"
+                            placeholderTextColor={secondaryTextColor}
                             value={age}
                             editable={false}
                         />
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Birthday</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Birthday</Text>
                         <TextInput
-                            style={[styles.inputField, styles.inputFieldDisabled]}
+                            style={[styles.inputField, styles.inputFieldDisabled, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f5f5f5', borderColor, color: secondaryTextColor }]}
                             placeholder="Enter birthday"
-                            placeholderTextColor="#999"
+                            placeholderTextColor={secondaryTextColor}
                             value={birthday}
                             editable={false}
                         />
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Gender</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Gender</Text>
                         <View style={styles.radioGroup}>
                             <TouchableOpacity 
                                 style={styles.radioOption}
@@ -1178,12 +1191,13 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <View style={[
                                     styles.radioButton,
-                                    gender === 'Female' && styles.radioButtonSelected,
+                                    { borderColor: iconColor },
+                                    gender === 'Female' && { backgroundColor: iconColor },
                                     selectedPet && { opacity: 0.6 }
                                 ]}>
                                     {gender === 'Female' && <View style={styles.radioDot} />}
                                 </View>
-                                <Text style={[styles.radioText, selectedPet && { opacity: 0.6 }]}>Female</Text>
+                                <Text style={[styles.radioText, { color: textColor }, selectedPet && { opacity: 0.6 }]}>Female</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 style={styles.radioOption}
@@ -1191,19 +1205,20 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <View style={[
                                     styles.radioButton,
-                                    gender === 'Male' && styles.radioButtonSelected,
+                                    { borderColor: iconColor },
+                                    gender === 'Male' && { backgroundColor: iconColor },
                                     selectedPet && { opacity: 0.6 }
                                 ]}>
                                     {gender === 'Male' && <View style={styles.radioDot} />}
                                 </View>
-                                <Text style={[styles.radioText, selectedPet && { opacity: 0.6 }]}>Male</Text>
+                                <Text style={[styles.radioText, { color: textColor }, selectedPet && { opacity: 0.6 }]}>Male</Text>
                             </TouchableOpacity>
                         </View>
 
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Reproductive Status</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Reproductive Status</Text>
                         <View style={styles.radioGroup}>
                             <TouchableOpacity 
                                 style={styles.radioOption}
@@ -1211,12 +1226,13 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <View style={[
                                     styles.radioButton,
-                                    reproductiveStatus === 'Intact' && styles.radioButtonSelected,
+                                    { borderColor: iconColor },
+                                    reproductiveStatus === 'Intact' && { backgroundColor: iconColor },
                                     selectedPet && { opacity: 0.6 }
                                 ]}>
                                     {reproductiveStatus === 'Intact' && <View style={styles.radioDot} />}
                                 </View>
-                                <Text style={[styles.radioText, selectedPet && { opacity: 0.6 }]}>Intact</Text>
+                                <Text style={[styles.radioText, { color: textColor }, selectedPet && { opacity: 0.6 }]}>Intact</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 style={styles.radioOption}
@@ -1224,27 +1240,29 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                             >
                                 <View style={[
                                     styles.radioButton,
-                                    reproductiveStatus === 'Castrated/Spayed' && styles.radioButtonSelected,
+                                    { borderColor: iconColor },
+                                    reproductiveStatus === 'Castrated/Spayed' && { backgroundColor: iconColor },
                                     selectedPet && { opacity: 0.6 }
                                 ]}>
                                     {reproductiveStatus === 'Castrated/Spayed' && <View style={styles.radioDot} />}
                                 </View>
-                                <Text style={[styles.radioText, selectedPet && { opacity: 0.6 }]}>Castrated/Spayed</Text>
+                                <Text style={[styles.radioText, { color: textColor }, selectedPet && { opacity: 0.6 }]}>Castrated/Spayed</Text>
                             </TouchableOpacity>
                         </View>
 
                     </View>
 
         <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Description</Text>
             <TextInput
                 ref={descriptionInputRef}
                 style={[
                     styles.textArea,
+                    { backgroundColor: inputBackground, borderColor, color: textColor },
                     isEditing && styles.inputFieldDisabled
                 ]}
                 placeholder="e.g vomiting"
-                placeholderTextColor="#999"
+                placeholderTextColor={secondaryTextColor}
                 multiline
                 value={description}
                 onChangeText={setDescription}
@@ -1257,7 +1275,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
 
                 {/* Schedule Button */}
                 <TouchableOpacity 
-                    style={[styles.scheduleButton, isScheduling && { opacity: 0.7 }]}
+                    style={[styles.scheduleButton, { backgroundColor: iconColor }, isScheduling && { opacity: 0.7 }]}
                     onPress={handleScheduleAppointment}
                     disabled={isScheduling}
                 >

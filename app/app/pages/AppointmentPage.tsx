@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function AppointmentPage({ onNavigate }: { onNavigate: (page: string, data?: any) => void }) {
+export default function AppointmentPage({ onNavigate, isDarkMode = false }: { onNavigate: (page: string, data?: any) => void; isDarkMode?: boolean }) {
     const [activeFilter, setActiveFilter] = useState('Upcoming');
     const [modalVisible, setModalVisible] = useState(false);
     const [appointments, setAppointments] = useState<AppointmentData[]>([]);
@@ -465,13 +465,22 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
     const totalCount = appointments.length;
     const cancelledCount = appointments.filter(a => a.status?.toLowerCase() === 'cancelled').length;
 
+    const backgroundColor = isDarkMode ? '#121212' : '#ffffff';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#fff';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const borderColor = isDarkMode ? '#333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
+    const searchBackground = isDarkMode ? '#1e1e1e' : '#FFFFFF';
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
             {/* Header Section */}
-            <View style={styles.header}>
-                <Text style={styles.title}>Appointments</Text>
+            <View style={[styles.header, { backgroundColor: cardBackground }]}>
+                <Text style={[styles.title, { color: textColor }]}>Appointments</Text>
                 <TouchableOpacity 
-                    style={styles.addAppointmentBtn}
+                    style={[styles.addAppointmentBtn, { backgroundColor: iconColor }]}
                     onPress={() => onNavigate('Appointment Scheduling')}
                 >
                     <Text style={styles.addAppointmentText}>Add New Appointment</Text>
@@ -486,15 +495,15 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={['#045b26']}
-                        tintColor="#045b26"
+                        colors={[iconColor]}
+                        tintColor={iconColor}
                     />
                 }
             >
                 {/* Search Bar */}
-                <View style={styles.searchBar}>
-                    <MaterialIcons name="search" size={20} color="#888888" />
-                    <Text style={styles.searchText}>Search appointments...</Text>
+                <View style={[styles.searchBar, { backgroundColor: searchBackground, borderColor }]}>
+                    <MaterialIcons name="search" size={20} color={secondaryTextColor} />
+                    <Text style={[styles.searchText, { color: secondaryTextColor }]}>Search appointments...</Text>
                 </View>
 
                 {/* Quick Stats removed as requested */}
@@ -504,13 +513,13 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                     <TouchableOpacity 
                         style={[
                             styles.filterTab, 
-                            activeFilter === 'Upcoming' ? styles.filterTabActive : styles.filterTabInactive
+                            activeFilter === 'Upcoming' ? { backgroundColor: iconColor } : { backgroundColor: 'transparent' }
                         ]}
                         onPress={() => setActiveFilter('Upcoming')}
                     >
                         <Text style={[
                             styles.filterText, 
-                            activeFilter === 'Upcoming' ? styles.filterTextActive : styles.filterTextInactive
+                            { color: activeFilter === 'Upcoming' ? '#FFFFFF' : secondaryTextColor }
                         ]}>
                             Upcoming
                         </Text>
@@ -518,13 +527,13 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                     <TouchableOpacity 
                         style={[
                             styles.filterTab, 
-                            activeFilter === 'Lists' ? styles.filterTabActive : styles.filterTabInactive
+                            activeFilter === 'Lists' ? { backgroundColor: iconColor } : { backgroundColor: 'transparent' }
                         ]}
                         onPress={() => setActiveFilter('Lists')}
                     >
                         <Text style={[
                             styles.filterText, 
-                            activeFilter === 'Lists' ? styles.filterTextActive : styles.filterTextInactive
+                            { color: activeFilter === 'Lists' ? '#FFFFFF' : secondaryTextColor }
                         ]}>
                             All Appointments
                         </Text>
@@ -534,8 +543,8 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                 {/* Loading State */}
                 {loading && (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#045b26" />
-                        <Text style={styles.loadingText}>Loading appointments...</Text>
+                        <ActivityIndicator size="large" color={iconColor} />
+                        <Text style={[styles.loadingText, { color: textColor }]}>Loading appointments...</Text>
                     </View>
                 )}
 
@@ -547,13 +556,13 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                 <MaterialCommunityIcons 
                                     name="calendar-blank" 
                                     size={64} 
-                                    color="#E0E0E0" 
+                                    color={secondaryTextColor} 
                                     style={styles.emptyIcon} 
                                 />
-                                <Text style={styles.emptyTitle}>
+                                <Text style={[styles.emptyTitle, { color: textColor }]}>
                                     {activeFilter === 'Upcoming' ? 'No Upcoming Appointments' : 'No Appointments Found'}
                                 </Text>
-                                <Text style={styles.emptyText}>
+                                <Text style={[styles.emptyText, { color: secondaryTextColor }]}>
                                     {activeFilter === 'Upcoming' 
                                         ? 'You have no upcoming appointments scheduled.' 
                                         : 'No appointments match your current filter.'}
@@ -561,9 +570,9 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                             </View>
                         ) : (
                             filteredAppointments.map((item) => (
-                                <View key={item.id} style={styles.appointmentCard}>
+                                <View key={item.id} style={[styles.appointmentCard, { backgroundColor: cardBackground, borderColor }]}>
                                     <View style={styles.appointmentHeader}>
-                                        <Text style={styles.appointmentDate}>
+                                        <Text style={[styles.appointmentDate, { color: textColor }]}>
                                             {formatAppointmentDate(item.date)}
                                         </Text>
                                         <View style={[styles.statusBadge, getStatusBadgeStyle(item.status)]}>
@@ -574,25 +583,25 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                     </View>
                                     
                                     <View style={styles.appointmentDetails}>
-                                        <Text style={styles.appointmentType}>{item.type}</Text>
-                                        <Text style={styles.appointmentTime}>
+                                        <Text style={[styles.appointmentType, { color: textColor }]}>{item.type}</Text>
+                                        <Text style={[styles.appointmentTime, { color: secondaryTextColor }]}>
                                             Time: {item.time || 'N/A'}
                                         </Text>
-                                        <Text style={styles.appointmentPet}>
+                                        <Text style={[styles.appointmentPet, { color: secondaryTextColor }]}>
                                             Pet: {item.pet_name || 'N/A'}
                                         </Text>
                                         {item.pet_species && (
-                                            <Text style={styles.appointmentPet}>
+                                            <Text style={[styles.appointmentPet, { color: secondaryTextColor }]}>
                                                 Species: {formatSpecies(item.pet_species)}
                                             </Text>
                                         )}
                                         {item.pet_breed && (
-                                            <Text style={styles.appointmentPet}>
+                                            <Text style={[styles.appointmentPet, { color: secondaryTextColor }]}>
                                                 Breed: {item.pet_breed}
                                             </Text>
                                         )}
                                         {item.owner_name && (
-                                            <Text style={styles.appointmentPet}>
+                                            <Text style={[styles.appointmentPet, { color: secondaryTextColor }]}>
                                                 Owner: {item.owner_name}
                                             </Text>
                                         )}
@@ -600,13 +609,13 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                     <View style={styles.appointmentActions}>
                                         {/* View Details is always available */}
                                         <TouchableOpacity
-                                            style={[styles.actionButton, styles.secondaryButton]}
+                                            style={[styles.actionButton, styles.secondaryButton, { backgroundColor: isDarkMode ? '#2d2d2d' : '#F8F9FA', borderColor: borderColor }]}
                                             onPress={() => {
                                                 setSelectedAppointment(item);
                                                 setModalVisible(true);
                                             }}
                                         >
-                                            <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                                            <Text style={[styles.buttonText, styles.secondaryButtonText, { color: textColor }]}>
                                                 View Details
                                             </Text>
                                         </TouchableOpacity>
@@ -615,7 +624,7 @@ export default function AppointmentPage({ onNavigate }: { onNavigate: (page: str
                                         {canModifyAppointment(item.status) && (
                                             <>
                                                 <TouchableOpacity
-                                                    style={[styles.actionButton, styles.primaryButton]}
+                                                    style={[styles.actionButton, styles.primaryButton, { backgroundColor: iconColor }]}
                                                     onPress={() => {
                                                         setSelectedAppointment(item);
                                                         onNavigate('Appointment Scheduling', { appointmentToEdit: item });

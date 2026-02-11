@@ -319,7 +319,7 @@ interface MyAccountPageProps {
     onUserDataUpdate?: () => void;
 }
 
-export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps = {}) {
+export default function MyAccountPage({ onUserDataUpdate, isDarkMode = false }: MyAccountPageProps & { isDarkMode?: boolean } = {}) {
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -530,12 +530,22 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
         );
     }
 
+    const backgroundColor = isDarkMode ? '#121212' : '#FFFFFF';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#FFFFFF';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const borderColor = isDarkMode ? '#333' : '#F0F8F0';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const lightBackground = isDarkMode ? '#2d2d2d' : '#F8FFF8';
+    const iconBg = isDarkMode ? '#2d2d2d' : '#E8F5E8';
+    const inputBackground = isDarkMode ? '#2d2d2d' : '#FFFFFF';
+    
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.content}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
+            <ScrollView style={[styles.content, { backgroundColor }]}>
                 {/* Modern Profile Header Card */}
-                <View style={styles.profileCard}>
-                    <View style={styles.profileGradient} />
+                <View style={[styles.profileCard, { backgroundColor: cardBackground, borderColor }]}>
+                    <View style={[styles.profileGradient, { backgroundColor: iconColor }]} />
                     <View style={styles.profileHeader}>
                         <View style={styles.avatarContainer}>
                             {userData?.photo_url ? (
@@ -571,14 +581,14 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                                     style={styles.avatar}
                                 />
                             )}
-                            <TouchableOpacity style={styles.editAvatarBtn} onPress={handleEditProfile}>
+                            <TouchableOpacity style={[styles.editAvatarBtn, { backgroundColor: iconColor }]} onPress={handleEditProfile}>
                                 <MaterialIcons name="camera-alt" size={14} color="#FFFFFF" />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.profileInfo}>
-                            <Text style={styles.name}>{userData?.name || 'User Name'}</Text>
-                            <Text style={styles.email}>{userData?.email || 'user@email.com'}</Text>
-                            <TouchableOpacity style={styles.editBtn} onPress={handleEditProfile}>
+                            <Text style={[styles.name, { color: textColor }]}>{userData?.name || 'User Name'}</Text>
+                            <Text style={[styles.email, { color: secondaryTextColor }]}>{userData?.email || 'user@email.com'}</Text>
+                            <TouchableOpacity style={[styles.editBtn, { backgroundColor: iconColor }]} onPress={handleEditProfile}>
                                 <Text style={styles.editBtnText}>Edit Profile</Text>
                             </TouchableOpacity>
                         </View>
@@ -586,48 +596,48 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                 </View>
                 
                 {/* Account Information Card */}
-                <View style={styles.infoCard}>
+                <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
                     <View style={styles.cardHeader}>
-                        <View style={styles.cardIconContainer}>
-                            <MaterialCommunityIcons name="account-circle" size={16} color="#045b26" />
+                        <View style={[styles.cardIconContainer, { backgroundColor: iconBg }]}>
+                            <MaterialCommunityIcons name="account-circle" size={16} color={iconColor} />
                         </View>
-                        <Text style={styles.cardTitle}>Account Information</Text>
+                        <Text style={[styles.cardTitle, { color: textColor }]}>Account Information</Text>
                     </View>
                     
                     <View style={styles.infoItem}>
-                        <View style={styles.infoItemIcon}>
-                            <MaterialIcons name="phone" size={16} color="#045b26" />
+                        <View style={[styles.infoItemIcon, { backgroundColor: iconBg }]}>
+                            <MaterialIcons name="phone" size={16} color={iconColor} />
                         </View>
-                        <Text style={userData?.phone_number ? styles.infoItemText : styles.infoItemTextEmpty}>
+                        <Text style={[userData?.phone_number ? styles.infoItemText : styles.infoItemTextEmpty, { color: userData?.phone_number ? iconColor : secondaryTextColor }]}>
                             {userData?.phone_number || 'No phone number added'}
                         </Text>
                     </View>
                     
                     <View style={styles.infoItem}>
-                        <View style={styles.infoItemIcon}>
-                            <MaterialIcons name="location-on" size={16} color="#045b26" />
+                        <View style={[styles.infoItemIcon, { backgroundColor: iconBg }]}>
+                            <MaterialIcons name="location-on" size={16} color={iconColor} />
                         </View>
-                        <Text style={userData?.address ? styles.infoItemText : styles.infoItemTextEmpty}>
+                        <Text style={[userData?.address ? styles.infoItemText : styles.infoItemTextEmpty, { color: userData?.address ? iconColor : secondaryTextColor }]}>
                             {userData?.address || 'No address added'}
                         </Text>
                     </View>
                 </View>
                 
                 {/* Settings Card */}
-                <View style={styles.infoCard}>
+                <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
                     <View style={styles.cardHeader}>
-                        <View style={styles.cardIconContainer}>
-                            <MaterialCommunityIcons name="cog" size={16} color="#045b26" />
+                        <View style={[styles.cardIconContainer, { backgroundColor: iconBg }]}>
+                            <MaterialCommunityIcons name="cog" size={16} color={iconColor} />
                         </View>
-                        <Text style={styles.cardTitle}>Settings</Text>
+                        <Text style={[styles.cardTitle, { color: textColor }]}>Settings</Text>
                     </View>
                     
-                    <TouchableOpacity style={styles.settingsItem} onPress={handleChangePassword}>
-                        <View style={styles.settingsItemIcon}>
-                            <MaterialIcons name="lock-outline" size={16} color="#045b26" />
+                    <TouchableOpacity style={[styles.settingsItem, { backgroundColor: lightBackground }]} onPress={handleChangePassword}>
+                        <View style={[styles.settingsItemIcon, { backgroundColor: iconBg }]}>
+                            <MaterialIcons name="lock-outline" size={16} color={iconColor} />
                         </View>
-                        <Text style={styles.settingsItemText}>Change Password</Text>
-                        <MaterialIcons name="chevron-right" size={16} color="#045b26" style={styles.settingsItemArrow} />
+                        <Text style={[styles.settingsItemText, { color: iconColor }]}>Change Password</Text>
+                        <MaterialIcons name="chevron-right" size={16} color={iconColor} style={styles.settingsItemArrow} />
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -643,13 +653,13 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                 }}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Change Password</Text>
+                    <View style={[styles.modalCard, { backgroundColor: cardBackground }]}>
+                        <Text style={[styles.modalTitle, { color: textColor }]}>Change Password</Text>
                         <View style={styles.modalInputWrapper}>
                             <TextInput
-                                style={[styles.modalInput, styles.modalInputWithIcon]}
+                                style={[styles.modalInput, styles.modalInputWithIcon, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                 placeholder="Current password"
-                                placeholderTextColor="#777"
+                                placeholderTextColor={secondaryTextColor}
                                 value={currentPasswordInput}
                                 onChangeText={setCurrentPasswordInput}
                                 secureTextEntry={!showCurrentPassword}
@@ -661,15 +671,15 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                                 <MaterialIcons
                                     name={showCurrentPassword ? 'visibility-off' : 'visibility'}
                                     size={20}
-                                    color="#777"
+                                    color={secondaryTextColor}
                                 />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.modalInputWrapper}>
                             <TextInput
-                                style={[styles.modalInput, styles.modalInputWithIcon]}
+                                style={[styles.modalInput, styles.modalInputWithIcon, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                 placeholder="New password"
-                                placeholderTextColor="#777"
+                                placeholderTextColor={secondaryTextColor}
                                 value={newPasswordInput}
                                 onChangeText={setNewPasswordInput}
                                 secureTextEntry={!showNewPassword}
@@ -681,15 +691,15 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                                 <MaterialIcons
                                     name={showNewPassword ? 'visibility-off' : 'visibility'}
                                     size={20}
-                                    color="#777"
+                                    color={secondaryTextColor}
                                 />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.modalInputWrapper}>
                             <TextInput
-                                style={[styles.modalInput, styles.modalInputWithIcon]}
+                                style={[styles.modalInput, styles.modalInputWithIcon, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                 placeholder="Confirm new password"
-                                placeholderTextColor="#777"
+                                placeholderTextColor={secondaryTextColor}
                                 value={confirmPasswordInput}
                                 onChangeText={setConfirmPasswordInput}
                                 secureTextEntry={!showConfirmPassword}
@@ -701,25 +711,26 @@ export default function MyAccountPage({ onUserDataUpdate }: MyAccountPageProps =
                                 <MaterialIcons
                                     name={showConfirmPassword ? 'visibility-off' : 'visibility'}
                                     size={20}
-                                    color="#777"
+                                    color={secondaryTextColor}
                                 />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.modalActionsRow}>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.modalSecondaryButton, { marginRight: 8 }]}
+                                style={[styles.modalButton, styles.modalSecondaryButton, { backgroundColor: lightBackground, marginRight: 8 }]}
                                 onPress={() => {
                                     setPasswordModalVisible(false);
                                     resetPasswordModal();
                                 }}
                                 disabled={changingPassword}
                             >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
+                                <Text style={[styles.modalButtonText, { color: iconColor }]}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[
                                     styles.modalButton,
                                     styles.modalPrimaryButton,
+                                    { backgroundColor: iconColor },
                                     changingPassword && { opacity: 0.7 }
                                 ]}
                                 onPress={handleSubmitPasswordChange}

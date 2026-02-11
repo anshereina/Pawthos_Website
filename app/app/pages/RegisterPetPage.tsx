@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: string) => void }) {
+export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { onNavigate?: (page: string) => void; isDarkMode?: boolean }) {
     const [petName, setPetName] = useState('');
     const [species, setSpecies] = useState('Please Select');
     const [showSpeciesDropdown, setShowSpeciesDropdown] = useState(false);
@@ -859,24 +859,33 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
         }
     };
 
+    const backgroundColor = isDarkMode ? '#121212' : '#ffffff';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#FFFFFF';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const borderColor = isDarkMode ? '#333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const inputBackground = isDarkMode ? '#2d2d2d' : '#FFFFFF';
+    const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
+    
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
             <TouchableWithoutFeedback onPress={() => { setShowSpeciesDropdown(false); setShowGenderDropdown(false); }}>
                 <Animated.View style={{ flex: 1, opacity: enterOpacity, transform: [{ translateY: enterTranslateY }] }}>
                     <ScrollView 
-                        style={styles.content} 
+                        style={[styles.content, { backgroundColor }]} 
                         contentContainerStyle={{ paddingBottom: 32 }}
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
                         <View style={styles.header}>
-                            <Text style={styles.title}>Register Your Pet</Text>
-                            <Text style={styles.subtitle}>Complete the form to add your pet to your profile</Text>
+                            <Text style={[styles.title, { color: textColor }]}>Register Your Pet</Text>
+                            <Text style={[styles.subtitle, { color: secondaryTextColor }]}>Complete the form to add your pet to your profile</Text>
                         </View>
 
                         {/* Progress Indicator */}
                         <View style={styles.progressContainer}>
-                            <Text style={styles.progressTitle}>
+                            <Text style={[styles.progressTitle, { color: textColor }]}>
                                 Registration Progress ({Math.round(calculateProgress())}% complete)
                             </Text>
                             <View style={styles.progressBar}>
@@ -894,28 +903,29 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                             </View>
                         </View>
 
-                        <View style={styles.formContainer}>
+                        <View style={[styles.formContainer, { backgroundColor: cardBackground }]}>
                             {/* Pet's Name */}
                             <View style={styles.formSection}>
                                 <View style={styles.sectionHeader}>
-                                    <MaterialCommunityIcons name="dog" size={20} color="#045b26" style={styles.sectionIcon} />
-                                    <Text style={styles.sectionTitle}>Pet's Name</Text>
+                                    <MaterialCommunityIcons name="dog" size={20} color={iconColor} style={styles.sectionIcon} />
+                                    <Text style={[styles.sectionTitle, { color: textColor }]}>Pet's Name</Text>
                                 </View>
                                 <TextInput
                                     style={[
                                         styles.inputField,
-                                        focusedField === 'petName' && styles.inputFieldFocused,
+                                        { backgroundColor: inputBackground, borderColor, color: textColor },
+                                        focusedField === 'petName' && { borderColor: iconColor },
                                         fieldErrors.petName && styles.inputFieldError
                                     ]}
                                     placeholder="Enter your pet's name"
-                                    placeholderTextColor="#6C757D"
+                                    placeholderTextColor={secondaryTextColor}
                                     value={petName}
                                     onChangeText={handlePetNameChange}
                                     onFocus={() => handleFieldFocus('petName')}
                                     onBlur={handleFieldBlur}
                                     maxLength={50}
                                 />
-                                <Text style={styles.inputHelpText}>Required • Letters, spaces, and hyphens only</Text>
+                                <Text style={[styles.inputHelpText, { color: secondaryTextColor }]}>Required • Letters, spaces, and hyphens only</Text>
                                 {fieldErrors.petName && (
                                     <Text style={styles.inputErrorText}>{fieldErrors.petName}</Text>
                                 )}
@@ -924,42 +934,43 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                             {/* Type of Species */}
                             <View style={styles.formSection}>
                                 <View style={styles.sectionHeader}>
-                                    <MaterialCommunityIcons name="paw" size={20} color="#045b26" style={styles.sectionIcon} />
-                                    <Text style={styles.sectionTitle}>Type of Species</Text>
+                                    <MaterialCommunityIcons name="paw" size={20} color={iconColor} style={styles.sectionIcon} />
+                                    <Text style={[styles.sectionTitle, { color: textColor }]}>Type of Species</Text>
                                 </View>
                                 <View style={{ position: 'relative' }}>
                             <TouchableOpacity 
                                 style={[
                                     styles.dropdownContainer,
-                                    showSpeciesDropdown && styles.dropdownContainerActive
+                                    { backgroundColor: inputBackground, borderColor },
+                                    showSpeciesDropdown && { borderColor: iconColor }
                                 ]}
                                 onPress={() => setShowSpeciesDropdown(!showSpeciesDropdown)}
                             >
                                 <Text style={[
-                                    species === 'Please Select' ? styles.dropdownText : styles.dropdownTextSelected
+                                    { color: species === 'Please Select' ? secondaryTextColor : textColor }
                                 ]}>
                                     {species}
                                 </Text>
                                 <MaterialIcons 
                                     name={showSpeciesDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
                                     size={24} 
-                                    color="#666" 
+                                    color={secondaryTextColor} 
                                 />
                             </TouchableOpacity>
                             
                             {showSpeciesDropdown && (
-                                <View style={styles.dropdownOptions}>
+                                <View style={[styles.dropdownOptions, { backgroundColor: cardBackground, borderColor }]}>
                                     {speciesOptions.map((option, index) => (
                                         <Pressable 
                                             key={option}
                                             style={({ pressed }) => [
                                                 styles.dropdownOption,
+                                                { backgroundColor: pressed ? (isDarkMode ? '#2d2d2d' : '#f0f0f0') : cardBackground },
                                                 index === speciesOptions.length - 1 && styles.dropdownOptionLast,
-                                                pressed && styles.dropdownOptionPressed
                                             ]}
                                             onPress={() => handleSpeciesSelect(option)}
                                         >
-                                            <Text style={styles.dropdownOptionText}>{option}</Text>
+                                            <Text style={[styles.dropdownOptionText, { color: textColor }]}>{option}</Text>
                                         </Pressable>
                                     ))}
                                 </View>
@@ -969,26 +980,26 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
 
                     {/* Breed and Color */}
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Breed and Color</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Breed and Color</Text>
                         <View style={styles.rowContainer}>
                             <View style={styles.halfWidthField}>
                                 <TextInput
-                                    style={styles.inputField}
+                                    style={[styles.inputField, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                     placeholder="Breed"
-                                    placeholderTextColor="#999"
+                                    placeholderTextColor={secondaryTextColor}
                                     value={breed}
                                     onChangeText={handleBreedChange}
                                 />
                             </View>
                             <View style={styles.halfWidthField}>
                                 <TextInput
-                                    style={styles.inputField}
+                                    style={[styles.inputField, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                     placeholder="Color"
-                                    placeholderTextColor="#999"
+                                    placeholderTextColor={secondaryTextColor}
                                     value={color}
                                     onChangeText={handleColorChange}
                                 />
-                                <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
+                                <Text style={{ fontSize: 10, color: secondaryTextColor, marginTop: 4 }}>
                                     Note: Use '/ , -' for multiple colors
                                 </Text>
                             </View>
@@ -996,11 +1007,11 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Owner's Birthday</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Owner's Birthday</Text>
                         <TextInput
-                            style={styles.inputField}
+                            style={[styles.inputField, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                             placeholder="DD/MM/YYYY"
-                            placeholderTextColor="#999"
+                            placeholderTextColor={secondaryTextColor}
                             value={ownerBirthday}
                             onChangeText={handleOwnerBirthdayChange}
                             keyboardType="numeric"
@@ -1013,21 +1024,21 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
 
                     {/* Date of Birth and Age */}
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Pet's Date of Birth and Age</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Pet's Date of Birth and Age</Text>
                         <View style={styles.rowContainer}>
                             <TextInput
-                                style={[styles.inputField, styles.halfWidthField]}
+                                style={[styles.inputField, styles.halfWidthField, { backgroundColor: inputBackground, borderColor, color: textColor }]}
                                 placeholder="DD/MM/YYYY"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={secondaryTextColor}
                                 value={dateOfBirth}
                                 onChangeText={handleDateOfBirthChange}
                                 keyboardType="numeric"
                                 maxLength={10}
                             />
                             <TextInput
-                                style={[styles.inputField, styles.halfWidthField, styles.inputFieldDisabled]}
+                                style={[styles.inputField, styles.halfWidthField, styles.inputFieldDisabled, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f5f5f5', borderColor, color: secondaryTextColor }]}
                                 placeholder="Age"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={secondaryTextColor}
                                 value={age}
                                 editable={false}
                             />
@@ -1039,40 +1050,41 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
 
                     {/* Gender */}
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Gender</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Gender</Text>
                         <View style={{ position: 'relative' }}>
                             <TouchableOpacity 
                                 style={[
                                     styles.dropdownContainer,
-                                    showGenderDropdown && styles.dropdownContainerActive
+                                    { backgroundColor: inputBackground, borderColor },
+                                    showGenderDropdown && { borderColor: iconColor }
                                 ]}
                                 onPress={() => setShowGenderDropdown(!showGenderDropdown)}
                             >
                                 <Text style={[
-                                    gender === 'Please Select' ? styles.dropdownText : styles.dropdownTextSelected
+                                    { color: gender === 'Please Select' ? secondaryTextColor : textColor }
                                 ]}>
                                     {gender}
                                 </Text>
                                 <MaterialIcons 
                                     name={showGenderDropdown ? "arrow-drop-up" : "arrow-drop-down"} 
                                     size={24} 
-                                    color="#666" 
+                                    color={secondaryTextColor} 
                                 />
                             </TouchableOpacity>
                             
                             {showGenderDropdown && (
-                                <View style={styles.dropdownOptions}>
+                                <View style={[styles.dropdownOptions, { backgroundColor: cardBackground, borderColor }]}>
                                     {genderOptions.map((option, index) => (
                                         <Pressable 
                                             key={option}
                                             style={({ pressed }) => [
                                                 styles.dropdownOption,
+                                                { backgroundColor: pressed ? (isDarkMode ? '#2d2d2d' : '#f0f0f0') : cardBackground },
                                                 index === genderOptions.length - 1 && styles.dropdownOptionLast,
-                                                pressed && styles.dropdownOptionPressed
                                             ]}
                                             onPress={() => handleGenderSelect(option)}
                                         >
-                                            <Text style={styles.dropdownOptionText}>{option}</Text>
+                                            <Text style={[styles.dropdownOptionText, { color: textColor }]}>{option}</Text>
                                         </Pressable>
                                     ))}
                                 </View>
@@ -1081,7 +1093,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                     </View>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Reproductive Status</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Reproductive Status</Text>
                         <View style={styles.radioGroup}>
                             <TouchableOpacity 
                                 style={styles.radioOption}
@@ -1089,11 +1101,12 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                             >
                                 <View style={[
                                     styles.radioButton,
-                                    reproductiveStatus === 'Intact' && styles.radioButtonSelected
+                                    { borderColor: iconColor },
+                                    reproductiveStatus === 'Intact' && { backgroundColor: iconColor }
                                 ]}>
                                     {reproductiveStatus === 'Intact' && <View style={styles.radioDot} />}
                                 </View>
-                                <Text style={styles.radioText}>Intact</Text>
+                                <Text style={[styles.radioText, { color: textColor }]}>Intact</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 style={styles.radioOption}
@@ -1101,18 +1114,19 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                             >
                                 <View style={[
                                     styles.radioButton,
-                                    reproductiveStatus === 'Castrated/Spayed' && styles.radioButtonSelected
+                                    { borderColor: iconColor },
+                                    reproductiveStatus === 'Castrated/Spayed' && { backgroundColor: iconColor }
                                 ]}>
                                     {reproductiveStatus === 'Castrated/Spayed' && <View style={styles.radioDot} />}
                                 </View>
-                                <Text style={styles.radioText}>Castrated/Spayed</Text>
+                                <Text style={[styles.radioText, { color: textColor }]}>Castrated/Spayed</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
 
                     {/* Picture Upload */}
                     <View style={styles.formSection}>
-                        <Text style={styles.sectionTitle}>Attached Picture here</Text>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Attached Picture here</Text>
                         {petPhoto ? (
                             <View>
                                 <View style={styles.imageContainer}>
@@ -1129,7 +1143,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                                     />
                                     {imageLoading && (
                                         <View style={styles.imageLoadingOverlay}>
-                                            <ActivityIndicator size="small" color="#045b26" />
+                                            <ActivityIndicator size="small" color={iconColor} />
                                         </View>
                                     )}
                                     <TouchableOpacity 
@@ -1140,19 +1154,19 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                                     </TouchableOpacity>
                                 </View>
                                 <TouchableOpacity 
-                                    style={styles.changePhotoButton}
+                                    style={[styles.changePhotoButton, { borderColor: iconColor }]}
                                     onPress={pickImage}
                                 >
-                                    <Text style={styles.changePhotoText}>Change Photo</Text>
+                                    <Text style={[styles.changePhotoText, { color: iconColor }]}>Change Photo</Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
                             <TouchableOpacity 
-                                style={styles.pictureContainer}
+                                style={[styles.pictureContainer, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f5f5f5', borderColor }]}
                                 onPress={pickImage}
                             >
-                                <MaterialIcons name="add-photo-alternate" size={48} color="#ccc" />
-                                <Text style={styles.pictureText}>Tap to add photo</Text>
+                                <MaterialIcons name="add-photo-alternate" size={48} color={secondaryTextColor} />
+                                <Text style={[styles.pictureText, { color: secondaryTextColor }]}>Tap to add photo</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -1160,7 +1174,7 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
 
                 {/* Register Button */}
                 <TouchableOpacity 
-                    style={[styles.registerButton, isRegistering && { opacity: 0.7 }]}
+                    style={[styles.registerButton, { backgroundColor: iconColor }, isRegistering && { opacity: 0.7 }]}
                     onPress={handleRegister}
                     disabled={isRegistering}
                 >
