@@ -107,10 +107,20 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function FAQsPage() {
+export default function FAQsPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
     const [open, setOpen] = React.useState<number | null>(null);
+    
+    const dynamicStyles = {
+        container: { ...styles.container, backgroundColor: isDarkMode ? '#121212' : '#f7f7f7' },
+        card: { ...styles.card, backgroundColor: isDarkMode ? '#1e1e1e' : '#fff' },
+        question: { ...styles.question, color: isDarkMode ? '#4CAF50' : '#045b26' },
+        answer: { ...styles.answer, color: isDarkMode ? '#e0e0e0' : '#333' },
+        linkButton: { ...styles.linkButton, backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8', borderColor: isDarkMode ? '#4CAF50' : '#045b26' },
+        linkText: { ...styles.linkText, color: isDarkMode ? '#4CAF50' : '#045b26' },
+    };
+    
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={dynamicStyles.container}>
             
             
             {/* Event Notification Box */}
@@ -126,30 +136,30 @@ export default function FAQsPage() {
                 </View>
             </View>
             {FAQS.map((faq, idx) => (
-                <TouchableOpacity key={faq.question} style={styles.card} onPress={() => setOpen(open === idx ? null : idx)} activeOpacity={0.9}>
+                <TouchableOpacity key={faq.question} style={dynamicStyles.card} onPress={() => setOpen(open === idx ? null : idx)} activeOpacity={0.9}>
                     <View style={styles.questionRow}>
-                        <MaterialIcons name="help-outline" size={22} color="#045b26" style={{ marginRight: 8 }} />
-                        <Text style={styles.question}>{faq.question}</Text>
-                        <MaterialIcons name={open === idx ? 'expand-less' : 'expand-more'} size={22} color="#045b26" />
+                        <MaterialIcons name="help-outline" size={22} color={isDarkMode ? '#4CAF50' : '#045b26'} style={{ marginRight: 8 }} />
+                        <Text style={dynamicStyles.question}>{faq.question}</Text>
+                        <MaterialIcons name={open === idx ? 'expand-less' : 'expand-more'} size={22} color={isDarkMode ? '#4CAF50' : '#045b26'} />
                     </View>
                     {open === idx && (
                         <View>
-                            <Text style={styles.answer}>{faq.answer}</Text>
+                            <Text style={dynamicStyles.answer}>{faq.answer}</Text>
                             {idx === 0 && (
                                 <View style={styles.linkContainer}>
                                     <TouchableOpacity
-                                        style={styles.linkButton}
+                                        style={dynamicStyles.linkButton}
                                         onPress={() => Linking.openURL('https://mnpets.com/2024/03/08/beap-pain-scales-for-cats-and-dogs/')}
                                     >
-                                        <MaterialCommunityIcons name="book-open-variant" size={18} color="#045b26" />
-                                        <Text style={styles.linkText}>Learn More About BEAP</Text>
+                                        <MaterialCommunityIcons name="book-open-variant" size={18} color={isDarkMode ? '#4CAF50' : '#045b26'} />
+                                        <Text style={dynamicStyles.linkText}>Learn More About BEAP</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={styles.linkButton}
+                                        style={dynamicStyles.linkButton}
                                         onPress={() => Linking.openURL('https://www.felinegrimacescale.com/')}
                                     >
-                                        <MaterialCommunityIcons name="book-open-variant" size={18} color="#045b26" />
-                                        <Text style={styles.linkText}>Learn More About FGS</Text>
+                                        <MaterialCommunityIcons name="book-open-variant" size={18} color={isDarkMode ? '#4CAF50' : '#045b26'} />
+                                        <Text style={dynamicStyles.linkText}>Learn More About FGS</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}

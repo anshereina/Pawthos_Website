@@ -898,34 +898,34 @@ export default function MainApp() {
 
     // Modular page mapping
     const pageMap: Record<string, any> = {
-        Home: <HomePage onSelect={navigateToPage} />, 
-        "My account": <MyAccountPage onUserDataUpdate={refreshUserData} />, 
-        "Appointment": <AppointmentPage onNavigate={navigateWithData} />, 
-        "Appointment Scheduling": <AppointmentSchedulingPage key={navigationData.appointmentToEdit?.id || 'new'} initialAppointmentType={appointmentType} onBack={navigateBack} onNavigate={navigateToPage} {...navigationData} />, 
-        "Pet profile": <PetProfilePage onNavigate={navigateWithData} />,
-        "Register Pet": <RegisterPetPage onNavigate={navigateToPage} />, 
-        "Pet Details": <PetDetailsPage onNavigate={navigateWithData as any} petId={navigationData.petId} />, 
-        "Pet VacCard": <PetVacCardPage onNavigate={navigateWithData} />, 
-        "Pet MedRecords": <PetMedRecordsPage onNavigate={navigateWithData} petId={navigationData.petId} />, 
-        "Vaccine Records": <VaccineRecordsPage onNavigate={navigateToPage} />, 
-        "Medical Records": <MedicalRecordsPage onNavigate={navigateToPage} />, 
-        "Vet Health Cert": <VetHealthPage onNavigate={handleNavigation} />, 
-        "Certificate": <CertificatePage />, 
-        "Vet Health": <VetHealthPage onNavigate={handleNavigation} />, 
-        "FAQs": <FAQsPage />, 
-        "Notification": <NotificationPage />,
-        "Upcoming Vaccination": <UpcomingVaccinationPage onBack={navigateBack} />,
-        "Owner's Responsibility": <OwnersResponsibilityPage onBack={navigateBack} />,
-        "Animal Bite": <AnimalBitePage onBack={navigateBack} />,
-        "Safe Handling Tips for your Pets": <SafeHandlingTipsPage onBack={navigateBack} />,
-        "Law on Pet Ownership": <LawOnPetOwnershipPage onBack={navigateBack} />,
-        "Retrieve Dog": <RetrieveDogPage onBack={navigateBack} />,
-                    "Common Signs of Rabies in Pets": <SignOfRabiesPage onBack={navigateBack} />,
-            "Pain Assessment": <PainAssessmentLandingPage onGetStarted={() => navigateToPage('Integration')} onBack={navigateBack} onViewHistory={() => navigateToPage('Pain Assessment History')} />,
-            "Pain Assessment History": <PainAssessmentPage onNavigate={navigateToPage} />,
-            "Integration": <IntegrationPage onSelect={navigateToPage} />,
-                "CanineIntegration": <CanineIntegrationPage onSelect={navigateToPage} />,
-    "CanineGuidelineIntegration": <CanineGuidelineIntegrationPage onSelect={navigateToPage} />,
+        Home: <HomePage onSelect={navigateToPage} isDarkMode={isDarkMode} />, 
+        "My account": <MyAccountPage onUserDataUpdate={refreshUserData} isDarkMode={isDarkMode} />, 
+        "Appointment": <AppointmentPage onNavigate={navigateWithData} isDarkMode={isDarkMode} />, 
+        "Appointment Scheduling": <AppointmentSchedulingPage key={navigationData.appointmentToEdit?.id || 'new'} initialAppointmentType={appointmentType} onBack={navigateBack} onNavigate={navigateToPage} isDarkMode={isDarkMode} {...navigationData} />, 
+        "Pet profile": <PetProfilePage onNavigate={navigateWithData} isDarkMode={isDarkMode} />,
+        "Register Pet": <RegisterPetPage onNavigate={navigateToPage} isDarkMode={isDarkMode} />, 
+        "Pet Details": <PetDetailsPage onNavigate={navigateWithData as any} petId={navigationData.petId} isDarkMode={isDarkMode} />, 
+        "Pet VacCard": <PetVacCardPage onNavigate={navigateWithData} isDarkMode={isDarkMode} />, 
+        "Pet MedRecords": <PetMedRecordsPage onNavigate={navigateWithData} petId={navigationData.petId} isDarkMode={isDarkMode} />, 
+        "Vaccine Records": <VaccineRecordsPage onNavigate={navigateToPage} isDarkMode={isDarkMode} />, 
+        "Medical Records": <MedicalRecordsPage onNavigate={navigateToPage} isDarkMode={isDarkMode} />, 
+        "Vet Health Cert": <VetHealthPage onNavigate={handleNavigation} isDarkMode={isDarkMode} />, 
+        "Certificate": <CertificatePage isDarkMode={isDarkMode} />, 
+        "Vet Health": <VetHealthPage onNavigate={handleNavigation} isDarkMode={isDarkMode} />, 
+        "FAQs": <FAQsPage isDarkMode={isDarkMode} />, 
+        "Notification": <NotificationPage isDarkMode={isDarkMode} />,
+        "Upcoming Vaccination": <UpcomingVaccinationPage onBack={navigateBack} isDarkMode={isDarkMode} />,
+        "Owner's Responsibility": <OwnersResponsibilityPage onBack={navigateBack} isDarkMode={isDarkMode} />,
+        "Animal Bite": <AnimalBitePage onBack={navigateBack} isDarkMode={isDarkMode} />,
+        "Safe Handling Tips for your Pets": <SafeHandlingTipsPage onBack={navigateBack} isDarkMode={isDarkMode} />,
+        "Law on Pet Ownership": <LawOnPetOwnershipPage onBack={navigateBack} isDarkMode={isDarkMode} />,
+        "Retrieve Dog": <RetrieveDogPage onBack={navigateBack} isDarkMode={isDarkMode} />,
+                    "Common Signs of Rabies in Pets": <SignOfRabiesPage onBack={navigateBack} isDarkMode={isDarkMode} />,
+            "Pain Assessment": <PainAssessmentLandingPage onGetStarted={() => navigateToPage('Integration')} onBack={navigateBack} onViewHistory={() => navigateToPage('Pain Assessment History')} isDarkMode={isDarkMode} />,
+            "Pain Assessment History": <PainAssessmentPage onNavigate={navigateToPage} isDarkMode={isDarkMode} />,
+            "Integration": <IntegrationPage onSelect={navigateToPage} isDarkMode={isDarkMode} />,
+                "CanineIntegration": <CanineIntegrationPage onSelect={navigateToPage} isDarkMode={isDarkMode} />,
+    "CanineGuidelineIntegration": <CanineGuidelineIntegrationPage onSelect={navigateToPage} isDarkMode={isDarkMode} />,
     "CanineIntegrationQuestion": <CanineIntegrationQuestionPage 
         onSelect={(label, data) => {
             if (data) {
@@ -934,10 +934,12 @@ export default function MainApp() {
             navigateToPage(label);
         }} 
         onCategoryChange={handleCategoryChange}
+        isDarkMode={isDarkMode}
     />,
     "CanineIntegrationResult": <CanineIntegrationResultPage 
         onSecondOpinion={() => navigateToPage('CanineIntegration')}
         onHome={() => navigateToPage('Home')} 
+        isDarkMode={isDarkMode}
         onSecondOpinionAppointment={async () => {
             try {
                 // First try to read from saved pet info (after assessment was saved)
@@ -966,19 +968,21 @@ export default function MainApp() {
         }}
         selectedAnswers={navigationData.beaap_answers || []}
     />,
-    "IntegrationQuestionsDog": <IntegrationQuestionsPage petType="dog" onBack={() => navigateToPage('CanineIntegration')} onNext={() => { setSelectedPetType('dog'); navigateToPage('IntegrationPicture'); }} />,
-        "IntegrationQuestionsCat": <IntegrationQuestionsPage petType="cat" onBack={() => navigateToPage('Integration')} onNext={() => { setSelectedPetType('cat'); navigateToPage('IntegrationPicture'); }} />,
+    "IntegrationQuestionsDog": <IntegrationQuestionsPage petType="dog" onBack={() => navigateToPage('CanineIntegration')} onNext={() => { setSelectedPetType('dog'); navigateToPage('IntegrationPicture'); }} isDarkMode={isDarkMode} />,
+        "IntegrationQuestionsCat": <IntegrationQuestionsPage petType="cat" onBack={() => navigateToPage('Integration')} onNext={() => { setSelectedPetType('cat'); navigateToPage('IntegrationPicture'); }} isDarkMode={isDarkMode} />,
         "IntegrationPicture": <IntegrationPicturePage 
             onStartScan={(imageUri: string) => { setNavigationData({ capturedImage: imageUri }); navigateToPage('IntegrationScanning'); }}
             onResult={(result, imageUri) => { setNavigationData({ painLevel: result, capturedImage: imageUri }); navigateToPage('IntegrationImageResult'); }} 
             onBack={() => navigateToPage('Integration')} 
+            isDarkMode={isDarkMode}
         />,
         "IntegrationScanning": <IntegrationScanningPage 
             imageUri={navigationData.capturedImage}
             onDone={(result: any, imageUri?: string) => { setNavigationData(prev => ({ ...prev, apiResult: result, capturedImage: imageUri || prev.capturedImage })); navigateToPage('IntegrationResult'); }}
             onCancel={() => navigateToPage('IntegrationPicture')}
+            isDarkMode={isDarkMode}
         />,
-        "IntegrationImageResult": <IntegrationImageResultPage onRetake={() => navigateToPage('IntegrationPicture')} onSeeResult={() => navigateToPage('IntegrationResult')} capturedImage={navigationData.capturedImage} />,
+        "IntegrationImageResult": <IntegrationImageResultPage onRetake={() => navigateToPage('IntegrationPicture')} onSeeResult={() => navigateToPage('IntegrationResult')} capturedImage={navigationData.capturedImage} isDarkMode={isDarkMode} />,
         "IntegrationResult": (() => {
           console.log('🔍 IntegrationResult - navigationData:', navigationData);
           console.log('🔍 IntegrationResult - apiResult:', navigationData.apiResult);
@@ -987,6 +991,7 @@ export default function MainApp() {
             onHome={() => navigateToPage('Home')} 
             onSave={() => navigateToPage('Pain Assessment')}
             onTakeAnotherPicture={() => navigateToPage('IntegrationPicture')}
+            isDarkMode={isDarkMode}
             painLevel={navigationData.apiResult?.pain_level}
             fgsBreakdown={navigationData.apiResult?.fgs_breakdown}
             detailedExplanation={navigationData.apiResult?.detailed_explanation}
@@ -1122,7 +1127,7 @@ export default function MainApp() {
                 isDarkMode={isDarkMode}
                 onToggleDarkMode={handleToggleDarkMode}
             />
-            <View style={styles.contentContainer}>
+            <View style={[styles.contentContainer, { backgroundColor: isDarkMode ? '#000000' : '#ffffff' }]}>
                 {content}
             </View>
             {selectedMenu !== 'Integration' && selectedMenu !== 'CanineIntegration' && selectedMenu !== 'CanineGuidelineIntegration' && selectedMenu !== 'CanineIntegrationQuestion' && selectedMenu !== 'CanineIntegrationResult' && selectedMenu !== 'IntegrationQuestionsCat' && selectedMenu !== 'IntegrationPicture' && selectedMenu !== 'IntegrationScanning' && selectedMenu !== 'IntegrationImageResult' && selectedMenu !== 'Pet Details' && (

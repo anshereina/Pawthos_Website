@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function PetProfilePage({ onNavigate }: { onNavigate: (page: string, data?: any) => void }) {
+export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onNavigate: (page: string, data?: any) => void; isDarkMode?: boolean }) {
     const [activeFilter, setActiveFilter] = useState('All');
     const [pets, setPets] = useState<PetData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -505,13 +505,21 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
         isFiltered: false
     };
 
+    const backgroundColor = isDarkMode ? '#121212' : '#ffffff';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#fff';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const borderColor = isDarkMode ? '#333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
+    
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
             {/* Header Section */}
-            <View style={styles.header}>
-                <Text style={styles.title}>My Pets</Text>
+            <View style={[styles.header, { backgroundColor: cardBackground }]}>
+                <Text style={[styles.title, { color: textColor }]}>My Pets</Text>
                 <TouchableOpacity 
-                    style={styles.addPetBtn}
+                    style={[styles.addPetBtn, { backgroundColor: iconColor }]}
                     onPress={() => {
                         try {
                             if (onNavigate) {
@@ -531,16 +539,16 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                     style={styles.content}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#045b26"]} />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[iconColor]} />
                     }
                 >
                     {/* Search Bar */}
-                    <View style={styles.searchBar}>
-                        <MaterialIcons name="search" size={20} color="#888888" />
+                    <View style={[styles.searchBar, { backgroundColor: cardBackground, borderColor }]}>
+                        <MaterialIcons name="search" size={20} color={secondaryTextColor} />
                         <TextInput
-                            style={styles.searchInput}
+                            style={[styles.searchInput, { color: textColor }]}
                             placeholder="Search pets..."
-                            placeholderTextColor="#888888"
+                            placeholderTextColor={secondaryTextColor}
                             value={searchQuery}
                             onChangeText={handleSearchChange}
                             autoCapitalize="none"
@@ -548,7 +556,7 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                         />
                         {searchQuery.length > 0 && (
                             <TouchableOpacity onPress={clearSearch} activeOpacity={0.7}>
-                                <MaterialIcons name="clear" size={20} color="#888888" />
+                                <MaterialIcons name="clear" size={20} color={secondaryTextColor} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -559,7 +567,7 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                         <TouchableOpacity 
                             style={[
                                 styles.filterTab, 
-                                activeFilter === 'All' ? styles.filterTabActive : styles.filterTabInactive
+                                activeFilter === 'All' ? { backgroundColor: iconColor } : { backgroundColor: 'transparent' }
                             ]}
                             onPress={() => handleTabPress('All')}
                         >
@@ -567,18 +575,18 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                 <MaterialCommunityIcons 
                                     name="paw" 
                                     size={20} 
-                                    color={activeFilter === 'All' ? '#FFFFFF' : '#045b26'} 
+                                    color={activeFilter === 'All' ? '#FFFFFF' : iconColor} 
                                 />
                                 <Text style={[
                                     styles.filterText, 
-                                    activeFilter === 'All' ? styles.filterTextActive : styles.filterTextInactive
+                                    { color: activeFilter === 'All' ? '#FFFFFF' : secondaryTextColor }
                                 ]}>
                                     All
                                 </Text>
                             </View>
                             <Text style={[
                                 styles.filterCount,
-                                activeFilter === 'All' ? styles.filterCountActive : styles.filterCountInactive
+                                { color: activeFilter === 'All' ? '#FFFFFF' : iconColor }
                             ]}>
                                 {displayStats.total}
                             </Text>
@@ -588,7 +596,7 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                         <TouchableOpacity 
                             style={[
                                 styles.filterTab, 
-                                activeFilter === 'Cats' ? styles.filterTabActive : styles.filterTabInactive
+                                activeFilter === 'Cats' ? { backgroundColor: iconColor } : { backgroundColor: 'transparent' }
                             ]}
                             onPress={() => handleTabPress('Cats')}
                         >
@@ -596,18 +604,18 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                 <MaterialCommunityIcons 
                                     name="cat" 
                                     size={20} 
-                                    color={activeFilter === 'Cats' ? '#FFFFFF' : '#045b26'} 
+                                    color={activeFilter === 'Cats' ? '#FFFFFF' : iconColor} 
                                 />
                                 <Text style={[
                                     styles.filterText, 
-                                    activeFilter === 'Cats' ? styles.filterTextActive : styles.filterTextInactive
+                                    { color: activeFilter === 'Cats' ? '#FFFFFF' : secondaryTextColor }
                                 ]}>
                                     Cats
                                 </Text>
                             </View>
                             <Text style={[
                                 styles.filterCount,
-                                activeFilter === 'Cats' ? styles.filterCountActive : styles.filterCountInactive
+                                { color: activeFilter === 'Cats' ? '#FFFFFF' : iconColor }
                             ]}>
                                 {displayStats.cats}
                             </Text>
@@ -617,7 +625,7 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                         <TouchableOpacity 
                             style={[
                                 styles.filterTab, 
-                                activeFilter === 'Dogs' ? styles.filterTabActive : styles.filterTabInactive
+                                activeFilter === 'Dogs' ? { backgroundColor: iconColor } : { backgroundColor: 'transparent' }
                             ]}
                             onPress={() => handleTabPress('Dogs')}
                         >
@@ -625,18 +633,18 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                 <MaterialCommunityIcons 
                                     name="dog" 
                                     size={20} 
-                                    color={activeFilter === 'Dogs' ? '#FFFFFF' : '#045b26'} 
+                                    color={activeFilter === 'Dogs' ? '#FFFFFF' : iconColor} 
                                 />
                                 <Text style={[
                                     styles.filterText, 
-                                    activeFilter === 'Dogs' ? styles.filterTextActive : styles.filterTextInactive
+                                    { color: activeFilter === 'Dogs' ? '#FFFFFF' : secondaryTextColor }
                                 ]}>
                                     Dogs
                                 </Text>
                             </View>
                             <Text style={[
                                 styles.filterCount,
-                                activeFilter === 'Dogs' ? styles.filterCountActive : styles.filterCountInactive
+                                { color: activeFilter === 'Dogs' ? '#FFFFFF' : iconColor }
                             ]}>
                                 {displayStats.dogs}
                             </Text>
@@ -646,8 +654,8 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                     {/* Loading State */}
                     {loading && (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#045b26" />
-                            <Text style={styles.loadingText}>Loading pets...</Text>
+                            <ActivityIndicator size="large" color={iconColor} />
+                            <Text style={[styles.loadingText, { color: textColor }]}>Loading pets...</Text>
                         </View>
                     )}
 
@@ -679,20 +687,20 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                     <MaterialCommunityIcons 
                                         name="paw-off" 
                                         size={64} 
-                                        color="#E0E0E0" 
+                                        color={secondaryTextColor} 
                                         style={styles.emptyIcon} 
                                     />
-                                    <Text style={styles.emptyTitle}>
+                                    <Text style={[styles.emptyTitle, { color: textColor }]}>
                                         {activeFilter === 'All' ? 'No Pets Found' : `No ${activeFilter} Found`}
                                     </Text>
-                                    <Text style={styles.emptyText}>
+                                    <Text style={[styles.emptyText, { color: secondaryTextColor }]}>
                                         {activeFilter === 'All' 
                                             ? 'You haven\'t registered any pets yet.' 
                                             : `You don't have any ${activeFilter.toLowerCase()} registered.`}
                                     </Text>
                                     {activeFilter === 'All' && (
                                         <TouchableOpacity 
-                                            style={styles.addPetBtn}
+                                            style={[styles.addPetBtn, { backgroundColor: iconColor }]}
                                             onPress={() => onNavigate('Register Pet')}
                                         >
                                             <Text style={styles.addPetText}>Add Your First Pet</Text>
@@ -704,11 +712,11 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                     {filteredPets.map((pet) => (
                                         <TouchableOpacity 
                                             key={pet.id} 
-                                            style={styles.petCard}
+                                            style={[styles.petCard, { backgroundColor: cardBackground, borderColor }]}
                                             onPress={() => handlePetPress(pet)}
                                             activeOpacity={0.9}
                                         >
-                                            <View style={styles.petImageContainer}>
+                                            <View style={[styles.petImageContainer, { backgroundColor: isDarkMode ? '#2d2d2d' : '#F5F5F5' }]}>
                                                 {pet.photo_url ? (
                                                     <Image 
                                                         source={{ uri: getPhotoUrl(pet.photo_url) || '' }} 
@@ -720,14 +728,14 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                                                     <MaterialCommunityIcons 
                                                         name="camera-off" 
                                                         size={40} 
-                                                        color="#999" 
+                                                        color={secondaryTextColor} 
                                                     />
                                                 )}
                                             </View>
                                             <View style={styles.petInfoContainer}>
-                                                <Text style={styles.petName}>{pet.name}</Text>
-                                                <Text style={styles.petInfo}>{formatSpeciesLabel(pet.species)} • {formatPetAge(pet.date_of_birth)}</Text>
-                                                <Text style={styles.petId}>ID: {pet.pet_id}</Text>
+                                                <Text style={[styles.petName, { color: textColor }]}>{pet.name}</Text>
+                                                <Text style={[styles.petInfo, { color: secondaryTextColor }]}>{formatSpeciesLabel(pet.species)} • {formatPetAge(pet.date_of_birth)}</Text>
+                                                <Text style={[styles.petId, { color: iconColor }]}>ID: {pet.pet_id}</Text>
                                             </View>
                                         </TouchableOpacity>
                                     ))}

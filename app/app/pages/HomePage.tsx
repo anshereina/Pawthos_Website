@@ -6,7 +6,7 @@ import { getCurrentUser } from '../../utils/auth.utils';
 import { getScheduledVaccinationEvents, VaccinationEvent } from '../../utils/vaccination.utils';
 import { medicalRecordsAPI } from '../../utils/medicalRecords.utils';
 
-export default function HomePage({ onSelect }: { onSelect: (label: string) => void }) {
+export default function HomePage({ onSelect, isDarkMode = false }: { onSelect: (label: string) => void; isDarkMode?: boolean }) {
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -232,10 +232,18 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
     };
 
 
+    const backgroundColor = isDarkMode ? '#121212' : '#ffffff';
+    const cardBackground = isDarkMode ? '#1e1e1e' : '#FFFFFF';
+    const textColor = isDarkMode ? '#e0e0e0' : '#000000';
+    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
+    const borderColor = isDarkMode ? '#333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
+    const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
+    
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor }}>
             <Animated.View style={{ flex: 1, opacity: enterOpacity, transform: [{ translateY: enterTranslateY }] }}>
-            <ScrollView style={{ flex: 1, padding: 16 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#045b26"]} />}>
+            <ScrollView style={{ flex: 1, padding: 16, backgroundColor }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[isDarkMode ? "#4CAF50" : "#045b26"]} />}>
                 {/* Search Bar */}
                 <View style={{ 
                     marginBottom: 24,
@@ -244,12 +252,12 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     <View style={{ 
                         flexDirection: 'row', 
                         alignItems: 'center',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: cardBackground,
                         borderRadius: 8,
                         paddingHorizontal: 20,
                         paddingVertical: 12,
                         borderWidth: 1,
-                        borderColor: '#E0E0E0',
+                        borderColor: borderColor,
                         elevation: 1,
                         shadowColor: '#000',
                         shadowOffset: {
@@ -259,17 +267,17 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         shadowOpacity: 0.05,
                         shadowRadius: 2,
                     }}>
-                        <Ionicons name="search" size={20} color="#888888" style={{ marginRight: 16 }} />
+                        <Ionicons name="search" size={20} color={secondaryTextColor} style={{ marginRight: 16 }} />
                         <TextInput
                             style={{
                                 flex: 1,
                                 fontSize: 16,
-                                color: '#000000',
+                                color: textColor,
                                 fontFamily: 'Flink',
                                 paddingVertical: 4,
                             }}
                             placeholder="Search for anything"
-                            placeholderTextColor="#888888"
+                            placeholderTextColor={secondaryTextColor}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             onSubmitEditing={() => handleSearch(searchQuery)}
@@ -277,7 +285,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         />
                         {searchQuery.length > 0 && (
                             <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <Ionicons name="close-circle" size={20} color="#888888" />
+                                <Ionicons name="close-circle" size={20} color={secondaryTextColor} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -300,14 +308,14 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                             <Text style={{
                                 fontSize: 20,
                                 fontWeight: 'bold',
-                                color: '#000',
+                                color: textColor,
                                 fontFamily: 'Jumper',
                             }}>
                                 Upcoming Vaccinations
                             </Text>
                             <TouchableOpacity 
                                 style={{ 
-                                    backgroundColor: '#045b26',
+                                    backgroundColor: iconColor,
                                     borderRadius: 20,
                                     paddingHorizontal: 10,
                                     paddingVertical: 6,
@@ -343,15 +351,15 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                 <View style={{
                                     width: 280,
                                     marginRight: 16,
-                                    backgroundColor: '#FFFFFF',
+                                    backgroundColor: cardBackground,
                                     borderRadius: 20,
                                     padding: 20,
                                     borderWidth: 1,
-                                    borderColor: '#E8E8E8',
+                                    borderColor: borderColor,
                                 }}>
                                     {/* Header with gradient background */}
                             <View style={{ 
-                                        backgroundColor: '#045b26',
+                                        backgroundColor: iconColor,
                                         borderRadius: 16,
                                         padding: 16,
                                         marginBottom: 16,
@@ -389,7 +397,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                     {/* Event Details */}
                                     <View style={{ marginBottom: 16 }}>
                                         <View style={{
-                                            backgroundColor: '#F8F9FA',
+                                            backgroundColor: isDarkMode ? '#2d2d2d' : '#F8F9FA',
                                             borderRadius: 12,
                                             padding: 16,
                                             marginBottom: 12,
@@ -399,10 +407,10 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                                 alignItems: 'center',
                                                 marginBottom: 6,
                                             }}>
-                                                <MaterialCommunityIcons name="map-marker" size={16} color="#666" />
+                                                <MaterialCommunityIcons name="map-marker" size={16} color={secondaryTextColor} />
                                                 <Text style={{
                                                     fontSize: 14,
-                                                    color: '#666',
+                                                    color: secondaryTextColor,
                                                     fontFamily: 'Flink',
                                                     marginLeft: 6,
                                                 }}>
@@ -413,10 +421,10 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
                                             }}>
-                                                <MaterialCommunityIcons name="calendar" size={16} color="#666" />
+                                                <MaterialCommunityIcons name="calendar" size={16} color={secondaryTextColor} />
                                                 <Text style={{
                                                     fontSize: 14,
-                                                    color: '#666',
+                                                    color: secondaryTextColor,
                                                     fontFamily: 'Flink',
                                                     marginLeft: 6,
                                                 }}>
@@ -427,7 +435,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
 
                                         {/* Days Remaining Badge */}
                                         <View style={{
-                                            backgroundColor: getDaysRemaining(item.event_date) < 0 ? '#E8F5E8' : '#E8F5E8',
+                                            backgroundColor: lightBackground,
                                             borderRadius: 20,
                                             paddingHorizontal: 16,
                                             paddingVertical: 8,
@@ -438,11 +446,11 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                                             <MaterialCommunityIcons 
                                                 name={getDaysRemaining(item.event_date) < 0 ? "check-circle" : "clock-outline"} 
                                                 size={16} 
-                                                color="#045b26" 
+                                                color={iconColor} 
                                             />
                                             <Text style={{
                                                 fontSize: 14,
-                                                color: '#045b26',
+                                                color: iconColor,
                                                 fontFamily: 'Flink',
                                                 fontWeight: 'bold',
                                                 marginLeft: 6,
@@ -465,7 +473,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     <Text style={{
                         fontSize: 18,
                         fontWeight: 'bold',
-                        color: '#000',
+                        color: textColor,
                         fontFamily: 'Jumper',
                         marginBottom: 16,
                     }}>
@@ -478,24 +486,24 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* Total Pets Card */}
                         <View style={{
                             flex: 1,
-                            backgroundColor: '#E8F5E8',
+                            backgroundColor: lightBackground,
                             borderRadius: 16,
                             padding: 16,
                             marginRight: 8,
                             alignItems: 'center',
                         }}>
-                            <MaterialCommunityIcons name="paw" size={24} color="#045b26" />
+                            <MaterialCommunityIcons name="paw" size={24} color={iconColor} />
                             <Text style={{
                                 fontSize: 20,
                                 fontWeight: 'bold',
-                                color: '#045b26',
+                                color: iconColor,
                                 marginTop: 8,
                             }}>
                                 {dashboardData?.pets_count || 0}
                             </Text>
                             <Text style={{
                                 fontSize: 12,
-                                color: '#666',
+                                color: secondaryTextColor,
                                 fontFamily: 'Flink',
                                 textAlign: 'center',
                             }}>
@@ -506,24 +514,24 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* Upcoming Appointments Card */}
                         <View style={{
                             flex: 1,
-                            backgroundColor: '#E8F5E8',
+                            backgroundColor: lightBackground,
                             borderRadius: 16,
                             padding: 16,
                             marginHorizontal: 4,
                             alignItems: 'center',
                         }}>
-                            <MaterialCommunityIcons name="calendar-clock" size={24} color="#045b26" />
+                            <MaterialCommunityIcons name="calendar-clock" size={24} color={iconColor} />
                             <Text style={{
                                 fontSize: 20,
                                 fontWeight: 'bold',
-                                color: '#045b26',
+                                color: iconColor,
                                 marginTop: 8,
                             }}>
                                 {vaccinationEvents.length}
                             </Text>
                             <Text style={{
                                 fontSize: 12,
-                                color: '#666',
+                                color: secondaryTextColor,
                                 fontFamily: 'Flink',
                                 textAlign: 'center',
                             }}>
@@ -534,24 +542,24 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* Health Records Card */}
                         <View style={{
                             flex: 1,
-                            backgroundColor: '#E8F5E8',
+                            backgroundColor: lightBackground,
                             borderRadius: 16,
                             padding: 16,
                             marginLeft: 8,
                             alignItems: 'center',
                         }}>
-                            <MaterialCommunityIcons name="file-document" size={24} color="#045b26" />
+                            <MaterialCommunityIcons name="file-document" size={24} color={iconColor} />
                             <Text style={{
                                 fontSize: 20,
                                 fontWeight: 'bold',
-                                color: '#045b26',
+                                color: iconColor,
                                 marginTop: 8,
                             }}>
                                 {medicalRecordsCount}
                             </Text>
                             <Text style={{
                                 fontSize: 12,
-                                color: '#666',
+                                color: secondaryTextColor,
                                 fontFamily: 'Flink',
                                 textAlign: 'center',
                             }}>
@@ -569,7 +577,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     <Text style={{
                         fontSize: 18,
                         fontWeight: 'bold',
-                        color: '#000',
+                        color: textColor,
                         fontFamily: 'Jumper',
                         marginBottom: 16,
                     }}>
@@ -583,7 +591,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* Pain Assessment */}
                         <TouchableOpacity style={{
                             width: '48%',
-                            backgroundColor: '#045b26',
+                            backgroundColor: iconColor,
                             borderRadius: 16,
                             padding: 20,
                             marginBottom: 16,
@@ -610,7 +618,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* Book Appointment */}
                         <TouchableOpacity style={{
                             width: '48%',
-                            backgroundColor: '#045b26',
+                            backgroundColor: iconColor,
                             borderRadius: 16,
                             padding: 20,
                             marginBottom: 16,
@@ -637,7 +645,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* FAQs */}
                         <TouchableOpacity style={{
                             width: '48%',
-                            backgroundColor: '#045b26',
+                            backgroundColor: iconColor,
                             borderRadius: 16,
                             padding: 20,
                             marginBottom: 16,
@@ -664,7 +672,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         {/* View Pets */}
                         <TouchableOpacity style={{
                             width: '48%',
-                            backgroundColor: '#045b26',
+                            backgroundColor: iconColor,
                             borderRadius: 16,
                             padding: 20,
                             marginBottom: 16,
@@ -698,7 +706,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     <Text style={{
                         fontSize: 18,
                         fontWeight: 'bold',
-                        color: '#000',
+                        color: textColor,
                         fontFamily: 'Jumper',
                         marginBottom: 16,
                     }}>
@@ -710,19 +718,19 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                     }}>
                         <TouchableOpacity style={{
                             flex: 1,
-                            backgroundColor: '#E8F5E8',
+                            backgroundColor: lightBackground,
                             borderRadius: 16,
                             padding: 16,
                             marginRight: 8,
                             alignItems: 'center',
                             borderWidth: 1,
-                            borderColor: '#C8E6C9',
+                            borderColor: isDarkMode ? '#333' : '#C8E6C9',
                         }}>
-                            <MaterialCommunityIcons name="phone" size={24} color="#045b26" />
+                            <MaterialCommunityIcons name="phone" size={24} color={iconColor} />
                             <Text style={{
                                 fontSize: 12,
                                 fontWeight: 'bold',
-                                color: '#045b26',
+                                color: iconColor,
                                 fontFamily: 'Jumper',
                                 marginTop: 8,
                                 textAlign: 'center',
@@ -731,7 +739,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                             </Text>
                             <Text style={{
                                 fontSize: 10,
-                                color: '#666',
+                                color: secondaryTextColor,
                                 fontFamily: 'Flink',
                                 textAlign: 'center',
                             }}>
@@ -742,19 +750,19 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
 
                         <TouchableOpacity style={{
                             flex: 1,
-                            backgroundColor: '#E8F5E8',
+                            backgroundColor: lightBackground,
                             borderRadius: 16,
                             padding: 16,
                             marginLeft: 8,
                             alignItems: 'center',
                             borderWidth: 1,
-                            borderColor: '#C8E6C9',
+                            borderColor: isDarkMode ? '#333' : '#C8E6C9',
                         }}>
-                            <MaterialCommunityIcons name="hospital" size={24} color="#045b26" />
+                            <MaterialCommunityIcons name="hospital" size={24} color={iconColor} />
                             <Text style={{
                                 fontSize: 12,
                                 fontWeight: 'bold',
-                                color: '#045b26',
+                                color: iconColor,
                                 fontFamily: 'Jumper',
                                 marginTop: 8,
                                 textAlign: 'center',
@@ -763,7 +771,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                             </Text>
                             <Text style={{
                                 fontSize: 10,
-                                color: '#666',
+                                color: secondaryTextColor,
                                 fontFamily: 'Flink',
                                 textAlign: 'center',
                             }}>
@@ -783,11 +791,11 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                         alignItems: 'center',
                         marginBottom: 16,
                     }}>
-                        <MaterialCommunityIcons name="shield-check" size={22} color="#045b26" style={{ marginRight: 8 }} />
+                        <MaterialCommunityIcons name="shield-check" size={22} color={iconColor} style={{ marginRight: 8 }} />
                         <Text style={{
                             fontSize: 18,
                             fontWeight: 'bold',
-                            color: '#000',
+                            color: textColor,
                             fontFamily: 'Jumper',
                         }}>
                             Responsible Pet Care
@@ -803,7 +811,7 @@ export default function HomePage({ onSelect }: { onSelect: (label: string) => vo
                             key={item.label}
                         style={{
                                 width: '48%',
-                                backgroundColor: '#045b26',
+                                backgroundColor: iconColor,
                                 borderRadius: 16,
                                 padding: 16,
                                 marginBottom: 16,
