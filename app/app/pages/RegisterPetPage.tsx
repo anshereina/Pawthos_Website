@@ -826,8 +826,12 @@ export default function RegisterPetPage({ onNavigate }: { onNavigate?: (page: st
                                 setPetPhoto(null);
                                 
                                 // Navigate back to pet profile or main page
-                                if (onNavigate) {
-                                    onNavigate('Pet profile');
+                                try {
+                                    if (onNavigate && typeof onNavigate === 'function') {
+                                        onNavigate('Pet profile');
+                                    }
+                                } catch (error) {
+                                    console.error('Navigation error after registration:', error);
                                 }
                             }
                         }

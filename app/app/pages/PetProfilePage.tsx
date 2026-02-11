@@ -512,7 +512,15 @@ export default function PetProfilePage({ onNavigate }: { onNavigate: (page: stri
                 <Text style={styles.title}>My Pets</Text>
                 <TouchableOpacity 
                     style={styles.addPetBtn}
-                    onPress={() => onNavigate('Register Pet')}
+                    onPress={() => {
+                        try {
+                            if (onNavigate) {
+                                onNavigate('Register Pet');
+                            }
+                        } catch (error) {
+                            console.error('Navigation error:', error);
+                        }
+                    }}
                 >
                     <Text style={styles.addPetText}>Add Pet</Text>
                 </TouchableOpacity>

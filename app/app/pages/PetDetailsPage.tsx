@@ -446,7 +446,13 @@ export default function PetDetailsPage({
             {/* Back Button - Fixed Position */}
             <TouchableOpacity 
                 style={styles.backButton}
-                onPress={() => onNavigate('Pet profile')}
+                onPress={() => {
+                    try {
+                        onNavigate('Pet profile');
+                    } catch (error) {
+                        console.error('Navigation error:', error);
+                    }
+                }}
             >
                 <MaterialIcons name="arrow-back" size={24} color="#045b26" />
             </TouchableOpacity>
@@ -563,14 +569,26 @@ export default function PetDetailsPage({
                     <View style={styles.actionButtonsContainer}>
                         <TouchableOpacity 
                             style={styles.actionButton}
-                            onPress={() => onNavigate('Pet MedRecords')}
+                            onPress={() => {
+                                try {
+                                    onNavigate('Pet MedRecords');
+                                } catch (error) {
+                                    console.error('Navigation error:', error);
+                                }
+                            }}
                         >
                             <MaterialCommunityIcons name="file-document-outline" size={24} color="#FFFFFF" style={styles.actionButtonIcon} />
                             <Text style={styles.actionButtonText}>Medical History</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
                             style={[styles.actionButton, styles.actionButtonSecondary]}
-                            onPress={() => onNavigate('Pet VacCard')}
+                            onPress={() => {
+                                try {
+                                    onNavigate('Pet VacCard');
+                                } catch (error) {
+                                    console.error('Navigation error:', error);
+                                }
+                            }}
                         >
                             <MaterialCommunityIcons name="shield-check" size={24} color="#045b26" style={styles.actionButtonIcon} />
                             <Text style={[styles.actionButtonText, styles.actionButtonTextSecondary]}>Vaccination Records</Text>

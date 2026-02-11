@@ -88,6 +88,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#045b26',
     },
+    inputDisabled: {
+        backgroundColor: '#f5f5f5',
+        opacity: 0.7,
+    },
     inputError: {
         borderColor: '#ff6b6b',
     },
@@ -238,7 +242,7 @@ export default function EditPetProfileModal({
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
     const speciesOptions = ['Canine', 'Feline'];
-    const genderOptions = ['male', 'female'];
+    const genderOptions = ['Male', 'Female'];
 
     const formatDateForInput = (dateString: string) => {
         if (!dateString) return '';
@@ -587,7 +591,7 @@ export default function EditPetProfileModal({
                             >
                                 <View style={styles.pickerButton}>
                                     <Text style={formData.species ? styles.pickerText : styles.pickerPlaceholder}>
-                                        {formData.species || 'Select species'}
+                                        {formData.species ? (formData.species.charAt(0).toUpperCase() + formData.species.slice(1).toLowerCase()) : 'Select species'}
                                     </Text>
                                     <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
                                 </View>
@@ -639,7 +643,7 @@ export default function EditPetProfileModal({
                             >
                                 <View style={styles.pickerButton}>
                                     <Text style={formData.gender ? styles.pickerText : styles.pickerPlaceholder}>
-                                        {formData.gender || 'Select gender'}
+                                        {formData.gender ? (formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1).toLowerCase()) : 'Select gender'}
                                     </Text>
                                     <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
                                 </View>
@@ -651,7 +655,7 @@ export default function EditPetProfileModal({
                                             key={option}
                                             style={styles.pickerOption}
                                             onPress={() => {
-                                                handleInputChange('gender', option);
+                                                handleInputChange('gender', option.toLowerCase());
                                                 setShowGenderPicker(false);
                                             }}
                                         >

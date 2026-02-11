@@ -3,7 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicat
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createPainAssessment } from '../../utils/painAssessments.utils';
-import { calculateBeapAverageScore, mapBeapScoreToPainLevel } from '../../utils/beapScoring.utils';
+import { 
+    calculateBeapAverageScore, 
+    mapBeapScoreToPainLevel,
+    calculateBeapTotalScore,
+    mapBeapTotalScoreToPainLevel,
+    getBeapScoreFromImageIndex
+} from '../../utils/beapScoring.utils';
 
 const styles = StyleSheet.create({
     container: {
@@ -201,31 +207,18 @@ export default function CanineIntegrationResultPage({
     beap_average_score
 }: CanineIntegrationResultPageProps) {
     
-    // Calculate total BEAP-derived score on 0–40 scale (8 categories x 0–5)
-    const calculateTotalScore = (): number => {
-        if (selectedAnswers && Array.isArray(selectedAnswers) && selectedAnswers.length > 0) {
-            return selectedAnswers.reduce((sum, imageIndices) => {
-                if (!imageIndices || imageIndices.length === 0) return sum;
-                const categoryScore = Math.max(...imageIndices.map(index => index));
-                return sum + categoryScore;
-            }, 0);
-        }
-        return 0;
-    };
+    // Calculate total BEAP score (0-76 scale: 8 categories × 9.5 max BEAP score per category)
+    // This uses proper BEAP scoring where image indices are converted to BEAP scores first
+    const totalBeapScore = calculateBeapTotalScore(selectedAnswers);
+    
+    // Calculate average BEAP score (0-10 scale) for display
+    const averageBeapScore = beap_average_score || calculateBeapAverageScore(selectedAnswers);
 
-    // Map total score (0–40) to new 0–4 canine levels
-    const mapTotalScoreToLevel = (total: number): string => {
-        if (total <= 8) return 'Level 0 (No Pain)';
-        if (total <= 16) return 'Level 1 (Mild Pain)';
-        if (total <= 24) return 'Level 2 (Moderate Pain)';
-        if (total <= 32) return 'Level 3 (Moderate to Severe Pain)';
-        return 'Level 4 (Severe Pain)';
-    };
-
-    const totalScore = calculateTotalScore();
-
-    // Use explicit mapping based on total 0–40 score; fall back to provided painLevel if present
-    const currentPainLevel = painLevel || mapTotalScoreToLevel(totalScore);
+    // Map total BEAP score to pain level using proper BEAP scale mapping
+    // Fall back to average score mapping if total score calculation fails
+    const currentPainLevel = painLevel || 
+        mapBeapTotalScoreToPainLevel(totalBeapScore) || 
+        mapBeapScoreToPainLevel(averageBeapScore);
 
     // Define a function to get recommendations based on the pain level
     const getRecommendations = (level: string) => {
@@ -306,7 +299,8 @@ export default function CanineIntegrationResultPage({
                     assessmentData.recommendations = recommendations;
                     assessmentData.pain_level = currentPainLevel;
                     assessmentData.beaap_answers = selectedAnswers;
-                    assessmentData.beap_average_score = beapScore;
+                    assessmentData.beap_average_score = averageBeapScore;
+                    assessmentData.beap_total_score = totalBeapScore;
                     assessmentData.assessment_type = 'BEAP';
                     assessmentData.pet_type = 'Canine';  // Normalize to Canine
                     
@@ -400,31 +394,50 @@ export default function CanineIntegrationResultPage({
                         {currentPainLevel}
                     </Text>
                     
-                    {/* Display Total Score */}
+                    {/* Display BEAP Scores */}
                     {selectedAnswers && selectedAnswers.length > 0 && (
                         <>
                             <View style={styles.divider} />
                             <Text style={styles.recommendationsTitle}>
-                                Total Score
+                                BEAP Assessment Scores
                             </Text>
-                            <Text style={[styles.resultText, { fontSize: 18, color: '#045b26', marginBottom: 12 }]}>
-                                {totalScore} / 40
+                            
+                            {/* Average BEAP Score (0-10 scale) */}
+                            <Text style={[styles.resultText, { fontSize: 18, color: '#045b26', marginBottom: 8 }]}>
+                                Average Score: {averageBeapScore.toFixed(1)} / 10
+                            </Text>
+                            
+                            {/* Total BEAP Score (0-76 scale) */}
+                            <Text style={[styles.resultText, { fontSize: 16, color: '#666', marginBottom: 12 }]}>
+                                Total Score: {totalBeapScore.toFixed(1)} / 76
                             </Text>
                             
                             {/* Scoring Explanation */}
                             <View style={styles.scoringExplanation}>
-                                <Text style={styles.scoringTitle}>📊 How Scoring Works</Text>
+                                <Text style={styles.scoringTitle}>📊 How BEAP Scoring Works</Text>
                                     <Text style={styles.scoringText}>
-                                        We assessed 8 areas of your dog's behavior: breathing, eyes, walking, activity, appetite, attitude, posture, and touch response. Each area is scored 0–5 points based on pain indicators.
+                                        We assessed 8 areas of your dog's behavior using the BEAP (BluePearl Pet Hospice) Pain Scale:
+                                        {'\n'}• Breathing, Eyes, Ambulation, Activity, Appetite, Attitude, Posture, Palpation
                                         {'\n\n'}
-                                        <Text style={{ fontWeight: 'bold' }}>Your dog's total: </Text>
-                                        {totalScore} points out of 40 possible
+                                        Each category is scored on a 0-10 BEAP scale:
+                                        {'\n'}• 0: No pain
+                                        {'\n'}• 1-2: Mild pain
+                                        {'\n'}• 3-4: Moderate pain
+                                        {'\n'}• 5-6: Moderate to severe pain
+                                        {'\n'}• 7-8: Severe pain
+                                        {'\n'}• 9-10: Worst pain possible
                                         {'\n\n'}
-                                        • 0–8 points: Level 0 (No Pain){'\n'}
-                                        • 9–16 points: Level 1 (Mild Pain){'\n'}
-                                        • 17–24 points: Level 2 (Moderate Pain){'\n'}
-                                        • 25–32 points: Level 3 (Moderate to Severe Pain){'\n'}
-                                        • 33–40 points: Level 4 (Severe Pain)
+                                        <Text style={{ fontWeight: 'bold' }}>Your dog's scores: </Text>
+                                        {'\n'}• Average: {averageBeapScore.toFixed(1)}/10 (average across all 8 categories)
+                                        {'\n'}• Total: {totalBeapScore.toFixed(1)}/76 (sum of all category scores)
+                                        {'\n\n'}
+                                        <Text style={{ fontWeight: 'bold' }}>Pain Level Mapping: </Text>
+                                        {'\n'}• 0: Level 0 (No Pain)
+                                        {'\n'}• 0.1-1.5: Level 1 (Mild Pain)
+                                        {'\n'}• 1.6-3.5: Level 2 (Moderate Pain)
+                                        {'\n'}• 3.6-5.5: Level 3 (Moderate to Severe Pain)
+                                        {'\n'}• 5.6-7.5: Level 4 (Severe Pain)
+                                        {'\n'}• 7.6-10: Level 5 (Worst Pain Possible)
                                     </Text>
                             </View>
                         </>

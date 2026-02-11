@@ -100,6 +100,61 @@ export const getBeapPainLevelRanges = () => {
 };
 
 /**
+ * Calculate BEAP total score (sum of all category scores)
+ * @param selectedAnswers Array of arrays: [[imageIndices for category 0], [imageIndices for category 1], ...]
+ * @returns Total BEAP score (0-76 scale: 8 categories × 9.5 max BEAP score)
+ */
+export const calculateBeapTotalScore = (selectedAnswers: number[][]): number => {
+  if (!selectedAnswers || selectedAnswers.length === 0) {
+    return 0;
+  }
+
+  let totalScore = 0;
+
+  selectedAnswers.forEach((imageIndices) => {
+    if (!imageIndices || imageIndices.length === 0) {
+      // If no selection for a category, use 0 (no pain)
+      return;
+    }
+
+    // Use maximum BEAP score from selected images in this category (conservative approach)
+    const categoryScore = Math.max(
+      ...imageIndices.map(imageIndex => getBeapScoreFromImageIndex(imageIndex))
+    );
+    totalScore += categoryScore;
+  });
+
+  return Math.round(totalScore * 10) / 10; // Round to 1 decimal place
+};
+
+/**
+ * Map BEAP total score (0-76) to pain level
+ * Based on BEAP scale ranges mapped to total score
+ * @param totalScore Total BEAP score (0-76 scale)
+ * @returns Pain level string
+ */
+export const mapBeapTotalScoreToPainLevel = (totalScore: number): string => {
+  // Map total score ranges to pain levels
+  // Each category can contribute 0-9.5 points, so total is 0-76
+  // We divide by 8 categories to get average, then map to BEAP levels
+  const averageScore = totalScore / 8;
+  
+  if (averageScore <= 0) {
+    return 'Level 0 (No Pain)';
+  } else if (averageScore <= 1.5) {
+    return 'Level 1 (Mild Pain)';
+  } else if (averageScore <= 3.5) {
+    return 'Level 2 (Moderate Pain)';
+  } else if (averageScore <= 5.5) {
+    return 'Level 3 (Moderate to Severe Pain)';
+  } else if (averageScore <= 7.5) {
+    return 'Level 4 (Severe Pain)';
+  } else {
+    return 'Level 5 (Worst Pain Possible)';
+  }
+};
+
+/**
  * Update category data scores to use BEAP midpoint values
  * This ensures consistency across the application
  */
