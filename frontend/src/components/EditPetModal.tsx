@@ -267,9 +267,9 @@ const EditPetModal: React.FC<EditPetModalProps> = ({ isOpen, onClose, onSubmit, 
                 type="date"
                 name="owner_birthday"
                 value={formData.owner_birthday}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                disabled={loading}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                disabled={true}
               />
             </div>
 
@@ -281,9 +281,9 @@ const EditPetModal: React.FC<EditPetModalProps> = ({ isOpen, onClose, onSubmit, 
                 type="date"
                 name="date_of_birth"
                 value={formData.date_of_birth}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                disabled={loading}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                disabled={true}
               />
             </div>
 

@@ -24,6 +24,21 @@ models/*.pth
 models/*.pkl
 eld/*.pkl
 
+# Datasets (too large for git)
+datasets/
+datasets_filtered/
+datasets_augmented/
+feline_pain_dataset/
+backend/datasets/
+**/datasets/**/*.csv
+**/datasets/**/*.json
+**/datasets/**/*.png
+**/datasets/**/*.jpg
+**/datasets/**/*.jpeg
+# Keep important CSV files (like requirements, configs)
+!requirements*.csv
+!package*.csv
+
 # Uploads and media
 # Uploads directory - ignore uploaded files but keep directory structure
 backend/uploads/*

@@ -443,13 +443,14 @@ export default function PetDetailsPage({
         );
     }
 
-    const backgroundColor = isDarkMode ? '#121212' : '#FFFFFF';
-    const cardBackground = isDarkMode ? '#1e1e1e' : '#FFFFFF';
-    const textColor = isDarkMode ? '#e0e0e0' : '#000';
-    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
-    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
-    const lightBackground = isDarkMode ? '#2d2d2d' : '#F8FFF8';
-    const buttonBackground = isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    const backgroundColor = isDarkMode ? '#000000' : '#FFFFFF';
+    const cardBackground = isDarkMode ? '#1a1a1a' : '#FFFFFF';
+    const textColor = isDarkMode ? '#FFFFFF' : '#000';
+    const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#666';
+    const borderColor = isDarkMode ? '#333333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#045b26' : '#045b26';
+    const lightBackground = isDarkMode ? '#1a1a1a' : '#F8FFF8';
+    const buttonBackground = isDarkMode ? 'rgba(26, 26, 26, 0.9)' : 'rgba(255, 255, 255, 0.9)';
     
     return (
         <View style={[styles.container, { backgroundColor }]}>
@@ -533,7 +534,7 @@ export default function PetDetailsPage({
                             }}
                         />
                     ) : (
-                        <View style={[styles.imagePlaceholder, { backgroundColor: isDarkMode ? '#1e1e1e' : '#F0F8F0' }]}>
+                        <View style={[styles.imagePlaceholder, { backgroundColor: isDarkMode ? '#1a1a1a' : '#F0F8F0' }]}>
                             <MaterialCommunityIcons name="camera-off" size={64} color={secondaryTextColor} />
                         </View>
                     )}
@@ -553,21 +554,21 @@ export default function PetDetailsPage({
                     {/* Quick Stats Bar */}
                     <View style={[styles.quickStatsBar, { backgroundColor: lightBackground }]}>
                         <View style={styles.statItem}>
-                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1e1e1e' : '#E8F5E8' }]}>
+                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                 <MaterialCommunityIcons name="calendar" size={20} color={iconColor} />
                             </View>
                             <Text style={[styles.statLabel, { color: secondaryTextColor }]}>Age</Text>
                             <Text style={[styles.statValue, { color: textColor }]}>{formatPetAge(petData.date_of_birth)}</Text>
                         </View>
                         <View style={styles.statItem}>
-                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1e1e1e' : '#E8F5E8' }]}>
+                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                 <MaterialCommunityIcons name="paw" size={20} color={iconColor} />
                             </View>
                             <Text style={[styles.statLabel, { color: secondaryTextColor }]}>Species</Text>
                                 <Text style={[styles.statValue, { color: textColor }]}>{formatSpecies(petData.species)}</Text>
                         </View>
                         <View style={styles.statItem}>
-                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1e1e1e' : '#E8F5E8' }]}>
+                            <View style={[styles.statIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                 <MaterialCommunityIcons name="gender-male-female" size={20} color={iconColor} />
                             </View>
                             <Text style={[styles.statLabel, { color: secondaryTextColor }]}>Gender</Text>
@@ -610,28 +611,28 @@ export default function PetDetailsPage({
                         <Text style={[styles.sectionTitle, { color: textColor }]}>Pet Information</Text>
                         <View style={styles.infoGrid}>
                             <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
-                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                     <MaterialCommunityIcons name="cake-variant" size={24} color={iconColor} />
                                 </View>
                                 <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Birthday</Text>
                                 <Text style={[styles.infoCardValue, { color: textColor }]}>{formatDate(petData.date_of_birth)}</Text>
                             </View>
                             <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
-                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                     <MaterialCommunityIcons name="palette" size={24} color={iconColor} />
                                 </View>
                                 <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Color</Text>
                                 <Text style={[styles.infoCardValue, { color: textColor }]}>{petData.color || 'Unknown'}</Text>
                             </View>
                             <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
-                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                     <MaterialCommunityIcons name="dna" size={24} color={iconColor} />
                                 </View>
                                 <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Breed</Text>
                                 <Text style={[styles.infoCardValue, { color: textColor }]}>{petData.breed || 'Mixed Breed'}</Text>
                             </View>
                             <View style={[styles.infoCard, { backgroundColor: cardBackground, borderColor }]}>
-                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#2d2d2d' : '#E8F5E8' }]}>
+                                <View style={[styles.infoCardIcon, { backgroundColor: isDarkMode ? '#1a1a1a' : '#E8F5E8' }]}>
                                     <MaterialCommunityIcons name="heart" size={24} color={iconColor} />
                                 </View>
                                 <Text style={[styles.infoCardLabel, { color: secondaryTextColor }]}>Status</Text>

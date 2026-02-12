@@ -344,9 +344,25 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
 
 
     const handlePetPress = (pet: PetData) => {
-        console.log('Pet selected:', pet);
-        // Navigate to pet details page with pet ID
-        onNavigate('Pet Details', { petId: pet.id });
+        try {
+            console.log('Pet selected:', pet);
+            if (!pet || !pet.id) {
+                console.error('Invalid pet data:', pet);
+                Alert.alert('Error', 'Invalid pet data. Please try again.');
+                return;
+            }
+            // Navigate to pet details page with pet ID
+            if (onNavigate) {
+                console.log('Navigating to Pet Details with petId:', pet.id);
+                onNavigate('Pet Details', { petId: pet.id });
+            } else {
+                console.error('onNavigate is not defined');
+                Alert.alert('Error', 'Navigation is not available. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error navigating to pet details:', error);
+            Alert.alert('Error', 'Failed to open pet details. Please try again.');
+        }
     };
 
     const handleTabPress = (tabName: string) => {
@@ -505,13 +521,13 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
         isFiltered: false
     };
 
-    const backgroundColor = isDarkMode ? '#121212' : '#ffffff';
-    const cardBackground = isDarkMode ? '#1e1e1e' : '#fff';
-    const textColor = isDarkMode ? '#e0e0e0' : '#000';
-    const secondaryTextColor = isDarkMode ? '#b0b0b0' : '#666';
-    const borderColor = isDarkMode ? '#333' : '#E0E0E0';
-    const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
-    const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
+    const backgroundColor = isDarkMode ? '#000000' : '#ffffff';
+    const cardBackground = isDarkMode ? '#1a1a1a' : '#fff';
+    const textColor = isDarkMode ? '#FFFFFF' : '#000';
+    const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#666';
+    const borderColor = isDarkMode ? '#333333' : '#E0E0E0';
+    const iconColor = isDarkMode ? '#045b26' : '#045b26';
+    const lightBackground = isDarkMode ? '#1a1a1a' : '#E8F5E8';
     
     return (
         <SafeAreaView style={[styles.container, { backgroundColor }]}>
@@ -523,10 +539,14 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
                     onPress={() => {
                         try {
                             if (onNavigate) {
+                                console.log('Navigating to Register Pet');
                                 onNavigate('Register Pet');
+                            } else {
+                                console.error('onNavigate is not defined');
                             }
                         } catch (error) {
                             console.error('Navigation error:', error);
+                            Alert.alert('Error', 'Failed to navigate. Please try again.');
                         }
                     }}
                 >
@@ -716,7 +736,7 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
                                             onPress={() => handlePetPress(pet)}
                                             activeOpacity={0.9}
                                         >
-                                            <View style={[styles.petImageContainer, { backgroundColor: isDarkMode ? '#2d2d2d' : '#F5F5F5' }]}>
+                                            <View style={[styles.petImageContainer, { backgroundColor: isDarkMode ? '#1a1a1a' : '#F5F5F5' }]}>
                                                 {pet.photo_url ? (
                                                     <Image 
                                                         source={{ uri: getPhotoUrl(pet.photo_url) || '' }} 
