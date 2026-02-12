@@ -239,7 +239,7 @@ export default function HomePage({ onSelect, isDarkMode = false }: { onSelect: (
     const borderColor = isDarkMode ? '#333' : '#E0E0E0';
     const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
     const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
-    
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor }}>
             <Animated.View style={{ flex: 1, opacity: enterOpacity, transform: [{ translateY: enterTranslateY }] }}>

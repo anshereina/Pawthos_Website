@@ -34,3 +34,17 @@ Thumbs.db
 # Logs
 *.log
 
+# --- Pawthos: exclude evaluation datasets & scripts not needed for mobile build ---
+# Feline pain dataset (used only for offline evaluation with evaluate_gemini.py)
+../feline_pain_dataset/
+../feline_pain_dataset/**
+../backend/feline_pain_dataset/
+../backend/feline_pain_dataset/**
+
+# Evaluation scripts and docs (not required for running the mobile app)
+../evaluate_gemini.py
+../EVALUATION_README.md
+../BEAP_PAIN_ASSESSMENT_SYSTEM.md
+../README_ELD.md
+../requirements_eld.txt
+

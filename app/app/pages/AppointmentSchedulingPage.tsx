@@ -832,7 +832,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
     const iconColor = isDarkMode ? '#4CAF50' : '#045b26';
     const calendarBg = isDarkMode ? '#2d2d2d' : '#045b26';
     const inputBackground = isDarkMode ? '#2d2d2d' : '#FFFFFF';
-    
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor }]}>
             <KeyboardAvoidingView 
