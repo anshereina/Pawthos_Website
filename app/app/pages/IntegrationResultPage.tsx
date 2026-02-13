@@ -607,13 +607,14 @@ export default function IntegrationResultPage({
     
     // Get pain level styling based on severity
     const getPainLevelStyling = (level: string) => {
-        if (level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain') {
+        const levelLower = level.toLowerCase();
+        if (levelLower.includes('level 0') || levelLower.includes('no pain') || level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain' || level === 'Level 0 - No Pain') {
             return {
-                containerColor: 'rgba(16, 185, 129, 0.05)',
-                borderColor: 'rgba(16, 185, 129, 0.3)',
-                textColor: '#059669',
-                confidenceColor: '#059669',
-                confidenceBg: 'rgba(16, 185, 129, 0.1)',
+                containerColor: 'rgba(100, 181, 246, 0.05)', // Soft light blue background
+                borderColor: 'rgba(100, 181, 246, 0.3)', // Soft light blue border
+                textColor: '#42A5F5', // Calming light blue text
+                confidenceColor: '#42A5F5', // Calming light blue for confidence
+                confidenceBg: 'rgba(100, 181, 246, 0.1)', // Soft light blue background
                 icon: 'check-circle'
             };
         } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain') {

@@ -13,7 +13,7 @@ const FAQS = [
     },
     {
         question: 'How do I add a new pet profile?',
-        answer: 'Adding a new pet profile helps you manage all your pet\'s information in one place:\n\n1) Navigate to Pet Information > Pet Profile from the main menu\n2) Tap the "Add Pet" button (usually located at the top right of the screen)\n3) Fill in all required information including:\n   • Pet\'s name\n   • Species (Canine or Feline)\n   • Breed\n   • Color\n   • Date of birth\n   • Gender\n   • Reproductive status\n4) Optionally upload a photo of your pet\n5) Review all information and submit\n\nOnce added, you can access your pet\'s complete profile, medical records, vaccination history, and more from the Pet Profile section.'
+        answer: 'Adding a new pet profile helps you manage all your pet\'s information in one place:\n\n1) Navigate to Pet Information > Pet Profile from the main menu\n2) Tap the "Add Pet" button (located at the top right of the screen)\n3) Fill in all required information including:\n   • Pet\'s name\n   • Species (Canine or Feline)\n   • Breed\n   • Color\n   • Date of birth\n   • Gender\n   • Reproductive status\n4) Optionally upload a photo of your pet\n5) Review all information and submit\n\nOnce added, you can access your pet\'s complete profile, medical records, vaccination history, and more from the Pet Profile section.'
     },
     {
         question: 'How can I view my pet\'s vaccine records?',
@@ -24,12 +24,8 @@ const FAQS = [
         answer: 'To obtain a shipping permit for your pet:\n\n1) Navigate to Pet Information or Other Services from the main menu\n2) Select "Shipping Permit" from the available options\n3) Fill out all required information including:\n   • Pet details (name, species, breed, etc.)\n   • Owner information\n   • Destination details\n   • Travel dates\n   • Health certificate information (if required)\n4) Upload any necessary documents (vaccination records, health certificates)\n5) Review and submit your application\n\nProcessing times may vary, so it\'s recommended to apply well in advance of your travel date. You\'ll receive notifications about the status of your permit application.'
     },
     {
-        question: 'How do I contact a veterinarian?',
-        answer: 'Connecting with veterinarians is simple:\n\n1) Navigate to the Vet Health section from the main menu\n2) Browse through the list of available veterinarians\n3) View each veterinarian\'s profile, which includes:\n   • Contact information\n   • Specializations\n   • Availability\n   • Location\n4) Use the provided contact methods (phone, email, or in-app messaging) to reach out\n5) You can also book appointments directly through the app\n\nFor urgent matters, it\'s recommended to call the veterinarian directly rather than using messaging. The Vet Health section also provides access to health certificates and other veterinary services.'
-    },
-    {
         question: 'How do I reset my password?',
-        answer: 'If you\'ve forgotten your password, you can reset it easily:\n\n1) Go to the login page\n2) Tap the "Forgot password?" link (usually located below the password field)\n3) Enter your registered email address\n4) Check your email for a password reset link\n5) Click the link in the email to open the password reset page\n6) Enter your new password (make sure it meets the security requirements)\n7) Confirm your new password and submit\n\nIf you don\'t receive the email, check your spam folder. The reset link is typically valid for a limited time (usually 24 hours). If you continue to have issues, contact support for assistance.'
+        answer: 'If you\'ve forgotten your password, you can reset it easily:\n\n1) Go to the login page\n2) Tap the "Forgot password?" link (usually located below the password field)\n3) Enter your registered email address\n4) Check your email for a password reset link\n5) Click the link in the email to open the password reset page\n6) Enter your new password (make sure it meets the security requirements)\n7) Confirm your new password and submit\n\nIf you don\'t receive the email, check your spam folder. The reset link is typically valid for a limited time (usually 24 hours).'
     },
 ];
 

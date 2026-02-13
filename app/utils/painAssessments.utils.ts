@@ -499,7 +499,7 @@ export const formatAssessmentDate = (dateString: string): string => {
 export const getPainLevelColor = (painLevel: string): string => {
     const level = (painLevel || '').toLowerCase();
     if (level.includes('level 0') || level.includes('no pain')) {
-        return '#4CAF50'; // Green
+        return '#64B5F6'; // Soft, calming light blue (less alarming than green)
     } else if (level.includes('level 1') || level.includes('mild')) {
         return '#8BC34A'; // Light green-yellow for mild
     } else if (level.includes('level 2') || level.includes('moderate pain')) {

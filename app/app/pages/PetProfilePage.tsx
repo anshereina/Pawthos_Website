@@ -538,11 +538,20 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
                     style={[styles.addPetBtn, { backgroundColor: iconColor }]}
                     onPress={() => {
                         try {
-                            if (onNavigate) {
+                            if (onNavigate && typeof onNavigate === 'function') {
                                 console.log('Navigating to Register Pet');
-                                onNavigate('Register Pet');
+                                // Use setTimeout to ensure navigation happens after current render cycle
+                                setTimeout(() => {
+                                    try {
+                                        onNavigate('Register Pet');
+                                    } catch (navError) {
+                                        console.error('Navigation execution error:', navError);
+                                        Alert.alert('Error', 'Failed to navigate. Please try again.');
+                                    }
+                                }, 100);
                             } else {
-                                console.error('onNavigate is not defined');
+                                console.error('onNavigate is not defined or not a function');
+                                Alert.alert('Error', 'Navigation is not available. Please try again.');
                             }
                         } catch (error) {
                             console.error('Navigation error:', error);

@@ -326,15 +326,18 @@ export default function AppointmentDetailsModal({
                             </View>
                         )}
                         
-                        <TouchableOpacity 
-                            style={styles.cancelButton}
-                            onPress={() => {
-                                onClose();
-                                // Add cancel appointment logic here
-                            }}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
-                        </TouchableOpacity>
+                        {/* Only show Cancel Appointment button if status is not 'cancelled' */}
+                        {appointmentData.status.toLowerCase() !== 'cancelled' && (
+                            <TouchableOpacity 
+                                style={styles.cancelButton}
+                                onPress={() => {
+                                    onClose();
+                                    // Add cancel appointment logic here
+                                }}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
+                            </TouchableOpacity>
+                        )}
                     </ScrollView>
                 </View>
             </View>

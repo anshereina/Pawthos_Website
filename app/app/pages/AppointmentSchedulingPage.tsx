@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, SafeAr
 import { MaterialIcons } from '@expo/vector-icons';
 import { getPets, PetData } from '../../utils/pets.utils';
 import { createAppointment, updateAppointment, AppointmentCreate } from '../../utils/appointments.utils';
+import { validateTextForProfanity } from '../../utils/profanityFilter.utils';
 
 const styles = StyleSheet.create({
     container: { 
@@ -251,6 +252,7 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
     const [gender, setGender] = useState<'Female' | 'Male' | null>(null);
     const [reproductiveStatus, setReproductiveStatus] = useState<'Intact' | 'Castrated/Spayed' | null>(null);
     const [description, setDescription] = useState('');
+    const [descriptionError, setDescriptionError] = useState<string | null>(null);
     
     // Pet selection states
     const [userPets, setUserPets] = useState<PetData[]>([]);
@@ -632,6 +634,15 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
         if (appointmentFor === 'Vaccination' && vaccinationType === 'Please Select') {
             Alert.alert('Error', 'Please select vaccination type');
             return false;
+        }
+        // Validate description for profanity
+        if (description && description.trim()) {
+            const profanityError = validateTextForProfanity(description);
+            if (profanityError) {
+                setDescriptionError(profanityError);
+                Alert.alert('Invalid Input', profanityError);
+                return false;
+            }
         }
         return true;
     };
@@ -1259,17 +1270,31 @@ export default function AppointmentSchedulingPage({ initialAppointmentType, onBa
                 style={[
                     styles.textArea,
                     { backgroundColor: inputBackground, borderColor, color: textColor },
-                    isEditing && styles.inputFieldDisabled
+                    isEditing && styles.inputFieldDisabled,
+                    descriptionError && { borderColor: '#F44336', borderWidth: 2 }
                 ]}
                 placeholder="e.g vomiting"
                 placeholderTextColor={secondaryTextColor}
                 multiline
                 value={description}
-                onChangeText={setDescription}
+                onChangeText={(text) => {
+                    setDescription(text);
+                    // Validate for profanity
+                    const error = validateTextForProfanity(text);
+                    setDescriptionError(error);
+                    if (error) {
+                        Alert.alert('Invalid Input', error);
+                    }
+                }}
                 editable={!isEditing}
                 returnKeyType="done"
                 blurOnSubmit={true}
             />
+            {descriptionError && (
+                <Text style={{ color: '#F44336', fontSize: 12, marginTop: 4 }}>
+                    {descriptionError}
+                </Text>
+            )}
         </View>
                 </View>
 

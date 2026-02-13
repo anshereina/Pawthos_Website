@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     painLevel0: {
-        color: '#4CAF50', // Green for no pain
+        color: '#64B5F6', // Soft, calming light blue for no pain (less alarming)
     },
     painLevel1: {
         color: '#FF9800', // Orange for mild pain

@@ -425,16 +425,6 @@ export default function LoginPage() {
                         )}
                         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
                             <TouchableOpacity
-                                style={[styles.button, { backgroundColor: '#f3f4f6', marginBottom: 0, marginRight: 8 }]}
-                                onPress={() => {
-                                    setCaptchaModalVisible(false);
-                                    setCaptchaAnswer("");
-                                    setCaptchaError(null);
-                                }}
-                            >
-                                <Text style={[styles.buttonText, { color: '#374151' }]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
                                 style={[styles.button, { marginBottom: 0 }]}
                                 onPress={handleCaptchaSubmit}
                                 disabled={loading}
