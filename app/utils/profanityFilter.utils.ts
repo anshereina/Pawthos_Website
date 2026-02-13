@@ -2,15 +2,19 @@
  * Profanity filter utility for filtering inappropriate words
  */
 
-// Common profanity words list (basic set - can be expanded)
+// Common profanity words list (expanded set - English + Tagalog/Filipino)
 const PROFANITY_WORDS = [
     // Explicit profanity (common words)
     'fuck', 'shit', 'damn', 'bitch', 'ass', 'bastard', 'crap', 'piss',
     // Variations
     'f*ck', 'f**k', 'sh*t', 's**t', 'b*tch', 'a**', 'a*s',
-    // Offensive terms
+    // Offensive / slur terms
     'idiot', 'stupid', 'dumb', 'retard', 'moron',
-    // Add more as needed
+    'nigga', 'nigger',
+    // Tagalog / Filipino profanity and insults
+    'putangina', 'putang ina', 'puta', 'punyeta',
+    'gago', 'ulol', 'tanga', 'tarantado', 'peste', 'bwisit', 'buwisit',
+    'lintik', 'leche', 'pakyu', 'pak yu', 'bobo', 'siraulo', 'sira ulo',
 ];
 
 /**

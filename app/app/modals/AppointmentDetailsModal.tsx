@@ -326,18 +326,30 @@ export default function AppointmentDetailsModal({
                             </View>
                         )}
                         
-                        {/* Only show Cancel Appointment button if status is not 'cancelled' */}
-                        {appointmentData.status.toLowerCase() !== 'cancelled' && (
-                            <TouchableOpacity 
-                                style={styles.cancelButton}
-                                onPress={() => {
-                                    onClose();
-                                    // Add cancel appointment logic here
-                                }}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
-                            </TouchableOpacity>
-                        )}
+                        {/* Only show Cancel Appointment button if status is NOT cancelled */}
+                        {(() => {
+                            const normalizedStatus = (appointmentData.status || '').trim().toLowerCase();
+                            const isCancelled =
+                                normalizedStatus === 'cancelled' ||
+                                normalizedStatus === 'canceled' ||
+                                normalizedStatus.startsWith('cancel'); // e.g. "cancelled by user"
+                            
+                            if (isCancelled) {
+                                return null;
+                            }
+                            
+                            return (
+                                <TouchableOpacity 
+                                    style={styles.cancelButton}
+                                    onPress={() => {
+                                        onClose();
+                                        // Add cancel appointment logic here
+                                    }}
+                                >
+                                    <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
                     </ScrollView>
                 </View>
             </View>

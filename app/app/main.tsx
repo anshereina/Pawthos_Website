@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions, Animated, Easing, BackHandler } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions, Animated, Easing, BackHandler, Alert } from "react-native";
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 // Navigation using expo-router
 import { useRouter } from "expo-router";
@@ -800,9 +800,20 @@ export default function MainApp() {
     };
 
     const navigateWithData = (page: string, data?: any) => {
-        setNavigationData(data || {});
-        addToHistory(page, data);
-        setSelectedMenu(page);
+        console.log('[MainApp] navigateWithData called with:', { page, hasData: !!data });
+        try {
+            // Update navigation data
+            setNavigationData(data || {});
+            // Add to history
+            addToHistory(page, data);
+            // Update selected menu - this triggers page render
+            console.log('[MainApp] Setting selectedMenu to:', page);
+            setSelectedMenu(page);
+            console.log('[MainApp] Navigation state updated');
+        } catch (error) {
+            console.error('[MainApp] Error in navigateWithData:', error);
+            Alert.alert('Navigation Error', `Failed to navigate to ${page}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     };
 
     const getUserName = () => {

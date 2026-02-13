@@ -537,27 +537,33 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
                 <TouchableOpacity 
                     style={[styles.addPetBtn, { backgroundColor: iconColor }]}
                     onPress={() => {
+                        console.log('[PetProfilePage] Add Pet button pressed');
+                        
+                        if (!onNavigate) {
+                            console.error('[PetProfilePage] onNavigate is not defined');
+                            Alert.alert('Error', 'Navigation is not available. Please try again.');
+                            return;
+                        }
+                        
+                        if (typeof onNavigate !== 'function') {
+                            console.error('[PetProfilePage] onNavigate is not a function, type:', typeof onNavigate);
+                            Alert.alert('Error', 'Navigation function is invalid. Please try again.');
+                            return;
+                        }
+                        
                         try {
-                            if (onNavigate && typeof onNavigate === 'function') {
-                                console.log('Navigating to Register Pet');
-                                // Use setTimeout to ensure navigation happens after current render cycle
-                                setTimeout(() => {
-                                    try {
-                                        onNavigate('Register Pet');
-                                    } catch (navError) {
-                                        console.error('Navigation execution error:', navError);
-                                        Alert.alert('Error', 'Failed to navigate. Please try again.');
-                                    }
-                                }, 100);
-                            } else {
-                                console.error('onNavigate is not defined or not a function');
-                                Alert.alert('Error', 'Navigation is not available. Please try again.');
-                            }
+                            console.log('[PetProfilePage] Calling onNavigate("Register Pet")');
+                            // Call navigation directly without setTimeout
+                            onNavigate('Register Pet', undefined);
+                            console.log('[PetProfilePage] Navigation call completed');
                         } catch (error) {
-                            console.error('Navigation error:', error);
-                            Alert.alert('Error', 'Failed to navigate. Please try again.');
+                            console.error('[PetProfilePage] Navigation error:', error);
+                            const errorMsg = error instanceof Error ? error.message : String(error);
+                            console.error('[PetProfilePage] Error details:', errorMsg);
+                            Alert.alert('Error', `Failed to navigate: ${errorMsg}`);
                         }
                     }}
+                    activeOpacity={0.7}
                 >
                     <Text style={styles.addPetText}>Add Pet</Text>
                 </TouchableOpacity>
