@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional, Union
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -61,8 +61,8 @@ def find_placeholder_user_by_name(db: Session, name: str):
     ).first()
 
 def claim_placeholder_account(db: Session, placeholder_user: models.User, email: str, password: str, 
-                             phone_number: str = None, address: str = None, otp_code: str = None, 
-                             otp_expires_at: datetime = None):
+                             phone_number: str = None, address: str = None, birthday: date = None,
+                             otp_code: str = None, otp_expires_at: datetime = None):
     """Claim a placeholder account by updating it with real user credentials"""
     # Update the placeholder account with real credentials
     placeholder_user.email = email
@@ -75,6 +75,8 @@ def claim_placeholder_account(db: Session, placeholder_user: models.User, email:
         placeholder_user.phone_number = phone_number
     if address:
         placeholder_user.address = address
+    if birthday:
+        placeholder_user.birthday = birthday
     
     # Set OTP for email verification
     if otp_code:

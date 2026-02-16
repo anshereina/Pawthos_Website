@@ -33,6 +33,7 @@ class UserBase(BaseModel):
     email: EmailStr
     address: Optional[str] = None
     phone_number: Optional[str] = None
+    birthday: Optional[date] = None
     photo_url: Optional[str] = None
 
 class UserCreate(UserBase):

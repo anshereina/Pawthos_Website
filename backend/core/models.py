@@ -27,6 +27,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     address = Column(Text, nullable=True)
     phone_number = Column(String(20), nullable=True)
+    birthday = Column(Date, nullable=True)  # User's birthday
     photo_url = Column(String(500), nullable=True)  # Add photo URL column
     is_confirmed = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
     is_placeholder = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True (marks auto-created users)

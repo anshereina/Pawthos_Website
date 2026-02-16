@@ -415,12 +415,13 @@ export async function signup(
   name?: string,
   phoneNumber?: string,
   address?: string,
+  birthday?: string,
   otpMethod: 'email' | 'sms' = 'email'
 ): Promise<AuthResult> {
   try {
     const signupUrl = `${API_BASE_URL}/register`;
     console.log('🔵 Signup URL:', signupUrl);
-    console.log('🔵 Signup payload:', { email, name, phone_number: phoneNumber, address });
+    console.log('🔵 Signup payload:', { email, name, phone_number: phoneNumber, address, birthday });
     
     const response = await fetchWithTimeout(signupUrl, {
       method: 'POST',
@@ -434,6 +435,7 @@ export async function signup(
         name,
         phone_number: phoneNumber,
         address,
+        birthday,
       }),
     }, 30000); // Increased to 30 seconds
 

@@ -544,6 +544,37 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
         }
     };
 
+    // Auto-fill owner's birthday from user profile on mount
+    useEffect(() => {
+        const loadOwnerBirthday = async () => {
+            try {
+                const currentUser = await getCurrentUser();
+                if (currentUser?.birthday) {
+                    // Convert YYYY-MM-DD to DD/MM/YYYY format for display
+                    try {
+                        const dateParts = currentUser.birthday.split('-');
+                        if (dateParts.length === 3) {
+                            const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                            setOwnerBirthday(formattedDate);
+                        } else {
+                            // If already in DD/MM/YYYY format, use as is
+                            setOwnerBirthday(currentUser.birthday);
+                        }
+                    } catch (error) {
+                        console.error('Error formatting birthday:', error);
+                        // If conversion fails, try to use as is
+                        setOwnerBirthday(currentUser.birthday);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading owner birthday:', error);
+                // Don't crash if we can't load the birthday
+            }
+        };
+        
+        loadOwnerBirthday();
+    }, []);
+
     // Handler for owner birthday - user can manually enter it
     const handleOwnerBirthdayChange = (text: string) => {
         const formatted = formatDateInput(text);
@@ -1116,7 +1147,9 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
                             keyboardType="numeric"
                             maxLength={10}
                         />
-                        <Text style={[styles.inputHelpText, { color: secondaryTextColor }]}>Optional • Enter your birthday in DD/MM/YYYY format</Text>
+                        <Text style={[styles.inputHelpText, { color: secondaryTextColor }]}>
+                            {ownerBirthday ? 'Auto-filled from your profile • You can edit if needed' : 'Optional • Enter your birthday in DD/MM/YYYY format'}
+                        </Text>
                         {fieldErrors.ownerBirthday ? (
                             <Text style={styles.inputErrorText}>{fieldErrors.ownerBirthday}</Text>
                         ) : null}

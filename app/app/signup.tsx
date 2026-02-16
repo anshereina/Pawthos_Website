@@ -177,6 +177,7 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [address, setAddress] = useState("");
+    const [birthday, setBirthday] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showOTPModal, setShowOTPModal] = useState(false);
@@ -249,7 +250,20 @@ export default function SignupPage() {
             return;
         }
 
-        const result = await auth.signup(email, password, name, phoneNumber, address);
+        // Convert birthday from DD/MM/YYYY to YYYY-MM-DD format for backend
+        let formattedBirthday = undefined;
+        if (birthday && birthday.length === 10) {
+            try {
+                const parts = birthday.split('/');
+                if (parts.length === 3) {
+                    formattedBirthday = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            } catch (error) {
+                console.error('Error formatting birthday:', error);
+            }
+        }
+        
+        const result = await auth.signup(email, password, name, phoneNumber, address, formattedBirthday);
         setLoading(false);
         if (!result.success) {
             setError(result.message || "Signup failed");
@@ -378,6 +392,33 @@ export default function SignupPage() {
                             autoCapitalize="words"
                             multiline={true}
                             numberOfLines={2}
+                        />
+                    </View>
+
+                    {/* Birthday */}
+                    <View style={styles.inputRow}>
+                        <MaterialIcons name="cake" size={20} color="#4a7c59" />
+                        <TextInput
+                            placeholder="Birthday (DD/MM/YYYY)"
+                            placeholderTextColor="#999"
+                            value={birthday}
+                            onChangeText={(text) => {
+                                // Format as DD/MM/YYYY
+                                const cleaned = text.replace(/[^0-9/]/g, '');
+                                const digits = cleaned.replace(/\//g, '');
+                                let formatted = '';
+                                if (digits.length <= 2) {
+                                    formatted = digits;
+                                } else if (digits.length <= 4) {
+                                    formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+                                } else {
+                                    formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+                                }
+                                setBirthday(formatted);
+                            }}
+                            style={styles.input}
+                            keyboardType="numeric"
+                            maxLength={10}
                         />
                     </View>
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -199,6 +199,7 @@ class UserCreate(BaseModel):
     password: str
     phone_number: Optional[str] = None
     address: Optional[str] = None
+    birthday: Optional[str] = None  # Accept as string (YYYY-MM-DD format)
 
 class UserLogin(BaseModel):
     email: str
@@ -246,6 +247,16 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     if derived_name:
         placeholder_user = auth.find_placeholder_user_by_name(db, derived_name)
     
+    # Parse birthday if provided (expecting YYYY-MM-DD format)
+    parsed_birthday = None
+    if user.birthday:
+        try:
+            parsed_birthday = datetime.strptime(user.birthday, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            # If parsing fails, just skip it (birthday is optional)
+            print(f"⚠️ Invalid birthday format: {user.birthday}, skipping")
+            parsed_birthday = None
+    
     # If placeholder exists, claim it instead of creating a new user
     if placeholder_user:
         print(f"🔄 Claiming placeholder account for {derived_name} with email {user.email}")
@@ -255,7 +266,8 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
             email=user.email,
             password=user.password,
             phone_number=user.phone_number,
-            address=user.address
+            address=user.address,
+            birthday=parsed_birthday
         )
         print(f"✅ Placeholder account claimed successfully: user_id={claimed_user.id}")
         return claimed_user
@@ -275,6 +287,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         password_hash=hashed_password,
         phone_number=user.phone_number,
         address=user.address,
+        birthday=parsed_birthday,
         otp_code=otp_code,
         otp_expires_at=otp_expires_at,
         is_confirmed=0,  # User must verify email
