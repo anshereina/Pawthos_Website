@@ -23,6 +23,7 @@ export type PetData = {
 export type PetCreateData = {
   pet_id: string;
   name: string;
+  owner_name: string;
   species: string;
   owner_birthday?: string;
   date_of_birth?: string;

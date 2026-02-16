@@ -774,22 +774,46 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
             const finalPetId = generatePetId();
 
             // Get current user info for owner name and birthday
-            const currentUser = await getCurrentUser();
-            const ownerName = currentUser?.name || 'Pet Owner';
+            let ownerName = 'Pet Owner';
+            try {
+                const currentUser = await getCurrentUser();
+                ownerName = currentUser?.name || 'Pet Owner';
+            } catch (error) {
+                console.error('Error getting current user:', error);
+                // Continue with default name if we can't get user info
+            }
 
             // Convert date from DD/MM/YYYY (or DD-MM-YYYY) to YYYY-MM-DD format for backend
             let formattedDateOfBirth = undefined;
             if (dateOfBirth && dateOfBirth.length === 10) {
-                const normalized = dateOfBirth.replace(/-/g, '/');
-                const parts = normalized.split('/');
-                if (parts.length === 3) {
-                    // Convert DD/MM/YYYY to YYYY-MM-DD
-                    formattedDateOfBirth = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                try {
+                    const normalized = dateOfBirth.replace(/-/g, '/');
+                    const parts = normalized.split('/');
+                    if (parts.length === 3) {
+                        // Convert DD/MM/YYYY to YYYY-MM-DD
+                        formattedDateOfBirth = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                } catch (error) {
+                    console.error('Error formatting date of birth:', error);
                 }
             }
 
-            // Owner birthday is stored as-is in backend for now (already in YYYY-MM-DD format if present)
-            const formattedOwnerBirthday = ownerBirthday || undefined;
+            // Convert owner birthday from DD/MM/YYYY to YYYY-MM-DD format for backend
+            let formattedOwnerBirthday = undefined;
+            if (ownerBirthday && ownerBirthday.length === 10) {
+                try {
+                    const normalized = ownerBirthday.replace(/-/g, '/');
+                    const parts = normalized.split('/');
+                    if (parts.length === 3) {
+                        // Convert DD/MM/YYYY to YYYY-MM-DD
+                        formattedOwnerBirthday = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                } catch (error) {
+                    console.error('Error formatting owner birthday:', error);
+                    // If conversion fails, don't send it
+                    formattedOwnerBirthday = undefined;
+                }
+            }
 
             const petData = {
                 pet_id: finalPetId,
@@ -804,9 +828,15 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
                 reproductive_status: reproductiveStatus?.toLowerCase(),
             };
 
+            console.log('Registering pet with data:', {
+                ...petData,
+                // Don't log sensitive data
+            });
 
             // Create pet first
             const result = await createPet(petData);
+            
+            console.log('Create pet result:', result);
 
             if (result.success) {
                 const createdPet = result.data as any;
@@ -814,64 +844,99 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
                 
                 // If there's a photo, upload it after pet creation
                 if (petPhoto) {
-                    const photoResult = await uploadPetPhoto(petId, petPhoto);
-                    
-                    if (photoResult.success) {
-                    } else {
-                        console.warn('Photo upload failed:', photoResult.message);
+                    try {
+                        const photoResult = await uploadPetPhoto(petId, petPhoto);
+                        
+                        if (photoResult.success) {
+                            console.log('Photo uploaded successfully');
+                        } else {
+                            console.warn('Photo upload failed:', photoResult.message);
+                            // Don't fail the entire registration if photo upload fails
+                        }
+                    } catch (photoError) {
+                        console.error('Error uploading photo:', photoError);
                         // Don't fail the entire registration if photo upload fails
                     }
                 }
 
                 // Use returned pet ID if available
                 const returnedId = createdPet?.pet_id || finalPetId;
-                Alert.alert(
-                    'Success!',
-                    `${petName} has been registered successfully with ID: ${returnedId}`,
-                    [
-                        {
-                            text: 'OK',
-                            onPress: () => {
-                                // Reset form
-                                setPetName('');
-                                setSpecies('Please Select');
-                                setBreed('');
-                                setColor('');
-                                setDateOfBirth('');
-                                setAge('');
-                                setGender('Please Select');
-                                setReproductiveStatus(null);
-                                setPetPhoto(null);
-                                
-                                // Navigate back to pet profile or main page
-                                try {
-                                    if (onNavigate && typeof onNavigate === 'function') {
-                                        onNavigate('Pet profile');
+                
+                // Use setTimeout to ensure Alert doesn't conflict with async operations
+                setTimeout(() => {
+                    try {
+                        Alert.alert(
+                            'Success!',
+                            `${petName} has been registered successfully with ID: ${returnedId}`,
+                            [
+                                {
+                                    text: 'OK',
+                                    onPress: () => {
+                                        try {
+                                            // Reset form
+                                            setPetName('');
+                                            setSpecies('Please Select');
+                                            setBreed('');
+                                            setColor('');
+                                            setDateOfBirth('');
+                                            setAge('');
+                                            setGender('Please Select');
+                                            setReproductiveStatus(null);
+                                            setPetPhoto(null);
+                                            setOwnerBirthday('');
+                                            
+                                            // Navigate back to pet profile or main page
+                                            if (onNavigate && typeof onNavigate === 'function') {
+                                                setTimeout(() => {
+                                                    try {
+                                                        onNavigate('Pet profile');
+                                                    } catch (navError) {
+                                                        console.error('Navigation error after registration:', navError);
+                                                    }
+                                                }, 100);
+                                            }
+                                        } catch (resetError) {
+                                            console.error('Error resetting form:', resetError);
+                                        }
                                     }
-                                } catch (error) {
-                                    console.error('Navigation error after registration:', error);
                                 }
-                            }
-                        }
-                    ]
-                );
+                            ]
+                        );
+                    } catch (alertError) {
+                        console.error('Error showing success alert:', alertError);
+                    }
+                }, 100);
             } else {
                 // Show error but don't navigate away
-                Alert.alert(
-                    'Registration Failed', 
-                    result.message || 'Failed to register pet. Please check your inputs and try again.',
-                    [{ text: 'OK', style: 'default' }]
-                );
+                setTimeout(() => {
+                    try {
+                        Alert.alert(
+                            'Registration Failed', 
+                            result.message || 'Failed to register pet. Please check your inputs and try again.',
+                            [{ text: 'OK', style: 'default' }]
+                        );
+                    } catch (alertError) {
+                        console.error('Error showing failure alert:', alertError);
+                    }
+                }, 100);
             }
         } catch (error: any) {
             console.error('Registration error:', error);
             // Show detailed error but don't navigate away
-            const errorMessage = error?.message || 'An unexpected error occurred while registering the pet.';
-            Alert.alert(
-                'Registration Error', 
-                errorMessage + '\n\nPlease check your inputs and try again.',
-                [{ text: 'OK', style: 'default' }]
-            );
+            const errorMessage = error?.message || error?.toString() || 'An unexpected error occurred while registering the pet.';
+            
+            // Use setTimeout to ensure Alert doesn't conflict with async operations
+            setTimeout(() => {
+                try {
+                    Alert.alert(
+                        'Registration Error', 
+                        errorMessage + '\n\nPlease check your inputs and try again.',
+                        [{ text: 'OK', style: 'default' }]
+                    );
+                } catch (alertError) {
+                    console.error('Error showing alert:', alertError);
+                }
+            }, 100);
         } finally {
             setIsRegistering(false);
         }
@@ -1189,10 +1254,10 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
                                     </TouchableOpacity>
                                 </View>
                                 <TouchableOpacity 
-                                    style={[styles.changePhotoButton, { borderColor: iconColor }]}
+                                    style={[styles.changePhotoButton, { backgroundColor: iconColor }]}
                                     onPress={pickImage}
                                 >
-                                    <Text style={[styles.changePhotoText, { color: iconColor }]}>Change Photo</Text>
+                                    <Text style={styles.changePhotoText}>Change Photo</Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
