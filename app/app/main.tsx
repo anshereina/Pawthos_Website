@@ -31,6 +31,7 @@ import SignOfRabiesPage from './pages/SignOfRabiesPage';
 import IntegrationPage from './pages/IntegrationPage';
 import PainAssessmentLandingPage from './pages/PainAssessmentLandingPage';
 import ConfirmLogoutModal from './modals/ConfirmLogoutModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { logout as performLogout, getCurrentUser } from '../utils/auth.utils';
 import { getDashboardData, DashboardData } from '../utils/dashboard.utils';
 import { getUserAlerts } from '../utils/alerts.utils';
@@ -799,42 +800,51 @@ export default function MainApp() {
         setSelectedMenu(page);
     };
 
+    // Navigation ref to prevent concurrent navigations
+    const isNavigatingRef = useRef(false);
+    
     const navigateWithData = (page: string, data?: any) => {
         console.log('[MainApp] navigateWithData called with:', { page, hasData: !!data });
         
         if (!page || typeof page !== 'string') {
             console.error('[MainApp] Invalid page parameter:', page);
-            Alert.alert('Navigation Error', 'Invalid page name provided');
+            setTimeout(() => {
+                Alert.alert('Navigation Error', 'Invalid page name provided');
+            }, 100);
+            return;
+        }
+        
+        // Prevent concurrent navigation calls
+        if (isNavigatingRef.current) {
+            console.log('[MainApp] Navigation already in progress, ignoring duplicate call');
             return;
         }
         
         try {
-            // Use requestAnimationFrame to ensure state updates happen in the next frame
-            requestAnimationFrame(() => {
-                try {
-                    // Update navigation data
-                    setNavigationData(data || {});
-                    // Add to history
-                    addToHistory(page, data);
-                    // Update selected menu - this triggers page render
-                    console.log('[MainApp] Setting selectedMenu to:', page);
-                    setSelectedMenu(page);
-                    console.log('[MainApp] Navigation state updated');
-                } catch (error) {
-                    console.error('[MainApp] Error in navigateWithData state update:', error);
-                    // Use setTimeout to avoid Alert during render
-                    setTimeout(() => {
-                        Alert.alert(
-                            'Navigation Error', 
-                            `Failed to navigate to ${page}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                            [{ text: 'OK' }]
-                        );
-                    }, 100);
-                }
-            });
+            isNavigatingRef.current = true;
+            
+            // Update navigation data first
+            if (data !== undefined) {
+                setNavigationData(data);
+            } else {
+                setNavigationData({});
+            }
+            
+            // Add to history
+            addToHistory(page, data);
+            
+            // Update selected menu - this triggers page render
+            console.log('[MainApp] Setting selectedMenu to:', page);
+            setSelectedMenu(page);
+            console.log('[MainApp] Navigation state updated');
+            
+            // Reset navigation flag after a short delay
+            setTimeout(() => {
+                isNavigatingRef.current = false;
+            }, 100);
         } catch (error) {
             console.error('[MainApp] Error in navigateWithData:', error);
-            // Use setTimeout to avoid Alert during render
+            isNavigatingRef.current = false;
             setTimeout(() => {
                 Alert.alert(
                     'Navigation Error', 
@@ -943,7 +953,7 @@ export default function MainApp() {
         "Appointment": <AppointmentPage onNavigate={navigateWithData} isDarkMode={isDarkMode} />, 
         "Appointment Scheduling": <AppointmentSchedulingPage key={navigationData.appointmentToEdit?.id || 'new'} initialAppointmentType={appointmentType} onBack={navigateBack} onNavigate={navigateToPage} isDarkMode={isDarkMode} {...navigationData} />, 
         "Pet profile": <PetProfilePage onNavigate={navigateWithData} isDarkMode={isDarkMode} />,
-        "Register Pet": <RegisterPetPage onNavigate={navigateToPage} isDarkMode={isDarkMode} />, 
+        "Register Pet": <ErrorBoundary><RegisterPetPage onNavigate={navigateToPage} isDarkMode={isDarkMode} /></ErrorBoundary>, 
         "Pet Details": <PetDetailsPage onNavigate={navigateWithData as any} petId={navigationData.petId} isDarkMode={isDarkMode} />, 
         "Pet VacCard": <PetVacCardPage onNavigate={navigateWithData} isDarkMode={isDarkMode} />, 
         "Pet MedRecords": <PetMedRecordsPage onNavigate={navigateWithData} petId={navigationData.petId} isDarkMode={isDarkMode} />, 
