@@ -801,18 +801,47 @@ export default function MainApp() {
 
     const navigateWithData = (page: string, data?: any) => {
         console.log('[MainApp] navigateWithData called with:', { page, hasData: !!data });
+        
+        if (!page || typeof page !== 'string') {
+            console.error('[MainApp] Invalid page parameter:', page);
+            Alert.alert('Navigation Error', 'Invalid page name provided');
+            return;
+        }
+        
         try {
-            // Update navigation data
-            setNavigationData(data || {});
-            // Add to history
-            addToHistory(page, data);
-            // Update selected menu - this triggers page render
-            console.log('[MainApp] Setting selectedMenu to:', page);
-            setSelectedMenu(page);
-            console.log('[MainApp] Navigation state updated');
+            // Use requestAnimationFrame to ensure state updates happen in the next frame
+            requestAnimationFrame(() => {
+                try {
+                    // Update navigation data
+                    setNavigationData(data || {});
+                    // Add to history
+                    addToHistory(page, data);
+                    // Update selected menu - this triggers page render
+                    console.log('[MainApp] Setting selectedMenu to:', page);
+                    setSelectedMenu(page);
+                    console.log('[MainApp] Navigation state updated');
+                } catch (error) {
+                    console.error('[MainApp] Error in navigateWithData state update:', error);
+                    // Use setTimeout to avoid Alert during render
+                    setTimeout(() => {
+                        Alert.alert(
+                            'Navigation Error', 
+                            `Failed to navigate to ${page}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                            [{ text: 'OK' }]
+                        );
+                    }, 100);
+                }
+            });
         } catch (error) {
             console.error('[MainApp] Error in navigateWithData:', error);
-            Alert.alert('Navigation Error', `Failed to navigate to ${page}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            // Use setTimeout to avoid Alert during render
+            setTimeout(() => {
+                Alert.alert(
+                    'Navigation Error', 
+                    `Failed to navigate to ${page}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                    [{ text: 'OK' }]
+                );
+            }, 100);
         }
     };
 

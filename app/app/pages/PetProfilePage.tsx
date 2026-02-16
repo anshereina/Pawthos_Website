@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, ScrollView, Image, RefreshControl, Animated, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, ScrollView, Image, RefreshControl, Animated, TextInput, InteractionManager } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { getPets, PetData } from '../../utils/pets.utils';
 import { isAuthenticated } from '../../utils/auth.utils';
@@ -551,17 +551,28 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
                             return;
                         }
                         
-                        try {
-                            console.log('[PetProfilePage] Calling onNavigate("Register Pet")');
-                            // Call navigation directly without setTimeout
-                            onNavigate('Register Pet', undefined);
-                            console.log('[PetProfilePage] Navigation call completed');
-                        } catch (error) {
-                            console.error('[PetProfilePage] Navigation error:', error);
-                            const errorMsg = error instanceof Error ? error.message : String(error);
-                            console.error('[PetProfilePage] Error details:', errorMsg);
-                            Alert.alert('Error', `Failed to navigate: ${errorMsg}`);
-                        }
+                        // Use InteractionManager to ensure navigation happens after interactions complete
+                        InteractionManager.runAfterInteractions(() => {
+                            try {
+                                console.log('[PetProfilePage] Calling onNavigate("Register Pet")');
+                                // Call navigation with proper error handling
+                                const result = onNavigate('Register Pet', undefined);
+                                console.log('[PetProfilePage] Navigation call completed, result:', result);
+                            } catch (error) {
+                                console.error('[PetProfilePage] Navigation error:', error);
+                                const errorMsg = error instanceof Error ? error.message : String(error);
+                                console.error('[PetProfilePage] Error details:', errorMsg);
+                                
+                                // Use setTimeout to ensure Alert doesn't conflict with navigation
+                                setTimeout(() => {
+                                    Alert.alert(
+                                        'Navigation Error', 
+                                        `Failed to navigate to Register Pet page: ${errorMsg}`,
+                                        [{ text: 'OK' }]
+                                    );
+                                }, 100);
+                            }
+                        });
                     }}
                     activeOpacity={0.7}
                 >
@@ -736,7 +747,27 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
                                     {activeFilter === 'All' && (
                                         <TouchableOpacity 
                                             style={[styles.addPetBtn, { backgroundColor: iconColor }]}
-                                            onPress={() => onNavigate('Register Pet')}
+                                            onPress={() => {
+                                                if (!onNavigate) {
+                                                    Alert.alert('Error', 'Navigation is not available. Please try again.');
+                                                    return;
+                                                }
+                                                
+                                                InteractionManager.runAfterInteractions(() => {
+                                                    try {
+                                                        onNavigate('Register Pet', undefined);
+                                                    } catch (error) {
+                                                        console.error('[PetProfilePage] Navigation error:', error);
+                                                        setTimeout(() => {
+                                                            Alert.alert(
+                                                                'Navigation Error', 
+                                                                `Failed to navigate: ${error instanceof Error ? error.message : String(error)}`,
+                                                                [{ text: 'OK' }]
+                                                            );
+                                                        }, 100);
+                                                    }
+                                                });
+                                            }}
                                         >
                                             <Text style={styles.addPetText}>Add Your First Pet</Text>
                                         </TouchableOpacity>
