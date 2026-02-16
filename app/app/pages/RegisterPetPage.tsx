@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView, Modal, TouchableWithoutFeedback, Pressable, Image, Alert, ActivityIndicator, Animated, InteractionManager } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -362,26 +362,35 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
     }, []);
 
     // Calculate form completion progress
-    const calculateProgress = () => {
-        const fields = [
-            petName.trim(),
-            species !== 'Please Select',
-            gender !== 'Please Select',
-            reproductiveStatus,
-        ];
-        const completed = fields.filter(Boolean).length;
-        return (completed / fields.length) * 100;
-    };
+    const calculateProgress = useCallback(() => {
+        try {
+            const fields = [
+                petName?.trim() || '',
+                species !== 'Please Select',
+                gender !== 'Please Select',
+                reproductiveStatus,
+            ];
+            const completed = fields.filter(Boolean).length;
+            return fields.length > 0 ? (completed / fields.length) * 100 : 0;
+        } catch (error) {
+            console.error('Error calculating progress:', error);
+            return 0;
+        }
+    }, [petName, species, gender, reproductiveStatus]);
 
     // Update progress animation
     useEffect(() => {
-        const progress = calculateProgress();
-        Animated.timing(progressAnim, {
-            toValue: progress,
-            duration: 300,
-            useNativeDriver: false,
-        }).start();
-    }, [petName, species, gender, reproductiveStatus]);
+        try {
+            const progress = calculateProgress();
+            Animated.timing(progressAnim, {
+                toValue: progress,
+                duration: 300,
+                useNativeDriver: false,
+            }).start();
+        } catch (error) {
+            console.error('Error updating progress animation:', error);
+        }
+    }, [calculateProgress, progressAnim]);
 
     // Function to filter out invalid characters (numbers and special characters except spaces, hyphens, apostrophes)
     const filterTextInput = (text: string) => {
@@ -868,6 +877,15 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
     const inputBackground = isDarkMode ? '#2d2d2d' : '#FFFFFF';
     const lightBackground = isDarkMode ? '#2d2d2d' : '#E8F5E8';
     
+    // Calculate progress safely
+    let progressValue = 0;
+    try {
+        progressValue = calculateProgress();
+    } catch (error) {
+        console.error('Error calculating progress in render:', error);
+        progressValue = 0;
+    }
+    
     return (
         <SafeAreaView style={[styles.container, { backgroundColor }]}>
             <TouchableWithoutFeedback onPress={() => { setShowSpeciesDropdown(false); setShowGenderDropdown(false); }}>
@@ -886,7 +904,7 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
                         {/* Progress Indicator */}
                         <View style={styles.progressContainer}>
                             <Text style={[styles.progressTitle, { color: textColor }]}>
-                                Registration Progress ({Math.round(calculateProgress())}% complete)
+                                Registration Progress ({Math.round(progressValue)}% complete)
                             </Text>
                             <View style={styles.progressBar}>
                                 <Animated.View 
