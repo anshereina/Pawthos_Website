@@ -544,7 +544,16 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
         }
     };
 
-    // Owner's birthday is now auto-filled from user profile and not editable
+    // Handler for owner birthday - user can manually enter it
+    const handleOwnerBirthdayChange = (text: string) => {
+        const formatted = formatDateInput(text);
+        setOwnerBirthday(formatted);
+        
+        // Clear error when user starts typing
+        if (fieldErrors.ownerBirthday) {
+            setFieldErrors(prev => ({ ...prev, ownerBirthday: '' }));
+        }
+    };
 
     const requestPermissions = async () => {
         // Check permission first, only request if needed
@@ -1027,14 +1036,22 @@ export default function RegisterPetPage({ onNavigate, isDarkMode = false }: { on
                     <View style={styles.formSection}>
                         <Text style={[styles.sectionTitle, { color: textColor }]}>Owner's Birthday</Text>
                         <TextInput
-                            style={[styles.inputField, { backgroundColor: inputBackground, borderColor, color: textColor }]}
+                            style={[
+                                styles.inputField,
+                                { backgroundColor: inputBackground, borderColor, color: textColor },
+                                focusedField === 'ownerBirthday' && { borderColor: iconColor },
+                                fieldErrors.ownerBirthday && styles.inputFieldError
+                            ]}
                             placeholder="DD/MM/YYYY"
                             placeholderTextColor={secondaryTextColor}
                             value={ownerBirthday}
                             onChangeText={handleOwnerBirthdayChange}
+                            onFocus={() => handleFieldFocus('ownerBirthday')}
+                            onBlur={handleFieldBlur}
                             keyboardType="numeric"
                             maxLength={10}
                         />
+                        <Text style={[styles.inputHelpText, { color: secondaryTextColor }]}>Optional • Enter your birthday in DD/MM/YYYY format</Text>
                         {fieldErrors.ownerBirthday ? (
                             <Text style={styles.inputErrorText}>{fieldErrors.ownerBirthday}</Text>
                         ) : null}
