@@ -101,21 +101,8 @@ def confirm_otp(data: schemas.OTPConfirm, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"{user_type.capitalize()} email confirmed successfully."}
 
-@router.options("/login")
-def login_options(response: Response):
-    response.headers["Access-Control-Allow-Origin"] = "https://cityvetsanpedro.me"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
-    response.headers["Access-Control-Max-Age"] = "86400"
-    return {"message": "OK"}
-
 @router.post("/login", response_model=schemas.Token)
 def login(login_data: schemas.UserLogin, db: Session = Depends(get_db), response: Response = None):
-    if response:
-        response.headers["Access-Control-Allow-Origin"] = "https://cityvetsanpedro.me"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
-    
     try:
         user = auth.authenticate_admin(db, login_data.email, login_data.password)
         user_type = "admin"

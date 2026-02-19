@@ -32,6 +32,13 @@ from routers import mobile_dashboard
 from datetime import datetime
 from pathlib import Path
 
+
+ALLOWED_ORIGINS = [
+    "https://cityvetsanpedro.me",
+    "https://www.cityvetsanpedro.me",
+]
+
+
 load_dotenv()
 
 if not os.getenv("DATABASE_URL"):
@@ -86,7 +93,7 @@ app = FastAPI(title="Pawthos API", version="1.0.0", redirect_slashes=False)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://cityvetsanpedro.me"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
@@ -263,11 +270,13 @@ async def upload_pet_photo(
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    origin = request.headers.get("origin")
+    allow_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
         headers={
-            "Access-Control-Allow-Origin": "https://cityvetsanpedro.me",
+            "Access-Control-Allow-Origin": allow_origin,
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
             "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
         }
@@ -275,11 +284,13 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin")
+    allow_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
         headers={
-            "Access-Control-Allow-Origin": "https://cityvetsanpedro.me",
+            "Access-Control-Allow-Origin": allow_origin,
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
             "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
         }
