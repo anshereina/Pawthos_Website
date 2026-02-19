@@ -61,8 +61,6 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         flex: 1,
-        borderWidth: 1,
-        borderColor: 'red',
     },
     inputGroup: {
         marginBottom: 20,
@@ -244,21 +242,7 @@ export default function EditPetProfileModal({
     const speciesOptions = ['Canine', 'Feline'];
     const genderOptions = ['Male', 'Female'];
 
-    const formatDateForInput = (dateString: string) => {
-        if (!dateString) return '';
-        try {
-            const date = new Date(dateString);
-            return date.toISOString().split('T')[0];
-        } catch {
-            return dateString;
-        }
-    };
-
     useEffect(() => {
-        console.log('=== EDIT MODAL DEBUG ===');
-        console.log('Modal visible:', visible);
-        console.log('Pet data received:', petData);
-        
         if (visible && petData) {
             const initialData = {
                 name: petData.name || '',
@@ -266,10 +250,11 @@ export default function EditPetProfileModal({
                 breed: petData.breed || '',
                 color: petData.color || '',
                 gender: petData.gender || '',
-                date_of_birth: formatDateForInput(petData.date_of_birth || ''),
-                owner_birthday: formatDateForInput(petData.owner_birthday || ''),
+                // Use the existing stored dates directly for display.
+                // These fields are view-only in the modal.
+                date_of_birth: petData.date_of_birth || '',
+                owner_birthday: petData.owner_birthday || '',
             };
-            console.log('Setting form data:', initialData);
             setFormData(initialData);
             setErrors({});
             setLocalPhotoUri(null);

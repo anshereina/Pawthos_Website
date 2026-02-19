@@ -1,90 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import Response, JSONResponse
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from core.database import engine, get_db
 from core import models
 from core.models import User, Pet
 from core.auth import get_current_user
-
-# Load environment variables
 import os
 from dotenv import load_dotenv
-
-# Try to load from .env file first, then use system environment variables
-try:
-    load_dotenv()
-    print("✅ .env file loaded successfully")
-except Exception as e:
-    print(f"⚠️ .env file loading failed: {e}")
-    print("📋 Using system environment variables instead")
-
-# Configure DATABASE_URL
-# Do NOT force Railway internal URL when running locally; default to local SQLite if not provided
-if not os.getenv("DATABASE_URL"):
-    print("🔧 DATABASE_URL not set; using local SQLite database ./pawthos.db")
-    os.environ["DATABASE_URL"] = "sqlite:///./pawthos.db"
-
-# Debug: Check if AI_API_KEY is loaded
-ai_key = os.getenv("AI_API_KEY")
-if ai_key:
-    print(f"✅ AI_API_KEY loaded: {ai_key[:10]}...")
-else:
-    print("⚠️ AI_API_KEY not found in environment variables (AI features may be disabled)")
-
-# Debug: Check DATABASE_URL
-db_url = os.getenv("DATABASE_URL")
-if db_url:
-    print(f"✅ DATABASE_URL loaded: {db_url[:20]}...")
-else:
-    print("❌ DATABASE_URL not found in environment variables")
-
-# Create database tables (fallback for development)
-print("🔧 Creating database tables...")
-try:
-    from core.database import Base
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created successfully")
-except Exception as e:
-    print(f"❌ Error creating database tables: {e}")
-
-# Create default admin account
-print("🔧 Creating default admin account...")
-try:
-    from core.database import SessionLocal
-    from core.models import Admin
-    from core.auth import get_password_hash
-    
-    db = SessionLocal()
-    
-    # Check if admin already exists
-    existing_admin = db.query(Admin).filter(Admin.email == "admin@pawthos.com").first()
-    
-    if not existing_admin:
-        # Create new admin
-        admin = Admin(
-            name="Admin User",
-            email="admin@pawthos.com",
-            password_hash=get_password_hash("admin123"),
-            is_confirmed=1,  # Set as confirmed
-            must_change_password=False
-        )
-        db.add(admin)
-        db.commit()
-        print("✅ Default admin account created: admin@pawthos.com / admin123")
-    else:
-        # Update existing admin to be confirmed
-        existing_admin.is_confirmed = 1
-        existing_admin.password_hash = get_password_hash("admin123")
-        db.commit()
-        print("✅ Existing admin account updated: admin@pawthos.com / admin123")
-    
-    db.close()
-except Exception as e:
-    print(f"❌ Error creating admin account: {e}")
-
-# Environment variables are set in run.txt
 from routers import auth, users, pets, reports, alerts, animal_control_records, meat_inspection_records, shipping_permit_records
 from routers import vaccination_records
 from routers import reproductive_records
@@ -96,76 +20,79 @@ from routers import appointments
 from routers import walk_ins
 from routers import pain_assessments
 from routers import file_uploads
-# AI features (optional - may not be available in Railway)
+
 try:
     from routers import ai_predictions
     AI_ENABLED = True
-except ImportError as e:
-    print(f"⚠️ AI features disabled: {e}")
+except ImportError:
     AI_ENABLED = False
+
 from routers import mobile_auth
 from routers import mobile_dashboard
 from datetime import datetime
 from pathlib import Path
-import os
 
-# Create database tables (skip in production/serverless environments)
-# Use Alembic migrations instead for production deployments
+load_dotenv()
+
+if not os.getenv("DATABASE_URL"):
+    os.environ["DATABASE_URL"] = "sqlite:///./pawthos.db"
+
+print("Creating database tables...")
+try:
+    from core.database import Base
+
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created successfully")
+except Exception as e:
+    print(f"Error creating database tables: {e}")
+
+print("Creating bootstrap admin account...")
+try:
+    from core.database import SessionLocal
+    from core.models import Admin
+    from core.auth import get_password_hash
+
+    db = SessionLocal()
+    bootstrap_email = os.getenv("ADMIN_BOOTSTRAP_EMAIL")
+    bootstrap_password = os.getenv("ADMIN_BOOTSTRAP_PASSWORD")
+
+    if bootstrap_email and bootstrap_password:
+        existing_admin = db.query(Admin).filter(Admin.email == bootstrap_email).first()
+
+        if not existing_admin:
+            admin = Admin(
+                name="Administrator",
+                email=bootstrap_email,
+                password_hash=get_password_hash(bootstrap_password),
+                is_confirmed=1,
+                must_change_password=True,
+            )
+            db.add(admin)
+            db.commit()
+            print(f"Bootstrap admin account created for {bootstrap_email}")
+        else:
+            print(f"Bootstrap admin already exists for {bootstrap_email}; no changes made.")
+    else:
+        print("ADMIN_BOOTSTRAP_EMAIL/ADMIN_BOOTSTRAP_PASSWORD not set; skipping bootstrap admin creation.")
+
+    db.close()
+except Exception as e:
+    print(f"Error creating bootstrap admin account: {e}")
+
 if os.getenv("ENVIRONMENT") != "production":
     models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Pawthos API", version="1.0.0", redirect_slashes=False)
 
-# Configure CORS - MUST be added before routers
-# Since frontend uses Authorization headers (not cookies), we can use wildcard with credentials=False
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (wildcard works when credentials=False)
-    allow_credentials=False,  # Set to False to allow wildcard (frontend uses Authorization header, not cookies)
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # All HTTP methods
-    allow_headers=["*"],  # Allow all headers including Authorization
+    allow_origins=["https://cityvetsanpedro.me"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
     expose_headers=["*"],
-    max_age=3600,  # Cache preflight for 1 hour
+    max_age=3600,
 )
-
-# Additional CORS middleware to ensure headers are always present (Railway/deployment fallback)
-# This runs AFTER CORSMiddleware to ensure headers are added even if CORSMiddleware fails
-@app.middleware("http")
-async def cors_handler(request: Request, call_next):
-    # Handle OPTIONS preflight requests
-    if request.method == "OPTIONS":
-        return Response(
-            status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Max-Age": "3600",
-            }
-        )
-    
-    try:
-        # For all other requests, add CORS headers
-        response = await call_next(request)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        return response
-    except Exception as e:
-        # Even on exceptions, add CORS headers
-        if isinstance(e, HTTPException):
-            response = Response(
-                status_code=e.status_code,
-                content=str(e.detail),
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                    "Access-Control-Allow-Headers": "*",
-                    "Content-Type": "application/json",
-                }
-            )
-            return response
-        raise
 
 # Include routers
 app.include_router(auth.router)  # Web frontend: /auth/*
@@ -216,9 +143,9 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 def read_root():
     return {
         "message": "Welcome to Pawthos API",
-        "version": "NUCLEAR-CORS-FIX-v1",
+        "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat(),
-        "cors_status": "SUPER_PERMISSIVE"
+        "cors_status": "RESTRICTED"
     }
 
 @app.get("/health")
@@ -226,51 +153,7 @@ def health_check():
     return {
         "status": "healthy",
         "version": "1.0.0",
-        "code_version": "2024-10-21-v3"
-    } 
-
-@app.get("/api/test")
-def test_endpoint():
-    """Test endpoint to verify server is running latest code"""
-    return {
-        "message": "Server is running with latest code - Oct 21, 2024 v3 (location field removed)",
-        "timestamp": datetime.utcnow().isoformat(),
-        "appointments_endpoint": "/api/appointments"
-    }
-
-@app.get("/test-cors")
-def test_cors():
-    return {
-        "message": "CORS is working",
-        "timestamp": datetime.utcnow().isoformat(),
-        "cors_origins": ["*", "https://pawthos-website.vercel.app"]
-    }
-
-@app.get("/test-smtp")
-def test_smtp():
-    from core.config import SMTP_USER, SMTP_PASS
-    return {
-        "message": "SMTP Configuration Test",
-        "timestamp": datetime.utcnow().isoformat(),
-        "smtp_user_configured": bool(SMTP_USER),
-        "smtp_pass_configured": bool(SMTP_PASS),
-        "smtp_user_value": SMTP_USER[:3] + "***" if SMTP_USER else None
-    }
-
-@app.post("/test-email")
-def test_email_send(email_data: dict):
-    from core.auth import send_email_otp
-    email = email_data.get("email")
-    if not email:
-        return {"error": "Email is required"}
-    
-    otp_code = "123456"  # Test OTP
-    result = send_email_otp(email, otp_code)
-    
-    return {
-        "message": f"Test email sent to {email}",
-        "success": result,
-        "timestamp": datetime.utcnow().isoformat()
+        "code_version": "2024-10-21-v3",
     }
 
 # Mobile app photo upload endpoints (UPLOAD_DIR already created above)
@@ -378,16 +261,15 @@ async def upload_pet_photo(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload photo: {str(e)}")
 
-# Global exception handler to ensure CORS headers are always present
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
         headers={
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": "https://cityvetsanpedro.me",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
         }
     )
 
@@ -397,9 +279,9 @@ async def general_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "Internal server error"},
         headers={
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": "https://cityvetsanpedro.me",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
         }
     )
 

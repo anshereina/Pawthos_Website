@@ -23,12 +23,11 @@ def get_all_vaccination_records(
         return db.query(VaccinationRecord).all()
 
 @router.get("/statistics/dashboard", response_model=Dict)
-def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
-    """
-    Get vaccination statistics for dashboard display
-    Returns counts by species (feline/canine) and gender (male/female) for a specific date
-    If no date is provided, uses current date
-    """
+def get_vaccination_statistics(
+    date: str = None,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin),
+):
     try:
         from datetime import datetime, date as date_type
         
@@ -113,12 +112,11 @@ def get_vaccination_statistics(date: str = None, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error fetching vaccination statistics: {str(e)}")
 
 @router.get("/statistics/yearly", response_model=Dict)
-def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(get_db)):
-    """
-    Get yearly vaccination statistics for dashboard display
-    Returns monthly counts by species (feline/canine) and gender (male/female) for a specific year
-    If no year is provided, uses current year
-    """
+def get_yearly_vaccination_statistics(
+    year: int = None,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin),
+):
     try:
         from datetime import datetime
         
@@ -203,16 +201,6 @@ def get_yearly_vaccination_statistics(year: int = None, db: Session = Depends(ge
         print(f"ERROR in get_yearly_vaccination_statistics: {str(e)}")
         print(f"Traceback: {error_details}")
         raise HTTPException(status_code=500, detail=f"Error fetching yearly vaccination statistics: {str(e)}")
-
-@router.get("/test")
-def test_endpoint():
-    """Test endpoint to check if the server is working"""
-    return {"message": "Vaccination records endpoint is working", "status": "ok"}
-
-@router.get("/simple")
-def simple_vaccination_records():
-    """Simple endpoint that returns empty array"""
-    return []
 
 @router.get("/with-pets")
 def get_vaccination_records_with_pets(db: Session = Depends(get_db)):

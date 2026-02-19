@@ -501,6 +501,7 @@ interface IntegrationResultPageProps {
     capturedImage?: string;
     // Full API result for error handling
     apiResult?: any;
+    isDarkMode?: boolean;
 }
 
 export default function IntegrationResultPage({ 
@@ -518,7 +519,8 @@ export default function IntegrationResultPage({
     landmarkAnalysis,
     visualLandmarks,
     capturedImage,
-    apiResult
+    apiResult,
+    isDarkMode = false
 }: IntegrationResultPageProps) {
     
     // Use painLevel if provided, otherwise fall back to severityLevel
@@ -849,7 +851,7 @@ export default function IntegrationResultPage({
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : '#f7f7f7' }]}>
             {/* Error Modal */}
             {showErrorModal && (
                 <View style={styles.errorModalOverlay}>
@@ -898,8 +900,12 @@ export default function IntegrationResultPage({
                 <View style={styles.content}>
                     {/* Header Section */}
                     <View style={styles.headerSection}>
-                        <Text style={styles.headerTitle}>Pain Assessment Results</Text>
-                        <Text style={styles.headerSubtitle}>AI analysis completed successfully</Text>
+                        <Text style={[styles.headerTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
+                            Pain Assessment Results
+                        </Text>
+                        <Text style={[styles.headerSubtitle, { color: isDarkMode ? '#d1d5db' : '#6b7280' }]}>
+                            AI analysis completed successfully
+                        </Text>
                     </View>
 
                     {/* Picture with Dots */}

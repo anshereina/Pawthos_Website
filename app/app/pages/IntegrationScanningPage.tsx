@@ -8,9 +8,10 @@ interface IntegrationScanningPageProps {
   imageUri?: string;
   onDone: (result: any, imageUri?: string) => void;
   onCancel: () => void;
+  isDarkMode?: boolean;
 }
 
-export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: IntegrationScanningPageProps) {
+export default function IntegrationScanningPage({ imageUri, onDone, onCancel, isDarkMode = false }: IntegrationScanningPageProps) {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Preparing image...');
   const scanAnimation = useState(new Animated.Value(0))[0];
@@ -159,12 +160,20 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : '#f7f7f7' }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: isDarkMode ? '#121212' : '#fff',
+            borderBottomColor: isDarkMode ? '#333333' : '#e0e0e0',
+          },
+        ]}
+      >
         <TouchableOpacity onPress={onCancel} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
+          <MaterialIcons name="arrow-back" size={24} color={isDarkMode ? '#ffffff' : '#000000'} />
         </TouchableOpacity>
-        <Text style={styles.title}>Analyzing</Text>
+        <Text style={[styles.title, { color: isDarkMode ? '#ffffff' : '#000000' }]}>Analyzing</Text>
       </View>
       
       <View style={styles.content}>
@@ -288,8 +297,7 @@ export default function IntegrationScanningPage({ imageUri, onDone, onCancel }: 
 
 const styles = StyleSheet.create({
   container: { 
-    flex: 1, 
-    backgroundColor: '#f7f7f7' 
+    flex: 1
   },
   header: {
     flexDirection: 'row',

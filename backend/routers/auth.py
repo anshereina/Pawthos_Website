@@ -103,43 +103,33 @@ def confirm_otp(data: schemas.OTPConfirm, db: Session = Depends(get_db)):
 
 @router.options("/login")
 def login_options(response: Response):
-    """Handle preflight OPTIONS request for login"""
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = "https://cityvetsanpedro.me"
     response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
     response.headers["Access-Control-Max-Age"] = "86400"
     return {"message": "OK"}
 
 @router.post("/login", response_model=schemas.Token)
 def login(login_data: schemas.UserLogin, db: Session = Depends(get_db), response: Response = None):
-    # Add CORS headers manually
     if response:
-        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Origin"] = "https://cityvetsanpedro.me"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
     
     try:
-        print(f"🔐 Login attempt for: {login_data.email}")
-        
         user = auth.authenticate_admin(db, login_data.email, login_data.password)
-        print(f"👤 Admin auth result: {user is not None}")
-        
         user_type = "admin"
         if not user:
             user = auth.authenticate_user(db, login_data.email, login_data.password)
             user_type = "user"
-            print(f"👤 User auth result: {user is not None}")
 
         if not user:
-            print(f"❌ Authentication failed for: {login_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email, password, or account not confirmed",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        print(f"✅ Authentication successful for: {login_data.email} (type: {user_type})")
-        
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = auth.create_access_token(
             data={"sub": user.email, "user_type": user_type}, expires_delta=access_token_expires
@@ -155,9 +145,8 @@ def login(login_data: schemas.UserLogin, db: Session = Depends(get_db), response
         }
     except HTTPException:
         raise
-    except Exception as e:
-        print(f"💥 Login error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Login failed")
 
 @router.post("/change-password")
 def change_password(
@@ -384,34 +373,21 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
             # Don't reveal if user exists or not for security
             return {"message": "If an account with this email exists, you will receive password reset instructions shortly."}
         
-        # Generate OTP code (6 digits)
         otp_code = ''.join(random.choices(string.digits, k=6))
-        otp_expiry = datetime.now(timezone.utc) + timedelta(minutes=10)  # 10 minutes expiry
-        
-        # Store OTP in database
+        otp_expiry = datetime.now(timezone.utc) + timedelta(minutes=10)
+
         user.reset_token = otp_code
         user.reset_token_expiry = otp_expiry
         db.commit()
         
         try:
-            # Send OTP email
-            print(f"🔄 Attempting to send OTP to {request.email}")
-            print(f"📧 SMTP_USER configured: {bool(auth.SMTP_USER)}")
-            print(f"📧 SMTP_PASS configured: {bool(auth.SMTP_PASS)}")
-            
             email_sent = auth.send_email_otp(request.email, otp_code)
-            if not email_sent:
-                print(f"⚠️ Failed to send OTP email to {request.email}")
-            else:
-                print(f"✅ OTP email sent successfully to {request.email}")
-        except Exception as e:
-            # Log error but don't reveal to user
-            print(f"❌ Error sending OTP email: {e}")
-        
+        except Exception:
+            pass
+
         return {"message": "If an account with this email exists, you will receive password reset instructions shortly."}
         
-    except Exception as e:
-        print(f"Password reset request error: {e}")
+    except Exception:
         raise HTTPException(status_code=500, detail="Failed to process password reset request")
 
 @router.post("/reset-password")
@@ -444,30 +420,8 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
         
     except HTTPException:
         raise
-    except Exception as e:
-        print(f"Password reset error: {e}")
+    except Exception:
         raise HTTPException(status_code=500, detail="Failed to reset password")
-
-@router.post("/test-email")
-def test_email(email: str, db: Session = Depends(get_db)):
-    """Test email sending functionality"""
-    try:
-        # Test OTP email sending
-        test_otp = "123456"
-        print(f"🔄 Testing OTP email to {email}")
-        print(f"📧 SMTP_USER: {auth.SMTP_USER}")
-        print(f"📧 SMTP_PASS configured: {bool(auth.SMTP_PASS)}")
-        
-        test_result = auth.send_email_otp(email, test_otp)
-        
-        if test_result:
-            return {"message": f"Test OTP email sent successfully to {email}. Check your inbox and spam folder."}
-        else:
-            return {"message": f"Failed to send test OTP email to {email}. Check SMTP configuration."}
-            
-    except Exception as e:
-        print(f"Test email error: {e}")
-        return {"message": f"Test email failed: {str(e)}"}
 
 @router.get("/check-user/{email}")
 def check_user_exists(email: str, db: Session = Depends(get_db)):

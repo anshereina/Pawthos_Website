@@ -17,7 +17,6 @@ module.exports = {
       permissions: [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES",
         "INTERNET",
         "ACCESS_NETWORK_STATE"

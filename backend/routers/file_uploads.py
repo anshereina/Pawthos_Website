@@ -13,8 +13,6 @@ from core.auth import get_current_user
 
 router = APIRouter(prefix="/uploads", tags=["File Uploads"])
 
-# Resolve uploads directory relative to the backend root regardless of CWD
-# backend/routers/file_uploads.py → backend/uploads
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = BACKEND_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,34 +24,32 @@ def is_valid_image_file(filename: str) -> bool:
     return Path(filename).suffix.lower() in ALLOWED_EXTENSIONS
 
 @router.post("/pain-assessment-image/")
-async def upload_pain_assessment_image(file: UploadFile = File(...)):
+async def upload_pain_assessment_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
     """Upload an image for pain assessment"""
-    
-    # Validate file type
+
     if not is_valid_image_file(file.filename):
         raise HTTPException(
             status_code=400, 
             detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
         )
     
-    # Validate file size (max 10MB)
     if file.size and file.size > 10 * 1024 * 1024:
         raise HTTPException(
             status_code=400,
             detail="File too large. Maximum size is 10MB."
         )
     
-    # Generate unique filename
     file_extension = Path(file.filename).suffix.lower()
     unique_filename = f"{uuid.uuid4()}{file_extension}"
     file_path = UPLOAD_DIR / unique_filename
     
     try:
-        # Save the file
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        
-        # Return the URL that can be used to access the file
+
         return {
             "filename": unique_filename,
             "url": f"/uploads/{unique_filename}",
@@ -65,7 +61,10 @@ async def upload_pain_assessment_image(file: UploadFile = File(...)):
         file.file.close()
 
 @router.get("/{filename}")
-async def get_uploaded_file(filename: str):
+async def get_uploaded_file(
+    filename: str,
+    current_user: User = Depends(get_current_user),
+):
     """Serve uploaded files"""
     file_path = UPLOAD_DIR / filename
     
@@ -75,7 +74,10 @@ async def get_uploaded_file(filename: str):
     return FileResponse(file_path)
 
 @router.delete("/{filename}")
-async def delete_uploaded_file(filename: str):
+async def delete_uploaded_file(
+    filename: str,
+    current_user: User = Depends(get_current_user),
+):
     """Delete an uploaded file"""
     file_path = UPLOAD_DIR / filename
     

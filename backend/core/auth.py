@@ -7,23 +7,21 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from . import models, schemas
 from .database import get_db
-from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SMTP_USER, SMTP_PASS, RESEND_API_KEY
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, RESEND_API_KEY
 import random
-import smtplib
-import logging
-import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 oauth2_scheme_mobile = OAuth2PasswordBearer(tokenUrl="api/login", auto_error=False)
 
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -35,12 +33,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 def verify_token(token: str, credentials_exception):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        user_type: str = payload.get("user_type", "admin")  # Default to admin
-        if email is None:
+        user_type = payload.get("user_type")
+        if email is None or user_type is None:
             raise credentials_exception
         token_data = schemas.TokenData(email=email, user_type=user_type)
     except JWTError:
@@ -98,63 +97,14 @@ def get_user_by_type(db: Session, email: str, user_type: str):
 def generate_otp(length=6):
     return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
-def send_email_otp(to_email: str, otp_code: str):
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    sender_email = SMTP_USER
-    password = SMTP_PASS
-    
-    # Debug logging
-    print(f"SMTP_USER: {SMTP_USER}")
-    print(f"SMTP_PASS: {'*' * len(SMTP_PASS) if SMTP_PASS else 'None'}")
-    print(f"Sending email to: {to_email}")
-    
-    if not sender_email or not password:
-        raise Exception(f"SMTP credentials not configured. SMTP_USER: {sender_email}, SMTP_PASS: {'set' if password else 'not set'}")
-    
-    subject = "Your Pawthos OTP Code"
-    body = f"Your OTP code is: {otp_code}. It will expire in 10 minutes."
-
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
-
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            print(f"Connected to SMTP server: {smtp_server}:{smtp_port}")
-            server.starttls()
-            print("TLS started successfully")
-            server.login(sender_email, password)
-            print("SMTP login successful")
-            server.sendmail(sender_email, to_email, msg.as_string())
-            print("Email sent successfully")
-    except smtplib.SMTPAuthenticationError as e:
-        print(f"SMTP Authentication Error: {e}")
-        raise Exception(f"SMTP authentication failed: {e}")
-    except smtplib.SMTPRecipientsRefused as e:
-        print(f"SMTP Recipients Refused: {e}")
-        raise Exception(f"Email address rejected: {e}")
-    except smtplib.SMTPServerDisconnected as e:
-        print(f"SMTP Server Disconnected: {e}")
-        raise Exception(f"SMTP server disconnected: {e}")
-    except Exception as e:
-        print(f"SMTP Error: {e}")
-        raise Exception(f"Failed to send email: {e}")
-
 def authenticate_admin(db: Session, email: str, password: str):
     user = get_admin(db, email)
     if not user:
-        print(f"❌ Admin not found: {email}")
         return False
     if not verify_password(password, user.password_hash):
-        print(f"❌ Password verification failed for: {email}")
         return False
     if not user.is_confirmed:
-        print(f"❌ Admin not confirmed: {email} (is_confirmed: {user.is_confirmed})")
         return False
-    print(f"✅ Admin authentication successful: {email}")
     return user
 
 def authenticate_user(db: Session, email: str, password: str):
@@ -186,26 +136,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        print("=== GET_CURRENT_USER CALLED ===")
-        print(f"Token (first 20 chars): {token[:20] if token else 'None'}...")
-
         token_data = verify_token(token, credentials_exception)
-        print(f"Token validated - Email: {token_data.email}, User type: {token_data.user_type}")
-
         user = get_user_by_type(db, email=token_data.email, user_type=token_data.user_type)
         if user is None:
-            print(f"❌ User not found: {token_data.email} (type: {token_data.user_type})")
             raise credentials_exception
-
-        print(f"✅ User found: {user.email} (ID: {user.id}, Confirmed: {getattr(user, 'is_confirmed', 'N/A')})")
         return user
     except HTTPException:
-        # Re-raise FastAPI HTTP exceptions as-is
         raise
-    except Exception as e:
-        print(f"❌ Error in get_current_user: {str(e)}")
-        import traceback
-        traceback.print_exc()
+    except Exception:
         raise credentials_exception
 
 def get_current_active_user(current_user: Union[models.Admin, models.User] = Depends(get_current_user)):
@@ -237,125 +175,33 @@ def get_current_mobile_user(token: str = Depends(oauth2_scheme_mobile), db: Sess
         raise credentials_exception
     return user
 
-def send_email_otp(email: str, otp_code: str):
-    """Send OTP code via email using Resend API"""
-    try:
-        # Try Resend first (modern, Railway-compatible)
-        if RESEND_API_KEY:
-            try:
-                import resend
-                resend.api_key = RESEND_API_KEY
-                
-                print(f"📧 Sending OTP via Resend to {email}")
-                
-                params = {
-                    "from": "Pawthos <noreply@cityvetsanpedro.me>",
-                    "to": [email],
-                    "subject": "Pawthos Email Verification",
-                    "html": f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #045b26;">Pawthos Email Verification</h2>
-                        <p>Your OTP code is:</p>
-                        <h1 style="color: #D37F52; font-size: 32px; letter-spacing: 5px;">{otp_code}</h1>
-                        <p>This code will expire in 10 minutes.</p>
-                        <p style="color: #666;">If you did not request this code, please ignore this email.</p>
-                        <hr style="border: 1px solid #eee; margin: 20px 0;">
-                        <p style="color: #999; font-size: 12px;">City Veterinary Office of San Pedro</p>
-                    </div>
-                    """
-                }
-                
-                response = resend.Emails.send(params)
-                print(f"✅ OTP email sent via Resend to {email}")
-                return True
-                
-            except Exception as e:
-                print(f"❌ Resend failed: {str(e)}")
-                # Fall through to SMTP fallback
-        
-        # Fallback to SMTP (will fail on Railway but works locally)
-        if not SMTP_USER or not SMTP_PASS:
-            print("⚠️ No email service configured (RESEND_API_KEY or SMTP credentials)")
-            return False
-        
-        # Create message
-        msg = MIMEMultipart()
-        msg['From'] = SMTP_USER
-        msg['To'] = email
-        msg['Subject'] = "Pawthos OTP Code"
-        
-        body = f"""
-        Your OTP code is: {otp_code}
-        
-        This code will expire in 10 minutes.
-        
-        If you did not request this code, please ignore this email.
-        """
-        
-        msg.attach(MIMEText(body, 'plain'))
-        
-        # Send email with timeout
-        print(f"🔧 Attempting to send email via SMTP to {email}")
-        
-        # Try Gmail SMTP
-        try:
-            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(SMTP_USER, email, msg.as_string())
-            server.quit()
-            print(f"✅ OTP email sent via SMTP to {email}")
-            return True
-        except Exception as e:
-            print(f"❌ SMTP failed: {str(e)}")
-            return False
-        
-    except Exception as e:
-        print(f"❌ Error sending email to {email}: {str(e)}")
-        return False
 
-def send_password_reset_email(email: str, reset_token: str, reset_link: str):
-    """Send password reset email"""
+def send_email_otp(email: str, otp_code: str):
+    """Send OTP code via email using Resend API only."""
     try:
-        if not SMTP_USER or not SMTP_PASS:
-            print("⚠️ SMTP credentials not configured, skipping email send")
+        if not RESEND_API_KEY:
             return False
-        
-        # Create message
-        msg = MIMEMultipart()
-        msg['From'] = SMTP_USER
-        msg['To'] = email
-        msg['Subject'] = "Password Reset Request - Pawthos"
-        
-        body = f"""
-        Hello,
-        
-        You have requested to reset your password for your Pawthos account.
-        
-        Click the following link to reset your password:
-        {reset_link}
-        
-        This link will expire in 1 hour.
-        
-        If you did not request this password reset, please ignore this email.
-        
-        Best regards,
-        The Pawthos Team
-        """
-        
-        msg.attach(MIMEText(body, 'plain'))
-        
-        # Send email
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        text = msg.as_string()
-        server.sendmail(SMTP_USER, email, text)
-        server.quit()
-        
-        print(f"✅ Password reset email sent to {email}")
+
+        import resend
+
+        resend.api_key = RESEND_API_KEY
+        params = {
+            "from": "Pawthos <noreply@cityvetsanpedro.me>",
+            "to": [email],
+            "subject": "Pawthos Email Verification",
+            "html": f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #045b26;">Pawthos Email Verification</h2>
+                <p>Your OTP code is:</p>
+                <h1 style="color: #D37F52; font-size: 32px; letter-spacing: 5px;">{otp_code}</h1>
+                <p>This code will expire in 10 minutes.</p>
+                <p style="color: #666;">If you did not request this code, please ignore this email.</p>
+                <hr style="border: 1px solid #eee; margin: 20px 0;">
+                <p style="color: #999; font-size: 12px;">City Veterinary Office of San Pedro</p>
+            </div>
+            """,
+        }
+        resend.Emails.send(params)
         return True
-        
-    except Exception as e:
-        print(f"❌ Error sending password reset email to {email}: {str(e)}")
-        return False 
+    except Exception:
+        return False

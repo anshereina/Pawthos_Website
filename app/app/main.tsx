@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 // Navigation using expo-router
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useFonts } from 'expo-font';
 import BottomNavigationBar from './components/BottomNavigationBar';
 import BottomGradient from './components/BottomGradient';
@@ -1101,6 +1102,7 @@ export default function MainApp() {
 
     return (
         <View style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : '#ffffff' }]}>
+            <StatusBar style={isDarkMode ? 'light' : 'dark'} />
             {/* Hide navbar for Pet Details and Integration pages to enable full-screen experience */}
             {selectedMenu !== 'Pet Details' && 
              !selectedMenu.includes('Integration') && 
