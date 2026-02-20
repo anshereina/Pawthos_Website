@@ -5,13 +5,14 @@ from datetime import date, datetime
 import uuid
 
 from core.database import get_db
-from core.models import ShippingPermitRecord as ShippingPermitRecordModel, Pet, User
+from core.models import ShippingPermitRecord as ShippingPermitRecordModel, Pet, User, Admin
 from core.schemas import (
     ShippingPermitRecord,
     ShippingPermitRecordCreate,
     ShippingPermitRecordUpdate,
     OwnerSearchResult
 )
+from core import auth
 
 router = APIRouter(prefix="/shipping-permit-records", tags=["shipping-permit-records"])
 
@@ -19,17 +20,13 @@ def generate_permit_number():
     """Generate a unique permit number"""
     return f"SP-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
 
-@router.get("/test")
-def test_shipping_permit_router():
-    """Test endpoint to verify router is registered"""
-    return {"message": "Shipping permit records router is working", "status": "ok"}
-
 @router.post("/", response_model=ShippingPermitRecord, status_code=status.HTTP_201_CREATED)
 def create_shipping_permit_record(
     record: ShippingPermitRecordCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
 ):
-    """Create a new shipping permit record"""
+    """Create a new shipping permit record (admin only)"""
     try:
         # Generate permit number if not provided
         if not record.permit_number:
@@ -53,9 +50,10 @@ def get_shipping_permit_records(
     limit: int = 100,
     search: str = None,
     status_filter: str = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
 ):
-    """Get all shipping permit records with optional filtering"""
+    """Get all shipping permit records with optional filtering (admin only)"""
     query = db.query(ShippingPermitRecordModel)
     
     # Apply search filter
@@ -78,9 +76,10 @@ def get_shipping_permit_records(
 @router.get("/search-owners", response_model=List[OwnerSearchResult])
 def search_owners(
     query: Optional[str] = Query(None, description="Search term for owner name"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
 ):
-    """Search for owners (Users) by name and return their most recent pet information"""
+    """Search for owners (Users) by name and return their most recent pet information (admin only)"""
     if not query or len(query.strip()) < 2:
         return []
     
@@ -144,8 +143,8 @@ def search_owners(
                                 break
                             except (ValueError, IndexError):
                                 continue
-                except Exception as e:
-                    print(f"Error parsing owner_birthday from pet: {e}")
+                except Exception:
+                    pass
             
             # If not found in pet record, try shipping permit records
             if not owner_birthdate:
@@ -221,9 +220,10 @@ def search_owners(
 @router.get("/by-date/{date}", response_model=List[ShippingPermitRecord])
 def get_shipping_permit_records_by_date(
     date: date,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
 ):
-    """Get shipping permit records by issue date"""
+    """Get shipping permit records by issue date (admin only)"""
     records = db.query(ShippingPermitRecordModel).filter(
         ShippingPermitRecordModel.issue_date == date
     ).all()
@@ -232,17 +232,22 @@ def get_shipping_permit_records_by_date(
 @router.get("/by-status/{status}", response_model=List[ShippingPermitRecord])
 def get_shipping_permit_records_by_status(
     status: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
 ):
-    """Get shipping permit records by status"""
+    """Get shipping permit records by status (admin only)"""
     records = db.query(ShippingPermitRecordModel).filter(
         ShippingPermitRecordModel.status == status
     ).all()
     return records
 
 @router.get("/{record_id}", response_model=ShippingPermitRecord)
-def get_shipping_permit_record(record_id: int, db: Session = Depends(get_db)):
-    """Get a specific shipping permit record by ID"""
+def get_shipping_permit_record(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
+):
+    """Get a specific shipping permit record by ID (admin only)"""
     record = db.query(ShippingPermitRecordModel).filter(ShippingPermitRecordModel.id == record_id).first()
     if not record:
         raise HTTPException(
@@ -255,9 +260,10 @@ def get_shipping_permit_record(record_id: int, db: Session = Depends(get_db)):
 def update_shipping_permit_record(
     record_id: int,
     record_update: ShippingPermitRecordUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
 ):
-    """Update a shipping permit record"""
+    """Update a shipping permit record (admin only)"""
     db_record = db.query(ShippingPermitRecordModel).filter(ShippingPermitRecordModel.id == record_id).first()
     if not db_record:
         raise HTTPException(
@@ -282,8 +288,12 @@ def update_shipping_permit_record(
         )
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_shipping_permit_record(record_id: int, db: Session = Depends(get_db)):
-    """Delete a shipping permit record"""
+def delete_shipping_permit_record(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(auth.get_current_admin)
+):
+    """Delete a shipping permit record (admin only)"""
     db_record = db.query(ShippingPermitRecordModel).filter(ShippingPermitRecordModel.id == record_id).first()
     if not db_record:
         raise HTTPException(

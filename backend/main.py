@@ -7,6 +7,7 @@ from core.database import engine, get_db
 from core import models
 from core.models import User, Pet
 from core.auth import get_current_user
+from core.rate_limit import RateLimitMiddleware
 import os
 from dotenv import load_dotenv
 from routers import auth, users, pets, reports, alerts, animal_control_records, meat_inspection_records, shipping_permit_records
@@ -100,6 +101,9 @@ app.add_middleware(
     expose_headers=["*"],
     max_age=3600,
 )
+
+# Add rate limiting middleware (60 requests per minute, 300 per hour)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=60, requests_per_hour=300)
 
 # Include routers
 app.include_router(auth.router)  # Web frontend: /auth/*

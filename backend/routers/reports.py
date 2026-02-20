@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
-from core import models, schemas
+from core import models, schemas, auth
 from core.database import get_db
 import re
 import os
@@ -39,8 +39,11 @@ def generate_report_id(db: Session) -> str:
     return f"REP-{next_num:04d}"
 
 @router.post("/upload-image")
-async def upload_report_image(file: UploadFile = File(...)):
-    """Upload an image for a report"""
+async def upload_report_image(
+    file: UploadFile = File(...),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Upload an image for a report (admin only)"""
     
     # Validate file type
     if not is_valid_image_file(file.filename):
@@ -79,8 +82,12 @@ async def upload_report_image(file: UploadFile = File(...)):
         file.file.close()
 
 @router.post("/", response_model=schemas.Report)
-def create_report(report: schemas.ReportCreate, db: Session = Depends(get_db)):
-    """Create a new report"""
+def create_report(
+    report: schemas.ReportCreate,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Create a new report (admin only)"""
     report_id = generate_report_id(db)
     db_report = models.Report(
         report_id=report_id,
@@ -98,22 +105,36 @@ def create_report(report: schemas.ReportCreate, db: Session = Depends(get_db)):
     return db_report
 
 @router.get("/", response_model=List[schemas.Report])
-def get_reports(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Get all reports with pagination"""
+def get_reports(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Get all reports with pagination (admin only)"""
     reports = db.query(models.Report).offset(skip).limit(limit).all()
     return reports
 
 @router.get("/{report_id}", response_model=schemas.Report)
-def get_report(report_id: str, db: Session = Depends(get_db)):
-    """Get a specific report by ID"""
+def get_report(
+    report_id: str,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Get a specific report by ID (admin only)"""
     report = db.query(models.Report).filter(models.Report.report_id == report_id).first()
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
     return report
 
 @router.put("/{report_id}", response_model=schemas.Report)
-def update_report(report_id: str, report_update: schemas.ReportUpdate, db: Session = Depends(get_db)):
-    """Update a report"""
+def update_report(
+    report_id: str,
+    report_update: schemas.ReportUpdate,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Update a report (admin only)"""
     db_report = db.query(models.Report).filter(models.Report.report_id == report_id).first()
     if db_report is None:
         raise HTTPException(status_code=404, detail="Report not found")
@@ -127,8 +148,12 @@ def update_report(report_id: str, report_update: schemas.ReportUpdate, db: Sessi
     return db_report
 
 @router.delete("/{report_id}")
-def delete_report(report_id: str, db: Session = Depends(get_db)):
-    """Delete a report"""
+def delete_report(
+    report_id: str,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Delete a report (admin only)"""
     db_report = db.query(models.Report).filter(models.Report.report_id == report_id).first()
     if db_report is None:
         raise HTTPException(status_code=404, detail="Report not found")
@@ -138,8 +163,12 @@ def delete_report(report_id: str, db: Session = Depends(get_db)):
     return {"message": "Report deleted successfully"}
 
 @router.get("/search/", response_model=List[schemas.Report])
-def search_reports(query: str, db: Session = Depends(get_db)):
-    """Search reports by title or description"""
+def search_reports(
+    query: str,
+    db: Session = Depends(get_db),
+    current_admin: models.Admin = Depends(auth.get_current_admin)
+):
+    """Search reports by title or description (admin only)"""
     reports = db.query(models.Report).filter(
         models.Report.title.ilike(f"%{query}%") | 
         models.Report.description.ilike(f"%{query}%")
