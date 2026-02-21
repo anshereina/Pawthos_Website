@@ -30,7 +30,6 @@ Pillow==10.4.0
 # efficientnet-pytorch>=0.7.1
 # opencv-python-headless>=4.8.1.78
 
-# AI Service Dependencies (Required for pain assessment)
 google-generativeai>=0.3.2
 
 # Email Service (Resend API)

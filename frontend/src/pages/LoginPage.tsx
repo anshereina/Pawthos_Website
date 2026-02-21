@@ -9,26 +9,22 @@ const LoginPage: React.FC = () => {
   const { setUser, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to dashboard if user is already authenticated
   useEffect(() => {
     if (!isLoading && user) {
       navigate({ to: '/dashboard' });
     }
   }, [user, isLoading, navigate]);
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  // Don't render login form if user is authenticated
   if (user) {
     return null;
   }
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-gradient-to-br from-gray-900 via-green-900 to-green-800">
-      {/* Left Column - Background Image (desktop & large tablets) */}
       <div className="hidden md:block md:w-3/5 relative overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -50,12 +46,9 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Column - Login Form (mobile-first, full width) */}
       <div className="w-full md:w-2/5 bg-green-900/90 flex items-center justify-center px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-0">
         <div className="w-full max-w-md bg-white/5 backdrop-blur-md rounded-2xl md:rounded-none md:bg-transparent md:backdrop-blur-0 md:shadow-none shadow-lg border border-white/10 md:border-none">
-          {/* Branding Section */}
           <div className="text-center px-4 pt-6 pb-6 sm:pt-8 sm:pb-8">
-            {/* Mobile logo row */}
             <div className="flex justify-center items-center mb-4 sm:hidden gap-4">
               <img 
                 src="/images/logos/SanPedro.png" 
