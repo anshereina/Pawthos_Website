@@ -6,6 +6,7 @@ import { useAuth } from '../features/auth/AuthContext';
 import { useRouter } from '@tanstack/react-router';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { userService } from '../services/userService';
+import { API_BASE_URL } from '../config';
 
 const ProfilePage: React.FC = () => {
   const { isExpanded, activeItem, navigationItems, toggleSidebar } = useSidebar();
@@ -306,7 +307,7 @@ const ProfilePage: React.FC = () => {
               {user?.photo_url ? (
                 <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden' }}>
                   <img 
-                    src={user.photo_url.startsWith('http') ? user.photo_url : `${import.meta.env.VITE_API_BASE_URL?.replace('/api', '')}${user.photo_url}`}
+                    src={user.photo_url.startsWith('http') ? user.photo_url : `${API_BASE_URL.replace('/api', '')}${user.photo_url}`}
                     alt="Profile"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => {
@@ -362,9 +363,9 @@ const ProfilePage: React.FC = () => {
             <div className="rounded-lg shadow-md p-6" style={{ backgroundColor: cardBackground, border: `1px solid ${borderColor}` }}>
               <div className="flex items-center space-x-6">
                 {user?.photo_url ? (
-                  <div className="rounded-full overflow-hidden" style={{ width: 96, height: 96 }}>
+                  <div style={{ width: 96, height: 96, borderRadius: '50%', overflow: 'hidden' }}>
                     <img 
-                      src={user.photo_url.startsWith('http') ? user.photo_url : `${import.meta.env.VITE_API_BASE_URL?.replace('/api', '')}${user.photo_url}`}
+                      src={user.photo_url.startsWith('http') ? user.photo_url : `${API_BASE_URL.replace('/api', '')}${user.photo_url}`}
                       alt="Profile"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => {
