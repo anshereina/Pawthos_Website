@@ -7,6 +7,7 @@ export interface User {
   email: string;
   address?: string;
   phone_number?: string;
+  photo_url?: string;
   created_at: string;
   is_confirmed: number;
 }

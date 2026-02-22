@@ -248,14 +248,25 @@ export default function PainAssessmentDetailsModal({ visible, onClose, record }:
     const buildImageUrl = (url?: string | null) => {
         if (!url) return null;
         const trimmed = url.trim();
-        if (trimmed.startsWith('file://')) return trimmed; // use local file path directly
-        if (trimmed.startsWith('http')) return trimmed;
-        // Normalize API base (strip trailing slashes and optional /api) then join with leading slash
+        
+        // Handle local file URIs (from device)
+        if (trimmed.startsWith('file://')) return trimmed;
+        
+        // Handle full HTTP/HTTPS URLs
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+        
+        // Construct full URL for relative paths
+        // Normalize API base URL (remove trailing slashes and /api suffix)
         const base = (API_BASE_URL || '')
             .replace(/\/+$/, '')
             .replace(/\/api$/, '');
+        
+        // Ensure path starts with /
         const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-        return `${base}${normalizedPath}`;
+        
+        const fullUrl = `${base}${normalizedPath}`;
+        console.log('Built image URL:', { original: url, fullUrl });
+        return fullUrl;
     };
     return (
         <Modal

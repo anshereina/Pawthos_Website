@@ -296,16 +296,16 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
             setLoading(true);
             setError(null);
             
-            console.log('Loading pets from API...');
+            console.log('[PetProfilePage] Loading pets from API...');
             const result = await getPets();
-            console.log('API response:', result);
+            console.log('[PetProfilePage] API response:', result);
             
             if (result.success && Array.isArray(result.data)) {
                 setPets(result.data);
-                console.log(`Loaded ${result.data.length} pets`);
+                console.log(`[PetProfilePage] Loaded ${result.data.length} pets`);
                 // Debug: Log pet data to see photo_url
                 result.data.forEach((pet, index) => {
-                    console.log(`Pet ${index + 1}:`, {
+                    console.log(`[PetProfilePage] Pet ${index + 1}:`, {
                         name: pet.name,
                         photo_url: pet.photo_url,
                         hasPhoto: !!pet.photo_url,
@@ -315,7 +315,7 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
             } else {
                 const errorMsg = result.message || 'Failed to load pets';
                 setError(errorMsg);
-                console.error('Failed to load pets:', errorMsg);
+                console.error('[PetProfilePage] Failed to load pets:', errorMsg);
                 
                 // Only show alert if it's not a simple "no pets" case
                 if (!errorMsg.includes('No authentication token') && result.data !== null) {
@@ -325,7 +325,7 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
         } catch (err) {
             const errorMessage = 'Failed to load pets. Please try again.';
             setError(errorMessage);
-            console.error('Load pets error:', err);
+            console.error('[PetProfilePage] Load pets error:', err);
             Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
@@ -474,20 +474,27 @@ export default function PetProfilePage({ onNavigate, isDarkMode = false }: { onN
     const getPhotoUrl = (photoUrl: string | undefined) => {
         if (!photoUrl) return null;
         
+        console.log('[PetProfilePage] getPhotoUrl input:', photoUrl);
+        
         // If it's already a full URL, return as is
-        if (photoUrl.startsWith('http')) {
+        if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+            console.log('[PetProfilePage] Full URL detected:', photoUrl);
             return photoUrl;
         }
         
         // If it starts with /uploads/, construct full URL
         if (photoUrl.startsWith('/uploads/')) {
             const baseUrl = getApiUrl().replace('/api', '');
-            return `${baseUrl}${photoUrl}`;
+            const fullUrl = `${baseUrl}${photoUrl}`;
+            console.log('[PetProfilePage] Constructed URL from /uploads/:', fullUrl);
+            return fullUrl;
         }
         
         // If it's just a filename, assume it's in uploads
         const baseUrl = getApiUrl().replace('/api', '');
-        return `${baseUrl}/uploads/${photoUrl}`;
+        const fullUrl = `${baseUrl}/uploads/${photoUrl}`;
+        console.log('[PetProfilePage] Constructed URL from filename:', fullUrl);
+        return fullUrl;
     };
 
     const filteredPets = getFilteredPets();

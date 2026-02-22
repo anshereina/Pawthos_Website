@@ -10,12 +10,14 @@ interface PainAssessmentLandingPageProps {
   onGetStarted: () => void;
   onBack: () => void;
   onViewHistory: () => void;
+  isDarkMode?: boolean;
 }
 
 export default function PainAssessmentLandingPage({ 
   onGetStarted, 
   onBack, 
-  onViewHistory 
+  onViewHistory,
+  isDarkMode = false
 }: PainAssessmentLandingPageProps) {
   const [checkboxChecked, setCheckboxChecked] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
@@ -57,6 +59,14 @@ export default function PainAssessmentLandingPage({
     animate();
   }, []);
 
+  // Dark mode colors
+  const backgroundColor = isDarkMode ? '#000000' : '#f8fffe';
+  const cardBackground = isDarkMode ? '#1a1a1a' : 'rgba(255, 255, 255, 0.98)';
+  const textColor = isDarkMode ? '#FFFFFF' : '#1f2937';
+  const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#6b7280';
+  const borderColor = isDarkMode ? '#333333' : 'rgba(4, 91, 38, 0.1)';
+  const lightBackground = isDarkMode ? '#1a1a1a' : '#f0fdf4';
+
   const handleCheckboxPress = () => {
     if (!checkboxChecked) {
       setTermsModalVisible(true);
@@ -77,11 +87,13 @@ export default function PainAssessmentLandingPage({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient 
-        colors={['#f8fffe', '#f0fdf4', '#e8f5e8']} 
-        style={StyleSheet.absoluteFillObject}
-      />
+    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : 'transparent' }]}>
+      {!isDarkMode && (
+        <LinearGradient 
+          colors={['#f8fffe', '#f0fdf4', '#e8f5e8']} 
+          style={StyleSheet.absoluteFillObject}
+        />
+      )}
       
       {/* Floating Background Elements */}
       <Animated.View style={[
@@ -95,7 +107,7 @@ export default function PainAssessmentLandingPage({
           }]
         }
       ]}>
-        <MaterialIcons name="pets" size={24} color="rgba(4, 91, 38, 0.1)" />
+        <MaterialIcons name="pets" size={24} color={isDarkMode ? 'rgba(4, 91, 38, 0.2)' : 'rgba(4, 91, 38, 0.1)'} />
       </Animated.View>
       
       <Animated.View style={[
@@ -109,7 +121,7 @@ export default function PainAssessmentLandingPage({
           }]
         }
       ]}>
-        <MaterialCommunityIcons name="heart-pulse" size={20} color="rgba(4, 91, 38, 0.08)" />
+        <MaterialCommunityIcons name="heart-pulse" size={20} color={isDarkMode ? 'rgba(4, 91, 38, 0.15)' : 'rgba(4, 91, 38, 0.08)'} />
       </Animated.View>
 
       <Animated.View style={{ 
@@ -125,6 +137,8 @@ export default function PainAssessmentLandingPage({
           <Animated.View style={[
             styles.heroCard,
             {
+              backgroundColor: cardBackground,
+              borderColor,
               transform: [{
                 translateY: floatingAnim.interpolate({
                   inputRange: [0, 1],
@@ -133,12 +147,14 @@ export default function PainAssessmentLandingPage({
               }]
             }
           ]}>
-            <LinearGradient 
-              colors={['rgba(255, 255, 255, 0.95)', 'rgba(240, 253, 244, 0.95)', 'rgba(232, 245, 232, 0.95)']} 
-              start={{ x: 0, y: 0 }} 
-              end={{ x: 1, y: 1 }} 
-              style={styles.heroBg} 
-            />
+            {!isDarkMode && (
+              <LinearGradient 
+                colors={['rgba(255, 255, 255, 0.95)', 'rgba(240, 253, 244, 0.95)', 'rgba(232, 245, 232, 0.95)']} 
+                start={{ x: 0, y: 0 }} 
+                end={{ x: 1, y: 1 }} 
+                style={styles.heroBg} 
+              />
+            )}
             
             <View style={styles.heroContent}>
               <View style={styles.heroLeft}>
@@ -162,8 +178,8 @@ export default function PainAssessmentLandingPage({
                 </Animated.View>
               </View>
               <View style={styles.heroRight}>
-                <Text style={styles.heroTitle}>AI Pain Assessment</Text>
-                <Text style={styles.heroSubtitle}>Know your pet's pain level in a minute</Text>
+                <Text style={[styles.heroTitle, { color: textColor }]}>AI Pain Assessment</Text>
+                <Text style={[styles.heroSubtitle, { color: secondaryTextColor }]}>Know your pet's pain level in a minute</Text>
               </View>
             </View>
           </Animated.View>
@@ -231,7 +247,7 @@ export default function PainAssessmentLandingPage({
 
           {/* Steps Section */}
           <View style={styles.stepsContainer}>
-            <Text style={styles.stepsTitle}>Simple step process</Text>
+            <Text style={[styles.stepsTitle, { color: textColor }]}>Simple step process</Text>
             {/* Step Numbers with Connectors */}
             <View style={styles.stepsRow}>
               <View style={styles.stepItem}>
@@ -283,7 +299,7 @@ export default function PainAssessmentLandingPage({
 
             {/* Checkbox Section */}
             <TouchableOpacity 
-              style={styles.checkboxContainer}
+              style={[styles.checkboxContainer, { backgroundColor: cardBackground, borderColor }]}
               onPress={handleCheckboxPress}
               activeOpacity={0.7}
             >
@@ -292,7 +308,7 @@ export default function PainAssessmentLandingPage({
                   <MaterialIcons name="check" size={20} color="#fff" />
                 )}
               </View>
-              <Text style={styles.checkboxText}>
+              <Text style={[styles.checkboxText, { color: textColor }]}>
                 I understand this is not a substitute for veterinary care.
               </Text>
             </TouchableOpacity>
@@ -327,45 +343,45 @@ export default function PainAssessmentLandingPage({
         onRequestClose={handleTermsCancel}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.termsModalBox}>
+          <View style={[styles.termsModalBox, { backgroundColor: cardBackground, borderColor }]}>
             <TouchableOpacity 
               style={styles.closeButton}
               onPress={handleTermsCancel}
             >
-              <MaterialIcons name="close" size={24} color="#666" />
+              <MaterialIcons name="close" size={24} color={secondaryTextColor} />
             </TouchableOpacity>
             
-            <Text style={styles.termsModalTitle}>Terms & Conditions</Text>
+            <Text style={[styles.termsModalTitle, { color: isDarkMode ? '#A1D998' : '#045b26' }]}>Terms & Conditions</Text>
             
             <ScrollView style={styles.termsContent} showsVerticalScrollIndicator={true}>
-              <View style={styles.termItem}>
+              <View style={[styles.termItem, { borderBottomColor: borderColor }]}>
                 <MaterialIcons name="info" size={20} color="#045b26" style={styles.termIcon} />
-                <Text style={styles.termText}>This is a preliminary tool only</Text>
+                <Text style={[styles.termText, { color: textColor }]}>This is a preliminary tool only</Text>
               </View>
               
-              <View style={styles.termItem}>
+              <View style={[styles.termItem, { borderBottomColor: borderColor }]}>
                 <MaterialIcons name="warning" size={20} color="#045b26" style={styles.termIcon} />
-                <Text style={styles.termText}>Results should not replace professional veterinary care</Text>
+                <Text style={[styles.termText, { color: textColor }]}>Results should not replace professional veterinary care</Text>
               </View>
               
-              <View style={styles.termItem}>
+              <View style={[styles.termItem, { borderBottomColor: borderColor }]}>
                 <MaterialIcons name="medical-services" size={20} color="#045b26" style={styles.termIcon} />
-                <Text style={styles.termText}>Always consult a licensed veterinarian for proper diagnosis</Text>
+                <Text style={[styles.termText, { color: textColor }]}>Always consult a licensed veterinarian for proper diagnosis</Text>
               </View>
               
-              <View style={styles.termItem}>
+              <View style={[styles.termItem, { borderBottomColor: borderColor }]}>
                 <MaterialIcons name="emergency" size={20} color="#F44336" style={styles.termIcon} />
-                <Text style={styles.termText}>Seek immediate veterinary attention for emergency situations</Text>
+                <Text style={[styles.termText, { color: textColor }]}>Seek immediate veterinary attention for emergency situations</Text>
               </View>
             </ScrollView>
 
             <View style={styles.termsButtons}>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderColor: isDarkMode ? '#333333' : '#d1d5db' }]}
                 onPress={handleTermsCancel}
                 activeOpacity={0.7}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={[styles.cancelButtonText, { color: textColor }]}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity

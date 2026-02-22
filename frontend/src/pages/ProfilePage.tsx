@@ -303,7 +303,21 @@ const ProfilePage: React.FC = () => {
           <h1 className="text-2xl font-bold" style={{ color: textColor }}>Staff Profile</h1>
           <div className="relative flex items-center space-x-4 user-info-area">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={toggleDropdown}>
-              <UserCircle size={28} style={{ color: secondaryTextColor }} />
+              {user?.photo_url ? (
+                <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden' }}>
+                  <img 
+                    src={user.photo_url.startsWith('http') ? user.photo_url : `${import.meta.env.VITE_API_BASE_URL?.replace('/api', '')}${user.photo_url}`}
+                    alt="Profile"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      console.error('Failed to load user avatar:', user.photo_url);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <UserCircle size={28} style={{ color: secondaryTextColor }} />
+              )}
               <div className="flex flex-col items-start">
                 <span className="font-medium" style={{ color: textColor }}>{user?.name || ''}</span>
                 <span className="text-sm" style={{ color: secondaryTextColor }}>{user?.role === 'admin' ? 'SuperAdmin' : user?.role || ''}</span>
@@ -347,9 +361,24 @@ const ProfilePage: React.FC = () => {
             {/* Profile Header Card */}
             <div className="rounded-lg shadow-md p-6" style={{ backgroundColor: cardBackground, border: `1px solid ${borderColor}` }}>
               <div className="flex items-center space-x-6">
-                <div className="rounded-full p-4" style={{ backgroundColor: isDarkMode ? '#1a3a1a' : '#d1fae5' }}>
-                  <UserCircle size={48} style={{ color: iconColor }} />
-                </div>
+                {user?.photo_url ? (
+                  <div className="rounded-full overflow-hidden" style={{ width: 96, height: 96 }}>
+                    <img 
+                      src={user.photo_url.startsWith('http') ? user.photo_url : `${import.meta.env.VITE_API_BASE_URL?.replace('/api', '')}${user.photo_url}`}
+                      alt="Profile"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        console.error('Failed to load profile image:', user.photo_url);
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement!.innerHTML = `<div style="width: 96px; height: 96px; border-radius: 50%; background-color: ${isDarkMode ? '#1a3a1a' : '#d1fae5'}; display: flex; align-items: center; justify-content: center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></div>`;
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-full p-4" style={{ backgroundColor: isDarkMode ? '#1a3a1a' : '#d1fae5' }}>
+                    <UserCircle size={48} style={{ color: iconColor }} />
+                  </div>
+                )}
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold" style={{ color: textColor }}>{staffData.personal.name}</h2>
                   <p className="font-medium" style={{ color: iconColor }}>{staffData.professional.position}</p>

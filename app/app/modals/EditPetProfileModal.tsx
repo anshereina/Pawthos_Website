@@ -278,9 +278,10 @@ export default function EditPetProfileModal({
             newErrors.gender = 'Gender is required';
         }
 
-        if (!formData.date_of_birth) {
-            newErrors.date_of_birth = 'Date of birth is required';
-        }
+        // Date of birth and owner birthday are NOT required (they are read-only display fields)
+        // if (!formData.date_of_birth) {
+        //     newErrors.date_of_birth = 'Date of birth is required';
+        // }
 
         // Validate breed if it has values
         if (formData.breed && !validateTextInput(formData.breed, 'Breed')) {
@@ -653,25 +654,26 @@ export default function EditPetProfileModal({
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Pet's Date of Birth</Text>
+                            <Text style={styles.label}>Pet's Date of Birth (Read-only)</Text>
                             <TextInput
                                 style={[styles.input, styles.dateInput, styles.inputDisabled]}
-                                value={formData.date_of_birth}
+                                value={formData.date_of_birth || ''}
                                 editable={false}
-                                placeholder="YYYY-MM-DD"
+                                placeholder="Not set"
                                 placeholderTextColor="#999"
+                                pointerEvents="none"
                             />
-                            {errors.date_of_birth && <Text style={styles.errorText}>{errors.date_of_birth}</Text>}
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Owner's Birthday</Text>
+                            <Text style={styles.label}>Owner's Birthday (Read-only)</Text>
                             <TextInput
                                 style={[styles.input, styles.dateInput, styles.inputDisabled]}
-                                value={formData.owner_birthday as string}
+                                value={(formData.owner_birthday as string) || ''}
                                 editable={false}
-                                placeholder="YYYY-MM-DD"
+                                placeholder="Not set"
                                 placeholderTextColor="#999"
+                                pointerEvents="none"
                             />
                         </View>
                     </ScrollView>

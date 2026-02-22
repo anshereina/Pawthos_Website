@@ -193,18 +193,20 @@ interface CanineIntegrationResultPageProps {
     painLevel?: string;
     selectedAnswers?: number[];
     beap_average_score?: number; // BEAP average score (0-10 scale)
+    isDarkMode?: boolean;
 }
 
-export default function CanineIntegrationResultPage({ 
-    onSecondOpinion, 
-    onHome, 
+export default function CanineIntegrationResultPage({
+    onSecondOpinion,
+    onHome,
     onSecondOpinionAppointment,
     onSave,
-    petType = 'dog', 
+    petType = 'dog',
     severityLevel = 'Unknown',
     painLevel,
     selectedAnswers = [],
-    beap_average_score
+    beap_average_score,
+    isDarkMode = false
 }: CanineIntegrationResultPageProps) {
     
     // Calculate total BEAP score (0-76 scale: 8 categories × 9.5 max BEAP score per category)
@@ -370,15 +372,22 @@ export default function CanineIntegrationResultPage({
         }
     };
 
+    // Dark mode colors
+    const backgroundColor = isDarkMode ? '#000000' : '#ffffff';
+    const cardBackground = isDarkMode ? '#1a1a1a' : '#ffffff';
+    const textColor = isDarkMode ? '#FFFFFF' : '#1f2937';
+    const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#6b7280';
+    const borderColor = isDarkMode ? '#333333' : '#e5e7eb';
+
     return (
-        <View style={styles.container}>
-            <ScrollView 
+        <View style={[styles.container, { backgroundColor }]}>
+            <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={true}
             >
                 {/* Circular Image */}
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? '#1a1a1a' : '#fff' }]}>
                     <Image
                         source={resultImageSource}
                         style={{ width: 50, height: 50, resizeMode: 'contain' }}
@@ -386,11 +395,11 @@ export default function CanineIntegrationResultPage({
                 </View>
 
                 {/* Results Card */}
-                <View style={styles.resultsCard}>
-                    <Text style={styles.resultTitle}>
+                <View style={[styles.resultsCard, { backgroundColor: cardBackground, borderColor }]}>
+                    <Text style={[styles.resultTitle, { color: textColor }]}>
                         Your dog's pain level is:
                     </Text>
-                    <Text style={styles.resultText}>
+                    <Text style={[styles.resultText, { color: painStyling.textColor }]}>
                         {currentPainLevel}
                     </Text>
                     

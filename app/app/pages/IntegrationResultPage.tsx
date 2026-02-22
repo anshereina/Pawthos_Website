@@ -548,6 +548,14 @@ export default function IntegrationResultPage({
 
     const normalizedPainLevel = normalizePainLevel(currentPainLevel);
 
+    // Dark mode colors
+    const backgroundColor = isDarkMode ? '#000000' : '#f7f7f7';
+    const cardBackground = isDarkMode ? '#1a1a1a' : '#ffffff';
+    const textColor = isDarkMode ? '#FFFFFF' : '#000000';
+    const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#6b7280';
+    const borderColor = isDarkMode ? '#333333' : '#e5e7eb';
+    const modalBackground = isDarkMode ? '#1a1a1a' : '#FFFFFF';
+
     // Resolve pet type preference from local assessment data if present
     const [displayPetType, setDisplayPetType] = useState<string>(petType);
     React.useEffect(() => {
@@ -851,16 +859,16 @@ export default function IntegrationResultPage({
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : '#f7f7f7' }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
             {/* Error Modal */}
             {showErrorModal && (
                 <View style={styles.errorModalOverlay}>
-                    <View style={styles.errorModalBox}>
+                    <View style={[styles.errorModalBox, { backgroundColor: modalBackground }]}>
                         <TouchableOpacity 
                             style={styles.errorModalCloseButton}
                             onPress={() => setShowErrorModal(false)}
                         >
-                            <MaterialIcons name="close" size={24} color="#9CA3AF" />
+                            <MaterialIcons name="close" size={24} color={secondaryTextColor} />
                         </TouchableOpacity>
                         
                         <View style={[
@@ -874,15 +882,15 @@ export default function IntegrationResultPage({
                             />
                         </View>
                         
-                        <Text style={styles.errorModalTitle}>
+                        <Text style={[styles.errorModalTitle, { color: textColor }]}>
                             {errorType === 'NO_CAT_DETECTED' ? 'No Cat Detected' : 'Cat Position Issue'}
                         </Text>
                         
-                        <Text style={styles.errorModalMessage}>
+                        <Text style={[styles.errorModalMessage, { color: secondaryTextColor }]}>
                             {errorMessage}
                         </Text>
                         
-                        <Text style={styles.errorModalGuidance}>
+                        <Text style={[styles.errorModalGuidance, { color: secondaryTextColor }]}>
                             {errorGuidance}
                         </Text>
                         
@@ -900,10 +908,10 @@ export default function IntegrationResultPage({
                 <View style={styles.content}>
                     {/* Header Section */}
                     <View style={styles.headerSection}>
-                        <Text style={[styles.headerTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
+                        <Text style={[styles.headerTitle, { color: textColor }]}>
                             Pain Assessment Results
                         </Text>
-                        <Text style={[styles.headerSubtitle, { color: isDarkMode ? '#d1d5db' : '#6b7280' }]}>
+                        <Text style={[styles.headerSubtitle, { color: secondaryTextColor }]}>
                             AI analysis completed successfully
                         </Text>
                     </View>
@@ -939,11 +947,11 @@ export default function IntegrationResultPage({
 
                     {/* Recommendations */}
                     {actionableAdvice ? (
-                        <View style={styles.comprehensiveSection}>
-                            <Text style={styles.comprehensiveTitle}>💡 Recommendations</Text>
+                        <View style={[styles.comprehensiveSection, { backgroundColor: cardBackground }]}>
+                            <Text style={[styles.comprehensiveTitle, { color: textColor }]}>💡 Recommendations</Text>
                             
                             {actionableAdvice.immediate_actions && (
-                                <View style={styles.adviceItem}>
+                                <View style={[styles.adviceItem, { backgroundColor: isDarkMode ? '#1a1a1a' : 'transparent', borderColor }]}>
                                     <View style={styles.adviceHeader}>
                                         <MaterialIcons name="flash-on" size={20} color="#045b26" />
                                         <Text style={[styles.adviceLabel, { color: '#045b26' }]}>Immediate Actions</Text>

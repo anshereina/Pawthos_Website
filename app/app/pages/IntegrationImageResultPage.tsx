@@ -72,18 +72,26 @@ interface IntegrationImageResultPageProps {
   onRetake: () => void;
   onSeeResult: () => void;
   capturedImage?: string | null;
+  isDarkMode?: boolean;
 }
 
-export default function IntegrationImageResultPage({ onRetake, onSeeResult, capturedImage }: IntegrationImageResultPageProps) {
+export default function IntegrationImageResultPage({ onRetake, onSeeResult, capturedImage, isDarkMode = false }: IntegrationImageResultPageProps) {
+  // Dark mode colors
+  const backgroundColor = isDarkMode ? '#000000' : '#f7f7f7';
+  const cardBackground = isDarkMode ? '#1a1a1a' : '#ffffff';
+  const textColor = isDarkMode ? '#FFFFFF' : '#000';
+  const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#666';
+  const borderColor = isDarkMode ? '#333333' : '#e0e0e0';
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor }]}>
       <View style={styles.content}>
         {/* Captured Image */}
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { backgroundColor: cardBackground, borderColor }]}>
           <View style={styles.capturedImage}>
             {capturedImage ? (
-              <Image 
-                source={{ uri: capturedImage }} 
+              <Image
+                source={{ uri: capturedImage }}
                 style={styles.imagePlaceholder}
                 resizeMode="cover"
               />

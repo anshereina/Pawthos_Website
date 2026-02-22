@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
 
 
 
-export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: string, data?: any) => void }) {
+export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: { onNavigate: (page: string, data?: any) => void; isDarkMode?: boolean }) {
     const [activeFilter, setActiveFilter] = useState('All');
     const [painAssessmentRecords, setPainAssessmentRecords] = useState<PainAssessmentRecord[]>([]);
     const [loading, setLoading] = useState(true);
@@ -244,8 +244,17 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
         setModalVisible(true);
     };
 
+    // Dark mode colors
+    const backgroundColor = isDarkMode ? '#000000' : '#f7f7f7';
+    const cardBackground = isDarkMode ? '#1a1a1a' : '#fff';
+    const textColor = isDarkMode ? '#FFFFFF' : '#000';
+    const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#666';
+    const borderColor = isDarkMode ? '#333333' : '#f0f0f0';
+    const searchBackground = isDarkMode ? '#1a1a1a' : '#f0f0f0';
+    const headerBackground = isDarkMode ? '#A1D998' : '#A1D998';
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor }]}>
             <ScrollView 
                 style={styles.content}
                 refreshControl={
@@ -259,10 +268,10 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                 showsVerticalScrollIndicator={true}
             >
                 {/* Search Bar */}
-                <View style={styles.searchBar}>
-                    <MaterialIcons name="menu" size={22} color="#666" />
-                    <Text style={styles.searchText}>Search assessments</Text>
-                    <MaterialIcons name="search" size={22} color="#666" />
+                <View style={[styles.searchBar, { backgroundColor: searchBackground }]}>
+                    <MaterialIcons name="menu" size={22} color={secondaryTextColor} />
+                    <Text style={[styles.searchText, { color: secondaryTextColor }]}>Search assessments</Text>
+                    <MaterialIcons name="search" size={22} color={secondaryTextColor} />
                 </View>
 
                 {/* Filter Buttons */}
@@ -270,7 +279,7 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                     <TouchableOpacity 
                         style={[
                             styles.filterBtn, 
-                            activeFilter === 'All' ? styles.filterBtnActive : styles.filterBtnInactive
+                            activeFilter === 'All' ? styles.filterBtnActive : [styles.filterBtnInactive, { backgroundColor: cardBackground, borderColor: '#045b26' }]
                         ]}
                         onPress={() => setActiveFilter('All')}
                     >
@@ -284,7 +293,7 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                     <TouchableOpacity 
                         style={[
                             styles.filterBtn, 
-                            activeFilter === 'Cats' ? styles.filterBtnActive : styles.filterBtnInactive
+                            activeFilter === 'Cats' ? styles.filterBtnActive : [styles.filterBtnInactive, { backgroundColor: cardBackground, borderColor: '#045b26' }]
                         ]}
                         onPress={() => setActiveFilter('Cats')}
                     >
@@ -298,7 +307,7 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                     <TouchableOpacity 
                         style={[
                             styles.filterBtn, 
-                            activeFilter === 'Dogs' ? styles.filterBtnActive : styles.filterBtnInactive
+                            activeFilter === 'Dogs' ? styles.filterBtnActive : [styles.filterBtnInactive, { backgroundColor: cardBackground, borderColor: '#045b26' }]
                         ]}
                         onPress={() => setActiveFilter('Dogs')}
                     >
@@ -312,7 +321,7 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                 </View>
 
                 {/* Record List Area - Column Headers */}
-                <View style={styles.tableHeader}>
+                <View style={[styles.tableHeader, { backgroundColor: headerBackground, borderBottomColor: borderColor }]}>
                     <Text style={styles.headerCell}>Pet Name</Text>
                     <Text style={styles.headerCell}>Type</Text>
                     <Text style={styles.headerCell}>Pain Level</Text>
@@ -321,23 +330,23 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
 
                 {/* Pain Assessment Records */}
                 {loading ? (
-                    <View style={styles.emptyState}>
+                    <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
                         <ActivityIndicator size="large" color="#045b26" />
-                        <Text style={styles.emptyStateText}>Loading pain assessments...</Text>
+                        <Text style={[styles.emptyStateText, { color: textColor }]}>Loading pain assessments...</Text>
                     </View>
                 ) : error ? (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyStateText}>{error}</Text>
+                    <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
+                        <Text style={[styles.emptyStateText, { color: textColor }]}>{error}</Text>
                     </View>
                 ) : filteredRecords.length > 0 ? (
                     filteredRecords.map((record) => (
                         <TouchableOpacity 
                             key={record.id}
-                            style={styles.tableRow}
+                            style={[styles.tableRow, { backgroundColor: cardBackground, borderBottomColor: borderColor }]}
                             onPress={() => handleRecordPress(record)}
                         >
-                            <Text style={styles.tableCell}>{record.pet_name}</Text>
-                            <Text style={styles.tableCell}>
+                            <Text style={[styles.tableCell, { color: textColor }]}>{record.pet_name}</Text>
+                            <Text style={[styles.tableCell, { color: textColor }]}>
                                 {record.pet_type?.toLowerCase() === 'dog' || record.pet_type?.toLowerCase() === 'canine' 
                                     ? 'Dog' 
                                     : record.pet_type?.toLowerCase() === 'cat' || record.pet_type?.toLowerCase() === 'feline' 
@@ -347,12 +356,12 @@ export default function PainAssessmentPage({ onNavigate }: { onNavigate: (page: 
                             <Text style={[styles.painLevelCell, getPainLevelColorStyle(record.pain_level)]}>
                                 {derivePainLevelLabel({ pain_level: record.pain_level, pain_score: record.pain_score })}
                             </Text>
-                            <Text style={styles.tableCell}>{formatAssessmentDate(record.assessment_date)}</Text>
+                            <Text style={[styles.tableCell, { color: textColor }]}>{formatAssessmentDate(record.assessment_date)}</Text>
                         </TouchableOpacity>
                     ))
                 ) : (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyStateText}>No pain assessment records found</Text>
+                    <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
+                        <Text style={[styles.emptyStateText, { color: textColor }]}>No pain assessment records found</Text>
                     </View>
                 )}
                 
