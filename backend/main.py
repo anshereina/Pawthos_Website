@@ -92,6 +92,12 @@ if os.getenv("ENVIRONMENT") != "production":
 
 app = FastAPI(title="Pawthos API", version="1.0.0", redirect_slashes=False)
 
+# Mount static files for serving uploaded images FIRST (before middleware and routers)
+# This ensures uploads are publicly accessible without authentication
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -145,10 +151,7 @@ app.include_router(file_uploads.router, prefix="/api")  # Mobile: /api/uploads
 app.include_router(alerts.router, prefix="/api")  # Mobile: /api/alerts
 app.include_router(post_abattoir_records.router, prefix="/api")
 
-# Mount static files for serving uploaded images (AFTER routers to avoid conflicts)
-UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+# Note: /uploads static files are already mounted above (before middleware)
 
 @app.get("/")
 def read_root():

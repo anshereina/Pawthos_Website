@@ -53,8 +53,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.last_cleanup = now
     
     async def dispatch(self, request: Request, call_next):
-        # Skip rate limiting for health checks and static files
-        if request.url.path in ["/health", "/docs", "/openapi.json", "/redoc"]:
+        # Skip rate limiting for health checks, static files, and uploads
+        if request.url.path in ["/health", "/docs", "/openapi.json", "/redoc"] or request.url.path.startswith("/uploads/"):
             return await call_next(request)
         
         client_ip = self.get_client_ip(request)
