@@ -60,10 +60,12 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        fontSize: 16,
+        fontSize: 15, // Slightly smaller font to fit better
         color: '#222',
         padding: 0,
+        paddingVertical: 12, // Add vertical padding
         marginLeft: 12,
+        lineHeight: 20, // Ensure proper line height
     },
     inputRow: {
         flexDirection: 'row',
@@ -72,7 +74,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 16,
         paddingHorizontal: 16,
-        height: 52,
+        minHeight: 56, // Increase minimum height to accommodate longer text
+        paddingVertical: 4, // Add vertical padding for better text centering
         borderWidth: 1,
         borderColor: '#e0e0e0',
     },
@@ -343,7 +346,7 @@ export default function SignupPage() {
                     <View style={styles.inputRow}>
                         <MaterialIcons name="person" size={20} color="#4a7c59" />
                         <TextInput
-                            placeholder="Full Name (First Name, Last Name)"
+                            placeholder="Full Name (e.g., Juan Dela Cruz)"
                             placeholderTextColor="#999"
                             value={name}
                             onChangeText={setName}

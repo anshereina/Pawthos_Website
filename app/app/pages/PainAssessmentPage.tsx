@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, ScrollView, RefreshControl, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getPainAssessments, PainAssessmentRecord, formatAssessmentDate, getPainLevelColor, derivePainLevelLabel } from '../../utils/painAssessments.utils';
 import { isAuthenticated } from '../../utils/auth.utils';
@@ -155,6 +155,7 @@ export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: {
     const [error, setError] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<PainAssessmentRecord | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         checkAuthAndLoadAssessments();
@@ -183,8 +184,14 @@ export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: {
             console.log('API response:', result);
             
             if (result.success && Array.isArray(result.data)) {
-                setPainAssessmentRecords(result.data);
-                console.log(`Loaded ${result.data.length} pain assessments`);
+                // Sort records by assessment_date in descending order (latest first)
+                const sortedRecords = result.data.sort((a, b) => {
+                    const dateA = new Date(a.assessment_date).getTime();
+                    const dateB = new Date(b.assessment_date).getTime();
+                    return dateB - dateA; // Descending order
+                });
+                setPainAssessmentRecords(sortedRecords);
+                console.log(`Loaded ${result.data.length} pain assessments (sorted descending)`);
             } else {
                 const errorMsg = result.message || 'Failed to load pain assessments';
                 setError(errorMsg);
@@ -234,6 +241,22 @@ export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: {
             return true;
         });
 
+    // Apply search filter to the already filtered records
+    const searchFilteredRecords = searchQuery.trim() 
+        ? filteredRecords.filter(record => {
+            const query = searchQuery.toLowerCase().trim();
+            const petName = (record.pet_name || '').toLowerCase();
+            const petType = (record.pet_type || '').toLowerCase();
+            const painLevel = (record.pain_level || '').toLowerCase();
+            const date = formatAssessmentDate(record.assessment_date).toLowerCase();
+            
+            return petName.includes(query) || 
+                   petType.includes(query) || 
+                   painLevel.includes(query) ||
+                   date.includes(query);
+        })
+        : filteredRecords;
+
     const handleAddAssessment = () => {
         // Navigate to integration flow for new assessment
         onNavigate('IntegrationQuestionsDog');
@@ -269,9 +292,21 @@ export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: {
             >
                 {/* Search Bar */}
                 <View style={[styles.searchBar, { backgroundColor: searchBackground }]}>
-                    <MaterialIcons name="menu" size={22} color={secondaryTextColor} />
-                    <Text style={[styles.searchText, { color: secondaryTextColor }]}>Search assessments</Text>
                     <MaterialIcons name="search" size={22} color={secondaryTextColor} />
+                    <TextInput
+                        style={[styles.searchText, { color: textColor }]}
+                        placeholder="Search assessments"
+                        placeholderTextColor={secondaryTextColor}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+                            <MaterialIcons name="clear" size={20} color={secondaryTextColor} />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {/* Filter Buttons */}
@@ -339,7 +374,7 @@ export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: {
                         <Text style={[styles.emptyStateText, { color: textColor }]}>{error}</Text>
                     </View>
                 ) : filteredRecords.length > 0 ? (
-                    filteredRecords.map((record) => (
+                    searchFilteredRecords.map((record) => (
                         <TouchableOpacity 
                             key={record.id}
                             style={[styles.tableRow, { backgroundColor: cardBackground, borderBottomColor: borderColor }]}
@@ -361,7 +396,9 @@ export default function PainAssessmentPage({ onNavigate, isDarkMode = false }: {
                     ))
                 ) : (
                     <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
-                        <Text style={[styles.emptyStateText, { color: textColor }]}>No pain assessment records found</Text>
+                        <Text style={[styles.emptyStateText, { color: textColor }]}>
+                            {searchQuery.trim() ? `No assessments found for "${searchQuery}"` : 'No pain assessment records found'}
+                        </Text>
                     </View>
                 )}
                 

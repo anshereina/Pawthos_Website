@@ -7,37 +7,40 @@ import * as auth from '../utils/auth.utils';
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
         backgroundColor: "#045b26",
-        padding: 24,
     },
     scrollContainer: {
         flexGrow: 1,
         justifyContent: "center",
         alignItems: "center",
-        padding: 24,
+        paddingHorizontal: 24,
+        paddingTop: 80, // Add more top padding to prevent logo clipping
+        paddingBottom: 24,
     },
     logoRow: {
         flexDirection: "row",
-        marginBottom: 16,
-        marginTop: 24,
+        marginBottom: 32, // Increase bottom margin
+        marginTop: 0, // Remove top margin since we added paddingTop
+        alignItems: 'center', // Ensure logos are centered
+        justifyContent: 'center', // Center the logos horizontally
     },
     backButton: {
         position: 'absolute',
-        top: 32,
+        top: 44, // Adjust for SafeAreaView
         left: 24,
         zIndex: 10,
         padding: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)', // Add subtle background for visibility
+        borderRadius: 20,
     },
     logo: {
-        width: 64,
-        height: 64,
-        marginRight: 12,
+        width: 70, // Slightly larger
+        height: 70,
+        marginRight: 16, // More spacing between logos
     },
     logo2: {
-        width: 64,
-        height: 64,
+        width: 70, // Slightly larger
+        height: 70,
     },
     title: {
         fontSize: 28,

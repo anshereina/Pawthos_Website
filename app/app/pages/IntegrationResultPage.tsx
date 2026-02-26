@@ -594,12 +594,12 @@ export default function IntegrationResultPage({
 
     // Define a function to get the image source based on pain level
     const getResultImage = (level: string) => {
-        if (level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain') {
+        if (level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain' || level === 'Level 0 - No Pain') {
             return require('../../assets/images/NoPain.png'); // No pain image
-        } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain') {
-            return require('../../assets/images/MildPain.png'); // Mild pain image
-        } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain') {
-            return require('../../assets/images/ModeratePain.png'); // Moderate pain image
+        } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain' || level === 'Level 1 - Moderate Pain') {
+            return require('../../assets/images/MildPain.png'); // Level 1 - Moderate Pain image
+        } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain' || level === 'Level 2 - Severe Pain') {
+            return require('../../assets/images/ModeratePain.png'); // Level 2 - Severe Pain image
         } else if (level === 'Level 3 (Moderate to Severe Pain)' || level === 'Level 3' || level === 'Moderate to Severe Pain') {
             return require('../../assets/images/ModeratePain.png'); // Reuse moderate image
         } else if (level === 'Level 4 (Severe Pain)' || level === 'Level 4' || level === 'Severe Pain') {

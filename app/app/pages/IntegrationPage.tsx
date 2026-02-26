@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../utils/config';
 
 const { width, height } = Dimensions.get('window');
 
-export default function IntegrationPage({ onSelect }: { onSelect: (label: string) => void }) {
+export default function IntegrationPage({ onSelect, isDarkMode = false }: { onSelect: (label: string) => void; isDarkMode?: boolean }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [showSecondModal, setShowSecondModal] = useState(false);
   const [selectedPet, setSelectedPet] = useState<string | null>(null);

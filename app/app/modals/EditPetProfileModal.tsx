@@ -21,6 +21,7 @@ interface EditPetProfileModalProps {
     onClose: () => void;
     petData: PetData | null;
     onSave: (updatedPetData: Partial<PetData>) => Promise<boolean>;
+    isDarkMode?: boolean;
 }
 
 const styles = StyleSheet.create({
@@ -229,7 +230,8 @@ export default function EditPetProfileModal({
     visible,
     onClose,
     petData,
-    onSave
+    onSave,
+    isDarkMode = false
 }: EditPetProfileModalProps) {
     const [formData, setFormData] = useState<Partial<PetData>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -312,8 +314,11 @@ export default function EditPetProfileModal({
 
                 if (result.success && result.photo_url) {
                     newPhotoUrl = result.photo_url;
+                    console.log('Photo uploaded successfully:', result.photo_url);
                 } else if (!result.success && result.message) {
                     Alert.alert('Photo Upload Failed', result.message);
+                    setLoading(false);
+                    return; // Stop if photo upload fails
                 }
             }
 
@@ -324,7 +329,11 @@ export default function EditPetProfileModal({
 
             const saved = await onSave(payload);
             if (saved) {
-                Alert.alert('Success', 'Pet profile updated successfully!');
+                // Show specific success message based on what was updated
+                const successMsg = newPhotoUrl 
+                    ? 'Pet profile and photo updated successfully!' 
+                    : 'Pet profile updated successfully!';
+                Alert.alert('Success', successMsg);
                 onClose();
             } else {
                 Alert.alert('Error', 'Failed to update pet profile. Please try again.');
@@ -497,6 +506,15 @@ export default function EditPetProfileModal({
 
     if (!petData) return null;
 
+    // Dark mode colors
+    const backgroundColor = isDarkMode ? '#000000' : '#fff';
+    const cardBackground = isDarkMode ? '#1a1a1a' : '#fff';
+    const textColor = isDarkMode ? '#FFFFFF' : '#333';
+    const secondaryTextColor = isDarkMode ? '#CCCCCC' : '#666';
+    const borderColor = isDarkMode ? '#333333' : '#ddd';
+    const inputBackground = isDarkMode ? '#1a1a1a' : '#f9f9f9';
+    const placeholderColor = isDarkMode ? '#888888' : '#999';
+
     return (
         <Modal
             visible={visible}
@@ -505,17 +523,17 @@ export default function EditPetProfileModal({
             onRequestClose={onClose}
         >
             <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Edit Pet Profile</Text>
+                <View style={[styles.modalContent, { backgroundColor: cardBackground }]}>
+                    <View style={[styles.header, { borderBottomColor: borderColor }]}>
+                        <Text style={[styles.headerTitle, { color: isDarkMode ? '#4CAF50' : '#045b26' }]}>Edit Pet Profile</Text>
                         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                            <MaterialIcons name="close" size={24} color="#666" />
+                            <MaterialIcons name="close" size={24} color={secondaryTextColor} />
                         </TouchableOpacity>
                     </View>
 
                     {/* Photo preview and actions */}
                     <View style={styles.photoSection}>
-                        <View style={styles.photoWrapper}>
+                        <View style={[styles.photoWrapper, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f0f0f0' }]}>
                             {getDisplayPhotoUri() ? (
                                 <Image
                                     source={{ uri: getDisplayPhotoUri() as string }}
@@ -525,18 +543,18 @@ export default function EditPetProfileModal({
                                 <MaterialIcons
                                     name="pets"
                                     size={36}
-                                    color="#999"
+                                    color={placeholderColor}
                                     style={styles.photoPlaceholderIcon}
                                 />
                             )}
                         </View>
                         <TouchableOpacity
-                            style={styles.photoButton}
+                            style={[styles.photoButton, { borderColor: isDarkMode ? '#4CAF50' : '#045b26' }]}
                             onPress={handlePickPhoto}
                             disabled={loading || uploadingPhoto}
                         >
-                            <MaterialIcons name="photo-camera" size={18} color="#045b26" />
-                            <Text style={styles.photoButtonText}>
+                            <MaterialIcons name="photo-camera" size={18} color={isDarkMode ? '#4CAF50' : '#045b26'} />
+                            <Text style={[styles.photoButtonText, { color: isDarkMode ? '#4CAF50' : '#045b26' }]}>
                                 {getDisplayPhotoUri() ? 'Change Photo' : 'Add Photo'}
                             </Text>
                         </TouchableOpacity>
@@ -546,7 +564,7 @@ export default function EditPetProfileModal({
                                 disabled={loading || uploadingPhoto}
                                 style={{ marginTop: 6 }}
                             >
-                                <Text style={{ fontSize: 12, color: '#666', textDecorationLine: 'underline' }}>
+                                <Text style={{ fontSize: 12, color: secondaryTextColor, textDecorationLine: 'underline' }}>
                                     Remove current photo
                                 </Text>
                             </TouchableOpacity>
@@ -559,41 +577,42 @@ export default function EditPetProfileModal({
                         contentContainerStyle={{ paddingVertical: 20 }}
                     >
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Pet's Name</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Pet's Name</Text>
                             <TextInput
-                                style={[styles.input, errors.name && styles.inputError]}
+                                style={[styles.input, { backgroundColor: inputBackground, color: textColor, borderColor }, errors.name && styles.inputError]}
                                 value={formData.name}
                                 onChangeText={(value) => handleInputChange('name', value)}
                                 placeholder="Enter pet's name"
+                                placeholderTextColor={placeholderColor}
                             />
                             {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Species</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Species</Text>
                             <TouchableOpacity
-                                style={[styles.pickerContainer, errors.species && styles.inputError]}
+                                style={[styles.pickerContainer, { backgroundColor: inputBackground, borderColor }, errors.species && styles.inputError]}
                                 onPress={() => setShowSpeciesPicker(!showSpeciesPicker)}
                             >
                                 <View style={styles.pickerButton}>
-                                    <Text style={formData.species ? styles.pickerText : styles.pickerPlaceholder}>
+                                    <Text style={[formData.species ? styles.pickerText : styles.pickerPlaceholder, { color: formData.species ? textColor : placeholderColor }]}>
                                         {formData.species ? (formData.species.charAt(0).toUpperCase() + formData.species.slice(1).toLowerCase()) : 'Select species'}
                                     </Text>
-                                    <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
+                                    <MaterialIcons name="arrow-drop-down" size={24} color={secondaryTextColor} />
                                 </View>
                             </TouchableOpacity>
                             {showSpeciesPicker && (
-                                <View style={styles.pickerOptions}>
+                                <View style={[styles.pickerOptions, { backgroundColor: cardBackground, borderColor }]}>
                                     {speciesOptions.map((option) => (
                                         <TouchableOpacity
                                             key={option}
-                                            style={styles.pickerOption}
+                                            style={[styles.pickerOption, { borderBottomColor: borderColor }]}
                                             onPress={() => {
                                                 handleInputChange('species', option);
                                                 setShowSpeciesPicker(false);
                                             }}
                                         >
-                                            <Text style={styles.pickerOptionText}>{option}</Text>
+                                            <Text style={[styles.pickerOptionText, { color: textColor }]}>{option}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
@@ -602,50 +621,52 @@ export default function EditPetProfileModal({
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Breed</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Breed</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: inputBackground, color: textColor, borderColor }]}
                                 value={formData.breed}
                                 onChangeText={(value) => handleInputChange('breed', value)}
                                 placeholder="Enter breed"
+                                placeholderTextColor={placeholderColor}
                             />
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Color</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Color</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: inputBackground, color: textColor, borderColor }]}
                                 value={formData.color}
                                 onChangeText={(value) => handleInputChange('color', value)}
                                 placeholder="Enter color"
+                                placeholderTextColor={placeholderColor}
                             />
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Gender</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Gender</Text>
                             <TouchableOpacity
-                                style={[styles.pickerContainer, errors.gender && styles.inputError]}
+                                style={[styles.pickerContainer, { backgroundColor: inputBackground, borderColor }, errors.gender && styles.inputError]}
                                 onPress={() => setShowGenderPicker(!showGenderPicker)}
                             >
                                 <View style={styles.pickerButton}>
-                                    <Text style={formData.gender ? styles.pickerText : styles.pickerPlaceholder}>
+                                    <Text style={[formData.gender ? styles.pickerText : styles.pickerPlaceholder, { color: formData.gender ? textColor : placeholderColor }]}>
                                         {formData.gender ? (formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1).toLowerCase()) : 'Select gender'}
                                     </Text>
-                                    <MaterialIcons name="arrow-drop-down" size={24} color="#666" />
+                                    <MaterialIcons name="arrow-drop-down" size={24} color={secondaryTextColor} />
                                 </View>
                             </TouchableOpacity>
                             {showGenderPicker && (
-                                <View style={styles.pickerOptions}>
+                                <View style={[styles.pickerOptions, { backgroundColor: cardBackground, borderColor }]}>
                                     {genderOptions.map((option) => (
                                         <TouchableOpacity
                                             key={option}
-                                            style={styles.pickerOption}
+                                            style={[styles.pickerOption, { borderBottomColor: borderColor }]}
                                             onPress={() => {
                                                 handleInputChange('gender', option.toLowerCase());
                                                 setShowGenderPicker(false);
                                             }}
                                         >
-                                            <Text style={styles.pickerOptionText}>{option}</Text>
+                                            <Text style={[styles.pickerOptionText, { color: textColor }]}>{option}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
@@ -654,36 +675,36 @@ export default function EditPetProfileModal({
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Pet's Date of Birth (Read-only)</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Pet's Date of Birth (Read-only)</Text>
                             <TextInput
-                                style={[styles.input, styles.dateInput, styles.inputDisabled]}
+                                style={[styles.input, styles.dateInput, styles.inputDisabled, { backgroundColor: isDarkMode ? '#0d0d0d' : '#f5f5f5', color: isDarkMode ? '#4CAF50' : '#045b26', borderColor }]}
                                 value={formData.date_of_birth || ''}
                                 editable={false}
                                 placeholder="Not set"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={placeholderColor}
                                 pointerEvents="none"
                             />
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Owner's Birthday (Read-only)</Text>
+                            <Text style={[styles.label, { color: textColor }]}>Owner's Birthday (Read-only)</Text>
                             <TextInput
-                                style={[styles.input, styles.dateInput, styles.inputDisabled]}
+                                style={[styles.input, styles.dateInput, styles.inputDisabled, { backgroundColor: isDarkMode ? '#0d0d0d' : '#f5f5f5', color: isDarkMode ? '#4CAF50' : '#045b26', borderColor }]}
                                 value={(formData.owner_birthday as string) || ''}
                                 editable={false}
                                 placeholder="Not set"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={placeholderColor}
                                 pointerEvents="none"
                             />
                         </View>
                     </ScrollView>
 
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                    <View style={[styles.buttonContainer, { borderTopColor: borderColor }]}>
+                        <TouchableOpacity style={[styles.cancelButton, { backgroundColor: isDarkMode ? '#2d2d2d' : '#f0f0f0' }]} onPress={onClose}>
+                            <Text style={[styles.cancelButtonText, { color: secondaryTextColor }]}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
-                            style={styles.saveButton} 
+                            style={[styles.saveButton, { backgroundColor: isDarkMode ? '#4CAF50' : '#045b26' }]}
                             onPress={handleSave}
                             disabled={loading}
                         >
@@ -696,8 +717,8 @@ export default function EditPetProfileModal({
                     </View>
 
                     {loading && (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#045b26" />
+                        <View style={[styles.loadingContainer, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)' }]}>
+                            <ActivityIndicator size="large" color={isDarkMode ? '#4CAF50' : '#045b26'} />
                         </View>
                     )}
                 </View>

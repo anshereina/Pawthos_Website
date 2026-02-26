@@ -90,6 +90,7 @@ export default function HomePage({ onSelect, isDarkMode = false }: { onSelect: (
                 console.log('Dashboard data loaded successfully');
             } else {
                 console.error('Dashboard data error:', dashboardResult.message);
+                // Don't show error alert for dashboard data - just log it
             }
             
             if (vaccinationResult.success && vaccinationResult.data) {
@@ -97,6 +98,7 @@ export default function HomePage({ onSelect, isDarkMode = false }: { onSelect: (
                 console.log('Vaccination events loaded successfully');
             } else {
                 console.error('Vaccination events error:', vaccinationResult.message);
+                // Don't show error alert - just log it
             }
             
             // Set medical records count
@@ -109,7 +111,28 @@ export default function HomePage({ onSelect, isDarkMode = false }: { onSelect: (
             
         } catch (error) {
             console.error('Error loading dashboard:', error);
-            Alert.alert('Error', 'Failed to load dashboard data');
+            // Check if error is related to token expiration
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (errorMessage.includes('token') || errorMessage.includes('authentication') || errorMessage.includes('401')) {
+                // Token might be expired - try to refresh silently
+                console.log('Possible token expiration, attempting silent refresh...');
+                // The getCurrentUser call will handle token refresh automatically
+                try {
+                    const refreshedUser = await getCurrentUser();
+                    if (refreshedUser) {
+                        setUserData(refreshedUser);
+                        // Retry loading dashboard data after token refresh
+                        const retryResult = await getDashboardData();
+                        if (retryResult.success && retryResult.data) {
+                            setDashboardData(retryResult.data);
+                        }
+                    }
+                } catch (refreshError) {
+                    console.error('Token refresh failed:', refreshError);
+                    // Silent failure - don't show alert to user
+                }
+            }
+            // Don't show error alert - just log it
         } finally {
             setLoading(false);
         }

@@ -649,6 +649,7 @@ export default function PetDetailsPage({
                 onClose={() => setEditModalVisible(false)}
                 petData={petData}
                 onSave={handleSavePet}
+                isDarkMode={isDarkMode}
             />
         </View>
     );
