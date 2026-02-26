@@ -15,13 +15,34 @@ export default function useForgotPassword(options: UseForgotPasswordOptions) {
       const result = await forgotPasswordService.requestPasswordReset(email);
       
       if (result.success) {
-        options.onSuccess && options.onSuccess(result.message || 'Password reset email sent successfully');
+        options.onSuccess && options.onSuccess(result.message || 'Password reset email sent successfully! Check your inbox.');
       } else {
-        options.onError && options.onError(result.message || 'Failed to send password reset email');
+        options.onError && options.onError(result.message || 'Failed to send password reset email. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Forgot password error:', error);
-      options.onError && options.onError('An unexpected error occurred. Please try again.');
+      
+      // Provide user-friendly error messages
+      let msg = 'An unexpected error occurred. Please try again.';
+      
+      if (error.response) {
+        const status = error.response.status;
+        const detail = error.response.data?.detail;
+        
+        if (status === 404) {
+          msg = 'Email address not found. Please check and try again.';
+        } else if (status === 422) {
+          msg = 'Invalid email format. Please enter a valid email address.';
+        } else if (status >= 500) {
+          msg = 'Server error. Please try again later or contact support.';
+        } else if (detail) {
+          msg = detail;
+        }
+      } else if (error.request) {
+        msg = 'Network error. Please check your internet connection.';
+      }
+      
+      options.onError && options.onError(msg);
     } finally {
       setLoading(false);
     }

@@ -382,7 +382,7 @@ const YearlyVaccinationReportCard = () => {
       </div>
 
       {/* Chart Container */}
-      <div className="flex-1 w-full" style={{ minHeight: '250px' }}>
+      <div className="flex-1 w-full" style={{ height: '320px', minHeight: '320px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <RechartsLineChart
             data={monthlyData}
@@ -690,10 +690,10 @@ const DashboardDetailRow: React.FC<DashboardDetailRowProps> = ({
   resetClearedNotifications
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-    <div className="h-96">
+    <div className="h-[500px]">
       <YearlyVaccinationReportCard />
     </div>
-    <div className="h-96">
+    <div className="h-[500px]">
               <NotificationsCenterCard 
           notifications={notifications}
           loading={notificationsLoading}

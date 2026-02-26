@@ -73,7 +73,14 @@ export const animalControlRecordService = {
       url.searchParams.append('date', date);
     }
     
-    const response = await fetch(url.toString());
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
     
     if (!response.ok) {
       const errorText = await response.text();

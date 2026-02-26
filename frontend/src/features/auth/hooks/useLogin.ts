@@ -71,7 +71,29 @@ export default function useLogin(options: UseLoginOptions) {
     } catch (err: any) {
       console.error('Login error:', err);
       setLoading(false);
-      const msg = err.response?.data?.detail || 'Login failed';
+      
+      // Provide user-friendly error messages
+      let msg = 'Login failed. Please try again.';
+      
+      if (err.response) {
+        const status = err.response.status;
+        const detail = err.response.data?.detail;
+        
+        if (status === 401 || status === 403) {
+          msg = 'Incorrect email or password. Please check your credentials and try again.';
+        } else if (status === 404) {
+          msg = 'Account not found. Please check your email address.';
+        } else if (status === 422) {
+          msg = 'Invalid email or password format. Please check your input.';
+        } else if (status >= 500) {
+          msg = 'Server error. Please try again later or contact support.';
+        } else if (detail) {
+          msg = detail;
+        }
+      } else if (err.request) {
+        msg = 'Network error. Please check your internet connection and try again.';
+      }
+      
       options.onError && options.onError(msg);
     }
   };
