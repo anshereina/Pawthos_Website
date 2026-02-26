@@ -60,7 +60,15 @@ const API_BASE_URL = config.apiUrl;
 
 export const animalControlRecordService = {
   async getAllRecords(): Promise<AnimalControlRecord[]> {
-    const response = await fetch(`${API_BASE_URL}/animal-control-records/`);
+    const token = localStorage.getItem('access_token');
+    
+    const response = await fetch(`${API_BASE_URL}/animal-control-records/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
     if (!response.ok) {
       throw new Error('Failed to fetch animal control records');
     }
@@ -73,7 +81,7 @@ export const animalControlRecordService = {
       url.searchParams.append('date', date);
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     
     const response = await fetch(url.toString(), {
       headers: {
@@ -93,7 +101,15 @@ export const animalControlRecordService = {
   },
 
   async getRecordById(id: number): Promise<AnimalControlRecord> {
-    const response = await fetch(`${API_BASE_URL}/animal-control-records/${id}`);
+    const token = localStorage.getItem('access_token');
+    
+    const response = await fetch(`${API_BASE_URL}/animal-control-records/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
     if (!response.ok) {
       throw new Error('Failed to fetch animal control record');
     }
@@ -101,13 +117,17 @@ export const animalControlRecordService = {
   },
 
   async createRecord(record: AnimalControlRecordCreate): Promise<AnimalControlRecord> {
+    const token = localStorage.getItem('access_token');
+    
     const response = await fetch(`${API_BASE_URL}/animal-control-records/`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(record),
     });
+    
     if (!response.ok) {
       throw new Error('Failed to create animal control record');
     }
@@ -122,13 +142,17 @@ export const animalControlRecordService = {
     
     console.log('Sending update data:', filteredRecord);
     
+    const token = localStorage.getItem('access_token');
+    
     const response = await fetch(`${API_BASE_URL}/animal-control-records/${id}`, {
       method: 'PUT',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(filteredRecord),
     });
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Update record error:', response.status, errorText);
@@ -138,9 +162,16 @@ export const animalControlRecordService = {
   },
 
   async deleteRecord(id: number): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    
     const response = await fetch(`${API_BASE_URL}/animal-control-records/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
+    
     if (!response.ok) {
       throw new Error('Failed to delete animal control record');
     }
