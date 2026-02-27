@@ -537,9 +537,9 @@ export default function IntegrationResultPage({
         if (/^level\s*1/i.test(normalized)) return 'Level 1 - Moderate Pain';
         if (/^level\s*2/i.test(normalized) || /^level\s*3/i.test(normalized)) return 'Level 2 - Severe Pain';
 
-        // Handle legacy plain labels
+        // Handle legacy plain labels (map "mild" to "moderate")
         if (lower.includes('no pain')) return 'Level 0 - No Pain';
-        if (lower.includes('mild')) return 'Level 1 - Moderate Pain';
+        if (lower.includes('mild')) return 'Level 1 - Moderate Pain';  // Legacy "mild" maps to "moderate"
         if (lower.includes('moderate')) return 'Level 1 - Moderate Pain';
         if (lower.includes('severe')) return 'Level 2 - Severe Pain';
         if (lower.includes('unknown') || lower.includes('not recognize') || lower.includes('not recognized')) return 'Unknown';
@@ -627,7 +627,7 @@ export default function IntegrationResultPage({
                 confidenceBg: 'rgba(100, 181, 246, 0.1)', // Soft light blue background
                 icon: 'check-circle'
             };
-        } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain') {
+        } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain' || level === 'Level 1 - Moderate Pain' || levelLower.includes('moderate')) {
             return {
                 containerColor: 'rgba(245, 158, 11, 0.05)',
                 borderColor: 'rgba(245, 158, 11, 0.3)',
@@ -636,7 +636,7 @@ export default function IntegrationResultPage({
                 confidenceBg: 'rgba(245, 158, 11, 0.1)',
                 icon: 'warning'
             };
-        } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain') {
+        } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain' || level === 'Level 2 - Severe Pain' || levelLower.includes('severe')) {
             return {
                 containerColor: 'rgba(239, 68, 68, 0.05)',
                 borderColor: 'rgba(239, 68, 68, 0.3)',

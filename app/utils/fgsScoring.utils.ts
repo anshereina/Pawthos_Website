@@ -15,8 +15,8 @@
  * 
  * Pain Level Classification:
  * - Level 0 (No Pain): FGS score 0-2
- * - Level 1 (Mild Pain): FGS score 3-5
- * - Level 2 (Moderate/Severe Pain): FGS score 6-10
+ * - Level 1 (Moderate Pain): FGS score 3-5
+ * - Level 2 (Severe Pain): FGS score 6-10
  */
 
 export interface FgsFeatureScores {
@@ -52,9 +52,9 @@ export const mapFgsScoreToPainLevel = (fgsTotal: number): string => {
   if (fgsTotal <= 2) {
     return 'Level 0 (No Pain)';
   } else if (fgsTotal <= 5) {
-    return 'Level 1 (Mild Pain)';
+    return 'Level 1 (Moderate Pain)';
   } else {
-    return 'Level 2 (Moderate/Severe Pain)';
+    return 'Level 2 (Severe Pain)';
   }
 };
 
@@ -115,8 +115,8 @@ export const getFgsScoringGuidelines = () => {
     notVisible: 'If the action unit is not visible, mark as "not possible to score"',
     painLevels: {
       'Level 0 (No Pain)': { min: 0, max: 2, description: 'FGS score 0-2, no signs of discomfort' },
-      'Level 1 (Mild Pain)': { min: 3, max: 5, description: 'FGS score 3-5, mild to moderate discomfort' },
-      'Level 2 (Moderate/Severe Pain)': { min: 6, max: 10, description: 'FGS score 6-10, severe pain requiring attention' }
+      'Level 1 (Moderate Pain)': { min: 3, max: 5, description: 'FGS score 3-5, moderate discomfort' },
+      'Level 2 (Severe Pain)': { min: 6, max: 10, description: 'FGS score 6-10, severe pain requiring attention' }
     }
   };
 };

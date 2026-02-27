@@ -55,6 +55,10 @@ export interface PainAssessmentCreate {
     image_url?: string;
     basic_answers?: string;  // JSON string of basic question answers
     assessment_answers?: string;  // JSON string of detailed assessment answers
+    beaap_answers?: number[][];  // BEAAP/BEAP assessment answers (array of arrays)
+    beap_average_score?: number;  // BEAP average score (0-10 scale)
+    beap_total_score?: number;  // BEAP total score (0-76 scale)
+    assessment_type?: string;  // Assessment type (e.g., 'BEAP', 'BEAAP', 'ELD')
 }
 
 export interface PainAssessmentResponse {
@@ -127,17 +131,15 @@ export const createPainAssessment = async (assessmentData: PainAssessmentCreate)
         }
 
         // Normalize payload for backend
-        // Map 6-level BEAP system to backend 3-level system
+        // Map 3-level feline system to backend 3-level system
         const toPainScore = (level?: string): number => {
             const value = (level || '').toLowerCase();
             // Level 0 → 0 (No pain)
             if (value.includes('level 0') || value.includes('no pain')) return 0;
-            // Level 1-2 → 1 (Mild to moderate pain)
-            if (value.includes('level 1') || value.includes('mild')) return 1;
-            if (value.includes('level 2') || (value.includes('moderate') && !value.includes('severe'))) return 1;
-            // Level 3-5 → 2 (Moderate to severe pain)
-            if (value.includes('level 3') || value.includes('level 4') || value.includes('level 5') || 
-                value.includes('moderate to severe') || value.includes('severe') || value.includes('worst')) return 2;
+            // Level 1 → 1 (Moderate pain)
+            if (value.includes('level 1') || value.includes('moderate')) return 1;
+            // Level 2 → 2 (Severe pain)
+            if (value.includes('level 2') || value.includes('severe')) return 2;
             return 0;
         };
 
@@ -182,14 +184,21 @@ export const createPainAssessment = async (assessmentData: PainAssessmentCreate)
             pain_score: typeof assessmentData.pain_score === 'number'
                 ? assessmentData.pain_score
                 : toPainScore(assessmentData.pain_level),
+            recommendations: assessmentData.recommendations,  // Include recommendations field
             notes: assessmentData.notes ||
                 [
                     assessmentData.recommendations ? `Recommendations: ${assessmentData.recommendations}` : undefined,
                 ].filter(Boolean).join('\n') || undefined,
             basic_answers: assessmentData.basic_answers,  // Include question answers
             assessment_answers: assessmentData.beaap_answers 
-                ? JSON.stringify({ beaap_answers: assessmentData.beaap_answers, assessment_type: 'BEAAP' })
+                ? JSON.stringify({ 
+                    beaap_answers: assessmentData.beaap_answers, 
+                    assessment_type: assessmentData.assessment_type || 'BEAP',
+                    beap_average_score: assessmentData.beap_average_score,
+                    beap_total_score: assessmentData.beap_total_score
+                })
                 : assessmentData.assessment_answers,  // Include detailed answers or BEAAP answers
+            questions_completed: true,  // Mark questions as completed
         };
 
         // Debug: Log what's being sent to backend
@@ -500,16 +509,10 @@ export const getPainLevelColor = (painLevel: string): string => {
     const level = (painLevel || '').toLowerCase();
     if (level.includes('level 0') || level.includes('no pain')) {
         return '#64B5F6'; // Soft, calming light blue (less alarming than green)
-    } else if (level.includes('level 1') || level.includes('mild')) {
-        return '#8BC34A'; // Light green-yellow for mild
-    } else if (level.includes('level 2') || level.includes('moderate pain')) {
+    } else if (level.includes('level 1') || level.includes('moderate')) {
         return '#FF9800'; // Orange
-    } else if (level.includes('level 3') || level.includes('moderate to severe')) {
-        return '#FF7043'; // Deep orange
-    } else if (level.includes('level 4') || level.includes('severe')) {
+    } else if (level.includes('level 2') || level.includes('severe')) {
         return '#F44336'; // Red
-    } else if (level.includes('level 5') || level.includes('worst')) {
-        return '#B71C1C'; // Dark red
     }
     return '#9e9e9e'; // Gray (default)
 };
@@ -518,10 +521,10 @@ export const getPainLevelColor = (painLevel: string): string => {
  * Map numeric pain score to human-readable label
  */
 export const getPainLevelLabelFromScore = (painScore?: number): string => {
-    // Backend currently stores compact score (0,1,2). Map to our 6-level labels broadly.
+    // Backend currently stores compact score (0,1,2). Map to our 3-level labels.
     if (painScore === 0) return 'Level 0 (No Pain)';
-    if (painScore === 1) return 'Level 2 (Moderate Pain)';
-    if (painScore === 2) return 'Level 4 (Severe Pain)';
+    if (painScore === 1) return 'Level 1 (Moderate Pain)';
+    if (painScore === 2) return 'Level 2 (Severe Pain)';
     return '';
 };
 

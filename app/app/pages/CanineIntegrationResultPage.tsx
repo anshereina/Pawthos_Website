@@ -191,7 +191,7 @@ interface CanineIntegrationResultPageProps {
     petType?: string;
     severityLevel?: string;
     painLevel?: string;
-    selectedAnswers?: number[];
+    selectedAnswers?: number[][];  // Array of arrays for BEAP assessment (8 categories, each with selected image indices)
     beap_average_score?: number; // BEAP average score (0-10 scale)
     isDarkMode?: boolean;
 }
@@ -264,6 +264,27 @@ export default function CanineIntegrationResultPage({
 
     const recommendations = getRecommendations(currentPainLevel);
     const resultImageSource = getResultImage(currentPainLevel);
+    
+    // Define pain styling based on pain level
+    const getPainStyling = (level: string) => {
+        if (level === 'Level 0 (No Pain)' || level === 'Level 0' || level === 'No Pain') {
+            return { textColor: '#4CAF50' }; // Green for no pain
+        } else if (level === 'Level 1 (Mild Pain)' || level === 'Level 1' || level === 'Mild Pain') {
+            return { textColor: '#8BC34A' }; // Light green
+        } else if (level === 'Level 2 (Moderate Pain)' || level === 'Level 2' || level === 'Moderate Pain') {
+            return { textColor: '#FF9800' }; // Orange
+        } else if (level === 'Level 3 (Moderate to Severe Pain)' || level === 'Level 3' || level === 'Moderate to Severe Pain') {
+            return { textColor: '#FF7043' }; // Deep orange
+        } else if (level === 'Level 4 (Severe Pain)' || level === 'Level 4' || level === 'Severe Pain') {
+            return { textColor: '#F44336' }; // Red
+        } else if (level === 'Level 5 (Worst Pain Possible)' || level === 'Level 5' || level === 'Worst Pain Possible') {
+            return { textColor: '#B71C1C' }; // Dark red
+        }
+        return { textColor: '#d37f52' }; // Default terracotta
+    };
+    
+    const painStyling = getPainStyling(currentPainLevel);
+    
     const [isSaved, setIsSaved] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveChoice, setSaveChoice] = useState<'yes' | 'no' | null>(null);
@@ -287,15 +308,21 @@ export default function CanineIntegrationResultPage({
     }, []);
 
     const handleSaveChoice = async (choice: 'yes' | 'no') => {
+        console.log('=== handleSaveChoice called with choice:', choice);
         setSaveChoice(choice);
         
         if (choice === 'yes') {
             setIsSaving(true);
             try {
+                console.log('=== Starting to save canine assessment ===');
+                
                 // Get the assessment data from local storage
                 const assessmentDataString = await AsyncStorage.getItem('currentAssessmentData');
+                console.log('Retrieved assessment data from storage:', assessmentDataString ? 'Data found' : 'No data found');
+                
                 if (assessmentDataString) {
                     const assessmentData = JSON.parse(assessmentDataString);
+                    console.log('Parsed assessment data:', JSON.stringify(assessmentData, null, 2));
                     
                     // Update the assessment data with final results
                     assessmentData.recommendations = recommendations;
@@ -306,8 +333,12 @@ export default function CanineIntegrationResultPage({
                     assessmentData.assessment_type = 'BEAP';
                     assessmentData.pet_type = 'Canine';  // Normalize to Canine
                     
+                    console.log('Updated assessment data before API call:', JSON.stringify(assessmentData, null, 2));
+                    
                     // Create the assessment in the database
+                    console.log('Calling createPainAssessment API...');
                     const result = await createPainAssessment(assessmentData);
+                    console.log('API call completed. Result:', JSON.stringify(result, null, 2));
 
                     if (result.success) {
                         console.log('Canine assessment created and saved successfully');
@@ -325,18 +356,21 @@ export default function CanineIntegrationResultPage({
                         
                         // Don't navigate automatically - stay on the same page
                         // The user can choose to navigate using the back arrow or second opinion button
+                        Alert.alert('Success', 'Assessment saved successfully!');
                     } else {
                         console.error('Failed to save canine assessment:', result.message);
-                        Alert.alert('Error', 'Failed to save assessment. Please try again.');
+                        Alert.alert('Error', `Failed to save assessment: ${result.message || 'Unknown error'}`);
                         setSaveChoice(null);
                     }
                 } else {
+                    console.error('No assessment data found in AsyncStorage');
                     Alert.alert('Error', 'No assessment data found to save.');
                     setSaveChoice(null);
                 }
             } catch (error) {
                 console.error('Error saving canine assessment:', error);
-                Alert.alert('Error', 'Failed to save assessment. Please try again.');
+                console.error('Error details:', JSON.stringify(error, null, 2));
+                Alert.alert('Error', `Failed to save assessment: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 setSaveChoice(null);
             } finally {
                 setIsSaving(false);
