@@ -1,8 +1,8 @@
 """
-AI Integration for Feline Pain Assessment
+ELD Integration for Feline Pain Assessment
 
-This router provides AI-powered pain assessment using multimodal AI analysis.
-Replaces the traditional ELD model with advanced AI processing.
+This router provides ELD-powered pain assessment using multimodal ELD analysis.
+Uses advanced ELD processing for accurate pain assessment.
 Matches the existing 3-level pain system: Level 0, Level 1, Level 2
 """
 
@@ -16,19 +16,19 @@ from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Form
 from sqlalchemy.orm import Session
 
-# Import AI processing library wrapper
+# Import ELD processing library wrapper
 try:
-    from services.ai_processing_lib import (
+    from services.eld_processing_lib import (
         is_available,
         configure,
         create_model,
         get_model_name,
         DEFAULT_MODEL
     )
-    AI_AVAILABLE = is_available()
+    ELD_AVAILABLE = is_available()
 except ImportError:
-    AI_AVAILABLE = False
-    logging.warning("AI processing library not available. Install with: pip install ai-processing-dependencies")
+    ELD_AVAILABLE = False
+    logging.warning("ELD processing library not available. Install with: pip install google-generativeai")
 
 from core.database import get_db
 from core.models import User, PainAssessment
@@ -37,22 +37,22 @@ from core.auth import get_current_user
 # Initialize router
 router = APIRouter(
     prefix="/api",
-    tags=["AI Pain Assessment"]
+    tags=["ELD Pain Assessment"]
 )
 
-# Configure AI Service
-AI_API_KEY = os.getenv("AI_API_KEY") or os.getenv("GEMINI_API_KEY")
-if AI_AVAILABLE and AI_API_KEY:
+# Configure ELD Service
+ELD_API_KEY = os.getenv("API_KEY") or os.getenv("KEY") or os.getenv("AI_API_KEY") or os.getenv("GEMINI_API_KEY")  # Support API_KEY, KEY, and legacy names
+if ELD_AVAILABLE and ELD_API_KEY:
     try:
-        configure(api_key=AI_API_KEY)
-        logging.info("AI service configured successfully")
+        configure(api_key=ELD_API_KEY)
+        logging.info("ELD service configured successfully")
     except Exception as e:
-        logging.error(f"Failed to configure AI service: {e}")
-        AI_AVAILABLE = False
+        logging.error(f"Failed to configure ELD service: {e}")
+        ELD_AVAILABLE = False
 else:
-    if not AI_API_KEY:
-        logging.warning("AI_API_KEY not found in environment variables")
-    AI_AVAILABLE = False
+    if not ELD_API_KEY:
+        logging.warning("API_KEY not found in environment variables")
+    ELD_AVAILABLE = False
 
 
 # The expert prompt for AI analysis - Updated to match official Feline Grimace Scale Training Manual
@@ -273,8 +273,8 @@ async def assess_pain_with_ai(
         Structured pain assessment with AI analysis matching existing system
     """
     
-    # Check if AI service is available
-    if not AI_AVAILABLE:
+    # Check if ELD service is available
+    if not ELD_AVAILABLE:
         raise HTTPException(
             status_code=503,
             detail="AI service is not available. Please contact support."
@@ -385,10 +385,10 @@ async def assess_pain_with_ai(
 
 @router.get("/ai-health")
 async def ai_health_check():
-    """Check if AI service is available"""
+    """Check if ELD service is available"""
     return {
-        "ai_available": AI_AVAILABLE,
-        "api_key_configured": bool(AI_API_KEY),
-        "status": "ready" if AI_AVAILABLE else "unavailable"
+        "eld_available": ELD_AVAILABLE,
+        "api_key_configured": bool(ELD_API_KEY),
+        "status": "ready" if ELD_AVAILABLE else "unavailable"
     }
 

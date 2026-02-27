@@ -4,26 +4,26 @@ from core.auth import get_current_user
 from core.models import User
 import logging
 
-# Optional AI service import
+# Optional ELD service import
 try:
-    from services.ai_service import ai_service
+    from services.eld_service import eld_service
     # Check if service was actually initialized (not None)
-    if ai_service is None:
-        raise ImportError("AI service instance is None")
-    AI_SERVICE_AVAILABLE = True
-    logging.info("✅ AI service loaded and available")
+    if eld_service is None:
+        raise ImportError("ELD service instance is None")
+    ELD_SERVICE_AVAILABLE = True
+    logging.info("✅ ELD service loaded and available")
 except ImportError as e:
-    logging.error(f"⚠️ AI service not available: {e}")
+    logging.error(f"⚠️ ELD service not available: {e}")
     import traceback
     logging.error(f"Import traceback: {traceback.format_exc()}")
-    AI_SERVICE_AVAILABLE = False
-    ai_service = None
+    ELD_SERVICE_AVAILABLE = False
+    eld_service = None
 except Exception as e:
-    logging.error(f"⚠️ Unexpected error loading AI service: {e}")
+    logging.error(f"⚠️ Unexpected error loading ELD service: {e}")
     import traceback
     logging.error(f"Error traceback: {traceback.format_exc()}")
-    AI_SERVICE_AVAILABLE = False
-    ai_service = None
+    ELD_SERVICE_AVAILABLE = False
+    eld_service = None
 
 router = APIRouter()
 security = HTTPBearer()
@@ -33,15 +33,15 @@ async def predict_pain_basic(file: UploadFile = File(...)):
     """
     Basic pain prediction endpoint using Haar cascades and heuristics
     """
-    if not AI_SERVICE_AVAILABLE or ai_service is None:
-        logging.error("AI service unavailable - returning 503 error")
+    if not ELD_SERVICE_AVAILABLE or eld_service is None:
+        logging.error("ELD service unavailable - returning 503 error")
         raise HTTPException(
             status_code=503, 
             detail={
                 "error": True,
                 "error_type": "SERVICE_UNAVAILABLE",
-                "error_message": "AI service is currently unavailable",
-                "error_guidance": "The AI pain assessment service is temporarily unavailable. Please try again later or contact support."
+                "error_message": "ELD service is currently unavailable",
+                "error_guidance": "The ELD pain assessment service is temporarily unavailable. Please try again later or contact support."
             }
         )
     try:
@@ -49,7 +49,7 @@ async def predict_pain_basic(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="File must be an image")
         
         image_bytes = file.file.read()
-        result = ai_service.predict_pain_basic(image_bytes)
+        result = eld_service.predict_pain_basic(image_bytes)
         return result
         
     except ValueError as e:
@@ -71,7 +71,7 @@ async def predict_pain_basic(file: UploadFile = File(...)):
             # Other errors - try heuristic fallback
             logging.warning(f"ELD primary analysis failed, using heuristic fallback: {e}")
             try:
-                fallback = ai_service.predict_pain_basic(image_bytes)
+                fallback = eld_service.predict_pain_basic(image_bytes)
                 return {
                     "pain_level": fallback.get("pain_level", "Unknown"),
                     "confidence": fallback.get("confidence", 0.72),
@@ -98,15 +98,15 @@ async def predict_pain_eld(
     """
     Enhanced pain prediction using Ensemble Landmark Detector (ELD) with 48 landmarks
     """
-    if not AI_SERVICE_AVAILABLE or ai_service is None:
-        logging.error("AI service unavailable - returning 503 error")
+    if not ELD_SERVICE_AVAILABLE or eld_service is None:
+        logging.error("ELD service unavailable - returning 503 error")
         raise HTTPException(
             status_code=503, 
             detail={
                 "error": True,
                 "error_type": "SERVICE_UNAVAILABLE",
-                "error_message": "AI service is currently unavailable",
-                "error_guidance": "The AI pain assessment service is temporarily unavailable. Please try again later or contact support."
+                "error_message": "ELD service is currently unavailable",
+                "error_guidance": "The ELD pain assessment service is temporarily unavailable. Please try again later or contact support."
             }
         )
     try:
@@ -114,9 +114,9 @@ async def predict_pain_eld(
             raise HTTPException(status_code=400, detail="File must be an image")
         
         image_bytes = file.file.read()
-        result = ai_service.predict_pain_eld(image_bytes)
+        result = eld_service.predict_pain_eld(image_bytes)
         
-        logging.info(f"AI Service Result: {result}")
+        logging.info(f"ELD Service Result: {result}")
         
         # Check if the result contains an error (no cat detected)
         if result.get("error") and result.get("error_type") == "NO_CAT_DETECTED":
@@ -132,9 +132,9 @@ async def predict_pain_eld(
                 }
             )
         
-        # Check if AI returned success=False (indicating detection failure)
+        # Check if ELD returned success=False (indicating detection failure)
         if not result.get("success", True):
-            logging.warning(f"AI returned success=False: {result}")
+            logging.warning(f"ELD returned success=False: {result}")
             raise HTTPException(
                 status_code=400, 
                 detail={
@@ -154,14 +154,14 @@ async def predict_pain_eld(
         raise HTTPException(status_code=500, detail="Failed to process image")
 
 @router.get("/health")
-def ai_health_check():
+def eld_health_check():
     """
-    Check AI service health and model availability
+    Check ELD service health and model availability
     """
     return {
         "status": "healthy",
-        "eld_model_available": ai_service.eld_model is not None,
+        "eld_model_available": eld_service.eld_model is not None if eld_service else False,
         "torch_available": True,  # Will be set based on actual availability
-        "cat_face_cascade_available": ai_service.cat_face_cascade is not None and not ai_service.cat_face_cascade.empty(),
+        "cat_face_cascade_available": eld_service.cat_face_cascade is not None and not eld_service.cat_face_cascade.empty() if eld_service else False,
         "version": "2.0.0"
     }
